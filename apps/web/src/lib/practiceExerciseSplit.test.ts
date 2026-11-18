@@ -119,10 +119,28 @@ describe("splitEmbedByPassage — một exercise nhiều đoạn thành các kh�
     expect(splitEmbedByPassage(embed({}))).toEqual([]);
   });
 
-  it("đoạn không có câu hỏi (chỉ audio) vẫn là một khối; câu không thuộc đoạn nào đi cùng đoạn trước", () => {
-    const r = splitEmbedByPassage(embed({ passages: [ps("a", "A"), ps("b", "B")], questions: [q("x", "a"), q("y", null)] }));
-    expect(r[0]!.questions.map((x) => x.id)).toEqual(["x", "y"]);
+  it("đoạn không có câu hỏi (chỉ audio) vẫn là một khối, đúng thứ tự đoạn của đề", () => {
+    const r = splitEmbedByPassage(embed({ passages: [ps("a", "A"), ps("b", "B"), ps("c", "C")], questions: [q("x", "a"), q("z", "c")] }));
+    expect(r.map((e) => e.passages.map((p) => p.id))).toEqual([["a"], ["b"], ["c"]]);
     expect(r[1]!.questions).toEqual([]);
-    expect(r[1]!.passages.map((p) => p.id)).toEqual(["b"]);
+  });
+
+  it("câu không thuộc đoạn nào là một khối riêng không đoạn (không còn dính vào đoạn trước thành tab con), theo thứ tự soạn", () => {
+    const r = splitEmbedByPassage(embed({ passages: [ps("a", "Xem hình 1")], questions: [q("x", "a"), q("y", null), q("z", null)], answers: [ans("y")] }));
+    expect(r.map((e) => e.passages.map((p) => p.id))).toEqual([["a"], []]);
+    expect(r[0]!.questions.map((x) => x.id)).toEqual(["x"]);
+    expect(r[1]!.questions.map((x) => x.id)).toEqual(["y", "z"]);
+    expect(r[1]!.answers.map((x) => x.questionId)).toEqual(["y"]);
+  });
+
+  it("câu rời đứng trước đoạn thì khối rời đứng trước; hai dải câu rời cách nhau bởi một đoạn là hai khối", () => {
+    const r = splitEmbedByPassage(embed({ passages: [ps("a", "A")], questions: [q("l1", null), q("x", "a"), q("l2", null)] }));
+    expect(r.map((e) => e.questions.map((x) => x.id))).toEqual([["l1"], ["x"], ["l2"]]);
+    expect(r.map((e) => e.passages.length)).toEqual([0, 1, 0]);
+  });
+
+  it("toàn câu rời, hoặc một đoạn không câu rời: không tách", () => {
+    expect(splitEmbedByPassage(embed({ questions: [q("a", null), q("b", null)] }))).toEqual([]);
+    expect(splitEmbedByPassage(embed({ passages: [ps("p", "x")], questions: [q("a", "p"), q("b", "p")] }))).toEqual([]);
   });
 });

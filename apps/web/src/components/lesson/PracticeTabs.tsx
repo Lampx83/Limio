@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { BookOpen, Check, ChevronLeft, ChevronRight, Headphones, ListChecks, Mic, Shuffle, TextCursorInput, type LucideIcon } from "lucide-react";
-import { PRACTICE_KIND_LABEL, PRACTICE_PROGRESS_EVENT, type PracticeKind, type PracticeProgressDetail, type PracticeTabMeta } from "@/lib/practiceTabMeta";
+import { BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Headphones, ListChecks, Mic, Shuffle, TextCursorInput, type LucideIcon } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
+import Collapse from "@/components/ui/Collapse";
+import { PRACTICE_COMPLETE_EVENT, PRACTICE_KIND_LABEL, PRACTICE_PROGRESS_EVENT, type PracticeKind, type PracticeProgressDetail, type PracticeTabMeta } from "@/lib/practiceTabMeta";
 
 export interface PracticeTab {
   id: string;
@@ -46,7 +48,11 @@ function progressOf(meta: PracticeTabMeta | undefined, live: Live) {
  */
 export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[]; hsk?: boolean }) {
   const uid = useId();
+  const tr = useT();
   const [active, setActive] = useState(0);
+  // Thanh bài tập gọn dính ở đầu màn hình («  3/7 · tên bài  ▾  »): đổi bài tập mà không phải cuộn ngược lên; lưới thẻ chỉ mở khi cần xem cả danh sách.
+  const secRef = useRef<HTMLElement>(null);
+  const [listOpen, setListOpen] = useState(false);
   const [live, setLive] = useState<Live>({});
   useEffect(() => {
     const onProgress = (e: Event) => {
@@ -63,6 +69,13 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
     window.addEventListener(PRACTICE_PROGRESS_EVENT, onProgress);
     return () => window.removeEventListener(PRACTICE_PROGRESS_EVENT, onProgress);
   }, []);
+  // Báo cho thanh đáy: mọi bài tập có câu đã được kiểm hết chưa (nút "Tiếp" đổi mức nhấn). Chỉ báo khi có ít nhất một bài tập có câu.
+  const allChecked = tabs.some((tb) => (tb.meta?.ids?.length ?? 0) > 0) && tabs.every((tb) => (tb.meta?.ids?.length ?? 0) === 0 || progressOf(tb.meta, live).done);
+  const hasQuestions = tabs.some((tb) => (tb.meta?.ids?.length ?? 0) > 0);
+  useEffect(() => {
+    if (!hasQuestions) return;
+    window.dispatchEvent(new CustomEvent(PRACTICE_COMPLETE_EVENT, { detail: { done: allChecked } }));
+  }, [allChecked, hasQuestions]);
   // Hàng thẻ cuộn ngang: biết còn thẻ bị che ở mép nào để mờ mép và hiện nút mũi tên.
   const barRef = useRef<HTMLDivElement>(null);
   const [edge, setEdge] = useState({ left: false, right: false });
@@ -98,12 +111,49 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
   if (tabs.length === 1 && !/^\d/.test(tabs[0]!.label)) return <div>{tabs[0]!.content}</div>;
   const cur = Math.min(active, tabs.length - 1);
   const go = (i: number) => setActive((i + tabs.length) % tabs.length);
+  // Đổi bài tập bằng nút dính: về đầu khu bài luyện nếu đang cuộn sâu, để thấy bài tập mới từ đầu.
+  const step = (dir: -1 | 1) => {
+    if (cur + dir < 0 || cur + dir > tabs.length - 1) return;
+    // Dạng hàm: bấm nhanh hai lần liền vẫn đi đủ hai bài, không dựa vào giá trị cũ của lần dựng trước.
+    setActive((a) => Math.min(tabs.length - 1, Math.max(0, Math.min(a, tabs.length - 1) + dir)));
+    setListOpen(false);
+    const el = secRef.current;
+    if (el && el.getBoundingClientRect().top < 72) el.scrollIntoView?.({ block: "start", behavior: "smooth" });
+  };
+  const barTitle = (tb: PracticeTab) => {
+    const head = tb.label.split(" · ")[0] ?? "";
+    if (!EXERCISE_CODE.test(head)) return tb.label.replace(" · ", ": ");
+    return tb.meta?.title && tb.meta.title !== head ? `${head} · ${tb.meta.title}` : tb.label;
+  };
+  const curDone = progressOf(tabs[cur]?.meta, live).done;
+  const stepBtn = "flex w-11 shrink-0 items-center justify-center bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-40";
+  const stepBar =
+    tabs.length > 1 ? (
+      <div role="group" aria-label={tr("practice.tabs.aria")} data-testid="practice-step-nav" className="sticky top-[3.75rem] z-20 mb-3 flex items-stretch border border-token bg-[rgb(var(--surface))] shadow-sm">
+        <button type="button" onClick={() => step(-1)} disabled={cur === 0} aria-label={tr("practice.tabs.prev")} className={stepBtn}>
+          <ChevronsLeft size={18} aria-hidden />
+        </button>
+        <button type="button" onClick={() => setListOpen((v) => !v)} aria-expanded={listOpen} aria-label={tr("practice.tabs.list")} className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2 text-left">
+          <span className="shrink-0 text-sm font-bold tabular-nums text-brand-700" aria-label={tr("practice.tabs.counter", { n: cur + 1, total: tabs.length })}>
+            {tr("practice.tabs.label")} {cur + 1}/{tabs.length}
+          </span>
+          <span className="min-w-0 flex-1 truncate text-sm font-medium">{barTitle(tabs[cur]!)}</span>
+          {curDone && <Check size={16} aria-hidden className="shrink-0 text-lime-700" />}
+          <ChevronDown size={16} aria-hidden className={`shrink-0 text-muted transition-transform ${listOpen ? "rotate-180" : ""}`} />
+        </button>
+        <button type="button" onClick={() => step(1)} disabled={cur === tabs.length - 1} aria-label={tr("practice.tabs.next")} className={stepBtn}>
+          <ChevronsRight size={18} aria-hidden />
+        </button>
+      </div>
+    ) : null;
 
   if (hsk) {
     // Giao diện bài HSK: lưới thẻ hoạt động (biểu tượng, tên, số câu, thanh tiến độ); thẻ đang mở màu hồng, nội dung mở ngay bên dưới.
     return (
-      <section className="hsk-tabs" data-testid="practice-tabs">
-        <div role="tablist" aria-label="Bài luyện của bài học" className="hsk-tablist">
+      <section ref={secRef} className="hsk-tabs" data-testid="practice-tabs">
+        {stepBar}
+        <Collapse open={listOpen}>
+        <div role="tablist" aria-label={tr("practice.tabs.aria")} className="hsk-tablist">
           {tabs.map((t, i) => {
             const on = i === cur;
             const kind = t.meta?.kind;
@@ -123,7 +173,10 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
                 aria-selected={on}
                 aria-controls={`${uid}-panel-${i}`}
                 tabIndex={on ? 0 : -1}
-                onClick={() => setActive(i)}
+                onClick={() => {
+                  setActive(i);
+                  setListOpen(false);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "ArrowRight") {
                     e.preventDefault();
@@ -151,6 +204,7 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
             );
           })}
         </div>
+        </Collapse>
         {tabs.map((t, i) => (
           <div key={t.id} role="tabpanel" id={`${uid}-panel-${i}`} aria-labelledby={`${uid}-tab-${i}`} hidden={i !== cur}>
             {t.content}
@@ -161,7 +215,9 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
   }
 
   return (
-    <section className={hsk ? "hsk-tabs mt-5" : "mt-5"} data-testid="practice-tabs">
+    <section ref={secRef} className={hsk ? "hsk-tabs mt-5" : "mt-5"} data-testid="practice-tabs">
+      {stepBar}
+      <Collapse open={listOpen}>
       <div className="relative">
       {edge.left && (
         <button type="button" onClick={() => scrollBar(-1)} aria-label="Cuộn hàng bài tập sang trái" className="absolute left-0 top-10 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-token bg-[rgb(var(--surface))] text-muted shadow-sm hover:text-[rgb(var(--text))]">
@@ -177,7 +233,7 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
         ref={barRef}
         onScroll={measure}
         role="tablist"
-        aria-label="Bài luyện của bài học"
+        aria-label={tr("practice.tabs.aria")}
         className="relative -mx-2 overflow-x-auto px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         style={{
           maskImage: `linear-gradient(to right, transparent 0, #000 ${edge.left ? "2.5rem" : "0px"}, #000 calc(100% - ${edge.right ? "2.5rem" : "0px"}), transparent 100%)`,
@@ -224,7 +280,10 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
               aria-selected={on}
               aria-controls={`${uid}-panel-${i}`}
               tabIndex={on ? 0 : -1}
-              onClick={() => setActive(i)}
+              onClick={() => {
+                  setActive(i);
+                  setListOpen(false);
+                }}
               onKeyDown={(e) => {
                 if (e.key === "ArrowRight") {
                   e.preventDefault();
@@ -264,6 +323,7 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
         </div>
       </div>
       </div>
+      </Collapse>
       {tabs.map((t, i) => (
         <div key={t.id} role="tabpanel" id={`${uid}-panel-${i}`} aria-labelledby={`${uid}-tab-${i}`} hidden={i !== cur} className="pt-3">
           {t.content}

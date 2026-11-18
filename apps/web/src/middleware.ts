@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { applyAttributionCookie } from "@/lib/growth/edge";
 import { languageHostRewrite } from "@/lib/languageHost";
+import { courseSlugFromReferer } from "@/lib/i18n/core";
 
 /**
  * Gắn `X-Robots-Tag: noindex, nofollow` cho mọi route riêng tư.
@@ -79,7 +80,11 @@ export function middleware(req: NextRequest) {
   if (SPACE_PATH_RE.test(req.nextUrl.pathname)) reqHeaders.set("x-space-path", req.nextUrl.pathname);
   // I18N: slug khoá đang xem (để layout gốc chọn ngôn ngữ giao diện theo course.language).
   reqHeaders.delete("x-course-slug");
-  const courseSlug = COURSE_SLUG_RE.exec(req.nextUrl.pathname)?.[1];
+  let courseSlug = COURSE_SLUG_RE.exec(req.nextUrl.pathname)?.[1];
+  // Request API gửi từ trang của một khoá (nhận xét AI, kiểm câu…): lấy slug từ trang gọi để ngôn ngữ khớp với giao diện đang hiện.
+  if (!courseSlug && req.nextUrl.pathname.startsWith("/api/")) {
+    courseSlug = courseSlugFromReferer(req.headers.get("referer"), req.headers.get("host"), process.env.NEXT_PUBLIC_BASE_PATH) ?? undefined;
+  }
   if (courseSlug) {
     try {
       reqHeaders.set("x-course-slug", decodeURIComponent(courseSlug));

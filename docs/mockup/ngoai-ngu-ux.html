@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Limio Language — Phương án cải thiện UX</title>
+<style>
+  :root{
+    --brand:#65a30d; --brand-deep:#3f6212; --brand-soft:#eef5e2; --brand-soft2:#e0edc9;
+    --pink:#ec4899; --pink-deep:#be185d; --pink-soft:#fdeef6;
+    --ink:#1b2210; --muted:#5b6650; --line:#d5dfc4; --bg:#f7f8f3; --card:#fff; --warn:#b45309; --warn-soft:#fff4e0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Inter",Roboto,sans-serif}
+  .wrap{max-width:1120px;margin:0 auto;padding:40px 20px 80px}
+  header.hero{background:var(--brand);color:#fff;padding:44px 20px 40px}
+  header.hero .wrap{padding:0 20px}
+  header.hero small{letter-spacing:.14em;text-transform:uppercase;font-weight:700;opacity:.85}
+  header.hero h1{font-size:2.3rem;line-height:1.2;margin:.4rem 0 .6rem}
+  header.hero p{max-width:46rem;margin:0;font-size:1.1rem;opacity:.95}
+  h2{font-size:1.5rem;margin:3rem 0 .4rem;padding-left:.8rem;border-left:6px solid var(--brand)}
+  h2 .no{color:var(--brand-deep);margin-right:.4rem}
+  h3{font-size:1.1rem;margin:1.6rem 0 .3rem}
+  p.lead{color:var(--muted);max-width:50rem;margin:.2rem 0 1.2rem}
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:repeat(2,minmax(0,1fr))} .g3{grid-template-columns:repeat(3,minmax(0,1fr))} .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  @media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr}}
+  .card{background:var(--card);padding:18px 20px;border-left:5px solid var(--brand)}
+  .card.pink{border-left-color:var(--pink)} .card.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+  .card b.k{display:block;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--brand-deep);margin-bottom:.2rem}
+  .card.pink b.k{color:var(--pink-deep)} .card.warn b.k{color:var(--warn)}
+  .stat{font-size:2rem;font-weight:800;color:var(--brand-deep);line-height:1.1}
+  table{border-collapse:collapse;width:100%;background:var(--card);font-size:.95rem}
+  th,td{padding:.6rem .8rem;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+  th{background:var(--brand-soft2);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-deep)}
+  .tag{display:inline-block;padding:.05rem .5rem;font-size:.75rem;font-weight:700;color:#fff;background:var(--brand)} .tag.p{background:var(--pink)} .tag.w{background:var(--warn)} .tag.g{background:#6b7280}
+
+  /* ---- Khung điện thoại và màn hình mô phỏng ---- */
+  .pair{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;margin:1rem 0}
+  figure{margin:0}
+  figcaption{font-size:.85rem;color:var(--muted);margin-top:.5rem;max-width:300px}
+  figcaption b{color:var(--ink)}
+  .phone{width:290px;height:560px;background:var(--bg);border:8px solid #1f2937;border-radius:30px;overflow:hidden;position:relative;font-size:12px;line-height:1.45;box-shadow:0 10px 30px rgba(0,0,0,.12)}
+  .phone.bad{border-color:#9ca3af}
+  .scr{height:100%;overflow:hidden;position:relative}
+  .topbar{height:40px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;padding:0 10px}
+  .logo{font-weight:800;font-size:15px} .logo i{font-style:normal;color:var(--pink)}
+  .dot{width:22px;height:22px;border:1px solid var(--line);border-radius:50%;margin-left:auto}
+  .box{background:#fff;border:1px solid var(--line);margin:8px 10px;padding:8px 10px}
+  .crumb{color:#9ca3af;margin:8px 10px;font-size:11px}
+  .title{font-weight:800;font-size:16px;line-height:1.25;margin:10px 12px 6px}
+  .para{margin:6px 12px;color:#374151}
+  .banner{margin:6px 12px;background:linear-gradient(90deg,var(--pink),#f9c5dc);color:#fff;font-weight:800;padding:4px 10px}
+  .bottombar{position:absolute;left:0;right:0;bottom:0;height:46px;background:#fff;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 10px;gap:8px}
+  .btn{background:var(--brand);color:#fff;font-weight:700;padding:7px 12px;white-space:nowrap}
+  .btn.ghost{background:transparent;color:var(--ink);font-weight:600} .btn.pink{background:var(--pink)} .btn.dis{opacity:.4}
+  .fab{position:absolute;right:8px;width:30px;height:30px;border-radius:50%;background:#fff;border:1px solid var(--line);box-shadow:0 2px 6px rgba(0,0,0,.15)}
+  .annot{position:absolute;border:2px dashed var(--pink);color:var(--pink-deep);font-size:10px;font-weight:700;padding:1px 4px;background:rgba(255,255,255,.85)}
+  .stepbar{background:#fff;border:1px solid var(--line);display:flex;align-items:stretch;margin:6px 10px;font-weight:600}
+  .stepbar .a{width:30px;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:800}
+  .stepbar .m{flex:1;padding:6px 8px;display:flex;gap:6px;align-items:center;min-width:0}
+  .stepbar .m b{color:var(--brand-deep)} .stepbar .m span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rail{display:flex;gap:3px;margin:8px 12px}
+  .rail i{flex:1;height:5px;background:var(--brand-soft2)} .rail i.on{background:var(--brand)} .rail i.cur{background:var(--pink)}
+  .chip{display:inline-block;border:1px solid var(--line);background:#fff;padding:4px 9px;margin:3px 3px 0 0;font-weight:600}
+  .ruby{display:inline-flex;flex-direction:column;align-items:center;line-height:1.15;margin:0 1px}
+  .ruby small{font-size:9px;color:var(--muted)} .ruby b{font-size:19px;color:var(--brand-deep);font-weight:500}
+  .seg{display:flex;border:1px solid var(--line);margin:4px 0 10px}
+  .seg span{flex:1;text-align:center;padding:5px 2px;font-weight:600;background:#fff} .seg span.on{background:var(--brand);color:#fff}
+  .sheet{position:absolute;left:0;right:0;bottom:46px;background:#fff;border-top:3px solid var(--brand);padding:12px 14px;box-shadow:0 -8px 20px rgba(0,0,0,.12)}
+  .sheet h5{margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--brand-deep)}
+  .spk{display:inline-grid;place-items:center;width:26px;height:26px;background:var(--brand);color:#fff;vertical-align:middle}
+  .gap{display:inline-block;min-width:54px;border-bottom:2px solid var(--pink);margin:0 3px;text-align:center;color:var(--pink-deep);font-weight:700}
+  svg{display:block}
+  .flow{display:flex;gap:0;flex-wrap:wrap;margin:1rem 0}
+  .flow div{flex:1;min-width:130px;background:var(--brand-soft2);padding:.6rem .8rem;position:relative;margin-right:10px;font-weight:700;font-size:.92rem}
+  .flow div small{display:block;font-weight:500;color:var(--muted)}
+  .flow div.pain{background:var(--pink-soft)}
+  ul.tight{margin:.3rem 0 0;padding-left:1.1rem} ul.tight li{margin:.15rem 0}
+  code{background:var(--brand-soft2);padding:0 .3rem}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <small>Thiết kế UX/UI · Limio Language</small>
+  <h1>Học ngoại ngữ trên Limio: ít chữ hơn, một việc một lúc, người học tự chỉnh</h1>
+  <p>Phương án cải thiện trải nghiệm cho mọi khoá ngoại ngữ (HSK, Speakout, New Round-Up…), dựa trên phản hồi của học viên, số đo trên dữ liệu thật và khảo sát giao diện trên máy tính lẫn điện thoại.</p>
+</div></header>
+
+<div class="wrap">
+
+<h2><span class="no">1</span>Điều đã quan sát</h2>
+<p class="lead">Ba nguồn: phản hồi của một học viên (7 ý), số đo trên hai khoá thật (Speakout bản demo và HSK 4 bản gốc Limio), và ảnh chụp giao diện ở khổ máy tính 1100 px và điện thoại 375 px.</p>
+
+<div class="grid g4">
+  <div class="card"><b class="k">Speakout</b><div class="stat">40</div>bài nhỏ, mỗi bài là một mục sách. 26 bài có 2–4 tab bài tập.</div>
+  <div class="card"><b class="k">HSK 4 · mỗi bài khoá</b><div class="stat">18–20</div>khối nội dung, nhiều mục lớn: cuộn dài.</div>
+  <div class="card pink"><b class="k">Điện thoại, màn đầu tiên</b><div class="stat">~70%</div>diện tích là khung điều hướng; bài học thật nằm dưới nếp gấp.</div>
+  <div class="card warn"><b class="k">Từ vựng Speakout</b><div class="stat">0/50</div>từ có audio. Câu hỏi chưa có bản dịch kèm theo.</div>
+</div>
+
+<h3>Điện thoại: màn đầu tiên của một bài học (khảo sát trên bài Speakout 1.1)</h3>
+<div class="pair">
+  <figure>
+    <div class="phone bad"><div class="scr">
+      <div class="topbar"><span class="logo">Lim<i>io</i></span><span class="dot"></span><span class="dot" style="margin-left:4px"></span></div>
+      <div class="box"><b>▸ Lessons in this unit · 0 / 21</b></div>
+      <div class="crumb">Learn / Speakout Intermediate Plus — Unit 1 (demo) / Unit 1 · Lifestyles / 1.1 Reading</div>
+      <div class="box" style="text-align:right;margin-left:110px">≡ Course contents</div>
+      <div class="box" style="margin-top:14px"><div class="title" style="margin:2px 0 6px">1.1 Reading · The world's favourite drug</div><div class="banner" style="margin:6px 0">READING</div><div class="para" style="margin:6px 0">Read the article about coffee…</div></div>
+      <span class="fab" style="top:300px"></span><span class="fab" style="top:336px;background:var(--brand)"></span>
+      <div class="annot" style="left:8px;top:50px">3 lớp điều hướng</div>
+      <div class="annot" style="right:6px;top:268px">nút nổi đè chữ</div>
+      <div class="bottombar"><span class="btn ghost">← Previous</span><span class="btn pink">Next lesson →</span></div>
+    </div></div>
+    <figcaption><b>Hiện tại.</b> Thanh "Lessons in this unit", đường dẫn 3 dòng và nút "Course contents" cùng làm một việc: cho biết mình đang ở đâu. Nội dung bài mới bắt đầu sau khoảng 70% màn đầu.</figcaption>
+  </figure>
+  <div style="flex:1;min-width:280px">
+    <h3 style="margin-top:0">Điểm đau, gom theo hành trình</h3>
+    <div class="flow">
+      <div>Vào bài<small>chrome nuốt màn hình</small></div>
+      <div class="pain">Đọc / nghe<small>nhiều chữ, cuộn dài</small></div>
+      <div class="pain">Học từ<small>không có tiếng</small></div>
+      <div class="pain">Luyện tập<small>tab ở trên, nội dung ở dưới</small></div>
+      <div>Qua bài<small>thanh đáy rõ</small></div>
+    </div>
+    <table>
+      <tr><th>Phản hồi học viên</th><th>Nguyên nhân gốc (UX)</th></tr>
+      <tr><td>Tab ngang trên, nội dung cuộn dọc</td><td>Hai trục điều hướng ngược nhau; điều khiển không đi theo người dùng.</td></tr>
+      <tr><td>Ẩn pinyin/dịch thì ẩn hẳn, đừng làm mờ</td><td>Làm mờ vẫn là nhiễu thị giác; chưa có tuỳ chọn đọc của người học.</td></tr>
+      <tr><td>Quá nhiều chữ</td><td>Mật độ cố định do tác giả quyết, không phải người học.</td></tr>
+      <tr><td>Thiếu audio từ khó</td><td>Âm thanh chỉ có khi nhập sẵn; không có "chạm để nghe".</td></tr>
+      <tr><td>Lẫn Anh–Việt</td><td>Ngôn ngữ giao diện, nội dung và lời nhận xét AI chọn từ ba nguồn khác nhau.</td></tr>
+      <tr><td>Không cần giới thiệu nhân vật mỗi bài</td><td>Nội dung lặp ở đầu mỗi bài, không thuộc về tính năng.</td></tr>
+    </table>
+  </div>
+</div>
+
+<h2><span class="no">2</span>Nguyên tắc thiết kế</h2>
+<div class="grid g4">
+  <div class="card"><b class="k">1 · Một việc một lúc</b>Mỗi màn chỉ có một việc chính và một nút chính. Bài dài tự chia bước.</div>
+  <div class="card"><b class="k">2 · Nội dung lên trước</b>Khung điều hướng gọn, một dòng. Bài học bắt đầu ngay trong màn đầu tiên.</div>
+  <div class="card"><b class="k">3 · Người học chỉnh mật độ</b>Pinyin, dịch, cỡ chữ là lựa chọn của người học, nhớ theo khoá. Tắt là biến mất.</div>
+  <div class="card"><b class="k">4 · Một nguồn sự thật</b>Một ngôn ngữ giao diện cho cả trang, API và lời nhận xét AI. Một nút chính mỗi lúc.</div>
+</div>
+<p class="lead" style="margin-top:14px"><b>Ngôn ngữ hình ảnh</b> (đã áp dụng cho bài HSK, nên giữ đồng bộ): góc vuông, không viền mảnh, đổ nền cùng một tông xanh Limio đậm dần theo cấp bậc, hồng chỉ để nhấn trạng thái đang làm. Ô số vuông cho thứ tự, vạch dày bên trái cho khung quan trọng.</p>
+
+<h2><span class="no">3</span>Sáu đề xuất</h2>
+
+<h3>A · Thanh điều hướng một dòng, nội dung lên trước <span class="tag">P0</span></h3>
+<p class="lead">Gộp "Lessons in this unit", đường dẫn và "Course contents" thành một thanh 44 px dính ở đầu. Bấm vào để mở mục lục bài. Nút nổi lên/xuống được bỏ; nút trợ giảng AI chuyển vào thanh dưới.</p>
+<div class="pair">
+  <figure>
+    <div class="phone"><div class="scr">
+      <div class="topbar"><span class="logo">Lim<i>io</i></span><span class="dot"></span><span class="dot" style="margin-left:4px"></span></div>
+      <div class="stepbar" style="margin-top:0"><span class="a">←</span><span class="m"><b>4/21</b><span>1.1 Reading · The world's favourite drug</span><span>▾</span></span></div>
+      <div class="rail"><i class="on"></i><i class="on"></i><i class="on"></i><i class="cur"></i><i></i><i></i><i></i><i></i></div>
+      <div class="banner">READING</div>
+      <div class="para">Read the article about coffee. What information is new to you?</div>
+      <div style="margin:8px 12px;background:#f6f1e3;border:1px solid #e2d9bb;padding:10px"><b style="font-family:Georgia,serif;font-size:17px;line-height:1.25">The world's favourite drug: ten things you didn't know about coffee</b><p style="margin:6px 0 0;font-family:Georgia,serif;font-style:italic">For millions of us, coffee is a big part of our lifestyle. Early birds crave it…</p></div>
+      <div class="bottombar"><span class="btn ghost">← Previous</span><span class="spk" style="background:var(--pink)">AI</span><span class="btn">Next lesson →</span></div>
+    </div></div>
+    <figcaption><b>Đề xuất.</b> Bài học bắt đầu ngay dưới thanh. Vị trí trong khoá (4/21) và tên bài nằm trên một dòng; vạch tiến độ mỏng thay cho dòng "0 / 21 lessons completed".</figcaption>
+  </figure>
+  <div style="flex:1;min-width:280px">
+    <div class="card"><b class="k">Quy tắc</b>
+      <ul class="tight">
+        <li>Phía trên nội dung chỉ còn <b>một</b> thanh điều hướng. Đường dẫn dài (4 cấp) chỉ hiện trên màn rộng.</li>
+        <li>Thanh dính; cuộn xuống vẫn thấy mình đang ở bài nào.</li>
+        <li>Nút nổi trên nội dung: không có. Việc "lên đầu trang" làm bằng cách bấm vào thanh.</li>
+        <li>Thanh dưới luôn có đúng một nút chính (xem đề xuất B).</li>
+      </ul></div>
+    <div class="card warn" style="margin-top:12px"><b class="k">Đo</b>Thời gian từ lúc mở bài đến lúc thấy dòng nội dung đầu tiên; tỉ lệ cuộn quá 1 màn.</div>
+  </div>
+</div>
+
+<h3>B · Chế độ từng bước cho bài dài, một nút chính ở đáy <span class="tag">P1</span></h3>
+<p class="lead">Bài có nhiều mục (như bài khoá HSK) tự chia thành các bước theo cấu trúc sẵn có: Tình huống, Hội thoại A, Hội thoại B, Từ mới, Ngữ pháp, Luyện tập. Bài ngắn (phần lớn bài Speakout) vẫn là một trang. Ngưỡng tự bật: từ 4 mục lớn hoặc khoảng 2500 chữ lý thuyết; người học đổi lại được.</p>
+<div class="pair">
+  <figure>
+    <div class="phone"><div class="scr">
+      <div class="stepbar" style="margin-top:8px"><span class="a">←</span><span class="m"><b>Bài khoá 1</b><span>Chủ đề 1 · 搬进新家</span></span></div>
+      <div class="rail"><i class="on"></i><i class="on"></i><i class="cur"></i><i></i><i></i><i></i></div>
+      <div style="margin:0 12px;color:var(--muted);font-weight:700">Bước 3/6 · Hội thoại A</div>
+      <div class="para" style="margin-top:10px"><b style="color:var(--pink-deep)">林雨</b><br><span class="ruby"><small>nǐ</small><b>你</b></span><span class="ruby"><small>hǎo</small><b>好</b></span><span class="ruby"><small>wáng</small><b>王</b></span><span class="ruby"><small>āyí</small><b>阿姨</b></span>！</div>
+      <div class="para"><b style="color:var(--brand-deep)">王阿姨</b><br><span class="ruby"><small>qǐng</small><b>请</b></span><span class="ruby"><small>jìn</small><b>进</b></span>。</div>
+      <div class="bottombar"><span class="btn ghost">‹ Quay lại</span><span class="btn" style="flex:1;text-align:center">Tiếp: Từ mới ›</span></div>
+    </div></div>
+    <figcaption><b>Bước giữa bài.</b> Nút chính ở đáy là "Tiếp" tới bước kế. Chỉ nằm một nút, nên không lẫn với "bài tiếp theo".</figcaption>
+  </figure>
+  <figure>
+    <div class="phone"><div class="scr">
+      <div class="stepbar" style="margin-top:8px"><span class="a">←</span><span class="m"><b>Bài khoá 1</b><span>Chủ đề 1 · 搬进新家</span></span></div>
+      <div class="rail"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+      <div style="margin:0 12px;color:var(--muted);font-weight:700">Bước 6/6 · Luyện tập</div>
+      <div class="card" style="margin:12px"><b class="k">Hoàn thành</b>Bạn đã xong 3/3 bài tập. Kết quả: 14/17 câu đúng.<br><span class="chip">Làm lại câu sai (3)</span></div>
+      <div class="bottombar"><span class="btn ghost">‹ Quay lại</span><span class="btn pink" style="flex:1;text-align:center">Sang bài tiếp theo ›</span></div>
+    </div></div>
+    <figcaption><b>Bước cuối.</b> Cùng một nút nay đổi nghĩa thành "Sang bài tiếp theo" và đổi sang màu hồng. Nút "bài tiếp" chỉ xuất hiện khi thật sự xong.</figcaption>
+  </figure>
+  <div style="flex:1;min-width:240px">
+    <div class="card"><b class="k">Quy tắc</b>
+      <ul class="tight">
+        <li>Chia theo mục <code>##</code> hiện có, không cần sửa nội dung.</li>
+        <li>Một bước không dài hơn khoảng 2 màn; mục dài tự cắt đôi.</li>
+        <li>Có nút "Xem cả bài" để về chế độ cuộn; lựa chọn nhớ theo tài khoản.</li>
+        <li>Chia bước là tuỳ chọn của người học, bài ngắn mặc định tắt.</li>
+      </ul></div>
+    <div class="card warn" style="margin-top:12px"><b class="k">Đo</b>Tỉ lệ hoàn thành bài; số lần cuộn dọc; thời gian trên mỗi bước.</div>
+  </div>
+</div>
+
+<h3>C · Thanh bài tập gọn và tổng kết cuối <span class="tag g">Đã làm trên dev</span></h3>
+<p class="lead">Lưới thẻ tab gộp thành một thanh dính <code>«  2/7 · Tên bài  ▾  »</code>; bấm vào mở danh sách. Việc còn thiếu: màn tổng kết sau bài tập cuối và đánh dấu bài tập đã làm trong danh sách.</p>
+<div class="pair">
+  <figure>
+    <div class="phone"><div class="scr">
+      <div class="stepbar" style="margin-top:8px"><span class="a">«</span><span class="m"><b>2/7</b><span>Ôn ngữ pháp: Năm điểm của Chủ đề 1</span><span>▾</span></span><span class="a">»</span></div>
+      <div class="para"><b>Bài 1</b> · 14 câu</div>
+      <div class="para">1. Chọn câu đúng: "Mình chưa từng ăn món mì ngon thế này."</div>
+      <div class="para"><span class="chip">a. 我从来吃过这么好吃的面</span><span class="chip">b. 我没从来吃过…</span><span class="chip">c. 我从来没吃过这么好吃的面</span></div>
+    </div></div>
+    <figcaption><b>Thanh bài tập (đã có).</b> Một dòng, dính khi cuộn, không đè nội dung.</figcaption>
+  </figure>
+  <figure>
+    <div class="phone"><div class="scr">
+      <div class="stepbar" style="margin-top:8px"><span class="a">«</span><span class="m"><b>7/7</b><span>Viết: Một ngày chuyển nhà</span><span>✓</span></span><span class="a" style="opacity:.4">»</span></div>
+      <div class="card" style="margin:12px"><b class="k">Hoàn thành bài luyện</b>7/7 bài tập · 31/36 câu đúng.<div class="rail" style="margin:8px 0 4px"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+        <span class="chip">Ôn lại câu sai (5)</span><span class="chip">Về bài học</span></div>
+    </div></div>
+    <figcaption><b>Màn tổng kết (đề xuất).</b> Sau bài cuối: tổng số, nút ôn câu sai, rồi mới tới nút sang bài.</figcaption>
+  </figure>
+</div>
+
+<h3>D · "Tuỳ chọn đọc" của người học <span class="tag">P0</span></h3>
+<p class="lead">Một nút <b>Aa</b> trên thanh dưới mở bảng chọn. Người học chọn cách xem pinyin, dịch và cỡ chữ; lựa chọn nhớ theo khoá. Chọn "ẩn" thì chữ biến mất hẳn, không mờ.</p>
+<div class="pair">
+  <figure>
+    <div class="phone"><div class="scr">
+      <div class="stepbar" style="margin-top:8px"><span class="a">←</span><span class="m"><b>Bài khoá 1</b><span>Hội thoại A</span></span></div>
+      <div class="para" style="margin-top:12px"><span class="ruby"><small>nǐ</small><b>你</b></span><span class="ruby"><small>hǎo</small><b>好</b></span><span class="ruby"><small>wáng</small><b>王</b></span><span class="ruby"><small>āyí</small><b>阿姨</b></span>！</div>
+      <div class="para" style="color:var(--muted)">Chào dì Vương!</div>
+      <div class="sheet">
+        <h5>Tuỳ chọn đọc</h5>
+        Pinyin<div class="seg"><span class="on">Luôn hiện</span><span>Chạm để xem</span><span>Ẩn</span></div>
+        Bản dịch<div class="seg"><span>Luôn hiện</span><span class="on">Chạm để xem</span><span>Ẩn</span></div>
+        Cỡ chữ<div class="seg" style="margin-bottom:0"><span>A</span><span class="on">A+</span><span>A++</span></div>
+      </div>
+      <div class="bottombar"><span class="btn ghost">‹ Quay lại</span><span class="btn">Aa</span><span class="btn">Tiếp ›</span></div>
+    </div></div>
+    <figcaption><b>Bảng tuỳ chọn.</b> Ba lựa chọn đủ cho mọi khoá. "Chạm để xem" hiện nội dung khi chạm vào câu.</figcaption>
+  </figure>
+  <div style="flex:1;min-width:280px">
+    <table>
+      <tr><th>Chế độ</th><th>Hành vi</th></tr>
+      <tr><td>Luôn hiện</td><td>Như hiện nay.</td></tr>
+      <tr><td>Chạm để xem</td><td>Ẩn hẳn; chạm vào câu hoặc từ thì hiện tại chỗ, chạm lần nữa thì ẩn. Thay cho kiểu làm mờ.</td></tr>
+      <tr><td>Ẩn</td><td>Không hiện, không chiếm chỗ. Dành cho người đã quen.</td></tr>
+    </table>
+    <div class="card" style="margin-top:12px"><b class="k">Vì sao</b>Cùng một bài, người mới cần pinyin dày, người đã học lâu cần màn sạch. Quyền chọn nằm ở người học, không ở người soạn bài.</div>
+    <div class="card warn" style="margin-top:12px"><b class="k">Đo</b>Tỉ lệ người dùng đổi tuỳ chọn; thời gian đọc mỗi bài theo từng chế độ.</div>
+  </div>
+</div>
+
+<h3>E · Từ vựng có tiếng: chạm vào bất kỳ từ nào để nghe <span class="tag">P1</span></h3>
+<p class="lead">Speakout có 50 từ nhưng không từ nào có audio; HSK chỉ có audio cho những từ đã nhập. Giải pháp chung: nút loa trên mọi thẻ từ, và chạm vào bất kỳ từ nào trong bài để nghe, đọc theo yêu cầu rồi lưu lại, kèm tốc độ chậm.</p>
+<div class="pair">
+  <figure>
+    <div class="phone"><div class="scr">
+      <div class="stepbar" style="margin-top:8px"><span class="a">←</span><span class="m"><b>Khởi động</b><span>Từ mới</span></span></div>
+      <div style="margin:14px 12px;background:#fff;border-top:4px solid var(--pink);padding:12px;text-align:center">
+        <span class="ruby"><small style="font-size:12px">yàoshi</small><b style="font-size:38px">钥匙</b></span><br>
+        <span class="spk" style="width:36px;height:36px">▶</span> <span class="chip" style="margin:0 0 0 6px">Chậm</span>
+        <p style="margin:8px 0 0;font-weight:700">chìa khoá</p>
+        <p style="margin:4px 0 0;color:var(--muted)">我找不到<b style="color:var(--pink-deep)">钥匙</b>了。<span class="spk" style="width:20px;height:20px;font-size:9px">▶</span></p>
+      </div>
+      <div style="margin:0 12px;color:var(--muted);font-size:11px">Chạm vào bất kỳ chữ nào trong bài để nghe và xem nghĩa.</div>
+      <div class="bottombar"><span class="btn ghost">‹ Trước</span><span style="font-weight:700">3 / 18</span><span class="btn">Tiếp ›</span></div>
+    </div></div>
+    <figcaption><b>Thẻ từ.</b> Nút nghe to ở giữa, thêm tốc độ chậm, ví dụ có nút nghe riêng.</figcaption>
+  </figure>
+  <div style="flex:1;min-width:280px">
+    <div class="card"><b class="k">Cách làm</b>
+      <ul class="tight">
+        <li>Mọi từ vựng có nút nghe; âm thanh sinh theo yêu cầu bằng giọng của khoá (tiếng Anh, Trung…), lưu lại để lần sau nghe ngay.</li>
+        <li>Không phải đánh dấu từng từ "dễ nhầm": học viên tự chạm khi cần.</li>
+        <li>Tốc độ chậm cho từ khó (thanh điệu, nối âm).</li>
+      </ul></div>
+    <div class="card warn" style="margin-top:12px"><b class="k">Đo</b>Số lần nghe mỗi người mỗi bài; tỉ lệ từ được chạm nghe.</div>
+  </div>
+</div>
+
+<h3>F · Điền chỗ trống: ngân hàng từ chạm để điền <span class="tag">P1</span></h3>
+<p class="lead">Với ô điền, người học thường chỉ cần các từ trong bài. Hiện danh sách từ để chạm điền; chỉ khi cần gõ tự do mới mở bàn phím. Bàn phím tiếng Trung riêng không cần cho điện thoại (máy đã có) và ít giá trị hơn trên máy tính.</p>
+<div class="pair">
+  <figure>
+    <div class="phone"><div class="scr">
+      <div class="stepbar" style="margin-top:8px"><span class="a">«</span><span class="m"><b>2/7</b><span>Ôn ngữ pháp</span><span>▾</span></span><span class="a">»</span></div>
+      <div class="para" style="margin-top:12px">Chọn từ thích hợp điền vào chỗ trống.</div>
+      <div class="para" style="font-size:15px"><span class="ruby"><small>wǒ</small><b>我</b></span> <span class="gap">按时</span> <span class="ruby"><small>jiāo</small><b>交</b></span><span class="ruby"><small>bàomíngbiǎo</small><b>报名表</b></span>。</div>
+      <div class="para" style="font-size:15px"><span class="ruby"><small>tā</small><b>他</b></span> <span class="gap">&nbsp;&nbsp;&nbsp;&nbsp;</span> <span class="ruby"><small>pǎo</small><b>跑</b></span><span class="ruby"><small>lái</small><b>来</b></span>。</div>
+      <div class="sheet"><h5>Ngân hàng từ</h5><span class="chip">按时</span><span class="chip">忽然</span><span class="chip">赶紧</span><span class="chip">本来</span><span class="chip">从来</span><br><span style="color:var(--muted)">Chạm một từ để điền vào ô đang chọn. <u>Gõ tự do</u></span></div>
+    </div></div>
+    <figcaption><b>Ô điền.</b> Từ đã dùng mờ đi để không dùng hai lần; "Gõ tự do" chỉ hiện khi bài yêu cầu.</figcaption>
+  </figure>
+  <div style="flex:1;min-width:280px">
+    <div class="card pink"><b class="k">Không làm</b>Bàn phím ảo tiếng Trung riêng: ít giá trị vì mọi điện thoại và máy tính đã có bàn phím tiếng Trung hệ thống, và chỉ liên quan khoá tiếng Trung.</div>
+    <div class="card" style="margin-top:12px"><b class="k">Áp dụng chung</b>Dùng cho mọi loại điền chỗ trống có ngân hàng từ (cả Speakout).</div>
+  </div>
+</div>
+
+<h2><span class="no">4</span>Quy tắc mật độ nội dung</h2>
+<p class="lead">Để tác giả và công cụ AI soạn bài nhất quán, theo hướng "ít chữ, nhiều bước":</p>
+<table>
+  <tr><th>Quy tắc</th><th>Mức đề xuất</th><th>Cách kiểm</th></tr>
+  <tr><td>Một đoạn liền không quá</td><td>khoảng 90 chữ (hoặc 3–4 câu tiếng Trung có pinyin)</td><td>cảnh báo khi soạn</td></tr>
+  <tr><td>Một bước (một màn) có</td><td>một việc chính; ≤ 2 màn điện thoại</td><td>tự cắt khi quá dài</td></tr>
+  <tr><td>Đầu mỗi bài</td><td>không giới thiệu lại nhân vật; chỉ nhắc ở bài Khởi động</td><td>duyệt nội dung</td></tr>
+  <tr><td>Một màn có</td><td>đúng một nút chính</td><td>rà soát giao diện</td></tr>
+  <tr><td>Hướng dẫn làm bài</td><td>≤ 1 câu, đứng ngay trên bài tập</td><td>duyệt nội dung</td></tr>
+</table>
+
+<h2><span class="no">5</span>Nhất quán ngôn ngữ (lỗi lẫn Anh–Việt)</h2>
+<div class="grid g3">
+  <div class="card"><b class="k">Hiện trạng</b>Giao diện chọn theo cookie rồi theo ngôn ngữ khoá; request API không biết khoá nên lời nhận xét AI rơi về mặc định. Một số chữ như tiêu đề tab bị viết cứng.</div>
+  <div class="card"><b class="k">Đã sửa</b>API lấy khoá từ trang gọi (Referer); tiêu đề tab đưa vào từ điển vi/en; ẩn hẳn pinyin, dịch.</div>
+  <div class="card pink"><b class="k">Còn lại</b>Rà các chuỗi viết cứng còn lại (vd. hướng dẫn kéo thả); test đối chiếu khoá vi/en cho khu bài luyện; hiển thị ngôn ngữ lời nhận xét AI trên chính lời nhận xét.</div>
+</div>
+
+<h2><span class="no">6</span>Lộ trình và đo lường</h2>
+<table>
+  <tr><th>Mức</th><th>Việc</th><th>Công sức</th><th>Tác động</th><th>Số đo thành công</th></tr>
+  <tr><td><span class="tag g">Xong</span></td><td>Ẩn hẳn pinyin/dịch · sửa lẫn ngôn ngữ ở API · thanh bài tập gọn · khung Mục tiêu/Tổng kết · thẻ vuông góc</td><td>—</td><td>Cao</td><td>Phản hồi lặp lại: giảm</td></tr>
+  <tr><td><span class="tag">P0</span></td><td>A: thanh điều hướng một dòng · D: tuỳ chọn đọc "Aa"</td><td>Vừa</td><td>Rất cao (điện thoại)</td><td>Thời gian tới nội dung đầu; tỉ lệ cuộn quá 1 màn</td></tr>
+  <tr><td><span class="tag">P1</span></td><td>B: chế độ từng bước thích ứng · E: chạm để nghe · F: ngân hàng từ chạm để điền</td><td>Lớn</td><td>Cao</td><td>Tỉ lệ hoàn thành bài; số lần nghe; tỉ lệ điền đúng lần đầu</td></tr>
+  <tr><td><span class="tag p">P2</span></td><td>C: màn tổng kết bài luyện · ôn câu sai · chế độ tối giản cho học viên mới</td><td>Vừa</td><td>Vừa</td><td>Tỉ lệ làm lại câu sai</td></tr>
+  <tr><td><span class="tag w">Bỏ</span></td><td>Bàn phím ảo tiếng Trung riêng</td><td>—</td><td>Thấp</td><td>—</td></tr>
+</table>
+
+<h3>Thứ tự kiểm chứng</h3>
+<ol>
+  <li>Làm P0 trên điện thoại trước, vì khung điều hướng nuốt phần lớn màn đầu tiên ở khổ này.</li>
+  <li>Thử với một nhóm nhỏ học viên HSK bài khoá (bài dài nhất) rồi mới mở chế độ từng bước cho các khoá khác.</li>
+  <li>Mỗi mục có tiêu chí nghiệm thu viết trước khi làm, theo cách làm của dự án (tài liệu <code>docs/tieu-chi/</code>).</li>
+</ol>
+
+</div>
+</body>
+</html>

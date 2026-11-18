@@ -1,5 +1,7 @@
 "use client";
 
+import { Keyboard } from "lucide-react";
+import { splitTrailingHint } from "@/lib/practiceHint";
 import { Fragment, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import SafeHtml from "@/components/SafeHtml";
 import PromptAid from "./PromptAid";
@@ -58,6 +60,8 @@ export interface SheetTab {
   introTitle?: string;
   /** Biểu tượng đặt trước tên bài tập (vd micro cho bài nói với bạn ảo / đóng vai), để nhận ra ngay đây là phần phải nói. */
   introIcon?: ReactNode;
+  /** Tên đã hiện ở thẻ đề phía trên (hoặc chỉ là nhãn mặc định "Bài n" không mang nghĩa): đầu tab chỉ còn số câu, không lặp tên. */
+  hideTitle?: boolean;
 }
 
 const plain = (prompt: string) => (looksLikeHtml(prompt) ? htmlToPlainText(prompt) : prompt);
@@ -193,7 +197,9 @@ function RowBody({
     const cur = value && "blanks" in value ? value.blanks : {};
     const txt = value && "text" in value ? value.text : "";
     const tr = splitTransform(text);
-    const segs = splitBlankPrompt(tr ? tr.rest : text, count);
+    // Gợi ý cách trả lời cuối đề ("(gõ một từ tiếng Trung, nghĩa: …)") hiện thành dòng riêng dưới câu, không chen vào cuối câu.
+    const hint = splitTrailingHint(tr ? tr.rest : text);
+    const segs = splitBlankPrompt(hint ? hint.main : tr ? tr.rest : text, count);
     // Đề chữ Hán có pinyin ghép được: pinyin dưới từng chữ ở các đoạn chữ (ô gõ nằm giữa); không có thì như cũ.
     const syl = rubySyl;
     const textSegs = segs.filter((s) => s.kind === "text") as Array<{ kind: "text"; text: string }>;
@@ -210,13 +216,27 @@ function RowBody({
       return <Blank key={i} value={cur[b.id] ?? ""} label={label} onChange={(v) => onChange({ blanks: { ...cur, [b.id]: v } })} />;
     });
     return (
-      <div className={syl ? "han-text ruby-line" : undefined} lang={syl ? "zh-Hans" : undefined}>
-        {tr ? (
-          <>
-            <span>{tr.head}</span> <span className="ps-key-inline">({tr.key})</span> <span className="ps-rewrite">{parts}</span>
-          </>
-        ) : (
-          parts
+      <div>
+        <div className={syl ? "han-text ruby-line" : undefined} lang={syl ? "zh-Hans" : undefined}>
+          {tr ? (
+            <>
+              <span>{tr.head}</span> <span className="ps-key-inline">({tr.key})</span> <span className="ps-rewrite">{parts}</span>
+            </>
+          ) : (
+            parts
+          )}
+        </div>
+        {hint && (
+          <p className="ps-hint" data-testid="ps-hint">
+            <Keyboard size={14} aria-hidden />
+            <span>{hint.how}</span>
+            {hint.meaning && (
+              <>
+                <span aria-hidden>·</span>
+                <span className="ps-hint-meaning">{hint.meaning}</span>
+              </>
+            )}
+          </p>
         )}
       </div>
     );
@@ -267,10 +287,12 @@ function RowBody({
       else next.add(id);
       onChange({ optionIds: Array.from(next) });
     };
+    // Phương án đều ngắn (từ, lượng từ…): xếp thành một hàng ngang tự xuống dòng thay vì mỗi phương án một dòng, đỡ tốn chỗ.
+    const compact = opts.length > 0 && opts.every((o) => [...o.label].length <= COMPACT_OPTION_CHARS);
     return (
       <div>
         {prompt}
-        <ul className="ps-opts">
+        <ul className={`ps-opts${compact ? " ps-opts-row" : ""}`} data-compact={compact ? "" : undefined}>
           {opts.map((o, i) => (
             <li key={o.id}>
               <label className="ps-opt">
@@ -442,6 +464,9 @@ export function SheetTabBar({
     </div>
   );
 }
+
+/** Phương án trắc nghiệm có số ký tự (chữ Hán hay chữ cái) không quá ngưỡng này thì xếp một hàng ngang. */
+export const COMPACT_OPTION_CHARS = 14;
 
 export default function PracticeSheet({
   tabs,
@@ -621,7 +646,7 @@ export default function PracticeSheet({
           {(tabs.length > 1 || hideTabs) && !t.introTitle && (
             // Tab đang chọn mở đầu bằng tên khối và số câu (thanh tab chỉ có nhãn ngắn).
             <header className="ps-tabtitle">
-              <h2 className="text-h4">{t.label}</h2>
+              {!t.hideTitle && <h2 className="text-h4">{t.label}</h2>}
               <span className="ps-tabtitle-n">{tr("practice.sheet.count", { n: t.questionIds.filter((id) => questions.get(id)?.type !== "essay").length || t.questionIds.length })}</span>
             </header>
           )}

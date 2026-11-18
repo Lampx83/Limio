@@ -3,6 +3,12 @@ import { Check, Lock } from "lucide-react";
 import type { LessonFrameData, LessonRailItem } from "@feedbackme/core-lms";
 import { lessonViewHref, previewHref, type LessonView } from "@/lib/lessonFrameView";
 import LessonFrameShell from "./LessonFrameShell";
+import LessonSectionsNav from "./LessonSectionsNav";
+import { ReaderPrefsMenu } from "./ReaderPrefs";
+import { AiOpenButton } from "./LessonFrameContext";
+import NextLessonLink from "./NextLessonLink";
+import CurrentLessonLink from "./CurrentLessonLink";
+import { navSub, nextHeadline } from "@/lib/lessonNavLabels";
 import LessonTocDrawer from "@/components/lesson/LessonTocDrawer";
 import { tFor } from "@/lib/i18n/tFor";
 import LessonVideoBadge from "@/components/ui/LessonVideoBadge";
@@ -59,18 +65,23 @@ function RailList({ slug, frame, preview, lang, videos }: { slug: string; frame:
             </span>
           </>
         );
-        const cls = `flex items-start gap-2.5 rounded-lg border-l-2 px-2.5 py-2 ${it.state === "current" ? "border-brand-600 bg-brand-50" : "border-transparent"}`;
+        const cls = `flex items-start gap-2.5 rounded-lg border-l-2 px-2.5 py-2 ${it.state === "current" ? "border-brand-600 bg-brand-50 lg:pr-10" : "border-transparent"}`;
         return (
-          <li key={it.id}>
+          <li key={it.id} className="relative">
             {it.state === "locked" ? (
               <div className={`${cls} opacity-70`} aria-disabled="true">
                 {row}
               </div>
+            ) : it.state === "current" ? (
+              <CurrentLessonLink href={lessonViewHref(slug, it.id, "lesson", preview)} className={`${cls} cursor-pointer hover:bg-[rgb(var(--surface-muted))]`}>
+                {row}
+              </CurrentLessonLink>
             ) : (
-              <Link href={lessonViewHref(slug, it.id, "lesson", preview)} aria-current={it.state === "current" ? "page" : undefined} className={`${cls} hover:bg-[rgb(var(--surface-muted))]`}>
+              <Link href={lessonViewHref(slug, it.id, "lesson", preview)} className={`${cls} hover:bg-[rgb(var(--surface-muted))]`}>
                 {row}
               </Link>
             )}
+            {it.state === "current" && <LessonSectionsNav />}
           </li>
         );
       })}
@@ -96,7 +107,7 @@ export function RailCourseHeader({ slug, coverUrl, preview, lang }: { slug: stri
   }
   return (
     <div data-testid="rail-cover" className="flex flex-col items-center">
-      <Link href={href} tabIndex={-1} aria-hidden className="block w-24">
+      <Link href={href} tabIndex={-1} aria-hidden className="block w-24 max-lg:hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={coverUrl} alt="" className="h-auto w-full rounded-sm object-cover shadow-md ring-1 ring-black/10" />
       </Link>
@@ -186,37 +197,54 @@ export function LessonViewTabs({ slug, lessonId, view, vocabCount, preview, lang
   );
 }
 
-/** Rút gọn tên bài để vừa thanh điều hướng. */
-function short(t: string, n = 38): string {
-  return t.length > n ? `${t.slice(0, n - 1)}…` : t;
-}
-
 /**
- * Thanh "← Bài trước / Bài tiếp theo →" cố định ở đáy cột nội dung (thầy chốt 10/11/2026): theo thứ tự bài trong khoá, bỏ qua
- * bài khoá; bài đầu không có "Bài trước"; bài cuối thay "Bài tiếp theo" bằng "Về khoá học". Không đánh dấu hoàn thành.
+ * Thanh đáy cột nội dung (docs/tieu-chi/limio-language-ux-dieu-huong-bai.md): trái "Bài trước", giữa Aa và AI, phải "Tiếp". Nhãn hai dòng (việc, rồi tên đích);
+ * sang unit/chủ đề khác thì ghi kèm tên chủ đề; bài cuối unit thì nút phải mang tên chủ đề kế. Bài đầu khoá không có nút trái; bài cuối khoá nút phải là
+ * "Về khoá học". Theo thứ tự bài trong khoá, bỏ qua bài khoá. `nextQuiet`: bài còn Bài luyện chưa kiểm hết → "Tiếp" là nút viền (phụ).
  */
-export function LessonNavBar({ slug, prev, next, preview, lang }: { slug: string; prev: LessonFrameData["prev"]; next: LessonFrameData["next"]; preview?: boolean; lang?: UiLang }) {
+export function LessonNavBar({
+  slug,
+  prev,
+  next,
+  preview,
+  lang,
+  nextQuiet = false,
+}: {
+  slug: string;
+  prev: LessonFrameData["prev"];
+  next: LessonFrameData["next"];
+  preview?: boolean;
+  lang?: UiLang;
+  nextQuiet?: boolean;
+}) {
   const t = tFor(lang);
   return (
     <nav
       aria-label={t("learn.nav.aria")}
-      className="sticky bottom-0 z-20 -mx-4 mt-8 flex items-center justify-between gap-3 border-t border-token bg-[rgb(var(--surface)/0.94)] px-4 py-2 backdrop-blur lg:mx-0 lg:rounded-t-xl"
+      className="sticky bottom-0 z-20 -mx-4 mt-8 flex items-center justify-between gap-2 border-t border-token bg-[rgb(var(--surface)/0.94)] px-4 py-2 backdrop-blur lg:mx-0 lg:rounded-t-xl"
     >
       {prev ? (
-        <Link href={lessonViewHref(slug, prev.id, "lesson", preview)} className="btn-ghost btn-sm inline-flex min-w-0 items-center gap-1.5" title={prev.title}>
-          <span aria-hidden>←</span>
-          <span className="shrink-0">{t("learn.nav.prev")}</span>
-          <span className="hidden min-w-0 truncate text-muted md:inline">· {short(prev.title)}</span>
+        <Link
+          href={lessonViewHref(slug, prev.id, "lesson", preview)}
+          className="btn btn-sm min-w-0 max-w-[9.5rem] flex-col items-start gap-0 py-1 text-left leading-tight text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))] sm:max-w-[16rem]"
+          title={prev.title}
+        >
+          <span className="whitespace-nowrap font-semibold">
+            ← <span className="sm:hidden">{t("reader.nav.prevShort")}</span>
+            <span className="hidden sm:inline">{t("learn.nav.prev")}</span>
+          </span>
+          <small className="block w-full truncate text-[0.7rem] font-normal">{navSub(prev)}</small>
         </Link>
       ) : (
         <span aria-hidden />
       )}
+      {/* Giữa thanh đáy: vùng ngón cái với tới được, luôn thấy khi cuộn (Aa: tuỳ chọn đọc; AI: trợ giảng, chỉ dưới lg). */}
+      <div className="flex shrink-0 items-center gap-1.5">
+        <ReaderPrefsMenu showLabel />
+        <AiOpenButton />
+      </div>
       {next ? (
-        <Link href={lessonViewHref(slug, next.id, "lesson", preview)} className="btn-primary btn-sm inline-flex min-w-0 items-center gap-1.5" title={next.title}>
-          <span className="shrink-0">{t("learn.nav.next")}</span>
-          <span className="hidden min-w-0 truncate opacity-90 md:inline">· {short(next.title)}</span>
-          <span aria-hidden>→</span>
-        </Link>
+        <NextLessonLink href={lessonViewHref(slug, next.id, "lesson", preview)} headline={nextHeadline(next, t("learn.nav.next"))} headlineShort={next.sameUnit ? t("reader.nav.nextShort") : undefined} sub={navSub({ ...next, sameUnit: true })} title={next.title} quiet={nextQuiet} />
       ) : (
         <Link href={previewHref(`/learn/${slug}`, preview)} className="btn-primary btn-sm">
           {t("learn.nav.toCourse")}
@@ -245,6 +273,8 @@ export default function LessonFrameLayout({
   preview,
   accent = null,
   lang,
+  readerPinyin = false,
+  nextQuiet = false,
   children,
 }: {
   slug: string;
@@ -269,13 +299,24 @@ export default function LessonFrameLayout({
   accent?: string | null;
   /** Ngôn ngữ giao diện (trang cha lấy bằng `await getUiLang()`); mặc định "vi". */
   lang?: UiLang;
+  /** Khoá có pinyin: bảng tuỳ chọn đọc "Aa" có nhóm Pinyin. */
+  readerPinyin?: boolean;
+  /** Bài còn Bài luyện chưa kiểm hết: nút "Tiếp" là nút viền (phụ) cho tới khi kiểm xong. */
+  nextQuiet?: boolean;
   children: React.ReactNode;
 }) {
   const t = tFor(lang);
+  const curIdx = frame.items.findIndex((it) => it.state === "current");
   const levelLower = levelLabel.toLowerCase();
   return (
     <LessonFrameShell
       accent={accent}
+      slug={slug}
+      lessonTitle={lessonTitle}
+      posLabel={curIdx >= 0 ? `${curIdx + 1}/${frame.items.length}` : undefined}
+      unitPct={frame.unitTotal > 0 ? Math.round((frame.unitDone / frame.unitTotal) * 100) : 0}
+      readerPinyin={readerPinyin}
+      mobileExtra={tocModules && tocModules.length > 0 ? <LessonTocDrawer slug={slug} currentLessonId={lessonId} modules={tocModules} trigger="inline" side="right" preview={preview} /> : undefined}
       lessonId={lessonId}
       notesCount={notesCount}
       rail={<RailBody slug={slug} frame={frame} hasExams={hasExams} levelLabel={levelLabel} preview={preview} coverUrl={coverUrl} lang={lang} videos={videos} />}
@@ -285,14 +326,12 @@ export default function LessonFrameLayout({
         // Mục lục toàn khoá nằm ở hàng đường dẫn (căn phải), tách khỏi danh sách bài của unit ở thanh bên để không lẫn hai loại mục lục.
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <LessonCrumbs slug={slug} courseTitle={courseTitle} unitTitle={frame.unitTitle} lessonTitle={lessonTitle} preview={preview} lang={lang} />
-          {tocModules && tocModules.length > 0 && (
-            <div className="ml-auto">
-              <LessonTocDrawer slug={slug} currentLessonId={lessonId} modules={tocModules} trigger="inline" side="right" preview={preview} />
-            </div>
-          )}
+          <div className="ml-auto flex items-center gap-2">
+            {tocModules && tocModules.length > 0 && <LessonTocDrawer slug={slug} currentLessonId={lessonId} modules={tocModules} trigger="inline" side="right" preview={preview} />}
+          </div>
         </div>
       }
-      nav={<LessonNavBar slug={slug} prev={frame.prev} next={frame.next} preview={preview} lang={lang} />}
+      nav={<LessonNavBar slug={slug} prev={frame.prev} next={frame.next} preview={preview} lang={lang} nextQuiet={nextQuiet} />}
     >
       {children}
     </LessonFrameShell>

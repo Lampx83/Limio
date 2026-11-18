@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type KeyboardEvent, type ReactNode } from "react";
+import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -159,6 +159,8 @@ export function OrderingDnd({
   onOrder: (order: string[]) => void;
   prompt: ReactNode;
 }) {
+  // id cố định cho DndContext: không có thì dnd-kit đánh số theo bộ đếm toàn cục nên máy chủ và trình duyệt lệch nhau (lỗi hydration).
+  const dndId = useId();
   const t = useT();
   const sensors = useSheetSensors();
   const ids = items.map((i) => i.id);
@@ -189,6 +191,7 @@ export function OrderingDnd({
     <div className="ps-dnd">
       {prompt}
       <DndContext
+        id={dndId}
         sensors={sensors}
         collisionDetection={collide}
         accessibility={{ screenReaderInstructions: { draggable: "Nhấn Enter để chọn mảnh, rồi nhấn Enter ở ô muốn đặt vào." } }}
@@ -338,6 +341,8 @@ export function DragFillDnd({
   placed: Record<string, string>;
   onPlaced: (next: Record<string, string>) => void;
 }) {
+  // id cố định cho DndContext: không có thì dnd-kit đánh số theo bộ đếm toàn cục nên máy chủ và trình duyệt lệch nhau (lỗi hydration).
+  const dndId = useId();
   const t = useT();
   const sensors = useSheetSensors();
   const [sel, setSel] = useState<string | null>(null);
@@ -360,6 +365,7 @@ export function DragFillDnd({
   let ti = 0;
   return (
     <DndContext
+        id={dndId}
       sensors={sensors}
       collisionDetection={collide}
       accessibility={{ screenReaderInstructions: { draggable: "Nhấn Enter để chọn từ, rồi chọn chỗ trống muốn đặt vào." } }}

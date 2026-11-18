@@ -3,6 +3,8 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import HskVocabView from "./HskVocabView";
+import { ReaderPrefsProvider } from "@/components/language/ReaderPrefs";
+import { DEFAULT_READER_PREFS } from "@/lib/readerPrefs";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -76,6 +78,19 @@ describe("HskVocabView — mục Từ mới của bài HSK tác giả", () => {
     expect(back.querySelector(".hsk-vex-vi")?.textContent).toBe("Mình muốn thuê một căn nhà.");
     await act(async () => btn(/^Pinyin$/).click());
     expect(host.querySelector('.hsk-fc-b-py[data-masked="true"]')).not.toBeNull();
+  });
+  it("trong khung bài (có tuỳ chọn Aa) không có nút Pinyin riêng: pinyin do Aa điều khiển, không bị mờ bởi công tắc cục bộ", async () => {
+    await act(async () =>
+      root.render(
+        <ReaderPrefsProvider value={{ prefs: DEFAULT_READER_PREFS, setPrefs: () => undefined, pinyinAvailable: true }}>
+          <HskVocabView items={items} />
+        </ReaderPrefsProvider>,
+      ),
+    );
+    await act(async () => btn(/Flashcard/).click());
+    expect(btn(/^Pinyin$/)).toBeUndefined();
+    expect(host.querySelector('.hsk-fc-b-py[data-masked="true"]')).toBeNull();
+    expect(host.querySelector(".hsk-fc-b-py")?.textContent).toBe("zū");
   });
   it("thẻ có audioUrl có nút nghe; thẻ lỗi (thiếu từ) bị bỏ, không vỡ", async () => {
     const withAudio = [{ id: "a", term: "租", reading: "zū", meaning: "đg. · thuê", audioUrl: "/x.mp3" }, { id: "z", term: "", meaning: "lỗi" }, { id: "n", term: "房子" }] as never;

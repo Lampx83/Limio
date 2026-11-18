@@ -1,11 +1,15 @@
 "use client";
 
+import Collapse from "@/components/ui/Collapse";
 import { accentVar } from "@/lib/courseAccent";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Sparkles, X } from "lucide-react";
+import { ChevronDown, Sparkles, X } from "lucide-react";
 import AiTutorPanel from "@/components/AiTutorPanel";
 import { useT } from "@/lib/i18n/client";
 import { LessonNotes } from "@/components/LessonActions";
+import { LessonFrameActionsProvider } from "./LessonFrameContext";
+import { useLessonSections } from "./useLessonSections";
+import { ReaderPrefsProvider, useReaderPrefsState, useTapReveal } from "./ReaderPrefs";
 import {
   defaultPanelOpen,
   panelIsDocked,
@@ -33,6 +37,12 @@ export default function LessonFrameShell({
   crumbs,
   nav,
   accent = null,
+  slug,
+  lessonTitle,
+  posLabel,
+  unitPct = 0,
+  mobileExtra,
+  readerPinyin = false,
   children,
 }: {
   lessonId: string;
@@ -44,9 +54,28 @@ export default function LessonFrameShell({
   nav: React.ReactNode;
   /** Màu nhấn của bộ sách (`Course.themeColor`); trống = màu Limio. */
   accent?: string | null;
+  /** Slug khoá: khoá lưu tuỳ chọn đọc "Aa". */
+  slug?: string;
+  /** Có tên bài thì dưới `lg` dùng thanh điều hướng một dòng (docs/tieu-chi/limio-language-ux-p0.md, mục A) thay cho thẻ "Bài trong unit" và đường dẫn. */
+  lessonTitle?: string;
+  /** "4/21": vị trí bài trong unit. */
+  posLabel?: string;
+  /** Phần trăm bài đã xong của unit (vạch tiến độ dưới thanh). */
+  unitPct?: number;
+  /** Nội dung thêm cuối danh sách bài trên thanh một dòng (nút "Mục lục khoá học"). */
+  mobileExtra?: React.ReactNode;
+  /** Khoá có pinyin: bảng "Aa" có nhóm Pinyin. */
+  readerPinyin?: boolean;
   children: React.ReactNode;
 }) {
   const t = useT();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const reader = useReaderPrefsState(slug);
+  useTapReveal(rootRef, { pinyin: reader.prefs.pinyin, translation: reader.prefs.translation });
+  const [barOpen, setBarOpen] = useState(false);
+  // Thanh trên dưới lg: nhãn là MỤC đang đọc (01 Tình huống, 02 Hội thoại…) khi bài có từ 2 mục có số; không thì tên bài.
+  const { secs, cur: curSec } = useLessonSections();
+  const bySections = secs.length >= 2;
   // Lần dựng đầu (kể cả trên máy chủ) luôn đóng; chiều ngang thật chỉ biết sau khi mount.
   const [cls, setCls] = useState<PanelWidthClass>("narrow");
   const [open, setOpen] = useState(false);
@@ -143,7 +172,13 @@ export default function LessonFrameShell({
   const notesLabel = notes > 0 ? t("ai.panel.tabNotesN", { n: notes }) : t("ai.panel.tabNotes");
 
   return (
+    <LessonFrameActionsProvider value={{ openPanel: () => openPanel() }}>
+    <ReaderPrefsProvider value={{ prefs: reader.prefs, setPrefs: reader.setPrefs, pinyinAvailable: readerPinyin }}>
     <div
+      ref={rootRef}
+      data-rd-pinyin={reader.prefs.pinyin}
+      data-rd-translation={reader.prefs.translation}
+      data-rd-size={reader.prefs.size}
       // Dấu hiệu cho CSS: trong khung, nút nổi "Về trang chủ học viên" (góc dưới trái) bị rail che/đè chữ nên ẩn từ `lg` (globals.css).
       data-lesson-frame=""
       // Khoá có màu bộ sách: biến --brand của khung (thanh bài, nút, đường kẻ) đổi theo; CSS `[data-lesson-accent]` (globals.css) đổi các lớp brand cố định.
@@ -161,11 +196,84 @@ export default function LessonFrameShell({
 
       {/* Panel đóng: chừa lề phải ~4rem để hai nút nổi (cuộn lên/xuống + mở panel, rộng 40px cách mép 17px) nằm NGOÀI nội dung chứ không đè lên chữ. */}
       <div className={`min-w-0 px-4 pt-4 lg:pl-5 ${open ? "lg:pr-5" : "lg:pr-16"}`}>
-        <details className="mb-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-3 lg:hidden">
-          <summary className="cursor-pointer text-sm font-semibold">{railSummary}</summary>
-          <div className="mt-3">{rail}</div>
-        </details>
-        {crumbs}
+        {lessonTitle ? (
+          <div data-testid="lesson-mobile-bar" className="sticky top-[4.5rem] z-30 -mx-4 mb-3 border-b border-token bg-[rgb(var(--surface)/0.97)] backdrop-blur lg:hidden">
+            <div className="flex items-stretch">
+              <button type="button" onClick={() => setBarOpen((v) => !v)} aria-expanded={barOpen} aria-label={t("reader.bar.list")} className="flex min-w-0 flex-1 items-center gap-2 px-3 py-2 text-left">
+                {bySections ? (
+                  // Hai dòng: tên bài (nhỏ, mờ) rồi mục đang đọc (chính): cuộn sâu vẫn biết đang ở bài nào và mục nào.
+                  <span className="flex min-w-0 flex-1 flex-col leading-tight">
+                    <span className="block truncate text-[0.7rem] text-muted" data-testid="bar-lesson-title">
+                      {lessonTitle}
+                    </span>
+                    <span className="flex items-baseline gap-1.5">
+                      <b className="shrink-0 text-sm tabular-nums text-brand-700" data-testid="bar-section-no">
+                        {secs[curSec]?.no}
+                      </b>
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium" data-testid="bar-section-label">
+                        {secs[curSec]?.label}
+                      </span>
+                    </span>
+                  </span>
+                ) : (
+                  <>
+                    {posLabel && <b className="shrink-0 text-sm tabular-nums text-brand-700">{posLabel}</b>}
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium">{lessonTitle}</span>
+                  </>
+                )}
+                <ChevronDown size={16} aria-hidden className={`shrink-0 text-muted transition-transform ${barOpen ? "rotate-180" : ""}`} />
+              </button>
+            </div>
+            {bySections ? (
+              <div className="flex gap-0.5" aria-hidden data-testid="bar-section-progress">
+                {secs.map((_, i) => (
+                  <div key={i} className={`h-0.5 flex-1 ${i < curSec ? "bg-gray-400 dark:bg-gray-500" : i === curSec ? "bg-gray-700 dark:bg-gray-200" : "bg-gray-200 dark:bg-gray-700"}`} />
+                ))}
+              </div>
+            ) : (
+              <div className="h-0.5 bg-gray-200 dark:bg-gray-700" aria-hidden>
+                <div className="h-full bg-gray-500 dark:bg-gray-300" style={{ width: `${Math.max(0, Math.min(100, unitPct))}%` }} />
+              </div>
+            )}
+            {/* Dropdown mở/thu mượt; `lazy`: chỉ dựng nội dung khi mở (và lúc đang thu). */}
+            <Collapse open={barOpen} lazy>
+              <div className="max-h-[60vh] overflow-y-auto border-t border-token px-4 pb-4 pt-3">
+                {bySections && (
+                  <div className="mb-4" data-testid="bar-sections-list">
+                    <p className="mb-1 text-xs font-bold uppercase tracking-wider text-muted">{t("reader.bar.sections")}</p>
+                    <ol className="border-l border-token pl-1">
+                      {secs.map((s, i) => (
+                        <li key={i}>
+                          <button
+                            type="button"
+                            aria-current={i === curSec ? "location" : undefined}
+                            onClick={() => {
+                              setBarOpen(false);
+                              s.el.scrollIntoView({ block: "start", behavior: "smooth" });
+                            }}
+                            className={`flex w-full items-baseline gap-2 px-2 py-2 text-left text-sm hover:bg-black/5 ${i === curSec ? "bg-brand-50 font-bold text-brand-800" : ""}`}
+                          >
+                            <span className="shrink-0 tabular-nums text-muted">{s.no}</span>
+                            <span className="min-w-0 flex-1">{s.label}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+                {lessonTitle && <p className="mb-1 text-xs font-semibold text-muted">{[posLabel, lessonTitle].filter(Boolean).join(" · ")}</p>}
+                {rail}
+                {mobileExtra && <div className="mt-3">{mobileExtra}</div>}
+              </div>
+            </Collapse>
+          </div>
+        ) : (
+          <details className="mb-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-3 lg:hidden">
+            <summary className="cursor-pointer text-sm font-semibold">{railSummary}</summary>
+            <div className="mt-3">{rail}</div>
+          </details>
+        )}
+        <div className={lessonTitle ? "hidden lg:block" : undefined}>{crumbs}</div>
         {children}
         {nav}
       </div>
@@ -250,5 +358,7 @@ export default function LessonFrameShell({
         </button>
       )}
     </div>
+    </ReaderPrefsProvider>
+    </LessonFrameActionsProvider>
   );
 }

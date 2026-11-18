@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Limio Language — Phương án thanh điều hướng bài học</title>
+<style>
+  :root{--brand:#65a30d;--brand-deep:#3f6212;--soft:#eef5e2;--soft2:#e0edc9;--pink:#ec4899;--pink-deep:#be185d;--ink:#1b2210;--muted:#5b6650;--line:#d5dfc4;--bg:#f7f8f3;--warn:#b45309;--warn-soft:#fff4e0}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+  .wrap{max-width:1120px;margin:0 auto;padding:36px 20px 70px}
+  header.hero{background:var(--brand);color:#fff;padding:40px 20px 34px}
+  header.hero .wrap{padding:0 20px}
+  header.hero h1{font-size:2rem;line-height:1.25;margin:.3rem 0 .5rem}
+  header.hero p{margin:0;max-width:46rem;opacity:.95}
+  header.hero small{letter-spacing:.14em;text-transform:uppercase;font-weight:700;opacity:.85}
+  h2{font-size:1.4rem;margin:2.4rem 0 .4rem;padding-left:.8rem;border-left:6px solid var(--brand)}
+  h3{font-size:1.05rem;margin:1.4rem 0 .3rem}
+  p.lead{color:var(--muted);max-width:52rem;margin:.2rem 0 1rem}
+  .grid{display:grid;gap:14px} .g3{grid-template-columns:repeat(3,minmax(0,1fr))} .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  @media(max-width:900px){.g3,.g2{grid-template-columns:1fr}}
+  .card{background:#fff;padding:16px 18px;border-left:5px solid var(--brand)} .card.pink{border-left-color:var(--pink)} .card.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+  .card b.k{display:block;font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;color:var(--brand-deep);margin-bottom:.2rem}
+  .card.pink b.k{color:var(--pink-deep)} .card.warn b.k{color:var(--warn)}
+  table{border-collapse:collapse;width:100%;background:#fff;font-size:.93rem}
+  th,td{padding:.55rem .75rem;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+  th{background:var(--soft2);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-deep)}
+  code{background:var(--soft2);padding:0 .3rem}
+  .row{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start;margin:1rem 0}
+  figure{margin:0} figcaption{font-size:.84rem;color:var(--muted);margin-top:.5rem;max-width:290px} figcaption b{color:var(--ink)}
+  /* điện thoại */
+  .phone{width:290px;height:560px;background:var(--bg);border:8px solid #1f2937;border-radius:30px;overflow:hidden;position:relative;font-size:12px;line-height:1.4;box-shadow:0 10px 30px rgba(0,0,0,.12)}
+  .phone.bad{border-color:#9ca3af}
+  .scr{height:100%;position:relative;overflow:hidden}
+  .head{height:38px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;padding:0 10px}
+  .logo{font-weight:800;font-size:14px}.logo i{font-style:normal;color:var(--pink)}
+  .ctx{display:flex;align-items:stretch;background:#fff;border-bottom:1px solid var(--line);height:36px}
+  .ctx .a{width:34px;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:800}
+  .ctx .m{flex:1;padding:0 10px;display:flex;align-items:center;gap:6px;min-width:0;font-weight:600}
+  .ctx .m b{color:var(--brand-deep)} .ctx .m span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ctx .ic{width:34px;display:grid;place-items:center;color:var(--brand-deep);font-weight:800}
+  .ctx.slim{background:transparent;border:0;height:26px;font-size:11px;color:var(--muted)}
+  .ctx.slim .m{padding:0 12px}
+  .bar{position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:6px 8px 8px}
+  .bar .r{display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .btn{display:inline-flex;flex-direction:column;justify-content:center;background:var(--brand);color:#fff;font-weight:700;padding:5px 10px;min-width:0;white-space:nowrap;max-width:112px}
+  .btn small{display:block;font-weight:500;font-size:9.5px;opacity:.9;overflow:hidden;text-overflow:ellipsis}
+  .btn.ghost{background:transparent;color:var(--ink);font-weight:600;padding:5px 4px}
+  .btn.ghost small{color:var(--muted);opacity:1}
+  .btn.out{background:#fff;border:1.5px solid var(--brand);color:var(--brand-deep)}
+  .btn.pink{background:var(--pink)}
+  .ib{width:34px;height:34px;background:var(--soft);color:var(--brand-deep);display:grid;place-items:center;font-weight:800;font-size:12px;position:relative}
+  .center{display:flex;gap:6px}
+  .para{margin:8px 12px;color:#374151}.title{font-weight:800;font-size:15px;margin:10px 12px 4px}
+  .banner{margin:8px 12px;background:var(--brand);color:#fff;font-weight:800;padding:5px 10px}
+  .chip{display:inline-block;border:1px solid var(--line);background:#fff;padding:2px 8px;font-weight:600;color:var(--muted);font-size:10px}
+  .done{margin:10px 12px;background:#fff;border-left:5px solid var(--pink);padding:10px 12px}
+  .annot{position:absolute;border:2px dashed var(--pink);color:var(--pink-deep);font-size:10px;font-weight:700;padding:1px 4px;background:rgba(255,255,255,.9)}
+  .rail{display:flex;gap:3px;margin:6px 12px}.rail i{flex:1;height:4px;background:var(--soft2)}.rail i.on{background:var(--brand)}.rail i.cur{background:var(--pink)}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <small>Thiết kế UX/UI · Limio Language</small>
+  <h1>Làm lại thanh điều hướng bài học: một nút chính, nhãn rõ ràng</h1>
+  <p>Hiện có hai thanh (trên và dưới) cùng nói về "đi đâu tiếp", và nhãn Bài trước/Bài tiếp theo có thể nhảy sang chủ đề khác mà không báo. Phương án dưới đây dồn mọi nút bấm xuống một thanh đáy, để thanh trên chỉ cho biết mình đang ở đâu.</p>
+</div></header>
+
+<div class="wrap">
+
+<h2>1 · Vấn đề đã thấy</h2>
+<div class="grid g3">
+  <div class="card pink"><b class="k">Hai thanh, hai chỗ bấm</b>Thanh trên có ←, danh sách bài và AI; thanh dưới có Bài trước/Bài tiếp theo và Aa. Học viên phải nhớ nút nào ở thanh nào.</div>
+  <div class="card pink"><b class="k">Nhãn nhảy chủ đề không báo</b>Ở Khởi động của Chủ đề 2, "Bài trước" ghi "Bài tập tổng hợp" mà không nói đó là Chủ đề 1; thanh trên lại nói 1/5 (bài đầu). Nghe như mâu thuẫn.</div>
+  <div class="card pink"><b class="k">Nhãn dài, bị cắt</b>"Bài trước · Bài tập tổng hợp · 综合练习" và "Bài tiếp theo · Bài khoá 1 · 课文1「买买买」" chiếm cả hàng ở màn hẹp.</div>
+</div>
+
+<div class="row">
+  <figure>
+    <div class="phone bad"><div class="scr">
+      <div class="head"><span class="logo">Lim<i>io</i></span></div>
+      <div class="ctx"><span class="a">←</span><span class="m"><b>1/5</b><span>Khởi động · 热身</span></span><span class="ic">▾</span><span class="ic">✦</span></div>
+      <div class="banner">Chủ đề 2 · 退货这件事</div>
+      <div class="title">Khởi động</div><div class="para">Làm quen với các từ khoá của Mua sắm trực tuyến và trả hàng.</div>
+      <div class="bar"><div class="r"><span class="btn ghost">← Bài trước · Bài tập tổng…</span><span class="btn out" style="max-width:48px">Aa</span><span class="btn">Bài tiếp theo · Bài kh… →</span></div></div>
+      <div class="annot" style="left:6px;top:230px">1/5 mà vẫn có "Bài trước"?</div>
+    </div></div>
+    <figcaption><b>Hiện tại.</b> Hai thanh, nhãn dài bị cắt, không rõ "Bài trước" thuộc chủ đề nào.</figcaption>
+  </figure>
+  <div style="flex:1;min-width:300px">
+    <h3 style="margin-top:0">Nguyên tắc cho phương án mới</h3>
+    <div class="card"><b class="k">Bốn quy tắc</b>
+      <ol style="margin:.2rem 0 0;padding-left:1.1rem">
+        <li><b>Một chỗ bấm:</b> mọi nút hành động (trước, sau, Aa, AI) ở thanh đáy, vùng ngón cái.</li>
+        <li><b>Thanh trên chỉ để nhìn:</b> "bạn đang ở đâu", không có nút điều hướng.</li>
+        <li><b>Nhãn có đích đến:</b> nút ghi tên bài thật; sang chủ đề khác thì ghi tên chủ đề.</li>
+        <li><b>Một nút chính mỗi lúc:</b> nút phải nổi bật là việc nên làm tiếp (xem mục 3).</li>
+      </ol></div>
+  </div>
+</div>
+
+<h2>2 · Phương án: thanh đáy là nơi duy nhất để điều khiển</h2>
+<p class="lead">Thanh đáy có ba vùng: trái là bài trước, giữa là hai nút tiện ích (Aa và AI), phải là nút chính. Nhãn hai dòng: dòng trên là việc ("Trước", "Tiếp"), dòng dưới là tên đích nhỏ hơn, cắt gọn.</p>
+
+<div class="row">
+  <figure>
+    <div class="phone"><div class="scr">
+      <div class="head"><span class="logo">Lim<i>io</i></span></div>
+      <div class="ctx slim"><span class="m"><span>Chủ đề 2 · 1/5 · Khởi động</span><span style="margin-left:auto;color:var(--brand-deep);font-weight:800">▾</span></span></div>
+      <div class="rail"><i class="cur"></i><i></i><i></i><i></i><i></i></div>
+      <div class="banner">Chủ đề 2 · 退货这件事</div>
+      <div class="title">Khởi động</div><div class="para">Làm quen với các từ khoá của Mua sắm trực tuyến và trả hàng.</div>
+      <div class="bar"><div class="r">
+        <span class="btn ghost">← Trước<small>Chủ đề 1 · Tổng hợp</small></span>
+        <span class="center"><span class="ib">Aa</span><span class="ib">✦</span></span>
+        <span class="btn">Tiếp →<small>Bài khoá 1</small></span>
+      </div></div>
+    </div></div>
+    <figcaption><b>Bài đầu của chủ đề.</b> Thanh trên chỉ là nhãn "Chủ đề 2 · 1/5 · Khởi động". "Trước" ghi rõ đích là Chủ đề 1, hết mâu thuẫn với 1/5.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="phone"><div class="scr">
+      <div class="head"><span class="logo">Lim<i>io</i></span></div>
+      <div class="ctx slim"><span class="m"><span>Chủ đề 2 · 3/5 · Bài khoá 2</span><span style="margin-left:auto;color:var(--brand-deep);font-weight:800">▾</span></span></div>
+      <div class="rail"><i class="on"></i><i class="on"></i><i class="cur"></i><i></i><i></i></div>
+      <div class="title">Bài khoá 2 · 快递来了</div>
+      <div class="para">…nội dung bài…</div>
+      <div class="bar"><div class="r">
+        <span class="btn ghost">← Trước<small>Bài khoá 1</small></span>
+        <span class="center"><span class="ib">Aa</span><span class="ib">✦</span></span>
+        <span class="btn out">Tiếp →<small>Bài khoá 3</small></span>
+      </div></div>
+    </div></div>
+    <figcaption><b>Giữa bài, chưa làm xong.</b> "Tiếp" là nút viền (phụ): vẫn bấm được nhưng không giục. Việc nên làm là đọc và làm bài tập.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="phone"><div class="scr">
+      <div class="head"><span class="logo">Lim<i>io</i></span></div>
+      <div class="ctx slim"><span class="m"><span>Chủ đề 2 · 3/5 · Bài khoá 2</span><span style="margin-left:auto;color:var(--brand-deep);font-weight:800">▾</span></span></div>
+      <div class="rail"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
+      <div class="done"><b>Xong bài luyện</b><br>7/7 bài tập · 31/36 câu đúng.<br><span class="chip">Ôn lại câu sai (5)</span></div>
+      <div class="bar"><div class="r">
+        <span class="btn ghost">← Trước<small>Bài khoá 1</small></span>
+        <span class="center"><span class="ib">Aa</span><span class="ib">✦</span></span>
+        <span class="btn pink">Tiếp →<small>Bài khoá 3</small></span>
+      </div></div>
+    </div></div>
+    <figcaption><b>Sau khi làm xong.</b> "Tiếp" đổi sang màu hồng đặc: đây là bước kế. Cùng một nút, chỉ đổi mức nhấn.</figcaption>
+  </figure>
+</div>
+
+<h3>Khi chuyển sang chủ đề khác</h3>
+<div class="row">
+  <figure>
+    <div class="phone"><div class="scr">
+      <div class="head"><span class="logo">Lim<i>io</i></span></div>
+      <div class="ctx slim"><span class="m"><span>Chủ đề 1 · 5/5 · Bài tập tổng hợp</span><span style="margin-left:auto;color:var(--brand-deep);font-weight:800">▾</span></span></div>
+      <div class="rail"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="cur"></i></div>
+      <div class="done" style="border-left-color:var(--brand)"><b>Hoàn thành Chủ đề 1</b><br>搬进新家 · Dọn về nhà mới<br><span class="chip">5/5 bài</span></div>
+      <div class="bar"><div class="r">
+        <span class="btn ghost">← Trước<small>Bài khoá 3</small></span>
+        <span class="center"><span class="ib">Aa</span><span class="ib">✦</span></span>
+        <span class="btn pink">Chủ đề 2 →<small>Khởi động</small></span>
+      </div></div>
+    </div></div>
+    <figcaption><b>Bài cuối của chủ đề.</b> Nút chính đổi tên thành "Chủ đề 2 →" để báo rõ sẽ sang chủ đề mới, kèm bài đầu tiên của nó.</figcaption>
+  </figure>
+  <div style="flex:1;min-width:300px">
+    <table>
+      <tr><th>Tình huống</th><th>Nhãn "Trước"</th><th>Nhãn "Tiếp"</th></tr>
+      <tr><td>Cùng chủ đề</td><td>Trước<br><small>tên bài</small></td><td>Tiếp<br><small>tên bài</small></td></tr>
+      <tr><td>Bài đầu của chủ đề (không phải chủ đề đầu)</td><td>Trước<br><small>Chủ đề N-1 · tên bài</small></td><td>Tiếp<br><small>tên bài</small></td></tr>
+      <tr><td>Bài cuối của chủ đề</td><td>Trước<br><small>tên bài</small></td><td>Chủ đề N+1<br><small>bài đầu</small></td></tr>
+      <tr><td>Bài đầu của khoá</td><td><i>không có nút</i></td><td>Tiếp</td></tr>
+      <tr><td>Bài cuối của khoá</td><td>Trước</td><td>Hoàn thành khoá</td></tr>
+    </table>
+  </div>
+</div>
+
+<h2>3 · Một nút chính, nhiều tầng "tiếp" nhưng không trùng chỗ</h2>
+<p class="lead">Về sau còn có chế độ từng bước và thanh bài tập. Quy tắc: nút "Tiếp" ở thanh đáy luôn là bước kế trong thứ tự đọc; thanh bài tập (chỉ trong khu Luyện tập) là một điều khiển khác, nằm trong nội dung chứ không ở thanh đáy.</p>
+<table>
+  <tr><th>Tầng</th><th>Điều khiển</th><th>Ở đâu</th><th>Khi nào là "chính"</th></tr>
+  <tr><td>Bài học</td><td>Trước / Tiếp</td><td>Thanh đáy</td><td>Tiếp đổi sang màu hồng khi đã làm xong bài</td></tr>
+  <tr><td>Mục trong bài (chế độ từng bước, sau này)</td><td>Tiếp mục kế</td><td>Cùng nút "Tiếp" của thanh đáy</td><td>Còn mục thì "Tiếp" là mục kế; hết mục thì "Tiếp" thành bài kế</td></tr>
+  <tr><td>Bài tập trong khu Luyện tập</td><td>« n/N · tên ▾ »</td><td>Thanh dính trong khu bài tập</td><td>Không cạnh tranh với thanh đáy vì khác vị trí và khác nhãn ("bài tập")</td></tr>
+</table>
+
+<h2>4 · Thanh trên và nút phụ đi đâu</h2>
+<div class="grid g3">
+  <div class="card"><b class="k">Thanh trên</b>Chỉ còn nhãn "Chủ đề · n/N · tên bài" và vạch tiến độ. Bấm vào nhãn (hoặc ▾) mở danh sách bài của unit cùng "Về trang khoá học" và "Mục lục khoá học". Không có nút ← riêng.</div>
+  <div class="card"><b class="k">Aa và AI</b>Hai nút vuông nhỏ ở giữa thanh đáy. Aa: tuỳ chọn đọc. ✦: trợ giảng AI. Cả hai nằm đúng vùng ngón cái, cùng một chỗ.</div>
+  <div class="card"><b class="k">Máy tính (≥ 1024 px)</b>Thanh bài bên trái giữ nguyên, không có thanh trên. Thanh đáy giống điện thoại, nhãn đầy đủ hơn ("Trước · tên bài").</div>
+</div>
+
+<h2>5 · Công việc và đo lường</h2>
+<table>
+  <tr><th>Việc</th><th>Chạm vào</th><th>Số đo</th></tr>
+  <tr><td>Nhãn Trước/Tiếp hai dòng, ghi chủ đề khi sang chủ đề khác; nút chính đổi tên ở bài cuối chủ đề</td><td>LessonNavBar</td><td>Số lần bấm nhầm sang chủ đề khác (quay lại ngay sau khi bấm)</td></tr>
+  <tr><td>Thanh trên thành nhãn một dòng; chuyển ←, ▾, AI xuống thanh đáy</td><td>LessonFrameShell</td><td>Chiều cao khung điều hướng phía trên nội dung; số lần mở danh sách bài</td></tr>
+  <tr><td>Nút "Tiếp" đổi mức nhấn theo tiến độ làm bài</td><td>LessonNavBar + tiến độ bài luyện</td><td>Tỉ lệ làm xong bài trước khi sang bài kế</td></tr>
+</table>
+
+</div>
+</body>
+</html>

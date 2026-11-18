@@ -17,6 +17,9 @@ export const PRACTICE_KIND_LABEL: Record<PracticeKind, string> = {
 
 /** Sự kiện do khối luyện phát mỗi khi đáp án hoặc kết quả kiểm tra đổi, để thẻ tab cập nhật tiến độ mà không phải đưa trạng thái lên cao. */
 export const PRACTICE_PROGRESS_EVENT = "limio:practice-progress";
+
+/** Khu bài luyện báo đã kiểm hết (done: true) hay chưa (false): nút "Tiếp" của thanh đáy đổi mức nhấn theo (docs/tieu-chi/limio-language-ux-dieu-huong-bai.md, H4). */
+export const PRACTICE_COMPLETE_EVENT = "limio:practice-complete";
 export interface PracticeProgressDetail {
   ids: string[];
   answered: string[];

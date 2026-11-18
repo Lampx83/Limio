@@ -3,6 +3,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import PracticeTabs from "./PracticeTabs";
+import { PRACTICE_COMPLETE_EVENT, PRACTICE_PROGRESS_EVENT } from "@/lib/practiceTabMeta";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -146,5 +147,82 @@ describe("PracticeTabs — nhiều thẻ: mũi tên và mờ mép", () => {
     await render(many.slice(0, 2));
     expect(arrow("phải")).toBeNull();
     expect(arrow("trái")).toBeNull();
+  });
+});
+
+describe("PracticeTabs — thanh bài tập gọn « Bài tập 3/7 · tên bài »", () => {
+  const three = [
+    { id: "a", label: "1 · Một", content: <p>Nội dung 1</p> },
+    { id: "b", label: "2 · Hai", content: <p>Nội dung 2</p> },
+    { id: "c", label: "3 · Ba", content: <p>Nội dung 3</p> },
+  ];
+  const nav = () => host.querySelector<HTMLElement>('[data-testid="practice-step-nav"]');
+  const navBtn = (label: string) => nav()!.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)!;
+  const counter = () => nav()!.querySelector('span[aria-label]')!.textContent;
+  // Danh sách thẻ nằm trong khối `.collapse` (mở/thu mượt): đóng = không có data-open, ẩn khỏi trình đọc màn hình.
+  const listBox = () => host.querySelector<HTMLElement>('[role="tablist"]')!.closest(".collapse") as HTMLElement;
+  const listOpen = () => listBox().hasAttribute("data-open");
+
+  it("hiện số bài tập hiện tại trên tổng số cùng tên bài; bài đầu thì nút lùi bị khoá", async () => {
+    await render(three);
+    expect(counter()).toBe("Bài tập 1/3");
+    expect(nav()!.textContent).toContain("1 · Một");
+    expect(navBtn("Bài tập trước").disabled).toBe(true);
+    expect(navBtn("Bài tập tiếp theo").disabled).toBe(false);
+  });
+
+  it("bấm tiếp/lùi đổi tab đang mở và số trên thanh; bài cuối thì nút tiến bị khoá", async () => {
+    await render(three);
+    await click(navBtn("Bài tập tiếp theo"));
+    expect(counter()).toBe("Bài tập 2/3");
+    expect(tabEls()[1]!.getAttribute("aria-selected")).toBe("true");
+    expect(panels()[1]!.hidden).toBe(false);
+    await click(navBtn("Bài tập tiếp theo"));
+    expect(counter()).toBe("Bài tập 3/3");
+    expect(navBtn("Bài tập tiếp theo").disabled).toBe(true);
+    await click(navBtn("Bài tập trước"));
+    expect(counter()).toBe("Bài tập 2/3");
+  });
+
+  it("danh sách thẻ ẩn sẵn, bấm vào tên bài thì mở; chọn một thẻ thì chuyển bài và đóng lại", async () => {
+    await render(three);
+    expect(listOpen()).toBe(false);
+    await click(navBtn("Danh sách bài tập"));
+    expect(listOpen()).toBe(true);
+    await click(tabEls()[2]!);
+    expect(counter()).toBe("Bài tập 3/3");
+    expect(listOpen()).toBe(false);
+  });
+
+  it("chỉ một bài tập thì không có thanh chuyển", async () => {
+    await render([three[0]!]);
+    expect(nav()).toBeNull();
+  });
+});
+
+describe("PracticeTabs — báo hoàn tất cho nút 'Tiếp' của thanh đáy", () => {
+  const meta = (ids: string[], checked: string[]) => ({ kind: "choose" as const, ids, answered: checked, checked });
+  const two = (c1: string[], c2: string[]) => [
+    { id: "a", label: "1 · Một", content: <p>1</p>, meta: meta(["q1"], c1) },
+    { id: "b", label: "2 · Hai", content: <p>2</p>, meta: meta(["q2"], c2) },
+  ];
+  it("chưa kiểm hết thì báo done=false; kiểm hết thì done=true (cả khi đổi trong lúc làm)", async () => {
+    const seen: boolean[] = [];
+    const on = (e: Event) => seen.push((e as CustomEvent<{ done: boolean }>).detail.done);
+    window.addEventListener(PRACTICE_COMPLETE_EVENT, on);
+    await act(async () => root.render(<PracticeTabs tabs={two(["q1"], [])} />));
+    expect(seen.at(-1)).toBe(false);
+    // học viên kiểm nốt câu của bài tập 2
+    await act(async () => void window.dispatchEvent(new CustomEvent(PRACTICE_PROGRESS_EVENT, { detail: { ids: ["q2"], answered: ["q2"], checked: ["q2"] } })));
+    expect(seen.at(-1)).toBe(true);
+    window.removeEventListener(PRACTICE_COMPLETE_EVENT, on);
+  });
+  it("không có bài tập nào có câu thì không báo gì", async () => {
+    const seen: boolean[] = [];
+    const on = (e: Event) => seen.push((e as CustomEvent<{ done: boolean }>).detail.done);
+    window.addEventListener(PRACTICE_COMPLETE_EVENT, on);
+    await act(async () => root.render(<PracticeTabs tabs={[{ id: "a", label: "1 · Một", content: <p>1</p> }, { id: "b", label: "2 · Hai", content: <p>2</p> }]} />));
+    expect(seen).toEqual([]);
+    window.removeEventListener(PRACTICE_COMPLETE_EVENT, on);
   });
 });

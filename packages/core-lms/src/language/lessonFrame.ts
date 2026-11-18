@@ -22,10 +22,17 @@ export interface LessonFrameData {
   unitDone: number;
   unitTotal: number;
   items: LessonRailItem[];
-  /** Bài kế tiếp mở được (bỏ qua bài khoá) trong thứ tự khoá; null = đã hết. */
-  next: { id: string; title: string } | null;
+  /** Bài kế tiếp mở được (bỏ qua bài khoá) trong thứ tự khoá; null = đã hết. `unitTitle` là unit/chủ đề của bài đó; `sameUnit` false khi bấm sẽ sang unit khác. */
+  next: LessonRailLink | null;
   /** Bài liền trước mở được (bỏ qua bài khoá) trong thứ tự khoá; null = đang ở bài đầu tiên. */
-  prev: { id: string; title: string } | null;
+  prev: LessonRailLink | null;
+}
+
+export interface LessonRailLink {
+  id: string;
+  title: string;
+  unitTitle: string;
+  sameUnit: boolean;
 }
 
 export function minutesOf(durationSec: number | null | undefined): number | null {
@@ -51,18 +58,20 @@ export function buildLessonFrame(
     state: l.id === currentLessonId ? "current" : l.locked ? "locked" : l.completed ? "done" : "todo",
   }));
 
-  const flat = progress.modules.flatMap((m) => m.lessons);
+  const flat = progress.modules.flatMap((m) => m.lessons.map((l) => ({ ...l, unitTitle: m.title })));
   const at = flat.findIndex((l) => l.id === currentLessonId);
   const nextLesson = flat.slice(at + 1).find((l) => !l.locked) ?? null;
   const prevLesson = flat.slice(0, at).reverse().find((l) => !l.locked) ?? null;
+  const link = (l: (typeof flat)[number] | null): LessonRailLink | null =>
+    l ? { id: l.id, title: l.title, unitTitle: l.unitTitle, sameUnit: l.unitTitle === unit.title } : null;
 
   return {
     unitTitle: unit.title,
     unitDone: unit.lessons.filter((l) => l.completed).length,
     unitTotal: unit.lessons.length,
     items,
-    next: nextLesson ? { id: nextLesson.id, title: nextLesson.title } : null,
-    prev: prevLesson ? { id: prevLesson.id, title: prevLesson.title } : null,
+    next: link(nextLesson),
+    prev: link(prevLesson),
   };
 }
 

@@ -389,9 +389,7 @@ export default function AiTutorPanel({
   if (docked) {
     return (
       <div className="flex h-full min-h-0 flex-col">
-        <p className="px-4 pt-3 text-xs text-muted">
-          {budget ? t("ai.budget", { n: budget.estimatedTurns }) : t("ai.subtitle")}
-        </p>
+        {/* Không hiện số lượt còn lại ở đây: hết hạn mức thì lời nhắn khi gửi (no_token_budget) đã báo. */}
         {logEl}
         {footerEl}
       </div>
