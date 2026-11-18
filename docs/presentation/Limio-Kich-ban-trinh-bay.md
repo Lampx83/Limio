@@ -35,11 +35,15 @@ Mở trang ở **hai tab**: tab chiếu ra máy chiếu, tab còn lại để �
 | 9 | Điểm thưởng bám theo việc học thật | 1,5' |
 | 10 | Người học: lộ trình | 1,5' |
 | 11 | Triển khai độc lập, dữ liệu thuộc về đơn vị | 1,5' |
+| 11a | Điều mới của Limio, tháng 10–11/2026 (slide `s21`) | 1,5' |
+| 11b | Vi tín chỉ MICRO4ASIA tại ĐH KTQD (slide `s22`) | 1,5' |
 | 12 | Thử nghiệm và hướng nghiên cứu | 1,5' |
 | 13 | Trình diễn trực tiếp | 6' |
 | 14 | Kết luận và liên hệ | 1,5' |
 
-Nếu chỉ có 15 phút: bỏ slide 7, 9, 11; rút demo còn 3 phút (bước 1, 2, 5).
+Hai slide 11a, 11b có trong bản Tổng quan, bản Lãnh đạo và bản Nhà đầu tư (Giảng viên chỉ có 11a). Số liệu ở 11b (99 người học, 147 lượt ghi danh, 54 chứng nhận) tính đến 18/11/2026; cập nhật trước khi trình bày.
+
+Nếu chỉ có 15 phút: bỏ slide 7, 9, 11, 11a; rút demo còn 3 phút (bước 1, 2, 5).
 
 ## 3. Kịch bản demo trực tiếp (6')
 
