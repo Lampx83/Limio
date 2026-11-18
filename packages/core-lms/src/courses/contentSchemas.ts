@@ -202,6 +202,8 @@ export const VocabItem = z.object({
   audioUrl: AudioUrl.optional(),
   /** Audio đọc câu ví dụ (`example`), một giọng. */
   exampleAudioUrl: AudioUrl.optional(),
+  /** Giây bắt đầu của từ này trong audio tổng hợp cả bảng từ (`VocabListPayload.audioUrl`): thẻ sáng lên khi đọc tới. */
+  trackStartSec: z.number().finite().min(0).max(6 * 60 * 60).transform((n) => Math.round(n * 10) / 10).optional(),
 });
 
 export const VocabListPayload = z.object({

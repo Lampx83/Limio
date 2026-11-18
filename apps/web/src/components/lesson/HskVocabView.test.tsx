@@ -99,3 +99,16 @@ describe("HskVocabView — mục Từ mới của bài HSK tác giả", () => {
     expect(host.querySelector("audio")).toBeNull();
   });
 });
+
+describe("currentTrackItem", () => {
+  it("trả thẻ có mốc lớn nhất không vượt quá giây hiện tại; chưa có mốc thì null", async () => {
+    const { currentTrackItem } = await import("./HskVocabView");
+    const it = [{ id: "a", trackStartSec: 0 }, { id: "b", trackStartSec: 5.2 }, { id: "c", trackStartSec: 10.4 }, { id: "d" }];
+    expect(currentTrackItem(it, 0)).toBe("a");
+    expect(currentTrackItem(it, 5.1)).toBe("a");
+    expect(currentTrackItem(it, 5.16)).toBe("b"); // sai số 0,05 s: sắp tới từ b
+    expect(currentTrackItem(it, 7)).toBe("b");
+    expect(currentTrackItem(it, 99)).toBe("c");
+    expect(currentTrackItem([{ id: "x" }], 3)).toBeNull();
+  });
+});

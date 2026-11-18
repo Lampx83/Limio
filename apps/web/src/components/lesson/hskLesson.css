@@ -1621,3 +1621,11 @@
 .lesson-hsk .hsk-vex-play-on {
   background: var(--hk-soft);
 }
+
+/* Thẻ từ đang được đọc trong audio tổng hợp: viền và nền nổi lên. */
+.lesson-hsk .hsk-wc[data-now="true"] {
+  border-color: rgb(var(--brand));
+  background: var(--hk-soft);
+  box-shadow: 0 0 0 3px rgb(var(--brand) / 0.28);
+  transition: box-shadow 0.15s ease, background 0.15s ease;
+}

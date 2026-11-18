@@ -289,6 +289,10 @@ describe("OpenAI TTS: một giọng, mỗi từ đọc 1 lần rồi nhắc lạ
     expect(await attachVocabTrack(payload, ctx)).toBe(true);
     expect(log.length).toBe(before);
     expect(payload.audioUrl).toBeDefined();
+    // mốc bắt đầu từng từ: từ đầu ở 0, từ sau cách từ trước đúng (độ dài cặp + 2 s)
+    const marks = (payload.items as Array<{ trackStartSec?: number }>).map((i) => i.trackStartSec);
+    expect(marks[0]).toBe(0);
+    expect(marks[1]).toBeGreaterThan(3);
     expect(await attachVocabExamples(payload.items, ctx, new Map())).toEqual({ attached: 1, failed: 0 });
     expect(log[log.length - 1]!.input).toBe("我找不到钥匙了。");
   });

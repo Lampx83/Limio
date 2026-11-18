@@ -24,6 +24,8 @@ export interface VocabViewItem {
   audioUrl?: string;
   /** Audio đọc câu ví dụ. */
   exampleAudioUrl?: string;
+  /** Giây bắt đầu của từ này trong audio tổng hợp cả bảng từ (để làm sáng thẻ khi đọc tới). */
+  trackStartSec?: number;
 }
 
 /**

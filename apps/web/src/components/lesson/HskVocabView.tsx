@@ -18,6 +18,13 @@ import type { UiLang } from "@/lib/i18n/core";
  * Flashcard: mặt trước chữ Hán (pinyin bật/tắt), mặt sau pinyin, nghĩa, ví dụ (có pinyin và bản dịch), ghi chú. Thẻ cũ (không có `reading`) vẫn hiện như trước.
  * Mọi chữ là text node, React tự thoát HTML. Tên mục "生词 Từ mới" do tiêu đề mục đánh số của bài đã hiện nên không lặp lại ở đây.
  */
+/** Thẻ của từ đang được đọc trong audio tổng hợp: thẻ có `trackStartSec` lớn nhất mà ≤ giây hiện tại (chưa có mốc nào thì null). */
+export function currentTrackItem(items: Array<{ id: string; trackStartSec?: number }>, sec: number): string | null {
+  let best: { id: string; at: number } | null = null;
+  for (const it of items) if (typeof it.trackStartSec === "number" && it.trackStartSec <= sec + 0.05 && (!best || it.trackStartSec >= best.at)) best = { id: it.id, at: it.trackStartSec };
+  return best?.id ?? null;
+}
+
 export default function HskVocabView({ items: raw, lang = "vi", trackUrl }: { title?: string; items: VocabViewItem[]; lang?: UiLang; trackUrl?: string }) {
   const t = (key: Parameters<typeof hskT>[1], params?: Record<string, string | number>) => hskT(lang, key, params);
   const items = useMemo(() => cleanVocabItems<VocabViewItem>(raw), [raw]);
@@ -25,6 +32,14 @@ export default function HskVocabView({ items: raw, lang = "vi", trackUrl }: { ti
   const [showReading, setShowReading] = useState(true);
   const [open, setOpen] = useState<VocabViewItem | null>(null);
   const { playingId, toggle } = useExclusiveAudio();
+  // Audio tổng hợp đang phát: thẻ của từ đang được đọc sáng lên (mốc `trackStartSec` của từng thẻ).
+  const [trackTime, setTrackTime] = useState(0);
+  const [trackPlaying, setTrackPlaying] = useState(false);
+  const nowId = useMemo(() => (trackPlaying ? currentTrackItem(items, trackTime) : null), [items, trackPlaying, trackTime]);
+  useEffect(() => {
+    if (!nowId) return;
+    document.getElementById(`vocab-${nowId}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [nowId]);
   if (items.length === 0) return null;
   return (
     <section className="hsk-vv">
@@ -32,7 +47,7 @@ export default function HskVocabView({ items: raw, lang = "vi", trackUrl }: { ti
         <div className="hsk-vv-track">
           <p className="hsk-vv-track-t">{t("learn.hsk.vocab.track")}</p>
           {/* Trình phát của Limio (thanh tua, tốc độ 0,75×/1×/1,25×, lặp lại), cùng kiểu với hội thoại. */}
-          <AudioLessonPlayer url={trackUrl} showTranscript={false} compact />
+          <AudioLessonPlayer url={trackUrl} showTranscript={false} compact onTimeChange={setTrackTime} onPlayingChange={setTrackPlaying} />
         </div>
       )}
       <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
@@ -74,7 +89,7 @@ export default function HskVocabView({ items: raw, lang = "vi", trackUrl }: { ti
       {view === "flash" ? (
         <Flash items={items} showReading={showReading} lang={lang} playingId={playingId} onAudio={toggle} />
       ) : (
-        <WordGrid items={items} playingId={playingId} onAudio={toggle} onOpen={setOpen} />
+        <WordGrid items={items} playingId={playingId} nowId={nowId} onAudio={toggle} onOpen={setOpen} />
       )}
       {open && (
         <HanziStrokeDialog
@@ -90,20 +105,20 @@ export default function HskVocabView({ items: raw, lang = "vi", trackUrl }: { ti
 }
 
 /** Lưới thẻ từ: cùng khuôn với bảng từ mới của bài HSK nhập từ sách (`.hsk-words` / `.hsk-wc`). Thẻ có chữ Hán bấm được để mở "Cách viết". */
-function WordGrid({ items, playingId, onAudio, onOpen }: { items: VocabViewItem[]; playingId: string | null; onAudio: (id: string, url: string) => void; onOpen: (it: VocabViewItem) => void }) {
+function WordGrid({ items, playingId, nowId, onAudio, onOpen }: { items: VocabViewItem[]; playingId: string | null; nowId: string | null; onAudio: (id: string, url: string) => void; onOpen: (it: VocabViewItem) => void }) {
   return (
     <>
       <HanFontLoader lang="zh-Hans" />
       <ul className="hsk-words">
         {items.map((it) => (
-          <WordCard key={it.id} it={it} playing={playingId === it.id} onAudio={onAudio} onOpen={onOpen} />
+          <WordCard key={it.id} it={it} playing={playingId === it.id} now={nowId === it.id} onAudio={onAudio} onOpen={onOpen} />
         ))}
       </ul>
     </>
   );
 }
 
-function WordCard({ it, playing, onAudio, onOpen }: { it: VocabViewItem; playing: boolean; onAudio: (id: string, url: string) => void; onOpen: (it: VocabViewItem) => void }) {
+function WordCard({ it, playing, now, onAudio, onOpen }: { it: VocabViewItem; playing: boolean; now: boolean; onAudio: (id: string, url: string) => void; onOpen: (it: VocabViewItem) => void }) {
   const { m, n } = useParts(it);
   const han = useMemo(() => vocabHanPieces(it.term, it.reading), [it.term, it.reading]);
   const writable = hasHanChars(it.term);
@@ -114,6 +129,7 @@ function WordCard({ it, playing, onAudio, onOpen }: { it: VocabViewItem; playing
       className="hsk-wc"
       data-term={writable ? it.term : undefined}
       data-playing={playing ? "true" : undefined}
+      data-now={now ? "true" : undefined}
       onClick={writable ? () => onOpen(it) : undefined}
     >
       {(m.pos || tag) && (

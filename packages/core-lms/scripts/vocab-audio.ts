@@ -315,19 +315,25 @@ export async function attachVocabTrack(
   if (ctx.openai) {
     if (!ctx.force && typeof payload.audioUrl === "string" && payload.audioUrl) return false;
     const o = ctx.openai;
-    const texts = (payload.items ?? []).flatMap((it) => {
+    const entries = (payload.items ?? []).flatMap((it) => {
       if (typeof it.term !== "string") return [];
       const tx = speakableTerm(it.term, ctx.language);
-      return tx && tx.length <= MAX_TERM_CHARS ? [tx] : [];
+      return tx && tx.length <= MAX_TERM_CHARS ? [{ item: it, text: tx }] : [];
     });
-    if (texts.length === 0) return false;
+    if (entries.length === 0) return false;
     try {
       // Mỗi từ = [đọc, nghỉ 1 s, đọc lại]; giữa hai từ nghỉ 2 s. Dùng lại PCM đã đọc ở từng thẻ (không gọi OpenAI lần nữa).
       const cache = (ctx.pairPcm ??= new Map<string, Pcm>());
       const pairs: Pcm[] = [];
-      for (const tx of texts) pairs.push(await openAiWordPair(tx, o, cache));
-      const track = joinPcm(pairs, gapFor(WORD_GAP_SEC));
-      payload.audioUrl = await ctx.store(encodeMp3(track));
+      for (const e of entries) pairs.push(await openAiWordPair(e.text, o, cache));
+      const gapSec = gapFor(WORD_GAP_SEC);
+      // Mốc bắt đầu của từng từ trong audio tổng hợp (để làm sáng thẻ khi đọc tới).
+      let at = 0;
+      for (const [i, e] of entries.entries()) {
+        e.item.trackStartSec = Math.round(at * 10) / 10;
+        at += pairs[i]!.samples.length / pairs[i]!.sampleRate + gapSec;
+      }
+      payload.audioUrl = await ctx.store(encodeMp3(joinPcm(pairs, gapSec)));
       return true;
     } catch (e) {
       ctx.warn?.(`Không ghép được audio tổng hợp: ${(e as Error).message}`);
