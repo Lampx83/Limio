@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Headphones, ListChecks, Mic, Shuffle, TextCursorInput, type LucideIcon } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
+import Collapse from "@/components/ui/Collapse";
 import { PRACTICE_COMPLETE_EVENT, PRACTICE_KIND_LABEL, PRACTICE_PROGRESS_EVENT, type PracticeKind, type PracticeProgressDetail, type PracticeTabMeta } from "@/lib/practiceTabMeta";
 
 export interface PracticeTab {
@@ -151,7 +152,8 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
     return (
       <section ref={secRef} className="hsk-tabs" data-testid="practice-tabs">
         {stepBar}
-        <div role="tablist" aria-label={tr("practice.tabs.aria")} className="hsk-tablist" style={listOpen ? undefined : { display: "none" }}>
+        <Collapse open={listOpen}>
+        <div role="tablist" aria-label={tr("practice.tabs.aria")} className="hsk-tablist">
           {tabs.map((t, i) => {
             const on = i === cur;
             const kind = t.meta?.kind;
@@ -202,6 +204,7 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
             );
           })}
         </div>
+        </Collapse>
         {tabs.map((t, i) => (
           <div key={t.id} role="tabpanel" id={`${uid}-panel-${i}`} aria-labelledby={`${uid}-tab-${i}`} hidden={i !== cur}>
             {t.content}
@@ -214,7 +217,8 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
   return (
     <section ref={secRef} className={hsk ? "hsk-tabs mt-5" : "mt-5"} data-testid="practice-tabs">
       {stepBar}
-      <div className="relative" style={listOpen ? undefined : { display: "none" }}>
+      <Collapse open={listOpen}>
+      <div className="relative">
       {edge.left && (
         <button type="button" onClick={() => scrollBar(-1)} aria-label="Cuộn hàng bài tập sang trái" className="absolute left-0 top-10 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-token bg-[rgb(var(--surface))] text-muted shadow-sm hover:text-[rgb(var(--text))]">
           <ChevronLeft size={18} aria-hidden />
@@ -319,6 +323,7 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
         </div>
       </div>
       </div>
+      </Collapse>
       {tabs.map((t, i) => (
         <div key={t.id} role="tabpanel" id={`${uid}-panel-${i}`} aria-labelledby={`${uid}-tab-${i}`} hidden={i !== cur} className="pt-3">
           {t.content}

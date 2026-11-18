@@ -1,5 +1,6 @@
 "use client";
 
+import { usePresence } from "@/components/ui/usePresence";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, Eye, EyeOff, MousePointerClick, X } from "lucide-react";
@@ -168,6 +169,8 @@ export function ReaderPrefsMenu({ className = "", showLabel = false }: { classNa
   const ctx = useReaderPrefs();
   const t = useT();
   const [open, setOpen] = useState(false);
+  // Giữ bảng thêm ~180 ms sau khi đóng để chạy hoạt ảnh thoát.
+  const { mounted } = usePresence(open);
   const [seen, setSeen] = useState(true);
   const [pos, setPos] = useState({ bottom: 0, left: 0 });
   // Bài có bản dịch (đoạn `data-rd-tr`) thì bảng có nhóm "Bản dịch"; đo lúc mở bảng.
@@ -225,14 +228,14 @@ export function ReaderPrefsMenu({ className = "", showLabel = false }: { classNa
   ];
   const panel = (
     <>
-      <div className="fixed inset-0 z-[60] bg-black/35 sm:hidden" aria-hidden onClick={() => setOpen(false)} />
+      <div className={`fixed inset-0 z-[60] bg-black/35 sm:hidden ${open ? "rd-fade-in" : "rd-fade-out"}`} aria-hidden onClick={() => setOpen(false)} />
       <div
         ref={sheet}
         role="dialog"
         aria-label={t("reader.prefs.title")}
         data-testid="reader-prefs"
         style={{ ["--rd-bottom" as string]: `${pos.bottom}px`, ["--rd-left" as string]: `${pos.left}px` } as React.CSSProperties}
-        className="fixed inset-x-0 bottom-0 z-[61] max-h-[85vh] overflow-y-auto border-t-4 border-brand-600 bg-[rgb(var(--surface))] p-4 pb-6 shadow-2xl sm:inset-x-auto sm:bottom-[var(--rd-bottom)] sm:left-[var(--rd-left)] sm:w-[22rem] sm:-translate-x-1/2 sm:pb-4 sm:shadow-xl"
+        className={`${open ? "rd-sheet-in" : "rd-sheet-out"} fixed inset-x-0 bottom-0 z-[61] max-h-[85vh] overflow-y-auto border-t-4 border-brand-600 bg-[rgb(var(--surface))] p-4 pb-6 shadow-2xl sm:inset-x-auto sm:bottom-[var(--rd-bottom)] sm:left-[var(--rd-left)] sm:w-[22rem] sm:-translate-x-1/2 sm:pb-4 sm:shadow-xl`}
       >
         <div className="mb-3 flex items-center justify-between">
           <p className="text-sm font-bold uppercase tracking-wider text-brand-700">{t("reader.prefs.title")}</p>
@@ -276,7 +279,7 @@ export function ReaderPrefsMenu({ className = "", showLabel = false }: { classNa
           </span>
         )}
       </button>
-      {open && typeof document !== "undefined" && createPortal(panel, document.body)}
+      {mounted && typeof document !== "undefined" && createPortal(panel, document.body)}
     </div>
   );
 }

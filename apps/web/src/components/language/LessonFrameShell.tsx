@@ -1,5 +1,6 @@
 "use client";
 
+import Collapse from "@/components/ui/Collapse";
 import { accentVar } from "@/lib/courseAccent";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronDown, Sparkles, X } from "lucide-react";
@@ -234,7 +235,8 @@ export default function LessonFrameShell({
                 <div className="h-full bg-gray-500 dark:bg-gray-300" style={{ width: `${Math.max(0, Math.min(100, unitPct))}%` }} />
               </div>
             )}
-            {barOpen && (
+            {/* Dropdown mở/thu mượt; `lazy`: chỉ dựng nội dung khi mở (và lúc đang thu). */}
+            <Collapse open={barOpen} lazy>
               <div className="max-h-[60vh] overflow-y-auto border-t border-token px-4 pb-4 pt-3">
                 {bySections && (
                   <div className="mb-4" data-testid="bar-sections-list">
@@ -263,7 +265,7 @@ export default function LessonFrameShell({
                 {rail}
                 {mobileExtra && <div className="mt-3">{mobileExtra}</div>}
               </div>
-            )}
+            </Collapse>
           </div>
         ) : (
           <details className="mb-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-3 lg:hidden">

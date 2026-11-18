@@ -60,6 +60,8 @@ export interface SheetTab {
   introTitle?: string;
   /** Biểu tượng đặt trước tên bài tập (vd micro cho bài nói với bạn ảo / đóng vai), để nhận ra ngay đây là phần phải nói. */
   introIcon?: ReactNode;
+  /** Tên đã hiện ở thẻ đề phía trên (hoặc chỉ là nhãn mặc định "Bài n" không mang nghĩa): đầu tab chỉ còn số câu, không lặp tên. */
+  hideTitle?: boolean;
 }
 
 const plain = (prompt: string) => (looksLikeHtml(prompt) ? htmlToPlainText(prompt) : prompt);
@@ -644,7 +646,7 @@ export default function PracticeSheet({
           {(tabs.length > 1 || hideTabs) && !t.introTitle && (
             // Tab đang chọn mở đầu bằng tên khối và số câu (thanh tab chỉ có nhãn ngắn).
             <header className="ps-tabtitle">
-              <h2 className="text-h4">{t.label}</h2>
+              {!t.hideTitle && <h2 className="text-h4">{t.label}</h2>}
               <span className="ps-tabtitle-n">{tr("practice.sheet.count", { n: t.questionIds.filter((id) => questions.get(id)?.type !== "essay").length || t.questionIds.length })}</span>
             </header>
           )}

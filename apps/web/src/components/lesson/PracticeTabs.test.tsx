@@ -159,7 +159,9 @@ describe("PracticeTabs — thanh bài tập gọn « Bài tập 3/7 · tên bài
   const nav = () => host.querySelector<HTMLElement>('[data-testid="practice-step-nav"]');
   const navBtn = (label: string) => nav()!.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)!;
   const counter = () => nav()!.querySelector('span[aria-label]')!.textContent;
-  const listBox = () => host.querySelector<HTMLElement>('[role="tablist"]')!.parentElement as HTMLElement;
+  // Danh sách thẻ nằm trong khối `.collapse` (mở/thu mượt): đóng = không có data-open, ẩn khỏi trình đọc màn hình.
+  const listBox = () => host.querySelector<HTMLElement>('[role="tablist"]')!.closest(".collapse") as HTMLElement;
+  const listOpen = () => listBox().hasAttribute("data-open");
 
   it("hiện số bài tập hiện tại trên tổng số cùng tên bài; bài đầu thì nút lùi bị khoá", async () => {
     await render(three);
@@ -184,12 +186,12 @@ describe("PracticeTabs — thanh bài tập gọn « Bài tập 3/7 · tên bài
 
   it("danh sách thẻ ẩn sẵn, bấm vào tên bài thì mở; chọn một thẻ thì chuyển bài và đóng lại", async () => {
     await render(three);
-    expect(listBox().style.display).toBe("none");
+    expect(listOpen()).toBe(false);
     await click(navBtn("Danh sách bài tập"));
-    expect(listBox().style.display).not.toBe("none");
+    expect(listOpen()).toBe(true);
     await click(tabEls()[2]!);
     expect(counter()).toBe("Bài tập 3/3");
-    expect(listBox().style.display).toBe("none");
+    expect(listOpen()).toBe(false);
   });
 
   it("chỉ một bài tập thì không có thanh chuyển", async () => {

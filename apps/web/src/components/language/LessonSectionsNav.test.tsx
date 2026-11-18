@@ -39,7 +39,7 @@ describe("LessonSectionsNav — mục lục phần trong thanh bài", () => {
     await mount();
     const buttons = [...host.querySelectorAll("ol button")];
     expect(buttons.map((b) => b.textContent)).toEqual(["01Tình huống", "02Hội thoại", "03Từ mới"]);
-    expect(host.querySelector('[data-testid="lesson-sections-nav"]')!.className).toContain("lg:block");
+    expect(host.querySelector('[data-testid="lesson-sections-nav"]')!.closest(".lg\\:block")).not.toBeNull();
   });
 
   it("bài không có mục có số thì không hiện gì", async () => {
@@ -70,33 +70,33 @@ describe("LessonSectionsNav — mục lục phần trong thanh bài", () => {
     content([["01", "情景", "Tình huống"], ["02", "对话", "Hội thoại"]]);
     await mount();
     const toggle = () => host.querySelector<HTMLButtonElement>('[data-testid="lesson-sections-toggle"]')!;
-    const list = () => host.querySelector<HTMLElement>('[data-testid="lesson-sections-nav"]')!;
+    const list = () => host.querySelector<HTMLElement>('[data-testid="lesson-sections-collapse"]')!;
     expect(toggle().getAttribute("aria-expanded")).toBe("true");
-    expect(list().hidden).toBe(false);
+    expect(list().hasAttribute("data-open")).toBe(true);
     await act(async () => void toggle().dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(toggle().getAttribute("aria-expanded")).toBe("false");
-    expect(list().hidden).toBe(true);
+    expect(list().hasAttribute("data-open")).toBe(false);
     expect(localStorage.getItem(SECTIONS_COLLAPSED_KEY)).toBe("1");
     await act(async () => void toggle().dispatchEvent(new MouseEvent("click", { bubbles: true })));
-    expect(list().hidden).toBe(false);
+    expect(list().hasAttribute("data-open")).toBe(true);
     expect(localStorage.getItem(SECTIONS_COLLAPSED_KEY)).toBe("0");
   });
 
   it("sự kiện bấm vào dòng bài hiện tại cũng thu gọn/mở danh sách", async () => {
     content([["01", "情景", "Tình huống"]]);
     await mount();
-    const list = () => host.querySelector<HTMLElement>('[data-testid="lesson-sections-nav"]')!;
+    const list = () => host.querySelector<HTMLElement>('[data-testid="lesson-sections-collapse"]')!;
     await act(async () => void window.dispatchEvent(new Event(RAIL_SECTIONS_TOGGLE_EVENT)));
-    expect(list().hidden).toBe(true);
+    expect(list().hasAttribute("data-open")).toBe(false);
     await act(async () => void window.dispatchEvent(new Event(RAIL_SECTIONS_TOGGLE_EVENT)));
-    expect(list().hidden).toBe(false);
+    expect(list().hasAttribute("data-open")).toBe(true);
   });
 
   it("đã thu gọn từ lần trước thì vào trang là thu gọn sẵn", async () => {
     localStorage.setItem(SECTIONS_COLLAPSED_KEY, "1");
     content([["01", "情景", "Tình huống"]]);
     await mount();
-    expect(host.querySelector<HTMLElement>('[data-testid="lesson-sections-nav"]')!.hidden).toBe(true);
+    expect(host.querySelector('[data-testid="lesson-sections-collapse"]')!.hasAttribute("data-open")).toBe(false);
     expect(host.querySelector('[data-testid="lesson-sections-toggle"]')!.getAttribute("aria-expanded")).toBe("false");
   });
 

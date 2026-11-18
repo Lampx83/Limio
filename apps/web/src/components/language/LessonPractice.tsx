@@ -830,6 +830,8 @@ export default function LessonPractice({
     label: tabLabel(sheetTitles[i], i),
     short: sheetShorts[i],
     questionIds: st.questionIds,
+    // Tên đoạn đã nằm ở thẻ đề phía trên (headCards) thì đầu tab không lặp lại; khối câu rời (không đoạn) chỉ có nhãn mặc định "Bài n".
+    ...(st.passageId === null || (i === stepIdx && !lead && !!stepPassage && !!parts && !(shortPartner && instructionText)) ? { hideTitle: true } : {}),
     ...(introOf(st) ? { intro: introOf(st) } : {}),
     ...(st.questionIds.some((id) => isSpeakingChat(qById.get(id))) ? { introIcon: <Mic size={20} /> } : {}),
   }));

@@ -17,6 +17,8 @@ afterEach(() => {
   act(() => root.unmount());
   host.remove();
 });
+/** Khối `.collapse` bao quanh phần tử có đang mở không (data-open). */
+const openOf = (sel: string) => host.querySelector(sel)!.closest(".collapse")!.hasAttribute("data-open");
 const click = (el: Element) => act(async () => void el.dispatchEvent(new MouseEvent("click", { bubbles: true })));
 
 describe("FoldSection — mục phụ gập sẵn", () => {
@@ -26,8 +28,7 @@ describe("FoldSection — mục phụ gập sẵn", () => {
     expect(btn.textContent).toBe("Xem chi tiết");
     expect(btn.getAttribute("aria-expanded")).toBe("false");
     expect(host.querySelector('[data-testid="fold-summary"]')!.textContent).toBe("1. 一 + 屋子");
-    const content = host.querySelector("#in")!.parentElement!;
-    expect(content.hidden).toBe(true);
+    expect(openOf("#in")).toBe(false);
     expect(host.querySelector("#in")).not.toBeNull();
   });
 
@@ -37,11 +38,13 @@ describe("FoldSection — mục phụ gập sẵn", () => {
     await click(btn);
     expect(btn.textContent).toBe("Thu gọn");
     expect(btn.getAttribute("aria-expanded")).toBe("true");
-    expect(host.querySelector("#in")!.parentElement!.hidden).toBe(false);
-    expect(host.querySelector('[data-testid="fold-summary"]')).toBeNull();
+    expect(openOf("#in")).toBe(true);
+    // Dòng tóm tắt thu lại (vẫn trong trang để thu/mở có chuyển động), ẩn khỏi trình đọc màn hình.
+    expect(openOf('[data-testid="fold-summary"]')).toBe(false);
     await click(btn);
     expect(btn.textContent).toBe("Xem chi tiết");
-    expect(host.querySelector('[data-testid="fold-summary"]')).not.toBeNull();
+    expect(openOf('[data-testid="fold-summary"]')).toBe(true);
+    expect(openOf("#in")).toBe(false);
   });
 
   it("token pinyin trong dòng tóm tắt thành ruby: pinyin dưới từng chữ Hán", async () => {
