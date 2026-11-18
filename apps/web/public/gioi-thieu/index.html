@@ -583,11 +583,11 @@ function init(){
     var f=document.createElement('div');f.className='flow';f.innerHTML=flowSvg();s.insertBefore(f,s.firstChild);
   });
   AUDS=[
-   {k:'all',n:'Tổng quan đầy đủ',d:'Bản chung cho mọi người nghe',i:'layers',o:['s01','s07','s02','s03','s04','s05','s06','s08','s09','s10','s11','s12','s20','s13','s14']},
-   {k:'lead',n:'Lãnh đạo nhà trường',d:'Giá trị, dữ liệu, triển khai',i:'building',o:['s01','s02','s03','s15','s04','s20','s05','s11','s12','s13','s14']},
-   {k:'teacher',n:'Giảng viên',d:'Dạy, tương tác, thi, chấm',i:'grad',o:['s01','s02','s16','s04','s20','s06','s10','s09','s13','s14']},
+   {k:'all',n:'Tổng quan đầy đủ',d:'Bản chung cho mọi người nghe',i:'layers',o:['s01','s07','s02','s03','s04','s05','s06','s08','s09','s10','s11','s21','s22','s12','s20','s13','s14']},
+   {k:'lead',n:'Lãnh đạo nhà trường',d:'Giá trị, dữ liệu, triển khai',i:'building',o:['s01','s02','s03','s15','s04','s20','s05','s11','s21','s22','s12','s13','s14']},
+   {k:'teacher',n:'Giảng viên',d:'Dạy, tương tác, thi, chấm',i:'grad',o:['s01','s02','s16','s04','s20','s21','s06','s10','s09','s13','s14']},
    {k:'student',n:'Sinh viên',d:'Học, phản hồi, lộ trình',i:'user',o:['s01','s17','s10','s06','s09','s20','s13','s14']},
-   {k:'investor',n:'Nhà đầu tư, đối tác',d:'Khác biệt, hiện trạng, hợp tác',i:'chart',o:['s01','s02','s03','s18','s04','s05','s19','s13','s14']},
+   {k:'investor',n:'Nhà đầu tư, đối tác',d:'Khác biệt, hiện trạng, hợp tác',i:'chart',o:['s01','s02','s03','s18','s04','s05','s21','s22','s19','s13','s14']},
    {k:'scientist',n:'Nhà khoa học',d:'Mô hình, cơ sở khoa học, đo lường',i:'flask',o:['s01','s07','s02','s04','s05','s06','s08','s09','s12','s13','s14']}
   ];
   var saved='';try{saved=localStorage.getItem('limio-deck-aud')||''}catch(e){}
@@ -3005,7 +3005,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   </div>
 
   <aside class="notes">
-    <p>(≈ 90 giây) Limio là sản phẩm mới ra mắt và đang được thử nghiệm ở một số học phần tại năm đơn vị: Khoa Khoa học và Công nghệ Giáo dục cùng Khoa Ngoại ngữ của Đại học Bách khoa Hà Nội, Khoa CNTT của Đại học Kinh tế Quốc dân, Khoa Dược của Cao đẳng Y tế Hà Nội và Khoa Ngoại ngữ của Cao đẳng Công nghệ cao Hà Nội. Xin nói rõ: hiện chưa có kết quả hiệu quả nào được công bố.</p>
+    <p>(≈ 90 giây) Limio là sản phẩm mới ra mắt và đang được thử nghiệm ở một số học phần tại năm đơn vị: Khoa Khoa học và Công nghệ Giáo dục cùng Khoa Ngoại ngữ của Đại học Bách khoa Hà Nội, Khoa CNTT của Đại học Kinh tế Quốc dân (nơi chạy sáu vi tín chỉ MICRO4ASIA, xem hai slide trước), Khoa Dược của Cao đẳng Y tế Hà Nội và Khoa Ngoại ngữ của Cao đẳng Công nghệ cao Hà Nội. Xin nói rõ: hiện chưa có kết quả hiệu quả nào được công bố.</p>
     <p>Bốn hướng nghiên cứu bên phải là đề xuất, không phải cam kết, và đều có nền tảng sẵn trong hệ thống: điều kiện phản hồi theo lớp cho thiết kế đối chứng; tham số BKT còn là giá trị khởi đầu cần hiệu chỉnh; mỗi phản hồi đã được mã hoá tầng và đo mức tiếp nhận; sau đó mới đến mở rộng và công bố. Chi tiết bốn hướng: (1) thu thập dữ liệu thử nghiệm có đối chứng theo lớp, vì hệ thống đã hỗ trợ đặt điều kiện phản hồi riêng cho từng lớp, cá nhân hoá hoặc tối giản, trên cùng một khoá; (2) hiệu chỉnh tham số BKT theo dữ liệu thực, vì hiện là giá trị khởi đầu thận trọng; (3) đánh giá tác động của phản hồi, gồm tầng phản hồi và mức tiếp nhận, lên kết quả học tập; (4) mở rộng số đơn vị, học phần và công bố kết quả, phụ thuộc vào các bước trước. Rất mong nhận được góp ý và đề nghị hợp tác từ quý vị.</p>
   </aside>
 
@@ -4536,6 +4536,114 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   })();</script>
 </section>
 
+<section class="slide tone-dark" id="s21" data-title="Điều mới của Limio, tháng 10–11/2026" data-section="Cập nhật mới">
+  <div class="slide-in">
+    <div class="eyebrow rv">Cập nhật mới · tháng 10–11/2026</div>
+    <h2 class="h2 rv">Từ một môn học đến cả chương trình</h2>
+    <div class="cols cols-3 s21-grid">
+      <article class="card s21-c rv">
+        <div class="s21-h"><span class="ico"><svg class="i"><use href="#i-grad"/></svg></span><span class="chip">Đang vận hành</span></div>
+        <h3 class="h3">Vi tín chỉ MICRO4ASIA</h3>
+        <p class="p">Sáu khoá tiếng Anh của Khoa CNTT, ĐH KTQD. Học không cần tài khoản, giao diện EN | VI, chứng nhận có mã xác thực công khai.</p>
+      </article>
+      <article class="card s21-c rv">
+        <div class="s21-h"><span class="ico"><svg class="i"><use href="#i-msg"/></svg></span><span class="chip">Đang thử nghiệm</span></div>
+        <h3 class="h3">Limio Language</h3>
+        <p class="p">Khoá ngoại ngữ: bài luyện ngay trong bài học, nói với bạn ảo, nhận xét của AI. Khoá HSK 4 có pinyin dưới chữ Hán và audio từ mới.</p>
+      </article>
+      <article class="card s21-c rv">
+        <div class="s21-h"><span class="ico"><svg class="i"><use href="#i-eye"/></svg></span><span class="chip">Giai đoạn đầu</span></div>
+        <h3 class="h3">Limio Vấn đáp</h3>
+        <p class="p">Soạn đề vấn đáp, nạp tài liệu, AI đề xuất dàn câu hỏi cho giảng viên. Thay dần bản vấn đáp AI cũ.</p>
+      </article>
+      <article class="card s21-c rv">
+        <div class="s21-h"><span class="ico"><svg class="i"><use href="#i-layers"/></svg></span><span class="chip">Mới</span></div>
+        <h3 class="h3">Không gian riêng của trường</h3>
+        <p class="p">Màu sắc, logo và chân trang theo từng trường; trang giới thiệu riêng cho từng đơn vị hoặc dự án.</p>
+      </article>
+      <article class="card s21-c rv">
+        <div class="s21-h"><span class="ico"><svg class="i"><use href="#i-chart"/></svg></span><span class="chip">Mới</span></div>
+        <h3 class="h3">Báo cáo cho đơn vị đối tác</h3>
+        <p class="p">Phát hành, doanh thu, mức nắm vững theo bài. Số liệu ẩn danh; nhóm dưới 10 người không hiển thị tỉ lệ.</p>
+      </article>
+      <article class="card s21-c rv">
+        <div class="s21-h"><span class="ico pink"><svg class="i"><use href="#i-notes"/></svg></span><span class="chip">Mới</span></div>
+        <h3 class="h3">Khảo sát trước và sau</h3>
+        <p class="p">Phiếu không chấm điểm, mở bằng mã QR theo từng lần đo, xuất được câu trả lời để so sánh.</p>
+      </article>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>(≈ 90 giây) Sáu tháng gần đây Limio mở rộng theo ba hướng. Thứ nhất là vi tín chỉ: sáu khoá tiếng Anh MICRO4ASIA của Khoa CNTT, Đại học Kinh tế Quốc dân đã mở công khai, mỗi khoá kết thúc bằng chứng nhận có mã xác thực. Thứ hai là ngoại ngữ: Limio Language đưa bài luyện vào ngay trong bài học, cho người học nói với bạn ảo và nhận nhận xét của AI; khoá HSK 4 hiển thị pinyin dưới chữ Hán. Limio Vấn đáp mới ở giai đoạn đầu: soạn đề, nạp tài liệu và để AI đề xuất dàn câu hỏi.</p>
+    <p>Thứ ba là khả năng triển khai cho tổ chức: không gian riêng cho từng trường, báo cáo ẩn danh cho đơn vị đối tác, và phiếu khảo sát trước/sau. Xin nói rõ: Limio Language đang thử nghiệm, Limio Vấn đáp mới ở giai đoạn đầu; chưa có kết quả hiệu quả nào được công bố. Về hạ tầng, tệp học liệu nay được ghi lên hai kho lưu trữ và đọc dự phòng khi một kho gặp sự cố.</p>
+  </aside>
+  <style>
+    #s21 .slide-in{gap:1.1rem}
+    #s21 .eyebrow{font-size:.95rem}
+    #s21 .h2{font-size:2.4rem}
+    #s21 .s21-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:1.1rem}
+    #s21 .s21-c{display:flex;flex-direction:column;gap:.55rem;padding:1.1rem 1.25rem}
+    #s21 .s21-h{display:flex;align-items:center;justify-content:space-between;gap:.6rem}
+    #s21 .s21-c .ico{width:3rem;height:3rem}
+    #s21 .s21-c .chip{font-size:.9rem}
+    #s21 .s21-c .h3{font-size:1.5rem;line-height:1.2}
+    #s21 .s21-c .p{font-size:1.12rem;line-height:1.45;color:var(--fg2)}
+    @media (max-width:860px){#s21 .s21-grid{grid-template-columns:1fr}}
+  </style>
+  <script>(function(){Deck.on('s21',{enter:function(c){},leave:function(c){}})})();</script>
+</section>
+
+<section class="slide tone-dark" id="s22" data-title="Vi tín chỉ MICRO4ASIA tại ĐH KTQD" data-section="Cập nhật mới">
+  <div class="slide-in">
+    <div class="eyebrow rv">Triển khai thực tế · Khoa CNTT, ĐH Kinh tế Quốc dân</div>
+    <h2 class="h2 rv">Sáu vi tín chỉ, mỗi khoá một chứng nhận xác thực được</h2>
+    <div class="split s22-split" style="--a:1fr;--b:1.15fr">
+      <div class="stack s22-left">
+        <div class="s22-stats">
+          <div class="card s22-st rv"><b class="num">6</b><span>vi tín chỉ, đều bằng tiếng Anh</span></div>
+          <div class="card s22-st rv"><b class="num">99</b><span>người học, 147 lượt ghi danh</span></div>
+          <div class="card s22-st rv"><b class="num">54</b><span>chứng nhận đã cấp</span></div>
+        </div>
+        <ul class="s22-ul">
+          <li class="rv"><span class="ico"><svg class="i"><use href="#i-check"/></svg></span><span>Cấp tự động khi hoàn thành <b>90%</b> số bài học</span></li>
+          <li class="rv"><span class="ico"><svg class="i"><use href="#i-link"/></svg></span><span>Mã chứng nhận riêng; ai cũng tra cứu được, không cần đăng nhập</span></li>
+          <li class="rv"><span class="ico"><svg class="i"><use href="#i-user"/></svg></span><span>Người học tự tải PDF (EN hoặc VI) và thêm vào LinkedIn</span></li>
+        </ul>
+        <p class="s22-src rv">Số liệu ngày 18/11/2026, không tính tài khoản giảng viên và nhân viên.</p>
+      </div>
+      <div class="rv rv-r">
+        <div class="frame s22-frame"><img data-zoom src="img/m4a-cert.png" alt="Chứng nhận mẫu của vi tín chỉ MICRO4ASIA, người học giả định" loading="lazy"></div>
+        <p class="s22-cap">Chứng nhận mẫu, người học giả định</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>(≈ 90 giây) Đây là ứng dụng thực tế đầu tiên của Limio ở cấp chương trình. Sáu vi tín chỉ MICRO4ASIA của Khoa CNTT, Đại học Kinh tế Quốc dân đều đã mở trên Limio, bằng tiếng Anh, người học xem được mà không cần tài khoản. Tính đến 18/11/2026 có 99 người học, 147 lượt ghi danh và 54 chứng nhận đã cấp.</p>
+    <p>Chứng nhận được cấp tự động khi người học hoàn thành 90% số bài học, mang logo trường và dự án, có mã riêng để ai cũng tra cứu được. Người học tự tải PDF tiếng Anh hoặc tiếng Việt và thêm vào LinkedIn. Lưu ý khi được hỏi: điều kiện hiện chỉ dựa trên tỉ lệ hoàn thành bài học; việc bổ sung điểm quiz tối thiểu và thông tin theo khung châu Âu như ECTS, EQF đang được cân nhắc cùng nhà trường. Ảnh là chứng nhận mẫu với người học giả định.</p>
+  </aside>
+  <style>
+    #s22 .slide-in{gap:1rem}
+    #s22 .eyebrow{font-size:.95rem}
+    #s22 .h2{font-size:2.2rem;max-width:62rem}
+    #s22 .s22-split{align-items:center;gap:2rem}
+    #s22 .s22-left{--g:1rem}
+    #s22 .s22-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem}
+    #s22 .s22-st{display:flex;flex-direction:column;gap:.2rem;padding:.8rem 1rem}
+    #s22 .s22-st b{font-size:3rem;line-height:1;letter-spacing:-.03em;background:var(--grad-text);-webkit-background-clip:text;background-clip:text;color:transparent}
+    #s22 .s22-st span{font-size:1.02rem;line-height:1.3;color:var(--fg2)}
+    #s22 .s22-ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.7rem}
+    #s22 .s22-ul li{display:flex;align-items:center;gap:.9rem;font-size:1.25rem;line-height:1.35;color:var(--fg)}
+    #s22 .s22-ul .ico{width:2.6rem;height:2.6rem}
+    #s22 .s22-ul b{color:var(--acc)}
+    #s22 .s22-src{margin:0;font-size:.95rem;color:var(--fg2)}
+    #s22 .s22-frame{background:#fff}
+    #s22 .s22-cap{margin:.5rem 0 0;text-align:center;font-size:.95rem;color:var(--fg2)}
+    @media (max-width:860px){#s22 .s22-stats{grid-template-columns:1fr}}
+  </style>
+  <script>(function(){Deck.on('s22',{enter:function(c){},leave:function(c){}})})();</script>
+</section>
+
+
 </main>
 <footer class="foot">
   <button data-act="prev" aria-label="Slide trước"><svg class="i"><use href="#i-left"/></svg></button>
@@ -4558,6 +4666,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <details><summary>Khác gì Moodle / LMS thông thường?</summary><p>LMS chấm điểm rồi đi tiếp; Limio cập nhật mức nắm vững theo từng chủ đề ngay trong lượt nộp bài và phản hồi đúng chỗ còn yếu. Ngoài ra Live, thi, vấn đáp AI, chấm chữa, điểm thưởng và e-portfolio dùng chung một dòng dữ liệu nên luôn khớp nhau.</p></details>
     <details><summary>Chống gian lận khi thi thế nào?</summary><p>Giảng viên giám sát thời gian thực, hệ thống cảnh báo khi thí sinh rời tab hoặc thoát toàn màn hình. Cảnh báo là căn cứ để giảng viên xem xét, không tự động kết luận vi phạm.</p></details>
     <details><summary>Điểm thưởng có làm lệch việc học thật không?</summary><p>Có cơ chế chống lạm dụng: giới hạn theo ngày, điều chỉnh XP theo năng lực (quiz dễ với người giỏi thì XP thấp), và lượt làm dưới 10 giây không được cộng điểm, chỉ ghi vết kiểm toán. Người học có thể rút khỏi bảng xếp hạng.</p></details>
+    <details><summary>Limio có dùng được cho vi tín chỉ và cấp chứng nhận không?</summary><p>Có. Sáu vi tín chỉ MICRO4ASIA của Khoa CNTT, ĐH Kinh tế Quốc dân đang chạy trên Limio: học không cần tài khoản, chứng nhận cấp tự động khi hoàn thành 90% bài học, có mã để tra cứu công khai. Điều kiện hiện chỉ dựa trên tỉ lệ hoàn thành; điểm quiz tối thiểu và thông tin theo khung châu Âu (ECTS, EQF) đang được cân nhắc cùng nhà trường.</p></details>
     <details><summary>Người học có thấy phần trăm mức nắm vững không?</summary><p>Không. Người học chỉ thấy nhãn Cần ôn / Nên luyện thêm / Vững. Con số xác suất chỉ hiển thị cho giảng viên, vì dễ bị đọc như điểm thi.</p></details>
   </div>
 </aside>
