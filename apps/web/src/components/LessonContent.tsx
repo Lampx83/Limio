@@ -14,6 +14,7 @@ import { deckIdOfUrl } from "@/lib/narration/deckCover";
 import DeckCover, { type DeckCoverInfo } from "./narration/DeckCover";
 import SafeHtml from "./SafeHtml";
 import LessonRichText from "./lesson/LessonRichText";
+import HskVocabView from "./lesson/HskVocabView";
 import HskSectionHead from "./lesson/HskSectionHead";
 import HskVocabSwitch from "./lesson/HskVocabSwitch";
 import { planHskSections, type HskKind } from "@/lib/hskLesson";
@@ -157,9 +158,38 @@ export default function LessonContent({
         {/* data-item-id: mốc neo ổn định giữa cửa sổ điều khiển và màn chiếu.
             Không đánh theo thứ tự được — cửa sổ điều khiển có thêm các khối ghi
             chú giảng viên xen giữa, nên khối thứ 3 ở hai bên là hai thứ khác nhau. */}
-        <div data-item-id={item.id}>
+        <div data-item-id={item.id} className={plan?.segs.has(idx) ? "hsk-aitem" : undefined}>
           {item.type === "exam_practice" || item.type === "exam_ref" ? (
             blocks?.[item.id]
+          ) : plan?.segs.has(idx) ? (
+            // Bài HSK tác giả soạn: mỗi khối chữ tách theo tiêu đề mục (lib/hskAuthored.ts) để mục có số 01, 02… chung một dãy với phần còn lại của bài.
+            plan.segs.get(idx)!.map((seg, si) => (
+              <Fragment key={si}>
+                {seg.head && <HskSectionHead no={seg.head.no} section={seg.head.section} lang={hskLang} />}
+                {seg.sub && (
+                  <p className="hsk-sub" data-t={seg.sub.tag}>
+                    {seg.sub.tag && <span className="hsk-sub-tag">{seg.sub.tag}</span>}
+                    {seg.sub.text}
+                  </p>
+                )}
+                {seg.html.trim() && (
+                  <div className={seg.card ? `hsk-card hsk-card-${seg.card}` : undefined}>
+                    <ContentBlock
+                      type={item.type}
+                      payload={{ ...(item.payload as object), html: seg.html }}
+                      itemId={item.id}
+                      courseId={courseId}
+                      lessonId={lessonId}
+                      interactive={interactive}
+                      deckCover={deckCover}
+                      numberTranscripts={numberTranscripts}
+                      hskKind={plan.kinds[idx]}
+                      hskLang={hskLang}
+                    />
+                  </div>
+                )}
+              </Fragment>
+            ))
           ) : (
             <ContentBlock
               type={item.type}
@@ -342,10 +372,13 @@ function ContentBlock({
       const p = (payload ?? {}) as {
         title?: string;
         readingLabel?: string;
+        audioUrl?: string;
         items?: VocabViewItem[];
       };
       const items = Array.isArray(p.items) ? p.items : [];
       if (items.length === 0) return null;
+      // Giao diện bài HSK: tab Từ vựng mở sẵn ở thẻ lật (pinyin, nghĩa, ví dụ), kiểu của mục Từ mới bài HSK.
+      if (hskKind) return <HskVocabView title={p.title} items={items} lang={hskLang} trackUrl={typeof p.audioUrl === "string" ? p.audioUrl : undefined} />;
       return <VocabListView title={p.title} readingLabel={p.readingLabel} items={items} />;
     }
     case "dialogue": {

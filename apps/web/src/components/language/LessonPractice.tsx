@@ -33,6 +33,7 @@ import { learnerTurnCount, parseFreeChatView, asPartnerSpeech, FREECHAT_MIN_FEED
 import { instructionOnlyText, isShortAudioPassage } from "@/lib/lessonPracticeView";
 import { parseRolePlay } from "@/lib/rolePlayView";
 import PracticeSheet, { SheetTabBar } from "./PracticeSheet";
+import { courseWantsPinyin } from "./PinyinLabel";
 import { tabLabel, tabShortLabels } from "@/lib/practiceSheetView";
 import { PRACTICE_PROGRESS_EVENT, headingTitleOf } from "@/lib/practiceTabMeta";
 import { accentVar } from "@/lib/courseAccent";
@@ -851,6 +852,7 @@ export default function LessonPractice({
       explanationOf={explanationOf}
       banner={skillLabel}
       hideTabs
+      pinyin={courseWantsPinyin(embed.courseLanguage)}
       header={
         // Phiếu: một hàng mỏng (tên bài luyện + nút bố cục dạng biểu tượng); tiến độ nằm ở đếm của tab và chân phiếu.
         <div className="flex items-center justify-end gap-3">

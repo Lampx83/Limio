@@ -8,6 +8,7 @@ import { buildVocabCards, buildVocabRuby } from "@/lib/lessonVocabRuby";
 import { hskGoalsHtml, hskPairHtml } from "@/lib/hskWarmup";
 import { hskGrammarHtml, type HskGrammarPoint } from "@/lib/hskGrammar";
 import { hskActivityHtml, hskBriefHtml, hskScenarioHtml } from "@/lib/hskActivity";
+import { hskAuthoredHtml } from "@/lib/hskAuthoredDom";
 import { hskDropPageRef, hskDropVocabLabel, hskIntroHtml, hskRecolor, type HskKind } from "@/lib/hskLesson";
 import { useCallback } from "react";
 import { useT, useUiLang } from "@/lib/i18n/client";
@@ -54,7 +55,7 @@ export default function LessonRichText({
     },
     [t, hskKind, hskGrammar],
   );
-  const base = `prose prose-sm max-w-none rounded-xl border border-token p-4 dark:prose-invert${hskKind ? ` hsk-plain hsk-${hskKind}` : ""}`; // mọi khối bài HSK không khung viền (khung viền kép với thẻ tình huống…)
+  const base = `prose prose-sm max-w-none rounded-xl border border-token p-4 dark:prose-invert${hskKind ? ` hsk-plain hsk-${hskKind}${hskKind === "authored" || hskKind === "a-goals" || hskKind === "a-summary" ? " hsk-ab" : ""}` : ""}`; // mọi khối bài HSK không khung viền (khung viền kép với thẻ tình huống…)
   if (!look) {
     return (
       <SafeHtml
@@ -82,6 +83,8 @@ export default function LessonRichText({
 
 /** Chuẩn bị HTML nhập sẵn của từng loại khối HSK: đổi màu cam sang màu chính, bỏ dải tiêu đề/nhãn/số trang đã có ở đầu bài và tiêu đề mục. */
 function prepareHsk(html: string, kind: HskKind, grammar?: Record<string, HskGrammarPoint>): string {
+  // Bài tác giả soạn (khoá bản gốc Limio): style nội tuyến bỏ hết, dựng lại theo ngôn ngữ thiết kế HSK (lib/hskAuthoredDom.ts).
+  if (kind === "authored" || kind === "a-goals" || kind === "a-summary") return hskAuthoredHtml(html, kind);
   const h = hskRecolor(html);
   if (kind === "intro") return hskIntroHtml(h);
   if (kind === "intro-brief") return hskBriefHtml(hskIntroHtml(h));

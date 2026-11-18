@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyHskItem, hskDropPageRef, hskDropVocabLabel, hskRecolor, hskDecorLang, isHskDecorCourse, parseHskDecorSlugs, hskIntroHtml, planHskSections, sealParts, splitHanRuns, splitLessonTitle, watermarkChar } from "./hskLesson";
+import { classifyHskItem, lessonSubtitle, hskDropPageRef, hskDropVocabLabel, hskRecolor, hskDecorLang, isHskDecorCourse, parseHskDecorSlugs, hskIntroHtml, planHskSections, sealParts, splitHanRuns, splitLessonTitle, watermarkChar } from "./hskLesson";
 
 const rt = (html: string) => ({ type: "richtext", payload: { html } });
 
@@ -52,6 +52,9 @@ describe("tên bài", () => {
     expect(splitLessonTitle("Tổng quan")).toEqual({ vi: "Tổng quan", han: "" });
     expect(sealParts("课文1")).toEqual({ top: "课文", bottom: "1" });
     expect(sealParts("热身")).toEqual({ top: "热身", bottom: "" });
+    expect(sealParts("课文1「看房那天」")).toEqual({ top: "课文", bottom: "1" });
+    expect(lessonSubtitle("课文1「看房那天」")).toBe("「看房那天」");
+    expect(lessonSubtitle("课文1")).toBe("");
     expect(watermarkChar("课文1")).toBe("课");
     expect(watermarkChar("综合练习")).toBe("综");
     expect(watermarkChar("")).toBe("");

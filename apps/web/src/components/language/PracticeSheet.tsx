@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import SafeHtml from "@/components/SafeHtml";
 import PromptAid from "./PromptAid";
-import RubyText from "@/components/RubyText";
+import PinyinLabel, { RubyRun, PinyinProvider, useSyllables, useSyllableFn, type SyllableFn } from "./PinyinLabel";
+import { DragFillDnd, OrderingDnd } from "./PracticeDnd";
 import { parsePromptAid } from "@/lib/promptAid";
-import { promptSyllables, sliceByHan } from "@/lib/promptRuby";
+import { promptSyllables, questionHidesPinyin, sliceByHan } from "@/lib/promptRuby";
 import { htmlToPlainText, looksLikeHtml, plainToRichHtml } from "@/lib/richText";
+import { useT } from "@/lib/i18n/client";
 import ExamQuestion, { isAnswerValueAnswered as isAnswered, type AnswerValue } from "@/components/exam/ExamQuestion";
 import {
   blankCountOf,
   blankWidthCh,
   groupSharedOptions,
+  instructionPlan,
   cleanMatchingLabels,
   letterOf,
   optionLabelsOf,
@@ -98,7 +101,7 @@ function InlineChoices({ options, selected, onPick }: { options: Array<{ id: str
     <span className="ps-alts" role="group">
       {options.map((o) => (
         <Alt key={o.id} on={selected === o.id} onClick={() => onPick(o.id)}>
-          {o.label}
+          <PinyinLabel text={o.label} />
         </Alt>
       ))}
     </span>
@@ -115,13 +118,15 @@ export function splitTransform(text: string): { head: string; key: string; rest:
 }
 
 /** Chữ thuần của đề với một chỗ để gắn điều khiển: nếu đề có dấu trống thì điều khiển thay dấu đó, không thì nằm sau chữ. */
-function PromptWith({ prompt, control }: { prompt: string; control: ReactNode }) {
+function PromptWith({ prompt, control, syllables = null }: { prompt: string; control: ReactNode; /** Pinyin cho cả đề (đề chữ Hán): đặt dưới từng chữ ở các đoạn chữ, chỗ điều khiển nằm giữa. */ syllables?: string[] | null }) {
   const segs = splitBlankPrompt(plain(prompt), 1);
+  const slices = syllables ? sliceByHan(syllables, segs.flatMap((s) => (s.kind === "text" ? [s.text] : []))) : null;
+  let ti = 0;
   return (
     <>
       {segs.map((s, i) =>
         s.kind === "text" ? (
-          <span key={i}>{s.text}</span>
+          slices ? <RubyRun key={i} text={s.text} syllables={slices[ti++]!} /> : <span key={i}>{s.text}</span>
         ) : (
           <span key={i}>{control}</span>
         ),
@@ -146,11 +151,12 @@ function RowBody({
 }) {
   const kind = sheetKind(q);
   const text = plain(q.prompt);
-  const rubySyl = rowRubySyllables(q, shared);
+  const hs = useSyllables();
+  const rubySyl = rowRubySyllables(q, shared, hs);
   // Đề chữ thường: pinyin dưới từng chữ Hán khi ghép được, không thì chữ thường như cũ.
   const textNode = rubySyl ? (
     <span className="han-text ruby-line" lang="zh-Hans">
-      <RubyText text={text} syllables={rubySyl} />
+      <RubyRun text={text} syllables={rubySyl} />
     </span>
   ) : (
     <span>{text}</span>
@@ -175,7 +181,7 @@ function RowBody({
   }
   const prompt = rubySyl ? (
     <p className="han-text ruby-line ps-prompt" lang="zh-Hans">
-      <RubyText text={text} syllables={rubySyl} />
+      <RubyRun text={text} syllables={rubySyl} />
     </p>
   ) : (
     <SafeHtml html={plainToRichHtml(q.prompt)} className="prose prose-sm ps-prompt max-w-none dark:prose-invert" />
@@ -196,7 +202,7 @@ function RowBody({
     const parts = segs.map((s, i) => {
       if (s.kind === "text") {
         const sl = slices?.[ti++];
-        return sl ? <RubyText key={i} text={s.text} syllables={sl} /> : <span key={i}>{s.text}</span>;
+        return sl ? <RubyRun key={i} text={s.text} syllables={sl} /> : <span key={i}>{s.text}</span>;
       }
       const label = `Câu ${n}${count > 1 ? `, chỗ trống ${s.index + 1}` : ""}`;
       if (q.type === "short_answer" || blanks.length === 0) return <Blank key={i} value={txt} label={label} onChange={(v) => onChange({ text: v })} />;
@@ -222,8 +228,8 @@ function RowBody({
     const control = <InlineChoices options={opts} selected={sel} onPick={(id) => onChange({ optionIds: [id] })} />;
     const hasMarker = splitBlankPrompt(text, 1).some((s) => s.kind === "blank") && /_{3,}/.test(text);
     return hasMarker ? (
-      <div>
-        <PromptWith prompt={q.prompt} control={control} />
+      <div className={rubySyl ? "han-text ruby-line" : undefined} lang={rubySyl ? "zh-Hans" : undefined}>
+        <PromptWith prompt={q.prompt} control={control} syllables={rubySyl} />
       </div>
     ) : (
       <div>
@@ -271,7 +277,9 @@ function RowBody({
                 <input className="ps-opt-input" type={single ? "radio" : "checkbox"} name={`ps-${q.id}`} checked={selected.has(o.id)} onChange={() => toggle(o.id)} />
                 <span className="ps-opt-text">
                   <span className="ps-letter">{letterOf(i)}</span>
-                  <span>{o.label}</span>
+                  <span>
+                    <PinyinLabel text={o.label} />
+                  </span>
                 </span>
               </label>
             </li>
@@ -307,7 +315,7 @@ function RowBody({
         <ul className="ps-box" aria-label="Các vế để chọn">
           {rights.map((r, i) => (
             <li key={r.id} className={used.has(r.id) ? "ps-used" : undefined}>
-              <span className="ps-letter">{letterOf(i)}.</span> {r.label}
+              <span className="ps-letter">{letterOf(i)}.</span> <PinyinLabel text={r.label} />
             </li>
           ))}
         </ul>
@@ -317,7 +325,7 @@ function RowBody({
             return (
               <li key={l.id}>
                 <span>
-                  <span className="ps-sub">{i + 1}</span> {l.label}
+                  <span className="ps-sub">{i + 1}</span> <PinyinLabel text={l.label} />
                 </span>
                 <select className="ps-select ps-select-match" value={matched[l.id] ?? ""} onChange={(e) => set(l.id, e.target.value)} aria-label={`Câu ${n}, mục ${i + 1}`}>
                   <option value="">—</option>
@@ -330,7 +338,7 @@ function RowBody({
                 </select>
                 {chosen >= 0 && (
                   <span className="ps-chosen">
-                    → {letterOf(chosen)}) {rights[chosen]!.label}
+                    → {letterOf(chosen)}) <PinyinLabel text={rights[chosen]!.label} />
                   </span>
                 )}
               </li>
@@ -344,42 +352,11 @@ function RowBody({
   if (kind === "ordering") return <OrderingRow q={q} n={n} value={value} onChange={onChange} prompt={prompt} />;
 
   if (kind === "drag") {
-    const tokens = items(q.config.tokens);
     const placed = value && "placed" in value ? value.placed : {};
-    const used = new Set(Object.values(placed).filter(Boolean));
-    const set = (slot: string, tokenId: string) => {
-      const next = { ...placed };
-      if (tokenId) next[slot] = tokenId;
-      else delete next[slot];
-      onChange({ placed: next });
-    };
-    return (
-      <div>
-        <ul className="ps-box ps-words" aria-label="Các từ để chọn">
-          {tokens.map((t) => (
-            <li key={t.id} className={used.has(t.id) ? "ps-used" : undefined}>
-              {t.label}
-            </li>
-          ))}
-        </ul>
-        <div>
-          {splitDragPrompt(text).map((s, i) =>
-            s.kind === "text" ? (
-              <span key={i}>{s.text}</span>
-            ) : (
-              <select key={i} className="ps-select ps-select-inline" value={placed[s.slot] ?? ""} onChange={(e) => set(s.slot, e.target.value)} aria-label={`Câu ${n}, chỗ trống ${s.slot}`}>
-                <option value="">—</option>
-                {tokens.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            ),
-          )}
-        </div>
-      </div>
-    );
+    const segs = splitDragPrompt(text);
+    // Đề chữ Hán có pinyin: pinyin dưới từng chữ ở các đoạn chữ, chỗ trống là một ô cùng cao với chữ có pinyin.
+    const slices = rubySyl ? sliceByHan(rubySyl, segs.flatMap((s) => (s.kind === "text" ? [s.text] : []))) : null;
+    return <DragFillDnd n={n} tokens={items(q.config.tokens)} segs={segs} slices={slices} placed={placed} onPlaced={(next) => onChange({ placed: next })} />;
   }
 
   // Dạng câu phiếu chưa biết dựng: dùng ô nhập của trình làm bài chung để câu vẫn trả lời được (không để một dòng chỉ có đề).
@@ -387,46 +364,9 @@ function RowBody({
   return <ExamQuestion question={{ ...q, config: { ...q.config, promptAid: undefined } }} value={value} onChange={onChange} compact />;
 }
 
-/** Sắp xếp không kéo: mỗi mục một ô chọn số thứ tự; chỉ lưu khi mọi mục đã có số và không trùng. Giữ số đang chọn khi chuyển tab. */
+/** Sắp xếp bằng kéo-thả (xem `PracticeDnd`): chỉ lưu khi mọi mảnh đã vào ô; giữ các mảnh đã đặt khi chuyển tab. */
 function OrderingRow({ q, n, value, onChange, prompt }: { q: SheetQuestion; n: number; value: AnswerValue; onChange: (v: AnswerValue) => void; prompt: ReactNode }) {
-  const list = items(q.config.items);
-  const [pos, setPos] = useState<Record<string, string>>(() => {
-    const init: Record<string, string> = {};
-    if (value && "order" in value) value.order.forEach((id, i) => (init[id] = String(i + 1)));
-    return init;
-  });
-  const set = (id: string, v: string) => {
-    const next = { ...pos };
-    if (v) next[id] = v;
-    else delete next[id];
-    setPos(next);
-    const chosen = list.map((it) => next[it.id]);
-    if (chosen.every(Boolean) && new Set(chosen).size === list.length) {
-      onChange({ order: [...list].sort((a, b) => Number(next[a.id]) - Number(next[b.id])).map((it) => it.id) });
-    }
-  };
-  const missing = list.filter((it) => !pos[it.id]).length;
-  return (
-    <div>
-      {prompt}
-      <ul className="ps-pairs">
-        {list.map((it) => (
-          <li key={it.id}>
-            <span>{it.label}</span>
-            <select className="ps-select" value={pos[it.id] ?? ""} onChange={(e) => set(it.id, e.target.value)} aria-label={`Câu ${n}, thứ tự của "${it.label}"`}>
-              <option value="">—</option>
-              {list.map((_, i) => (
-                <option key={i} value={String(i + 1)}>
-                  {i + 1}
-                </option>
-              ))}
-            </select>
-          </li>
-        ))}
-      </ul>
-      {missing > 0 && <p className="ps-hint">Đánh số thứ tự cho mọi mục ({list.length - missing}/{list.length}).</p>}
-    </div>
-  );
+  return <OrderingDnd n={n} items={items(q.config.items)} order={value && "order" in value ? value.order : null} onOrder={(order) => onChange({ order })} prompt={prompt} />;
 }
 
 /**
@@ -522,6 +462,7 @@ export default function PracticeSheet({
   header,
   banner,
   hideTabs = false,
+  pinyin = false,
 }: {
   tabs: SheetTab[];
   activeIdx: number;
@@ -544,7 +485,13 @@ export default function PracticeSheet({
   banner?: string | null;
   /** Thanh tab do nơi dùng vẽ ở ngoài (phía trên cả đoạn văn lẫn phiếu) để thấy tab đổi cả hai. */
   hideTabs?: boolean;
+  /** Khoá tiếng Trung: đặt pinyin dưới chữ Hán của đề và các phương án (xem `PinyinLabel`). */
+  pinyin?: boolean;
 }) {
+  // Chỉ nạp bộ tính pinyin khi phiếu thật sự có chữ Hán (khoá `vi` không phải tiếng Trung thì khỏi tải bảng).
+  const hasHan = useMemo(() => pinyin && /[\u3400-\u9fff]/.test(JSON.stringify(Array.from(questions.values()))), [pinyin, questions]);
+  const hs = useSyllableFn(hasHan);
+  const tr = useT();
   const root = useRef<HTMLDivElement>(null);
   const isEssay = (id: string) => questions.get(id)?.type === "essay";
   const answeredOf = (id: string) => isAnswered(answers[id] ?? null);
@@ -594,8 +541,11 @@ export default function PracticeSheet({
       <div key={qid} id={`lp-${qid}`} className="ps-row" data-state={graded ? (ok ? "ok" : "no") : undefined}>
         <span className="ps-n">{n}</span>
         <div className="ps-body">
-          <RowBody q={q} n={n} value={answers[qid] ?? null} onChange={(v) => onAnswer(qid, v)} shared={shared} />
-          {!shared && <PromptAid config={q.config} hideReading={!!rowRubySyllables(q)} />}
+          {/* Câu hỏi về cách đọc: pinyin dưới chữ Hán (và dòng pinyin của đề) sẽ lộ đáp án, nên tắt cả phần tự tính lẫn của tác giả. */}
+          <PinyinProvider value={hidesPinyin(q) ? null : hs}>
+            <RowBody q={q} n={n} value={answers[qid] ?? null} onChange={(v) => onAnswer(qid, v)} shared={shared} />
+          </PinyinProvider>
+          {!shared && <PromptAid config={q.config} hideReading={hidesPinyin(q) || !!rowRubySyllables(q, false, hs)} />}
         </div>
         <span className="ps-mark">
           {graded && (
@@ -606,13 +556,25 @@ export default function PracticeSheet({
         </span>
         {graded && !ok && (reveal || expl) && (
           <div className="ps-fix" role="status">
-            {reveal && <div>→ {reveal}</div>}
-            {expl && <div className="ps-expl">{expl}</div>}
+            {reveal && (
+              <div>
+                → <PinyinLabel text={reveal} />
+              </div>
+            )}
+            {expl && (
+              <div className="ps-expl">
+                <PinyinLabel text={expl} />
+              </div>
+            )}
           </div>
         )}
         {graded && !ok && !reveal && (
           <div className="ps-fix ps-review" role="status">
-            {expl && <div className="ps-expl">{expl}</div>}
+            {expl && (
+              <div className="ps-expl">
+                <PinyinLabel text={expl} />
+              </div>
+            )}
             {/* Khối dài (ghép cặp, sắp xếp, kéo thả): gập sẵn cho đỡ tốn diện tích, bấm mới mở. */}
             <details className="ps-review-details">
               <summary>Xem bài làm và đáp án</summary>
@@ -626,6 +588,7 @@ export default function PracticeSheet({
   }
 
   return (
+    <PinyinProvider value={hs}>
     <div ref={root} className="practice-sheet" data-testid="practice-sheet" onKeyDown={onKeyDown}>
       <div className="ps-head">
         {banner && (
@@ -655,27 +618,57 @@ export default function PracticeSheet({
           )}
           {t.intro && (typeof t.intro === "string" ? <p className="ps-intro">{t.intro}</p> : <div className="ps-intro-media">{t.intro}</div>)}
           {t.questionIds.length === 0 && <p className="ps-hint ps-empty">Phần này chỉ có nội dung để nghe hoặc đọc, không có câu hỏi.</p>}
-          {groupSharedOptions(
-            t.questionIds.map((id) => {
-              const q = questions.get(id);
-              return { id, type: q?.type ?? "", labels: q ? optionLabelsOf(q.config) : [] };
-            }),
-          ).map((run) =>
-            run.kind === "single" ? (
-              renderRow(run.id)
-            ) : (
-              <div key={run.ids[0]} className="ps-group">
-                <ul className="ps-box ps-legend" aria-label="Các lựa chọn dùng chung">
-                  {run.labels.map((l, i) => (
-                    <li key={i}>
-                      <span className="ps-letter">{letterOf(i)})</span> {l}
-                    </li>
-                  ))}
-                </ul>
-                {run.ids.map((id) => renderRow(id, true))}
-              </div>
-            ),
+          {(tabs.length > 1 || hideTabs) && !t.introTitle && (
+            // Tab đang chọn mở đầu bằng tên khối và số câu (thanh tab chỉ có nhãn ngắn).
+            <header className="ps-tabtitle">
+              <h2 className="text-h4">{t.label}</h2>
+              <span className="ps-tabtitle-n">{tr("practice.sheet.count", { n: t.questionIds.filter((id) => questions.get(id)?.type !== "essay").length || t.questionIds.length })}</span>
+            </header>
           )}
+          {(() => {
+            const runs = groupSharedOptions(
+              t.questionIds.map((id) => {
+                const q = questions.get(id);
+                return { id, type: q?.type ?? "", labels: q ? optionLabelsOf(q.config) : [] };
+              }),
+            );
+            // Dòng yêu cầu: bài tập đã có câu yêu cầu riêng (đoạn văn/`intro`) thì thôi; không thì theo `config.instruction` hoặc mặc định theo dạng câu.
+            const firstOf = (run: (typeof runs)[number]) => questions.get(run.kind === "single" ? run.id : run.ids[0]!);
+            const plan = instructionPlan(
+              runs.map((run) => {
+                const q = firstOf(run);
+                const explicit = q && typeof q.config.instruction === "string" ? q.config.instruction : null;
+                return { kind: q ? (q.type === "essay" ? "essay" : sheetKind(q)) : "other", prompt: q ? plain(q.prompt) : "", instruction: explicit };
+              }),
+            );
+            return runs.map((run, ri) => {
+              const p = t.intro ? null : plan[ri];
+              const line = p ? (p.key ? tr(p.key as Parameters<typeof tr>[0]) : p.text) : null;
+              return (
+                <Fragment key={run.kind === "single" ? run.id : run.ids[0]}>
+                  {line && (
+                    <p className="ps-instr" data-testid="ps-instr">
+                      {line}
+                    </p>
+                  )}
+                  {run.kind === "single" ? (
+                    renderRow(run.id)
+                  ) : (
+                    <div className="ps-group">
+                      <ul className="ps-box ps-legend" aria-label="Các lựa chọn dùng chung">
+                        {run.labels.map((l, i) => (
+                          <li key={i}>
+                            <span className="ps-letter">{letterOf(i)})</span> <PinyinLabel text={l} />
+                          </li>
+                        ))}
+                      </ul>
+                      {run.ids.map((id) => renderRow(id, true))}
+                    </div>
+                  )}
+                </Fragment>
+              );
+            });
+          })()}
         </div>
       ))}
       <div className="ps-foot">
@@ -696,20 +689,32 @@ export default function PracticeSheet({
         )}
       </div>
     </div>
+    </PinyinProvider>
   );
 }
 
 
 /**
- * Dạng câu nào hiện pinyin dưới từng chữ Hán của đề: chỉ các dạng vẽ đề bằng chữ thường (`prompt`/`text`) ở RowBody; đề có chèn ô chọn giữa câu ("____" + viên thuốc)
- * hoặc dạng "viết lại câu (từ khoá)" giữ cách hiện cũ. Trả dãy âm tiết cho cả đề (đề chữ Hán, pinyin ghép được từng chữ), không thì null.
+ * Pinyin dưới từng chữ Hán của đề: mọi dạng câu RowBody vẽ bằng chữ thường, kể cả đề có ô trống/ô chọn giữa câu; dạng "viết lại câu (từ khoá)" giữ cách hiện cũ.
+ * Lấy pinyin tác giả viết (`promptAid.reading`) khi ghép được từng chữ; đề không có pinyin tác giả thì tự tính (`hs`, khoá tiếng Trung). Trả dãy âm tiết cho cả đề, không thì null.
  */
-function rowRubySyllables(q: SheetQuestion, shared = false): string[] | null {
-  if (shared) return null;
+/** Câu hỏi này không được hiện pinyin dưới chữ Hán (xem `questionHidesPinyin`). */
+function hidesPinyin(q: SheetQuestion): boolean {
+  return questionHidesPinyin(plain(q.prompt), q.config);
+}
+
+function rowRubySyllables(q: SheetQuestion, shared = false, hs: SyllableFn | null = null): string[] | null {
+  if (shared || questionHidesPinyin(plain(q.prompt), q.config)) return null;
   const kind = sheetKind(q);
-  if (!["gap", "choice-inline", "tfng", "numerical", "choice-list", "multi-list", "matching", "ordering"].includes(kind)) return null;
+  if (!["gap", "choice-inline", "tfng", "numerical", "choice-list", "multi-list", "matching", "ordering", "drag"].includes(kind)) return null;
   const text = plain(q.prompt);
   if (kind === "gap" && splitTransform(text)) return null;
-  if (kind === "choice-inline" && splitBlankPrompt(text, 1).some((s) => s.kind === "blank") && /_{3,}/.test(text)) return null;
-  return promptSyllables(text, parsePromptAid(q.config)?.reading);
+  const reading = parsePromptAid(q.config)?.reading;
+  // Pinyin tác giả viết (ghép được từng chữ) luôn được ưu tiên.
+  const authored = promptSyllables(text, reading);
+  if (authored) return authored;
+  // Có pinyin tác giả mà không ghép được: giữ dòng pinyin riêng như cũ (không thay bằng pinyin tự tính để khỏi mất bản của tác giả).
+  if (reading || !hs || /[\n\r<>]/.test(text)) return null;
+  const auto = hs(text);
+  return auto && auto.some(Boolean) ? auto : null;
 }

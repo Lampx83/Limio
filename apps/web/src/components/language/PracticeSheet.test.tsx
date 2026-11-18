@@ -263,22 +263,25 @@ describe("Phiếu bài tập — trả lời ngay trong dòng", () => {
     await flush(600);
     expect(calls.filter((c) => c.url.endsWith("/answers/m1")).at(-1)!.body).toEqual({ answerJson: { matched: { L1: "R1", L2: "R2" } } });
 
-    // sắp xếp: chỉ lưu khi mọi mục có số và không trùng
-    const ord = [...panel().querySelectorAll<HTMLSelectElement>(".ps-pairs select")].slice(2);
-    await choose(ord[0]!, "2");
+    // sắp xếp (kéo-thả; ô chọn dự phòng cho đọc màn hình): chỉ lưu khi mọi ô đã có mảnh và không trùng
+    const ord = [...panel().querySelectorAll<HTMLSelectElement>('select[aria-label*="vị trí"]')];
+    expect(ord).toHaveLength(2);
+    await choose(ord[0]!, "I2");
     await flush(600);
     expect(calls.some((c) => c.url.endsWith("/answers/od1"))).toBe(false);
-    expect(text()).toContain("Đánh số thứ tự cho mọi mục (1/2)");
-    await choose(ord[1]!, "1");
+    expect(text()).toContain("Đặt đủ các mảnh vào ô (1/2)");
+    await choose(ord[1]!, "I1");
     await flush(600);
     expect(calls.filter((c) => c.url.endsWith("/answers/od1")).at(-1)!.body).toEqual({ answerJson: { order: ["I2", "I1"] } });
 
-    // kéo thả điền: hộp từ và ô chọn tại chỗ
-    const slot = panel().querySelector<HTMLSelectElement>("select.ps-select-inline")!;
+    // kéo thả điền: hộp từ và ô chỗ trống tại chỗ (ô chọn gốc nằm trong ô)
+    const slot = panel().querySelector<HTMLSelectElement>(".ps-slot select.ps-slot-select")!;
     await choose(slot, "T2");
     await flush(600);
     expect(calls.filter((c) => c.url.endsWith("/answers/d1")).at(-1)!.body).toEqual({ answerJson: { placed: { "1": "T2" } } });
-    expect(panel().querySelector(".ps-words .ps-used")!.textContent).toBe("reads"); // từ đã đặt của câu kéo thả (không lẫn nghĩa đã dùng của ghép cặp)
+    expect(panel().querySelector(".ps-slot")!.getAttribute("data-filled")).toBe("true");
+    expect(panel().querySelector(".ps-slot-face")!.textContent).toBe("reads");
+    expect(panel().querySelector('.ps-words .ps-card[data-used="true"]')!.textContent).toBe("reads"); // từ đã đặt của câu kéo thả (không lẫn nghĩa đã dùng của ghép cặp)
   });
 
   it("Enter trong ô điền chuyển sang ô kế tiếp; ở ô cuối chuyển tới nút kiểm tra", async () => {
@@ -435,5 +438,175 @@ describe("Phiếu bài tập — đề biến đổi câu (câu gốc / TỪ KHO
     expect(rewrite.textContent).toContain("yesterday.");
     expect(rewrite.querySelector("input.ps-blank")).not.toBeNull(); // chỗ điền nằm trong phần viết lại
     expect(row.querySelector(".ps-body")!.textContent).toMatch(/^Someone fixed our washing machine yesterday\. \(HAD\) We/);
+  });
+});
+
+describe("Phiếu bài tập — khoá tiếng Trung: pinyin dưới chữ ở đề, ngân hàng từ và phương án", () => {
+  const zh = (): PracticeEmbed => {
+    const e = embed();
+    return {
+      ...e,
+      courseLanguage: "zh",
+      questions: [
+        q("z1", "drag_drop_fill", "我在超市买了一[[1]]面包和一[[2]]铅笔。", "p1", {
+          tokens: [{ id: "T1", label: "幅" }, { id: "T2", label: "袋" }],
+          promptAid: { reading: "Wǒ zài chāoshì mǎi le yí ____ miànbāo hé yì ____ qiānbǐ." },
+        }),
+        q("z2", "mcq", "他家里新买了一____洗衣机。", "p1", { options: [{ id: "o1", label: "台" }, { id: "o2", label: "银行" }] }),
+      ],
+      passages: [e.passages[0]!],
+    };
+  };
+  const rt = (el: Element) => [...el.querySelectorAll("rt")].map((x) => x.textContent);
+  /** Bộ tính pinyin nạp lười (import động): chờ nó xong rồi mới vẽ lại. */
+  const loaded = async () => {
+    await act(async () => {
+      await import("@/lib/hanPinyin");
+    });
+    await flush(50);
+  };
+
+  it("đề có pinyin tác giả: pinyin dưới từng chữ, không còn dòng pinyin riêng; chỗ trống là một ô có số thứ tự", async () => {
+    await render(zh());
+    await loaded();
+    const row = panel().querySelectorAll(".ps-row")[0]!;
+    expect(row.querySelector('[data-testid="prompt-aid-reading"]')).toBeNull();
+    expect(rt(row.querySelector(".ps-drag-line")!)).toContain("chāo");
+    expect(row.querySelectorAll(".ps-slot")).toHaveLength(2);
+    expect([...row.querySelectorAll(".ps-slot-n")].map((n) => n.textContent)).toEqual(["1", "2"]);
+    // ngân hàng từ có pinyin tự tính
+    expect(rt(row.querySelector(".ps-words")!)).toEqual(["fú", "dài"]);
+  });
+
+  it("chọn từ vào ô: ô hiện từ đã chọn kèm pinyin dưới chữ; lưu đúng dạng cũ", async () => {
+    await render(zh());
+    await loaded();
+    const slot = panel().querySelectorAll<HTMLSelectElement>(".ps-slot select.ps-slot-select")[1]!;
+    expect([...slot.options].map((o) => o.textContent)).toEqual(["—", "幅 (fú)", "袋 (dài)"]);
+    await choose(slot, "T2");
+    await flush(600);
+    const filled = panel().querySelectorAll(".ps-slot")[1]!;
+    expect(filled.getAttribute("data-filled")).toBe("true");
+    expect(rt(filled.querySelector(".ps-slot-face")!)).toEqual(["dài"]);
+    expect(calls.filter((c) => c.url.endsWith("/answers/z1")).at(-1)!.body).toEqual({ answerJson: { placed: { "2": "T2" } } });
+  });
+
+  it("phương án trắc nghiệm có pinyin tự tính (chữ đa âm theo từ); đề không có pinyin tác giả cũng có pinyin dưới chữ", async () => {
+    await render(zh());
+    await loaded();
+    const row = panel().querySelectorAll(".ps-row")[1]!;
+    expect(rt(row.querySelector(".ps-alts")!)).toEqual(["tái", "yín", "háng"]);
+    expect(rt(row).length).toBeGreaterThan(8); // đề cũng có pinyin dưới chữ (tự tính)
+  });
+
+  it("khoá khác tiếng Trung (en) không đặt pinyin: chữ hiện trơn, vẫn là ô chọn bình thường", async () => {
+    const e = zh();
+    await render({ ...e, courseLanguage: "en", questions: [e.questions[1]!] });
+    await loaded();
+    expect(panel().querySelector("ruby")).toBeNull();
+    expect(panel().querySelectorAll(".ps-alt")).toHaveLength(2);
+  });
+
+  it("đề lẫn chữ Việt: chữ Việt giữ font bài (ps-latin) và tự xuống dòng; từ Hán ngắn là một khối không ngắt", async () => {
+    const e = zh();
+    await render({ ...e, questions: [q("m1", "mcq", "Màn hình đang 播放 một đoạn video.", "p1", { options: [{ id: "o1", label: "台" }, { id: "o2", label: "袋" }] })] });
+    await loaded();
+    const line = panel().querySelector(".ps-row .ruby-line")!;
+    expect(line.querySelectorAll(".ps-latin").length).toBeGreaterThan(0);
+    expect([...line.querySelectorAll(".ps-latin")].map((x) => x.textContent?.trim())).toEqual(["Màn hình đang", "một đoạn video."]);
+    const unit = [...line.querySelectorAll("span.whitespace-nowrap")].find((x) => x.textContent?.includes("播"))!;
+    expect(unit.textContent).toContain("放");
+    expect(rt(unit)).toEqual(["bō", "fàng"]);
+  });
+
+  it("câu hỏi cách đọc: không pinyin dưới chữ Hán của đề, không dòng pinyin của đề, không ruby ở bất kỳ chỗ nào của câu", async () => {
+    const e = zh();
+    await render({
+      ...e,
+      questions: [
+        q("p1", "mcq", "Màn hình đang 播放 một đoạn video. Chọn pinyin đúng của 播放.", "p1", {
+          options: [{ id: "o1", label: "bōfāng" }, { id: "o2", label: "bōfàng" }, { id: "o3", label: "bófàng" }, { id: "o4", label: "bǒfàng" }],
+          promptAid: { reading: "Pīnyīn ... bōfàng", translation: "Dịch" },
+        }),
+        q("p2", "mcq", "Chọn chữ Hán cho bōfàng.", "p1", { options: [{ id: "o1", label: "播放" }, { id: "o2", label: "插放" }], hidePinyin: true }),
+      ],
+    });
+    await loaded();
+    const rows = panel().querySelectorAll(".ps-row");
+    for (const r of rows) expect(r.querySelector("ruby")).toBeNull();
+    expect(rows[0]!.querySelector('[data-testid="prompt-aid-reading"]')).toBeNull();
+    expect(rows[0]!.textContent).toContain("Hiện bản dịch");
+  });
+
+  it("sắp xếp: chạm mảnh rồi chạm ô để đặt; chạm mảnh đã đặt để bỏ ra; mũi tên đổi chỗ; chỉ lưu khi đủ", async () => {
+    await render();
+    await click(button(/Bài 2/));
+    const pool = () => [...panel().querySelectorAll<HTMLButtonElement>(".ps-pool .ps-card")];
+    const slots = () => [...panel().querySelectorAll<HTMLElement>(".ps-oslot")];
+    expect(pool().map((c) => c.textContent)).toEqual(["wake up", "get dressed"]);
+    expect(slots()).toHaveLength(2);
+    // chạm "get dressed" (sáng lên) rồi chạm ô 1
+    await click(pool()[1]!);
+    expect(pool()[1]!.getAttribute("aria-pressed")).toBe("true");
+    await click(slots()[0]!.querySelector<HTMLButtonElement>(".ps-oslot-empty")!);
+    expect(slots()[0]!.textContent).toContain("get dressed");
+    expect(pool().map((c) => c.textContent)).toEqual(["wake up"]);
+    await flush(600);
+    expect(calls.some((c) => c.url.endsWith("/answers/od1"))).toBe(false); // chưa đủ
+    await click(pool()[0]!);
+    await click(slots()[1]!.querySelector<HTMLButtonElement>(".ps-oslot-empty")!);
+    await flush(600);
+    expect(calls.filter((c) => c.url.endsWith("/answers/od1")).at(-1)!.body).toEqual({ answerJson: { order: ["I2", "I1"] } });
+    // mũi tên phải ở ô 1: đổi chỗ với ô 2
+    await act(async () => {
+      slots()[0]!.querySelector(".ps-card")!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }));
+    });
+    await flush(600);
+    expect(calls.filter((c) => c.url.endsWith("/answers/od1")).at(-1)!.body).toEqual({ answerJson: { order: ["I1", "I2"] } });
+    // chạm mảnh đã đặt: về khay
+    await click(slots()[0]!.querySelector(".ps-card")!);
+    expect(pool().map((c) => c.textContent)).toEqual(["wake up"]);
+  });
+
+  it("kéo thả điền: chạm từ ở ngân hàng rồi chạm chỗ trống để đặt (mỗi từ một chỗ)", async () => {
+    await render();
+    await click(button(/Bài 2/));
+    const cards = () => [...panel().querySelectorAll<HTMLButtonElement>(".ps-words .ps-card")];
+    await click(cards()[1]!);
+    await click(panel().querySelector<HTMLElement>(".ps-slot")!);
+    await flush(600);
+    expect(calls.filter((c) => c.url.endsWith("/answers/d1")).at(-1)!.body).toEqual({ answerJson: { placed: { "1": "T2" } } });
+    expect(panel().querySelector(".ps-slot-face")!.textContent).toBe("reads");
+  });
+});
+
+describe("Phiếu bài tập — dòng yêu cầu và tên khối", () => {
+  it("câu không có dòng yêu cầu riêng nhận dòng mặc định theo dạng câu, một lần cho cụm cùng dạng; câu đã có 'Chọn…/Nối…' thì không thêm", async () => {
+    const e = embed();
+    await render({
+      ...e,
+      questions: [
+        q("a1", "drag_drop_fill", "我买了一[[1]]面包。", "p1", { tokens: [{ id: "T1", label: "袋" }, { id: "T2", label: "台" }] }),
+        q("a2", "drag_drop_fill", "我买了一[[1]]铅笔。", "p1", { tokens: [{ id: "T1", label: "袋" }, { id: "T2", label: "台" }] }),
+        q("a3", "matching", "Nối từ tiếng Trung với nghĩa tiếng Việt.", "p1", { lefts: [{ id: "L1", label: "桶" }], rights: [{ id: "R1", label: "cái xô" }] }),
+        q("a4", "mcq", "Hôm nay là ngày mấy?", "p1", { options: [{ id: "o1", label: "một" }, { id: "o2", label: "hai" }] }),
+      ],
+      passages: [e.passages[0]!],
+    });
+    const lines = [...panel().querySelectorAll('[data-testid="ps-instr"]')].map((x) => x.textContent);
+    expect(lines).toEqual(["Chọn từ thích hợp điền vào chỗ trống.", "Chọn đáp án đúng."]);
+  });
+
+  it("trường config.instruction của câu được dùng làm dòng yêu cầu", async () => {
+    const e = embed();
+    await render({ ...e, questions: [q("i1", "mcq", "Hôm nay là ngày mấy?", "p1", { instruction: "Nghe rồi chọn.", options: [{ id: "o1", label: "một" }, { id: "o2", label: "hai" }] })], passages: [e.passages[0]!] });
+    expect([...panel().querySelectorAll('[data-testid="ps-instr"]')].map((x) => x.textContent)).toEqual(["Nghe rồi chọn."]);
+  });
+
+  it("nhiều tab: tab đang chọn mở đầu bằng tên khối và số câu", async () => {
+    await render();
+    const head = panel().querySelector(".ps-tabtitle")!;
+    expect(head.textContent).toContain("Ex 1A · Present forms");
+    expect(head.textContent).toMatch(/\d+ câu/);
   });
 });

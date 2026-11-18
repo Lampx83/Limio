@@ -48,7 +48,7 @@ function el(doc: Document, tag: string, cls?: string): HTMLElement {
 }
 
 /** Chữ Hán có pinyin dưới từng chữ (ruby) nếu pinyin ghép được; không thì chữ kèm dòng pinyin nhỏ dưới. Tạo phần tử bằng DOM (textContent). */
-function appendHanWithReading(doc: Document, into: HTMLElement, han: string, reading: string | undefined, readingCls: string): void {
+export function appendHanWithReading(doc: Document, into: HTMLElement, han: string, reading: string | undefined, readingCls: string): void {
   const syl = reading ? alignReading(han, reading) : null;
   if (syl) {
     let k = 0;

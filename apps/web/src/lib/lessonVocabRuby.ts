@@ -32,7 +32,7 @@ export function buildVocabRuby(html: string): string {
   return changed ? doc.body.innerHTML : html;
 }
 
-function dressWordCell(cell: HTMLTableCellElement, reading: string): void {
+export function dressWordCell(cell: HTMLTableCellElement, reading: string): void {
   const word = (cell.textContent ?? "").trim();
   if (!word || !reading) return;
   const syl = alignReading(word, reading);

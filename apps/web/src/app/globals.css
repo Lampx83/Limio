@@ -2301,7 +2301,7 @@ button.fc-chip:hover:not(:disabled) {
 .fc-chip-static {
   cursor: default;
 }
-.fc-chip span {
+.fc-chip > span {
   font-size: 0.8125rem;
   color: rgb(var(--text-muted));
 }
@@ -3041,4 +3041,358 @@ textarea.fc-input {
 .fc-mic-start:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* ── Phiếu bài tập khoá tiếng Trung: pinyin dưới chữ ở phương án / ngân hàng từ, và chỗ trống kéo thả là MỘT ô rõ ràng ────────────────────────── */
+/* Nhãn có pinyin nằm trong dòng chữ khác (phương án, vế ghép…): không dùng line-height của đoạn văn, ruby đã tự cao. */
+.ps-han.ruby-line {
+  line-height: 1.25;
+}
+.ps-words:has(.ps-han) {
+  font-size: 1.125rem;
+  gap: 0.25rem 0.75rem;
+}
+.ps-opt-text:has(.ps-han),
+.ps-pairs li:has(.ps-han) {
+  align-items: center;
+}
+.ps-drag-line {
+  /* Đủ chỗ cho ruby và ô trống không dính nhau giữa hai dòng. */
+  line-height: 1.5;
+}
+.ps-drag-line.ruby-line {
+  line-height: 1.3;
+  row-gap: 0.25rem;
+}
+/* Ô chỗ trống: cao bằng một chữ Hán kèm pinyin (cùng lề trên dưới với ruby), rộng ≥ 2,5 chữ, viền + nền nhạt, mũi tên cho biết bấm được. */
+.ps-slot {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 2.7em;
+  min-height: 2.1em;
+  margin: 0.15em 0.2em;
+  padding: 0 0.3em;
+  vertical-align: middle;
+  border: 1.5px solid color-mix(in srgb, rgb(var(--text-muted)) 60%, transparent);
+  border-radius: 0.4em;
+  background: color-mix(in srgb, rgb(var(--text-muted)) 8%, transparent);
+  color: rgb(var(--text));
+  white-space: nowrap;
+}
+.ruby-line .ps-slot {
+  vertical-align: top;
+  min-height: 2.12em;
+}
+.ps-slot:hover {
+  border-color: rgb(var(--text-muted));
+}
+.ps-slot:focus-within {
+  outline: 2px solid rgb(var(--brand));
+  outline-offset: 1px;
+}
+.ps-slot[data-filled="true"] {
+  border-color: var(--ps-ink);
+  background: color-mix(in srgb, var(--ps-ink) 9%, transparent);
+  color: var(--ps-ink);
+  font-weight: 600;
+}
+.ps-slot-face {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.ps-slot-face .ps-han.ruby-line {
+  line-height: 1.25;
+}
+.ps-slot-face ruby.ruby-han {
+  margin-block: 0;
+}
+.ps-slot-chev {
+  color: rgb(var(--text-muted));
+}
+/* Số thứ tự nhỏ ở góc trên trái, đè lên viền. */
+.ps-slot-n {
+  position: absolute;
+  top: -0.55em;
+  left: -0.4em;
+  min-width: 1.3em;
+  height: 1.3em;
+  padding: 0 0.2em;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: rgb(var(--surface));
+  border: 1px solid color-mix(in srgb, rgb(var(--text-muted)) 60%, transparent);
+  color: rgb(var(--text-muted));
+  font-size: 0.6em;
+  font-weight: 600;
+  line-height: calc(1.3em - 2px);
+  text-align: center;
+  pointer-events: none;
+}
+/* Ô chọn gốc phủ kín ô, trong suốt: nhận bấm, bàn phím và bộ chọn của điện thoại; cỡ chữ 16px để iOS không phóng to khi chạm. */
+.practice-sheet select.ps-slot-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px;
+}
+/* Ô gõ chữ (điền từ không kéo thả) trong đề có pinyin: cũng là một ô cùng cao với chữ, không phải gạch chân lệch dòng. */
+.practice-sheet .ruby-line input.ps-blank {
+  box-sizing: border-box;
+  height: 2.1em;
+  min-width: 3em;
+  margin: 0.15em 0.2em;
+  vertical-align: top;
+  border: 1.5px solid color-mix(in srgb, rgb(var(--text-muted)) 60%, transparent);
+  border-radius: 0.4em;
+  background: color-mix(in srgb, rgb(var(--text-muted)) 8%, transparent);
+}
+.practice-sheet .ruby-line input.ps-blank:focus {
+  border-color: rgb(var(--brand));
+  border-width: 2px;
+}
+@media (max-width: 639.98px) {
+  .practice-sheet select.ps-slot-select {
+    height: 100%;
+  }
+  .ps-slot {
+    min-height: 2.4em;
+  }
+}
+/* Nhãn có pinyin nằm trong nút / dòng phương án: theo cỡ chữ và màu của chỗ chứa (khung bài HSK đặt chữ Hán trong phiếu to và có màu riêng cho ĐỀ). */
+.practice-sheet.practice-sheet .ps-alt .ps-han,
+.practice-sheet.practice-sheet .ps-opt-text .ps-han,
+.practice-sheet.practice-sheet .ps-pairs .ps-han,
+.practice-sheet.practice-sheet .ps-fix .ps-han,
+.practice-sheet.practice-sheet .ps-legend .ps-han {
+  font-size: inherit;
+  color: inherit;
+}
+.practice-sheet.practice-sheet .ps-fix .ps-han ruby.ruby-han > rt,
+.practice-sheet.practice-sheet .ps-alt .ps-han ruby.ruby-han > rt {
+  font-size: 0.6em;
+}
+/* Chữ Việt/Anh trong đề lẫn chữ Hán: giữ font và cỡ của bài (khung bài HSK đặt cả dòng theo font và cỡ chữ Hán, nên phải đặt lại ở đây), không dùng font Hán. */
+.practice-sheet .han-text .ps-latin {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: rgb(var(--text));
+}
+
+/* ── Phiếu bài tập: dòng yêu cầu, tên khối, và kéo-thả (thẻ, ô thứ tự, khay) ─────────────────────────────────────────────────────────────── */
+.ps-tabtitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  margin: 0 0 0.5rem;
+}
+.ps-tabtitle-n {
+  font-size: 0.8125rem;
+  color: rgb(var(--text-muted));
+}
+/* Dòng yêu cầu của bài tập: một dòng chữ vừa, đậm vừa, đứng TRÊN câu (và trên ngân hàng từ), thẳng cột với nội dung câu. */
+.practice-sheet .ps-instr {
+  margin: 0.75rem 0 0.125rem 2.125rem;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: rgb(var(--text));
+}
+@media (max-width: 639.98px) {
+  .practice-sheet .ps-instr {
+    margin-left: 0;
+  }
+}
+/* Thẻ kéo được: từ / mảnh câu. Chạm giữ ngắn mới nhấc (cuộn trang bình thường), chạm nhanh là chọn. */
+.ps-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 2.5rem;
+  padding: 0.125rem 0.75rem;
+  border: 1.5px solid color-mix(in srgb, rgb(var(--text-muted)) 55%, transparent);
+  border-radius: 0.6rem;
+  background: rgb(var(--surface));
+  color: rgb(var(--text));
+  font: inherit;
+  line-height: 1.3;
+  cursor: grab;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+}
+.ps-card:hover {
+  border-color: rgb(var(--text-muted));
+}
+.ps-card:focus-visible {
+  outline: 2px solid rgb(var(--brand));
+  outline-offset: 2px;
+}
+.ps-card[data-selected="true"] {
+  border-color: var(--ps-ink);
+  background: color-mix(in srgb, var(--ps-ink) 12%, rgb(var(--surface)));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ps-ink) 35%, transparent);
+}
+.ps-card[data-used="true"] {
+  opacity: 0.45;
+}
+.ps-card[data-dragging="true"] {
+  opacity: 0.35;
+}
+.ps-card-overlay {
+  cursor: grabbing;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.22);
+  border-color: var(--ps-ink);
+}
+/* Ngân hàng từ của câu Kéo thả điền: các thẻ nằm trong khung xám như cũ. */
+.ps-words {
+  align-items: center;
+  gap: 0.5rem 0.625rem;
+}
+.ps-words li {
+  padding: 0;
+}
+.ps-words .ps-card {
+  font-size: 1.1rem;
+}
+/* Ô nhận từ đang được chọn / kéo qua. */
+.ps-slot[data-over="true"],
+.ps-slot[data-picking="true"] {
+  border-color: var(--ps-ink);
+  border-style: dashed;
+  background: color-mix(in srgb, var(--ps-ink) 10%, transparent);
+}
+.ps-slot[data-picking="true"] {
+  cursor: pointer;
+}
+.practice-sheet .ps-slot[data-picking="true"] select.ps-slot-select {
+  pointer-events: none;
+}
+/* Câu Sắp xếp: hàng ô đánh số (đáp án) trên, khay các mảnh dưới. */
+.ps-dnd {
+  margin-top: 0.25rem;
+}
+.ps-oslots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 0.5rem;
+  list-style: none;
+  margin: 0.5rem 0 0.5rem;
+  padding: 0.5rem 0.25rem 0.25rem;
+}
+.ps-oslot {
+  position: relative;
+  display: flex;
+  min-width: 4.25rem;
+  min-height: 3.4rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border: 1.5px dashed color-mix(in srgb, rgb(var(--text-muted)) 60%, transparent);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, rgb(var(--text-muted)) 7%, transparent);
+}
+.ps-oslot[data-filled="true"] {
+  border-color: transparent;
+  background: transparent;
+}
+.ps-oslot[data-over="true"] {
+  border-color: var(--ps-ink);
+  background: color-mix(in srgb, var(--ps-ink) 12%, transparent);
+}
+.ps-oslot-n {
+  position: absolute;
+  top: -0.6rem;
+  left: -0.3rem;
+  z-index: 1;
+  min-width: 1.3rem;
+  height: 1.3rem;
+  padding: 0 0.25rem;
+  box-sizing: border-box;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, rgb(var(--text-muted)) 60%, transparent);
+  background: rgb(var(--surface));
+  color: rgb(var(--text-muted));
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: calc(1.3rem - 2px);
+  text-align: center;
+  pointer-events: none;
+}
+.ps-oslot-empty {
+  width: 100%;
+  min-height: 2.5rem;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+.ps-oslot-empty[data-selecting="true"] {
+  cursor: pointer;
+}
+.ps-oslot-empty:focus-visible {
+  outline: 2px solid rgb(var(--brand));
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+.ps-pool {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.625rem;
+  min-height: 3.4rem;
+  list-style: none;
+  margin: 0.5rem 0 0.25rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.5rem;
+  background: rgb(var(--surface-muted));
+}
+.ps-pool[data-over="true"] {
+  outline: 2px dashed var(--ps-ink);
+  outline-offset: -2px;
+}
+.ps-pool .ps-card,
+.ps-oslot .ps-card {
+  font-size: 1.1rem;
+}
+.ps-oslot .ps-card {
+  width: 100%;
+}
+
+/* Nói với bạn ảo (khoá tiếng Trung): pinyin dưới chữ Hán của lời bạn ảo, từ khoá, gợi ý, bài mẫu. Theo cỡ chữ và màu của chỗ chứa (khung bài HSK đặt chữ Hán trong phiếu 1.6rem có màu riêng
+   cho ĐỀ); pinyin có sàn 11px để chip nhỏ vẫn đọc được. Chip không tràn ngang: cụm Hán ngắn nowrap, cụm dài ngắt giữa các chữ. */
+.fc.fc.fc .ps-han.han-text {
+  font-size: 1.1em;
+  color: inherit;
+}
+.fc.fc.fc .ps-han ruby.ruby-han > rt {
+  font-size: max(0.6em, 0.6875rem);
+  color: rgb(var(--text-muted));
+}
+.fc .fc-chip strong .ps-han,
+.fc .fc-frame-en .ps-han {
+  white-space: normal;
+}
+.fc .fc-msg p {
+  overflow-wrap: anywhere;
+}
+.fc .fc-chip:has(.ps-han) {
+  white-space: normal;
+  border-radius: 1.25rem;
 }

@@ -64,7 +64,7 @@ import { createPassage } from "../src/exam/passages";
 import { createExamQuestion } from "../src/exam/questions";
 import { createAudioAsset, createImageAsset } from "../src/exam/assets";
 import { attachDialogueAudio, prepareDialogueAudio, type DialogueAudioContext } from "./dialogue-audio";
-import { attachVocabAudio, createNeuVocabSynth, lessonAudioStore, type VocabAudioContext } from "./vocab-audio";
+import { attachVocabAudio, attachVocabTrack, createNeuVocabSynth, lessonAudioStore, type VocabAudioContext } from "./vocab-audio";
 import { validateContentPayload } from "../src/courses/contentSchemas";
 import { setVideoTranscript } from "../src/exam/passageAssets";
 import {
@@ -362,8 +362,13 @@ export const LessonSpec = z.object({
         .array(
           z.object({
             term: z.string().min(1).max(200),
+            /** Phiên âm (pinyin) của từ; tách riêng để thẻ lật hiện phiên âm một mình. */
+            reading: z.string().max(200).optional(),
             meaning: z.string().min(1).max(1_000),
             example: z.string().max(1_000).optional(),
+            /** Phiên âm và bản dịch của câu ví dụ. */
+            exampleReading: z.string().max(1_000).optional(),
+            exampleMeaning: z.string().max(1_000).optional(),
             note: z.string().max(1_000).optional(),
           }),
         )
@@ -872,6 +877,12 @@ export function markdownToHtml(
       const dslot = /^:::dialogue\s+(\d+)\s*$/.exec(t);
       if (dslot) {
         out.push(`<div data-dialogue-slot="${dslot[1]}"></div>`);
+        i++;
+        continue;
+      }
+      // `:::vocab` — chỗ đặt bộ thẻ từ mới (`flashcards`) giữa thân bài (vd. ngay sau hội thoại, trước ngữ pháp). Không có mốc này thì thẻ nằm cuối bài như cũ.
+      if (/^:::vocab\s*$/.test(t)) {
+        out.push(`<div data-vocab-slot="1"></div>`);
         i++;
         continue;
       }
@@ -1592,8 +1603,11 @@ export function lessonContentItems(l: z.infer<typeof LessonSpec>): ContentItem[]
         title: l.flashcards.title ?? T().flashcards,
         items: l.flashcards.items.map((c) => ({
           term: c.term,
+          ...(c.reading ? { reading: c.reading } : {}),
           meaning: c.meaning,
           ...(c.example ? { example: c.example } : {}),
+          ...(c.exampleReading ? { exampleReading: c.exampleReading } : {}),
+          ...(c.exampleMeaning ? { exampleMeaning: c.exampleMeaning } : {}),
           ...(c.note ? { note: c.note } : {}),
         })),
       },
@@ -1605,7 +1619,7 @@ export function lessonContentItems(l: z.infer<typeof LessonSpec>): ContentItem[]
   return items;
 }
 
-const PRACTICE_SLOT = /<div data-(practice|dialogue|audio)-slot="(\d+)"><\/div>/g;
+const PRACTICE_SLOT = /<div data-(practice|dialogue|audio|vocab)-slot="(\d+)"><\/div>/g;
 
 /** Số thứ tự (1-based) các Bài luyện được thân bài đánh dấu bằng `:::practice n`, theo thứ tự xuất hiện. */
 export function practiceSlotsOf(body: string | undefined): number[] {
@@ -1633,9 +1647,14 @@ export function placePractices(items: ContentItem[], practiceCount: number, dial
   const placedP = new Set<number>();
   const placedD = new Set<number>();
   const placedA = new Set<number>();
+  // Thân bài có mốc `:::vocab` ⇒ bộ thẻ từ mới được rút khỏi chỗ mặc định (cuối bài) và đặt đúng tại mốc.
+  const hasVocabSlot = items.some((it) => it.type === "richtext" && typeof it.payload.html === "string" && /data-vocab-slot/.test(it.payload.html));
+  const vocabItem = hasVocabSlot ? items.find((it) => it.type === "vocab_list") : undefined;
+  let vocabPlaced = false;
   for (const it of items) {
+    if (vocabItem && it === vocabItem) continue;
     const html = typeof it.payload.html === "string" ? it.payload.html : null;
-    if (it.type !== "richtext" || html === null || !/data-(practice|dialogue|audio)-slot/.test(html)) {
+    if (it.type !== "richtext" || html === null || !/data-(practice|dialogue|audio|vocab)-slot/.test(html)) {
       out.push({ item: it });
       continue;
     }
@@ -1645,7 +1664,12 @@ export function placePractices(items: ContentItem[], practiceCount: number, dial
       if (k + 2 >= parts.length) break;
       const kind = parts[k + 1];
       const idx = Number(parts[k + 2]) - 1;
-      if (kind === "practice") {
+      if (kind === "vocab") {
+        if (vocabItem && !vocabPlaced) {
+          vocabPlaced = true;
+          out.push({ item: vocabItem });
+        }
+      } else if (kind === "practice") {
         if (idx >= 0 && idx < practiceCount && !placedP.has(idx)) {
           placedP.add(idx);
           out.push({ practice: idx });
@@ -1661,6 +1685,7 @@ export function placePractices(items: ContentItem[], practiceCount: number, dial
       }
     }
   }
+  if (vocabItem && !vocabPlaced) out.push({ item: vocabItem });
   for (let i = 0; i < audioCount; i++) if (!placedA.has(i)) out.push({ audio: i });
   for (let i = 0; i < dialogueCount; i++) if (!placedD.has(i)) out.push({ dialogue: i });
   for (let i = 0; i < practiceCount; i++) if (!placedP.has(i)) out.push({ practice: i });
@@ -1869,9 +1894,11 @@ export async function populateLessonContent(
   // nền 14px cho cả khối, không tách được chữ Hán ra để phóng to.
   const items = lessonContentItems(rl);
   if (ctx.vocabCtx) {
+    ctx.vocabCtx.pairPcm ??= new Map(); // PCM nam+nữ của từng từ: dùng lại để ghép audio tổng hợp mà không gọi cổng lần nữa
     for (const it of items) {
       if (it.type !== "vocab_list" || !Array.isArray(it.payload.items)) continue;
       const r = await attachVocabAudio(it.payload.items as Array<Record<string, unknown>>, ctx.vocabCtx, ctx.vocabCache ?? new Map());
+      await attachVocabTrack(it.payload as { items?: Array<Record<string, unknown>>; audioUrl?: unknown }, ctx.vocabCtx);
       if (ctx.vocabTotals) {
         ctx.vocabTotals.attached += r.attached;
         ctx.vocabTotals.failed += r.failed;

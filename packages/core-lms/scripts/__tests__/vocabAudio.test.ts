@@ -125,3 +125,85 @@ describe("createNeuVocabSynth", () => {
     expect(JSON.parse(String((speechCall[1] as RequestInit).body))).toEqual({ text: "early bird", voice: "emma", normalize: true });
   });
 });
+
+describe("đọc hai lần: nam trước, nữ sau (khoá tiếng Trung)", () => {
+  const pcm = (n: number, v: number) => ({ sampleRate: 48000, samples: new Int16Array(n).fill(v) });
+  it("pickMaleFemale chọn cặp nam–nữ đầu tiên và bỏ zf_xiaoni", async () => {
+    const { pickMaleFemale } = await import("../vocab-audio");
+    expect(pickMaleFemale(["zf_xiaoni", "zf_xiaobei", "zm_yunxi", "zm_yunjian"])).toEqual({ male: "zm_yunxi", female: "zf_xiaobei" });
+    expect(pickMaleFemale(["zf_xiaoni", "zm_yunxi"])).toBeNull();
+    expect(pickMaleFemale(["zf_xiaobei"])).toBeNull();
+  });
+  it("joinPairMp3 nối nam, lặng, nữ rồi mã hoá MP3 (dài hơn một lần đọc)", async () => {
+    const { joinPairMp3 } = await import("../vocab-audio");
+    const one = joinPairMp3(pcm(48000, 2000), pcm(1, 0), 0);
+    const both = joinPairMp3(pcm(48000, 2000), pcm(48000, 2000), 0.7);
+    expect(both.length).toBeGreaterThan(one.length);
+    expect(() => joinPairMp3(pcm(10, 1), { sampleRate: 24000, samples: new Int16Array(5) })).toThrow(/Tần số/);
+  });
+  it("attachVocabAudio đọc nam rồi nữ cho mỗi từ zh, một tệp mỗi từ; ngôn ngữ khác vẫn một giọng", async () => {
+    const calls: string[] = [];
+    const synth: VocabSynth = {
+      voiceFor: () => "zf_xiaobei",
+      voicesOf: () => ["zf_xiaobei", "zm_yunxi"],
+      synthesize: async (t, v) => (calls.push(`mp3:${v}:${t}`), Buffer.from(t)),
+      synthesizePcm: async (t, v) => (calls.push(`pcm:${v}:${t}`), pcm(4800, v.startsWith("zm") ? 1000 : 2000)),
+    };
+    const stored: Buffer[] = [];
+    const ctx = { synth, language: "zh", store: async (b: Buffer) => (stored.push(b), `/a/${stored.length}.mp3`) };
+    const items = [{ term: "租" }, { term: "租" }, { term: "钥匙" }];
+    const r = await attachVocabAudio(items, ctx, new Map());
+    expect(r).toEqual({ attached: 3, failed: 0 });
+    expect(calls).toEqual(["pcm:zm_yunxi:租", "pcm:zf_xiaobei:租", "pcm:zm_yunxi:钥匙", "pcm:zf_xiaobei:钥匙"]);
+    expect(items.map((i: { audioUrl?: string }) => i.audioUrl)).toEqual(["/a/1.mp3", "/a/1.mp3", "/a/2.mp3"]);
+    // ngôn ngữ khác: một giọng, không dùng PCM
+    calls.length = 0;
+    await attachVocabAudio([{ term: "word" }], { ...ctx, language: "en" }, new Map());
+    expect(calls).toEqual(["mp3:zf_xiaobei:word"]);
+  });
+  it("force đọc lại mục đã có audio", async () => {
+    const { itemsNeedingAudio } = await import("../vocab-audio");
+    const items = [{ term: "租", audioUrl: "/api/lesson-media/audio/x.mp3" }];
+    expect(itemsNeedingAudio(items, "zh").length).toBe(0);
+    expect(itemsNeedingAudio(items, "zh", true).length).toBe(1);
+  });
+});
+
+describe("audio tổng hợp cả bảng từ", () => {
+  const pcm = (n: number) => ({ sampleRate: 48000, samples: new Int16Array(n).fill(1500) });
+  const mk = () => {
+    const calls: string[] = [];
+    const synth: VocabSynth = {
+      voiceFor: () => "zf_xiaobei",
+      voicesOf: () => ["zm_yunxi", "zf_xiaobei"],
+      synthesize: async (t) => Buffer.from(t),
+      synthesizePcm: async (t, v) => (calls.push(`${v}:${t}`), pcm(4800)),
+    };
+    const stored: Buffer[] = [];
+    return { calls, stored, ctx: { synth, language: "zh", store: async (b: Buffer) => (stored.push(b), `/a/${stored.length}.mp3`), pairPcm: new Map() } };
+  };
+  it("joinPcm chèn khoảng lặng giữa các đoạn", async () => {
+    const { joinPcm } = await import("../vocab-audio");
+    const out = joinPcm([pcm(100), pcm(100), pcm(100)], 0.01);
+    expect(out.samples.length).toBe(300 + 2 * 480);
+    expect(() => joinPcm([], 1)).toThrow();
+  });
+  it("attachVocabTrack ghép mọi từ theo thứ tự, dùng lại PCM đã đọc ở từng thẻ (không gọi cổng lần nữa)", async () => {
+    const { attachVocabTrack } = await import("../vocab-audio");
+    const { calls, stored, ctx } = mk();
+    const payload: { items: Array<{ term: string; audioUrl?: string }>; audioUrl?: string } = { items: [{ term: "租" }, { term: "钥匙" }] };
+    await attachVocabAudio(payload.items, ctx, new Map());
+    expect(calls.length).toBe(4);
+    expect(await attachVocabTrack(payload, ctx)).toBe(true);
+    expect(calls.length).toBe(4); // dùng lại PCM
+    expect(payload.audioUrl).toBe(`/a/${stored.length}.mp3`);
+    expect(stored.length).toBe(3); // 2 thẻ + 1 tổng hợp
+  });
+  it("không ghi đè khi đã có (trừ --force); ngôn ngữ khác không làm", async () => {
+    const { attachVocabTrack } = await import("../vocab-audio");
+    const { ctx } = mk();
+    expect(await attachVocabTrack({ items: [{ term: "租" }], audioUrl: "/x.mp3" }, ctx)).toBe(false);
+    expect(await attachVocabTrack({ items: [{ term: "租" }], audioUrl: "/x.mp3" }, { ...ctx, force: true })).toBe(true);
+    expect(await attachVocabTrack({ items: [{ term: "word" }] }, { ...ctx, language: "en" })).toBe(false);
+  });
+});

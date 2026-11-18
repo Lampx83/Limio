@@ -25,6 +25,17 @@ describe("mốc :::dialogue n", () => {
     expect(kinds).toEqual(["text", "d1", "text", "p2", "text", "d2", "p1"]);
   });
 
+  it("mốc :::vocab đặt bộ thẻ từ mới ngay tại mốc; không có mốc thì để nguyên chỗ cũ", () => {
+    const cards = { type: "vocab_list", orderIndex: 1, payload: { items: [] } };
+    const withSlot = markdownToHtml("A\n\n:::dialogue 1\n\n:::vocab\n\nB\n", { toc: false });
+    const placed = placePractices([{ type: "richtext", orderIndex: 0, payload: { html: withSlot } }, cards] as never, 0, 1);
+    const kind = (b: (typeof placed)[number]) => ("item" in b ? (b.item.type === "vocab_list" ? "vocab" : "text") : "dialogue" in b ? "d" : "p");
+    expect(placed.map(kind)).toEqual(["text", "d", "vocab", "text"]);
+    const noSlot = markdownToHtml("A\n\n:::dialogue 1\n\nB\n", { toc: false });
+    const placed2 = placePractices([{ type: "richtext", orderIndex: 0, payload: { html: noSlot } }, cards] as never, 0, 1);
+    expect(placed2.map(kind)).toEqual(["text", "d", "text", "vocab"]);
+  });
+
   it("giữ cách gọi cũ (không có hội thoại)", () => {
     const html = markdownToHtml("A\n\n:::practice 1\n\nB\n", { toc: false });
     const placed = placePractices([{ type: "richtext", orderIndex: 0, payload: { html } }] as never, 1);

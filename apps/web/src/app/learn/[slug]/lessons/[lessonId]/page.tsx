@@ -796,7 +796,8 @@ export default async function LessonPage({
     : false;
   // Bài chỉ toàn từ vựng thì không tách tab (tab "Bài học" sẽ trống): hiện thẳng như cũ.
   const rawSplit = languageSkin && lessonFrame ? splitLessonItems(visibleItems) : null;
-  const split = rawSplit && rawSplit.count > 0 && rawSplit.lesson.length > 0 ? rawSplit : null;
+  // Bài giao diện HSK giữ thẻ từ mới ngay trong dòng bài (sau hội thoại, trước ngữ pháp) như sách; các khoá khác tách sang tab "Từ vựng".
+  const split = !hskDecor && rawSplit && rawSplit.count > 0 && rawSplit.lesson.length > 0 ? rawSplit : null;
   const lessonView = split ? parseLessonView(searchParams?.view) : "lesson";
   const shownItems = split ? (lessonView === "vocab" ? split.vocab : split.lesson) : visibleItems;
 

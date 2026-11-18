@@ -247,3 +247,63 @@ export function cleanMatchingLabels<T extends { label: string }>(lefts: readonly
   return { lefts: outLefts, rights: outRights };
 }
 
+
+// ── Dòng yêu cầu của từng câu ───────────────────────────────────────────────
+
+/** Đề đã tự có dòng yêu cầu ("Chọn…", "Sắp xếp…", "Điền…", "Nối…", "Gõ…", "Đúng hay sai…"…): không thêm dòng mặc định để khỏi trùng. */
+const OWN_INSTRUCTION =
+  /(?:^|[\s.:;!?(（])(?:Chọn|Sắp xếp|Điền|Nối|Ghép|Gõ|Viết|Nghe|Đọc|Nhìn|Hãy|Đúng hay sai|Câu nào|Trả lời|Dựa vào|Tìm|Đánh dấu|Dịch|Nhập|Select|Choose|Match|Put|Fill|Complete|Read|Listen|Write|Decide|Circle|Tick|Underline|Rearrange|Order|Type)(?=[\s:,.])/i;
+
+export function promptHasInstruction(prompt: string): boolean {
+  return OWN_INSTRUCTION.test(prompt);
+}
+
+/**
+ * Khoá i18n của dòng yêu cầu mặc định theo dạng câu (`practice.sheet.instr.*`), hoặc null khi dạng đó không cần (tự luận có khung riêng, dạng lạ) hoặc
+ * đề đã có dòng yêu cầu của chính nó. Câu chọn có ô trống trong đề ("____") hỏi như điền từ.
+ */
+export function defaultInstructionKey(kind: SheetKind, prompt: string): string | null {
+  if (promptHasInstruction(prompt)) return null;
+  const blank = /_{3,}|\[\[\d+\]\]/.test(prompt);
+  switch (kind) {
+    case "drag":
+      return "practice.sheet.instr.drag";
+    case "gap":
+      return "practice.sheet.instr.gap";
+    case "choice-inline":
+    case "choice-list":
+      return blank ? "practice.sheet.instr.choiceBlank" : "practice.sheet.instr.choice";
+    case "multi-list":
+      return "practice.sheet.instr.multi";
+    case "tfng":
+      return "practice.sheet.instr.tfng";
+    case "matching":
+      return "practice.sheet.instr.matching";
+    case "ordering":
+      return "practice.sheet.instr.ordering";
+    case "numerical":
+      return "practice.sheet.instr.numerical";
+    default:
+      return null;
+  }
+}
+
+/**
+ * Dòng yêu cầu cho từng câu của một tab: `explicit` (trường `config.instruction` do tác giả đặt) nếu có, không thì mặc định theo dạng. Cùng một dạng liền nhau chỉ nêu ở câu đầu của cụm
+ * (nhóm câu cùng dạng chung một dòng yêu cầu). Trả khoá i18n hoặc văn bản có sẵn; `null` là không thêm gì.
+ */
+export function instructionPlan(
+  rows: Array<{ kind: SheetKind; prompt: string; instruction?: string | null }>,
+): Array<{ key?: string; text?: string } | null> {
+  let prev = "";
+  return rows.map((r) => {
+    const explicit = (r.instruction ?? "").trim();
+    const group = `${r.kind}`;
+    const first = group !== prev;
+    prev = group;
+    if (explicit) return explicit && !r.prompt.includes(explicit) ? { text: explicit } : null;
+    if (!first) return null;
+    const key = defaultInstructionKey(r.kind, r.prompt);
+    return key ? { key } : null;
+  });
+}

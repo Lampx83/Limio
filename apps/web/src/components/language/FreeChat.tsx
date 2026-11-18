@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import PinyinLabel, { PinyinProvider, courseWantsPinyin, useSyllableFn } from "./PinyinLabel";
 import { createPortal } from "react-dom";
 import { BookOpen, Mic, Play, RotateCcw, Send, Square, Volume2, VolumeX, X } from "lucide-react";
 import { formatClock } from "@/lib/audioRecorder";
@@ -102,6 +103,11 @@ export default function FreeChat({
   const [preparing, setPreparing] = useState(false);
   const [typing, setTyping] = useState<{ idx: number; text: string } | null>(null);
   const [voiceOn, setVoiceOn] = useState(true);
+  // Khoá tiếng Trung: pinyin dưới chữ Hán của lời bạn ảo, từ khoá, gợi ý và bài mẫu; công tắc "Pinyin" (mặc định bật) ở đầu khung chat.
+  const hasHan = useMemo(() => /[\u3400-\u9fff]/.test(JSON.stringify(view)), [view]);
+  const pinyinAvail = courseWantsPinyin(language) && hasHan;
+  const [pinyinOn, setPinyinOn] = useState(true);
+  const syllableFn = useSyllableFn(pinyinAvail && pinyinOn);
   const reveal = usePacedReveal(TYPING_CHARS_PER_SEC);
   const voice = usePartnerVoice();
   /** Giọng đã có theo chỉ số tin trong khung chat (0 = lời mở đầu); null = đã thử mà không có. */
@@ -421,12 +427,16 @@ export default function FreeChat({
         <li key={i}>
           {canInsert ? (
             <button type="button" className="fc-chip" onClick={() => insertFromPrep(w.en)} aria-label={t(ariaKey, { w: w.en })}>
-              <strong>{w.en}</strong>
+              <strong>
+                <PinyinLabel text={w.en} />
+              </strong>
               {w.vi && <span>{w.vi}</span>}
             </button>
           ) : (
             <span className="fc-chip fc-chip-static">
-              <strong>{w.en}</strong>
+              <strong>
+                <PinyinLabel text={w.en} />
+              </strong>
               {w.vi && <span>{w.vi}</span>}
             </span>
           )}
@@ -465,7 +475,7 @@ export default function FreeChat({
                     <p className="fc-hint">{t("practice.say.modelHint")}</p>
                     {showTranscript && (
                       <p className="fc-transcript" data-testid="fc-transcript">
-                        {highlightSegments(model.text).map((seg, i) => (seg.hl ? <mark key={i} className="fc-hl">{seg.text}</mark> : <span key={i}>{seg.text}</span>))}
+                        {highlightSegments(model.text).map((seg, i) => (seg.hl ? <mark key={i} className="fc-hl"><PinyinLabel text={seg.text} /></mark> : <span key={i}><PinyinLabel text={seg.text} /></span>))}
                       </p>
                     )}
                     <button type="button" className="fc-link" onClick={() => setShowTranscript((v) => !v)} aria-expanded={showTranscript}>
@@ -481,7 +491,9 @@ export default function FreeChat({
                         <h4>{t("practice.say.ideas")}</h4>
                         <ul className="fc-ideas">
                           {scaffold.ideas.map((idea, i) => (
-                            <li key={i}>{idea}</li>
+                            <li key={i}>
+                              <PinyinLabel text={idea} />
+                            </li>
                           ))}
                         </ul>
                       </div>
@@ -499,12 +511,16 @@ export default function FreeChat({
                               )}
                               {canInsert ? (
                                 <button type="button" className="fc-frame" onClick={() => insertFromPrep(f.en)} aria-label={t("practice.say.insertFrame", { t: f.en })}>
-                                  <span className="fc-frame-en">{f.en}</span>
+                                  <span className="fc-frame-en">
+                                    <PinyinLabel text={f.en} />
+                                  </span>
                                   {f.vi && <span className="fc-frame-vi">{f.vi}</span>}
                                 </button>
                               ) : (
                                 <span className="fc-frame fc-frame-static">
-                                  <span className="fc-frame-en">{f.en}</span>
+                                  <span className="fc-frame-en">
+                                    <PinyinLabel text={f.en} />
+                                  </span>
                                   {f.vi && <span className="fc-frame-vi">{f.vi}</span>}
                                 </span>
                               )}
@@ -568,6 +584,7 @@ export default function FreeChat({
       : null;
 
   return (
+    <PinyinProvider value={syllableFn}>
     <div className="fc" data-testid="freechat">
       <p className="fc-scenario">{view.scenario}</p>
 
@@ -579,7 +596,7 @@ export default function FreeChat({
           <ul>
             {view.targets.map((target, i) => (
               <li key={i} data-used={used[i] ? "" : undefined}>
-                <span aria-hidden>{used[i] ? "✓" : "·"}</span> {target}
+                <span aria-hidden>{used[i] ? "✓" : "·"}</span> <PinyinLabel text={target} />
                 {used[i] && <span className="sr-only">{t("practice.say.used")}</span>}
               </li>
             ))}
@@ -591,10 +608,17 @@ export default function FreeChat({
         <div className="fc-chat-head">
           {avatar()}
           <div className="fc-chat-title">
-            <strong>{view.partnerRole}</strong>
+            <strong>
+              <PinyinLabel text={view.partnerRole} />
+            </strong>
             <span>{t("practice.say.partner")}</span>
           </div>
           <div className="fc-chat-tools">
+            {pinyinAvail && (
+              <button type="button" className="fc-btn fc-btn-ghost fc-btn-sm" onClick={() => setPinyinOn((v) => !v)} aria-pressed={pinyinOn} data-testid="fc-pinyin-toggle">
+                {t("practice.say.pinyin")}
+              </button>
+            )}
             {scaffold && started && (
               <button type="button" className="fc-btn fc-btn-ghost fc-btn-sm" onClick={openPrep} data-testid="fc-prep-open">
                 <BookOpen size={14} aria-hidden /> {t("practice.say.prepButton")}
@@ -617,7 +641,8 @@ export default function FreeChat({
           <div className="fc-start">
             {avatar(true)}
             <p className="fc-hint">
-              {t("practice.say.startHint", { name: view.partnerRole })}{openingSpeech ? t("practice.say.startSound") : ""}.
+              <PinyinLabel text={t("practice.say.startHint", { name: view.partnerRole })} />
+              {openingSpeech ? t("practice.say.startSound") : ""}.
               {scaffold ? t("practice.say.startPrep") : ""}
             </p>
             <div className="fc-start-actions">
@@ -651,7 +676,9 @@ export default function FreeChat({
                       >
                         <span className="sr-only">{m.role === "partner" ? t("practice.say.partnerSays", { name: view.partnerRole }) : t("practice.say.youSay")}</span>
                         {/* Đang gõ dần: người dùng đọc màn hình nghe cả câu một lần, không nghe từng chữ nhảy. */}
-                        <p aria-hidden={typingNow || undefined}>{typingNow ? reveal.revealed : m.text}</p>
+                        <p aria-hidden={typingNow || undefined}>
+                          <PinyinLabel text={typingNow ? reveal.revealed : m.text} />
+                        </p>
                         {typingNow && <span className="sr-only">{m.text}</span>}
                       </div>
                       {canHear && !typingNow && (
@@ -763,5 +790,6 @@ export default function FreeChat({
         </p>
       )}
     </div>
+    </PinyinProvider>
   );
 }

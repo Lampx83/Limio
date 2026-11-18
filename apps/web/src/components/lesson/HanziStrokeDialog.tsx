@@ -13,9 +13,9 @@ type Writer = { animateCharacter: (o?: { onComplete?: () => void }) => void; qui
 
 /**
  * Cửa sổ "Cách viết" của một từ mới: hiện nét viết từng chữ Hán (chạy theo thứ tự nét) và cho tập viết (vẽ theo, vẽ sai nét thì báo).
- * Dữ liệu nét lấy từ file tĩnh của chính site (public/hanzi), không gọi dịch vụ ngoài. Chữ thiếu dữ liệu thì báo, không vỡ.
+ * `head`/`foot` (tuỳ chọn): thông tin của từ (pinyin, nghĩa, ví dụ) hiện trên chữ chọn và dưới nút; khoá nào không truyền thì cửa sổ như cũ. Dữ liệu nét lấy từ file tĩnh của chính site (public/hanzi), không gọi dịch vụ ngoài. Chữ thiếu dữ liệu thì báo, không vỡ.
  */
-export default function HanziStrokeDialog({ term, lang, onClose }: { term: string; lang: UiLang; onClose: () => void }) {
+export default function HanziStrokeDialog({ term, lang, onClose, head, foot }: { term: string; lang: UiLang; onClose: () => void; head?: React.ReactNode; foot?: React.ReactNode }) {
   const t = (key: Parameters<typeof hskT>[1]) => hskT(lang, key);
   const chars = hanChars(term);
   const [idx, setIdx] = useState(0);
@@ -88,13 +88,15 @@ export default function HanziStrokeDialog({ term, lang, onClose }: { term: strin
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose} data-testid="hanzi-dialog">
-      <div role="dialog" aria-modal="true" aria-label={`${t("learn.hsk.write.open")}: ${term}`} className="w-full max-w-sm rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-label={`${t("learn.hsk.write.open")}: ${term}`} className="max-h-[92vh] w-full max-w-sm overflow-y-auto rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-3 flex items-center justify-between gap-2">
           <h3 className="text-h4 font-semibold">{t("learn.hsk.write.open")}</h3>
           <button ref={closeBtn} type="button" onClick={onClose} aria-label={t("learn.hsk.write.close")} className="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-brand-soft">
             <X size={16} aria-hidden />
           </button>
         </div>
+
+        {head}
 
         {chars.length > 1 && (
           <div role="group" aria-label={t("learn.hsk.write.chars")} className="mb-3 flex flex-wrap gap-1.5">
@@ -129,6 +131,7 @@ export default function HanziStrokeDialog({ term, lang, onClose }: { term: strin
             <BrushIcon /> {t("learn.hsk.write.practice")}
           </button>
         </div>
+        {foot}
       </div>
     </div>
   );

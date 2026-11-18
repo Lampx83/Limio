@@ -268,6 +268,8 @@ export const viLearn = {
   "learn.hsk.vocab.flash": "Flashcard",
   "learn.hsk.vocab.pinyin": "Pinyin",
   "learn.hsk.vocab.viewAria": "Cách xem từ mới",
+  "learn.hsk.vocab.example": "Ví dụ",
+  "learn.hsk.vocab.track": "Nghe cả bảng từ mới (mỗi từ đọc hai lần: giọng nam, rồi giọng nữ)",
   "learn.hsk.write.open": "Cách viết",
   "learn.hsk.write.close": "Đóng",
   "learn.hsk.write.chars": "Chọn chữ",

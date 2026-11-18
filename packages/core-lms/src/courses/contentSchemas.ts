@@ -206,6 +206,8 @@ export const VocabListPayload = z.object({
   title: optText(200),
   /** Nhãn cột phiên âm do giảng viên đặt ("Pinyin", "IPA"...); mặc định hiển thị "Phiên âm". */
   readingLabel: optText(40),
+  /** Audio tổng hợp cả bảng từ (tuỳ chọn): các từ theo thứ tự thẻ, mỗi từ đọc hai lần; ngoài audio riêng từng thẻ. */
+  audioUrl: AudioUrl.optional(),
   items: z
     .array(VocabItem)
     .min(1)

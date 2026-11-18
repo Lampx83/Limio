@@ -5,7 +5,7 @@ import SafeHtml from "@/components/SafeHtml";
 import PromptAid from "@/components/language/PromptAid";
 import RubyText from "@/components/RubyText";
 import { parsePromptAid } from "@/lib/promptAid";
-import { promptSyllables, sliceByHan } from "@/lib/promptRuby";
+import { promptSyllables, questionHidesPinyin, sliceByHan } from "@/lib/promptRuby";
 import { plainToRichHtml } from "@/lib/richText";
 import { splitSingleBlank } from "@/lib/inlineBlank";
 import { UNPLAYABLE_FOR_LEARNER } from "@/lib/examQuestionSupport";
@@ -64,7 +64,9 @@ export default function ExamQuestion({ question, value, onChange, optionOrder, c
   // Câu tự luận trong phiếu bài tập có đúng một chỗ trống trong đề: gõ thẳng vào chỗ trống, không có ô soạn thảo riêng.
   const inlineBlank = useMemo(() => (question.type === "essay" && compact ? splitSingleBlank(question.prompt) : null), [question.type, question.prompt, compact]);
   // Đề chữ Hán có pinyin ghép được: hiện pinyin dưới từng chữ (ruby), không lặp dòng pinyin riêng bên dưới.
-  const syl = useMemo(() => promptSyllables(question.prompt, parsePromptAid(question.config)?.reading), [question.prompt, question.config]);
+  // Câu hỏi về cách đọc (pinyin, thanh điệu…) thì không hiện pinyin của đề: sẽ lộ đáp án.
+  const hidePy = useMemo(() => questionHidesPinyin(question.prompt, question.config), [question.prompt, question.config]);
+  const syl = useMemo(() => (hidePy ? null : promptSyllables(question.prompt, parsePromptAid(question.config)?.reading)), [hidePy, question.prompt, question.config]);
   const prompt = syl ? (
     <p className="han-text ruby-line mb-2 text-lg" lang="zh-Hans">
       <RubyText text={question.prompt} syllables={syl} />
@@ -151,9 +153,9 @@ export default function ExamQuestion({ question, value, onChange, optionOrder, c
         question.type !== "drag_drop_fill" && prompt
       )}
       {/* Chú giải đề (phiên âm + bản dịch ẩn). Kéo thả điền tự vẽ đề nên chú giải đặt sau phần kéo thả. */}
-      {question.type !== "drag_drop_fill" && <PromptAid config={question.config} hideReading={!!syl} />}
+      {question.type !== "drag_drop_fill" && <PromptAid config={question.config} hideReading={!!syl || hidePy} />}
       {inner}
-      {question.type === "drag_drop_fill" && <PromptAid config={question.config} />}
+      {question.type === "drag_drop_fill" && <PromptAid config={question.config} hideReading={hidePy} />}
     </div>
   );
 }

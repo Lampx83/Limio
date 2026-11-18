@@ -4,7 +4,9 @@
  * lúc hiển thị, không cần nhập lại bài. Chỉ dùng khi khoá có chế độ ngoại ngữ và ngôn ngữ là tiếng Trung.
  */
 
-export type HskKind = "intro" | "intro-brief" | "dialogue" | "vocab" | "grammar" | "activity" | "goals" | "pair" | "other";
+import { authoredKind, isAuthoredLesson, planAuthored, type AuthoredKind, type AuthoredSeg } from "./hskAuthored";
+
+export type HskKind = "intro" | "intro-brief" | "dialogue" | "vocab" | "grammar" | "activity" | "goals" | "pair" | "other" | AuthoredKind;
 
 export interface HskSection {
   zh: string;
@@ -12,7 +14,7 @@ export interface HskSection {
 }
 
 /** Tên mục theo loại khối. Số thứ tự không cố định: bài không có hội thoại thì Từ mới là mục 01. */
-export const HSK_SECTIONS: Record<Exclude<HskKind, "intro" | "intro-brief" | "other"> | "practice", HskSection> = {
+export const HSK_SECTIONS: Record<Exclude<HskKind, "intro" | "intro-brief" | "other" | AuthoredKind> | "practice", HskSection> = {
   dialogue: { zh: "对话", vi: "Hội thoại" },
   vocab: { zh: "生词", vi: "Từ mới" },
   grammar: { zh: "小语讲堂", vi: "Lớp học của Tiểu Ngữ" },
@@ -46,7 +48,18 @@ export function classifyHskItem(item: ItemLike, index: number): HskKind {
 }
 
 /** Loại từng khối + số mục (1, 2, …) cho khối đầu tiên của mỗi loại hội thoại / từ mới / ngữ pháp. */
-export function planHskSections(items: ItemLike[]): { kinds: HskKind[]; headAt: Map<number, { no: number; section: HskSection }>; count: number } {
+export function planHskSections(items: ItemLike[]): {
+  kinds: HskKind[];
+  headAt: Map<number, { no: number; section: HskSection }>;
+  count: number;
+  /** Bài tác giả soạn (xem hskAuthored.ts): đoạn của từng khối chữ, mỗi đoạn có tiêu đề mục đánh số hoặc nhãn nhỏ riêng. Bài sách thì rỗng. */
+  segs: Map<number, AuthoredSeg[]>;
+} {
+  if (isAuthoredLesson(items)) {
+    const kinds: HskKind[] = items.map((it) => (it.type === "dialogue" ? "dialogue" : it.type !== "richtext" ? "other" : authoredKind(htmlOf(it))));
+    const { segs, count } = planAuthored(items, kinds);
+    return { kinds, headAt: new Map(), count, segs };
+  }
   const kinds = items.map((it, i) => classifyHskItem(it, i));
   // Khối tiêu đề đứng ngay trước hội thoại (câu dẫn + yêu cầu "Nghe hai lần…") thuộc mục Hội thoại: hiện thành dải nhắc dưới tiêu đề mục.
   kinds.forEach((k, i) => {
@@ -62,7 +75,7 @@ export function planHskSections(items: ItemLike[]): { kinds: HskKind[]; headAt: 
       headAt.set(kinds[i - 1] === "intro-brief" ? i - 1 : i, { no, section: HSK_SECTIONS[k] });
     }
   });
-  return { kinds, headAt, count: no };
+  return { kinds, headAt, count: no, segs: new Map() };
 }
 
 /** Tên bài trong sách có dạng "Bài khoá 1 · 课文1": phần tiếng Việt, rồi phần chữ Hán. */
@@ -75,10 +88,17 @@ export function splitLessonTitle(title: string): { vi: string; han: string } {
   return HAN.test(a) && !HAN.test(b) ? { vi: b, han: a } : { vi: a, han: b };
 }
 
+/** Phụ đề trong ngoặc kép của tên bài ("课文1「看房那天」" → "「看房那天」"), rỗng nếu không có. */
+export function lessonSubtitle(han: string): string {
+  return /\s*([「『“"][^」』”"]*[」』”"])\s*$/.exec(han)?.[1] ?? "";
+}
+
 /** Con dấu: chữ Hán của tên bài, số (nếu có) xuống dòng dưới ("课文" / "1"). */
 export function sealParts(han: string): { top: string; bottom: string } {
-  const m = /^([^\d]*?)\s*(\d+)?$/.exec(han.trim());
-  return { top: (m?.[1] ?? han).trim(), bottom: m?.[2] ?? "" };
+  // Tên bài có phụ đề trong ngoặc kép kiểu 「…」 ("课文1「看房那天」"): con dấu chỉ lấy phần nhãn bài ("课文" / "1").
+  const label = han.replace(/\s*[「『“"][^」』”"]*[」』”"]\s*$/, "").trim() || han.trim();
+  const m = /^([^\d]*?)\s*(\d+)?$/.exec(label);
+  return { top: (m?.[1] ?? label).trim(), bottom: m?.[2] ?? "" };
 }
 
 /** Chữ Hán mờ ở nền đầu bài: chữ Hán đầu tiên của tên bài (课文1 → 课, 热身 → 热, 综合练习 → 综). */

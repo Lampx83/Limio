@@ -271,6 +271,8 @@ export const enLearn: PartialDict<typeof viLearn> = {
   "learn.hsk.vocab.flash": "Flashcards",
   "learn.hsk.vocab.pinyin": "Pinyin",
   "learn.hsk.vocab.viewAria": "How to view new words",
+  "learn.hsk.vocab.example": "Example",
+  "learn.hsk.vocab.track": "Listen to all new words (each read twice: male voice, then female voice)",
   "learn.hsk.write.open": "How to write it",
   "learn.hsk.write.close": "Close",
   "learn.hsk.write.chars": "Choose a character",

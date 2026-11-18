@@ -11,7 +11,7 @@
  */
 
 import { getIntegrationSecret } from "../src/integrations/integrations";
-import { encodeMp3, parseWav } from "../src/narration/audio";
+import { encodeMp3, parseWav, type Pcm } from "../src/narration/audio";
 import { storePublicBuffer } from "./practice-spec";
 
 /** NEU TTS từ chối đoạn dài (413 từ ~3000 ký tự); một từ vựng không bao giờ gần mức đó. */
@@ -28,6 +28,54 @@ export interface VocabSynth {
   voiceFor(language: string): string | null;
   /** Một từ → MP3. Ném lỗi khi cổng trả lỗi. */
   synthesize(text: string, voice: string): Promise<Buffer>;
+  /** Tên mọi giọng của một ngôn ngữ (để chọn cặp giọng nam–nữ). Bỏ trống = chỉ đọc một giọng. */
+  voicesOf?(language: string): string[];
+  /** Một từ → PCM thô (để ghép hai giọng thành một tệp). */
+  synthesizePcm?(text: string, voice: string): Promise<Pcm>;
+}
+
+/** Giọng NEU không dùng cho học liệu (giống `AVOIDED_NEU_VOICES` ở dialogue-audio; nhắc lại đây để tránh vòng import). */
+const AVOIDED_VOICES: readonly string[] = ["zf_xiaoni"];
+const genderOf = (voice: string): "f" | "m" | null => {
+  const m = /^[a-z]{1,3}([fm])_/i.exec(voice);
+  return m ? (m[1]!.toLowerCase() as "f" | "m") : null;
+};
+
+/** Cặp giọng nam–nữ đầu tiên (theo thứ tự cổng trả về, bỏ giọng bị tránh); null nếu thiếu một trong hai. */
+export function pickMaleFemale(voices: string[]): { male: string; female: string } | null {
+  const ok = voices.filter((v) => !AVOIDED_VOICES.includes(v));
+  const male = ok.find((v) => genderOf(v) === "m");
+  const female = ok.find((v) => genderOf(v) === "f");
+  return male && female ? { male, female } : null;
+}
+
+/** Khoảng lặng giữa lần đọc của giọng nam và giọng nữ (giây). */
+export const PAIR_GAP_SEC = 0.7;
+
+/** Khoảng lặng giữa hai TỪ trong audio tổng hợp của cả bảng từ (giây). */
+export const TRACK_GAP_SEC = 1.4;
+
+/** Nối nhiều đoạn PCM (cùng tần số) có chèn khoảng lặng giữa các đoạn. */
+export function joinPcm(parts: Pcm[], gapSec: number): Pcm {
+  if (parts.length === 0) throw new Error("Không có đoạn nào để ghép");
+  const sampleRate = parts[0]!.sampleRate;
+  if (parts.some((p) => p.sampleRate !== sampleRate)) throw new Error("Tần số lấy mẫu lệch giữa các đoạn");
+  const gap = Math.round(sampleRate * gapSec);
+  const total = parts.reduce((n, p) => n + p.samples.length, 0) + gap * (parts.length - 1);
+  const samples = new Int16Array(total);
+  let pos = 0;
+  for (const [i, p] of parts.entries()) {
+    if (i > 0) pos += gap;
+    samples.set(p.samples, pos);
+    pos += p.samples.length;
+  }
+  return { sampleRate, samples };
+}
+
+/** Ghép hai đoạn PCM (cùng tần số) có chèn khoảng lặng, mã hoá MP3. */
+export function joinPairMp3(first: Pcm, second: Pcm, gapSec = PAIR_GAP_SEC): Buffer {
+  if (first.sampleRate !== second.sampleRate) throw new Error(`Tần số lấy mẫu lệch (${first.sampleRate} ≠ ${second.sampleRate})`);
+  return encodeMp3(joinPcm([first, second], gapSec));
 }
 
 /**
@@ -57,10 +105,10 @@ interface VocabItemLike {
 }
 
 /** Mục chưa có audio và có chữ đọc được (term là chuỗi, không vượt giới hạn). */
-export function itemsNeedingAudio(items: VocabItemLike[], language: string): Array<{ item: VocabItemLike; text: string }> {
+export function itemsNeedingAudio(items: VocabItemLike[], language: string, force = false): Array<{ item: VocabItemLike; text: string }> {
   const out: Array<{ item: VocabItemLike; text: string }> = [];
   for (const item of items) {
-    if (typeof item.audioUrl === "string" && item.audioUrl) continue;
+    if (!force && typeof item.audioUrl === "string" && item.audioUrl) continue;
     if (typeof item.term !== "string") continue;
     const text = speakableTerm(item.term, language);
     if (text && text.length <= MAX_TERM_CHARS) out.push({ item, text });
@@ -81,6 +129,10 @@ export interface VocabAudioContext {
   /** Ghi MP3 vào kho, trả đường dẫn công khai. */
   store: (mp3: Buffer) => Promise<string>;
   warn?: (msg: string) => void;
+  /** Đọc lại cả mục đã có audio (thay audio cũ). */
+  force?: boolean;
+  /** PCM "nam + nữ" của từng từ (khoá = chữ đọc), dùng lại để ghép audio tổng hợp mà không gọi cổng lần nữa. */
+  pairPcm?: Map<string, Pcm>;
 }
 
 /**
@@ -95,12 +147,21 @@ export async function attachVocabAudio(
   const result: VocabAudioResult = { attached: 0, failed: 0 };
   const voice = ctx.synth.voiceFor(ctx.language);
   if (!voice) return result;
-  for (const { item, text } of itemsNeedingAudio(items, ctx.language)) {
-    const key = `${voice}|${text}`;
+  // Khoá tiếng Trung: mỗi từ đọc HAI lần trong một tệp, giọng nam trước, giọng nữ sau (như băng của giáo trình). Thiếu một trong hai giọng thì đọc một giọng như cũ.
+  const pair =
+    ctx.language === "zh" && ctx.synth.voicesOf && ctx.synth.synthesizePcm ? pickMaleFemale(ctx.synth.voicesOf(ctx.language)) : null;
+  for (const { item, text } of itemsNeedingAudio(items, ctx.language, ctx.force)) {
+    const key = pair ? `${pair.male}+${pair.female}|${text}` : `${voice}|${text}`;
     let url = cache.get(key);
     if (!url) {
       try {
-        url = await ctx.store(await ctx.synth.synthesize(text, voice));
+        let mp3: Buffer;
+        if (pair) {
+          const both = joinPcm([await ctx.synth.synthesizePcm!(text, pair.male), await ctx.synth.synthesizePcm!(text, pair.female)], PAIR_GAP_SEC);
+          ctx.pairPcm?.set(text, both);
+          mp3 = encodeMp3(both);
+        } else mp3 = await ctx.synth.synthesize(text, voice);
+        url = await ctx.store(mp3);
         cache.set(key, url);
       } catch (e) {
         result.failed += 1;
@@ -112,6 +173,41 @@ export async function attachVocabAudio(
     result.attached += 1;
   }
   return result;
+}
+
+/**
+ * Audio TỔNG HỢP của cả bảng từ mới (khối `vocab_list`): mọi từ theo đúng thứ tự thẻ, mỗi từ đọc nam rồi nữ (như audio từng từ), cách nhau {@link TRACK_GAP_SEC}.
+ * Gắn vào `payload.audioUrl`. Chỉ làm khi khoá tiếng Trung có cặp giọng nam–nữ; từ chưa có PCM trong `ctx.pairPcm` được đọc lại. Trả true nếu có audio mới.
+ */
+export async function attachVocabTrack(
+  payload: { items?: VocabItemLike[]; audioUrl?: unknown },
+  ctx: VocabAudioContext,
+): Promise<boolean> {
+  if (ctx.language !== "zh" || !ctx.synth.voicesOf || !ctx.synth.synthesizePcm) return false;
+  const pair = pickMaleFemale(ctx.synth.voicesOf(ctx.language));
+  if (!pair) return false;
+  if (!ctx.force && typeof payload.audioUrl === "string" && payload.audioUrl) return false;
+  const cache = (ctx.pairPcm ??= new Map<string, Pcm>());
+  const parts: Pcm[] = [];
+  try {
+    for (const item of payload.items ?? []) {
+      if (typeof item.term !== "string") continue;
+      const text = speakableTerm(item.term, ctx.language);
+      if (!text || text.length > MAX_TERM_CHARS) continue;
+      let both = cache.get(text);
+      if (!both) {
+        both = joinPcm([await ctx.synth.synthesizePcm(text, pair.male), await ctx.synth.synthesizePcm(text, pair.female)], PAIR_GAP_SEC);
+        cache.set(text, both);
+      }
+      parts.push(both);
+    }
+    if (parts.length === 0) return false;
+    payload.audioUrl = await ctx.store(encodeMp3(joinPcm(parts, TRACK_GAP_SEC)));
+    return true;
+  } catch (e) {
+    ctx.warn?.(`Không ghép được audio tổng hợp: ${(e as Error).message}`);
+    return false;
+  }
 }
 
 /** Cổng NEU thật. Trả null khi chưa cấu hình (không có khoá) — caller bỏ qua việc sinh giọng. */
@@ -142,20 +238,24 @@ export async function createNeuVocabSynth(
       })
     : [];
 
+  const fetchWav = async (text: string, voice: string): Promise<Pcm> => {
+    // Tuần tự ở caller: máy chủ NEU chỉ nhận 2 yêu cầu đồng thời.
+    const r = await fetchImpl(`${baseUrl}/v1/speech`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": apiKey },
+      body: JSON.stringify({ text, voice, normalize: true }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!r.ok) throw new Error(`NEU TTS trả ${r.status}`);
+    return parseWav(Buffer.from(await r.arrayBuffer()));
+  };
+
   return {
     voiceFor: (language) => voices.find((v) => v.language === language)?.voice ?? null,
-    synthesize: async (text, voice) => {
-      // Tuần tự ở caller: máy chủ NEU chỉ nhận 2 yêu cầu đồng thời.
-      const r = await fetchImpl(`${baseUrl}/v1/speech`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": apiKey },
-        body: JSON.stringify({ text, voice, normalize: true }),
-        signal: AbortSignal.timeout(TIMEOUT_MS),
-      });
-      if (!r.ok) throw new Error(`NEU TTS trả ${r.status}`);
-      // Trình duyệt phát qua /api/lesson-media/audio không nhận WAV → mã hoá MP3 (thuần Node, không cần ffmpeg).
-      return encodeMp3(parseWav(Buffer.from(await r.arrayBuffer())));
-    },
+    voicesOf: (language) => voices.filter((v) => v.language === language).map((v) => v.voice),
+    synthesizePcm: fetchWav,
+    // Trình duyệt phát qua /api/lesson-media/audio không nhận WAV → mã hoá MP3 (thuần Node, không cần ffmpeg).
+    synthesize: async (text, voice) => encodeMp3(await fetchWav(text, voice)),
   };
 }
 
