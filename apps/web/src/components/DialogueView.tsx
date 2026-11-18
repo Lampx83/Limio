@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { Eye, Pause, Square, Volume2 } from "lucide-react";
+import { Languages, Pause, Square, Volume2 } from "lucide-react";
 import AudioLessonPlayer, { type AudioControl } from "./AudioLessonPlayer";
 import RubyText, { hanTextProps, rubyPlan } from "./RubyText";
 import HanFontLoader from "./HanFontLoader";
@@ -12,6 +12,7 @@ import { createTurnSequencer } from "@/lib/turnSequencer";
 import { useExclusiveAudio } from "./useExclusiveAudio";
 import { hskT } from "./lesson/hskT";
 import { useT } from "@/lib/i18n/client";
+import { useReaderPrefs } from "./language/ReaderPrefs";
 
 /**
  * Mọi người nói dùng MỘT màu cho tên và avatar chữ cái (trung tính). Trước đây màu chạy theo thứ tự xuất hiện nên cùng một nhân vật
@@ -65,7 +66,7 @@ export default function DialogueView({
   turns,
   speakers: speakerInfo,
   initialShowReading = true,
-  initialShowTranslation = true,
+  initialShowTranslation,
   hsk = false,
   hskLang = "vi",
 }: {
@@ -81,11 +82,14 @@ export default function DialogueView({
   /** Ảnh đại diện từng người nói (tuỳ chọn); người nói không có ở đây hiện chữ cái đầu. */
   speakers?: DialogueViewSpeaker[];
   initialShowReading?: boolean;
+  /** Mặc định: hiện bản dịch. Trong khung bài (khoá ngoại ngữ) việc hiện/ẩn do bảng Aa điều khiển. */
   initialShowTranslation?: boolean;
 }) {
   const tx = useT();
+  // Trong khung bài (có tuỳ chọn đọc "Aa") pinyin và bản dịch do bảng Aa điều khiển (mặc định bản dịch ẩn) nên không có nút riêng ở đây.
+  const prefsOwnDisplay = !!useReaderPrefs();
   const [showReading, setShowReading] = useState(initialShowReading);
-  const [showTranslation, setShowTranslation] = useState(initialShowTranslation);
+  const [showTranslation, setShowTranslation] = useState(initialShowTranslation ?? true);
   // Phải khai báo TRƯỚC useExclusiveAudio: khi rời trang, cleanup chạy theo thứ tự
   // khai báo — tắt chuỗi trước thì tiếng bị dừng không kích hoạt lượt kế.
   const sequencer = useMemo(
@@ -163,23 +167,18 @@ export default function DialogueView({
               {sequenceOn ? tx("learn.dialogue.stop") : tx("learn.dialogue.playAll")}
             </button>
           )}
-          {(hasReading || hasTranslation) && (
-            // Một cụm liền: biểu tượng mắt (= "hiện") rồi các nút bật/tắt cùng chiều cao với nút phát.
-            <div
-              role="group"
-              aria-label={tx("learn.dialogue.display")}
-              className="inline-flex h-9 items-center gap-0.5 rounded-full border border-token bg-[rgb(var(--surface))] p-0.5 pl-3"
-            >
-              <Eye size={15} aria-hidden className="mr-1.5 text-muted" />
+          {!prefsOwnDisplay && (hasReading || hasTranslation) && (
+            <div role="group" aria-label={tx("learn.dialogue.display")} className="inline-flex flex-wrap items-center gap-2">
               {hasReading && (
-                <ToggleChip pressed={showReading} onClick={() => setShowReading((v) => !v)}>
+                <SwitchChip on={showReading} onClick={() => setShowReading((v) => !v)}>
                   {readingName}
-                </ToggleChip>
+                </SwitchChip>
               )}
               {hasTranslation && (
-                <ToggleChip pressed={showTranslation} onClick={() => setShowTranslation((v) => !v)}>
-                  {tx("learn.dialogue.translation")}
-                </ToggleChip>
+                // Cùng kiểu và cùng chữ với nút dịch của bài tập ("Hiện bản dịch" / "Ẩn bản dịch"), biểu tượng Languages.
+                <button type="button" className="rp-link inline-flex h-9 items-center gap-1.5 text-sm" aria-expanded={showTranslation} onClick={() => setShowTranslation((v) => !v)}>
+                  <Languages size={15} aria-hidden /> {showTranslation ? tx("practice.aid.hideTranslation") : tx("practice.aid.showTranslation")}
+                </button>
               )}
             </div>
           )}
@@ -327,8 +326,9 @@ export default function DialogueView({
               </div>
               {t.translation && (
                 <p
+                  data-rd-tr=""
                   data-masked={showTranslation ? undefined : "true"}
-                  className={`col-start-2 text-body text-muted md:col-start-3 md:row-start-1 ${
+                  className={`${hsk ? "hsk-dlg-tr " : ""}col-start-2 text-body text-muted md:col-start-3 md:row-start-1 ${
                     showTranslation ? "" : "select-none blur-sm"
                   }`}
                 >
@@ -345,27 +345,21 @@ export default function DialogueView({
 
 const turnDomId = (id: string) => `dlg-turn-${id}`;
 
-function ToggleChip({
-  pressed,
-  onClick,
-  children,
-}: {
-  pressed: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
+/** Nút bật/tắt một lớp hiển thị (Bản dịch, Pinyin): nhãn + công tắc nhỏ; bật = nền xanh nhạt và công tắc xanh, tắt = viền mảnh và công tắc xám. */
+function SwitchChip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"
-      aria-pressed={pressed}
+      aria-pressed={on}
       onClick={onClick}
-      className={`h-8 rounded-full px-3.5 text-sm transition-colors ${
-        pressed
-          ? "bg-brand-100 font-medium text-brand-800 shadow-sm"
-          : "text-muted line-through decoration-[rgb(var(--text-muted))/0.5] hover:bg-brand-soft"
+      className={`inline-flex h-9 items-center gap-2.5 border px-3 text-sm font-semibold transition-colors ${
+        on ? "border-brand-600 bg-brand-100 text-brand-800" : "border-token bg-[rgb(var(--surface))] text-muted hover:bg-brand-soft"
       }`}
     >
       {children}
+      <span aria-hidden className={`relative h-5 w-9 shrink-0 transition-colors ${on ? "bg-brand-600" : "bg-black/20 dark:bg-white/25"}`}>
+        <span className={`absolute top-0.5 h-4 w-4 bg-white shadow-sm transition-all ${on ? "left-[1.125rem]" : "left-0.5"}`} />
+      </span>
     </button>
   );
 }

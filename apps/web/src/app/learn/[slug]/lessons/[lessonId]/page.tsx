@@ -1450,6 +1450,7 @@ export default async function LessonPage({
       preview={previewMode}
       lang={lang}
       readerPinyin={courseHasPinyin(lesson.module.course.language)}
+      nextQuiet={requirePractice && practiceCheck.checked < practiceCheck.total}
     >
       {body}
     </LessonFrameLayout>

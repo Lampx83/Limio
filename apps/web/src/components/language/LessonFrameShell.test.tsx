@@ -221,3 +221,47 @@ describe("LessonFrameShell — hai tab và Hỏi AI (AC2–AC4)", () => {
     expect(host.querySelector('[data-testid="ai"]')).not.toBeNull();
   });
 });
+
+describe("LessonFrameShell — thanh trên dưới lg theo mục đang đọc", () => {
+  const heads = (items: Array<[string, string, string]>) => {
+    const c = document.createElement("div");
+    c.id = "lesson-content";
+    c.innerHTML = items.map(([no, zh, vi2]) => `<div class="hsk-sh"><span class="hsk-sn">${no}</span><h2><span class="zh">${zh}</span>${vi2}</h2></div>`).join("");
+    document.body.appendChild(c);
+    return c;
+  };
+  const renderBar = async () => {
+    await act(async () => {
+      root.render(
+        <LessonFrameShell lessonId="l1" notesCount={0} rail={<p>RAIL</p>} railLabel="Bài" railSummary="s" crumbs={<p>CRUMBS</p>} nav={<p>NAV</p>} lessonTitle="Bài khoá 1" posLabel="2/5" unitPct={40}>
+          <main>NỘI DUNG</main>
+        </LessonFrameShell>,
+      );
+    });
+  };
+  const bar = () => host.querySelector('[data-testid="lesson-mobile-bar"]') as HTMLElement;
+
+  it("bài có từ 2 mục có số: nhãn là mục đang đọc (số + tên), vạch tiến độ chia theo mục; danh sách mục trong ngăn mở", async () => {
+    const c = heads([["01", "情景", "Tình huống"], ["02", "对话", "Hội thoại"], ["03", "生词", "Từ mới"]]);
+    await renderBar();
+    expect(bar().querySelector('[data-testid="bar-section-no"]')!.textContent).toBe("01");
+    expect(bar().querySelector('[data-testid="bar-section-label"]')!.textContent).toBe("Tình huống");
+    // tên bài hiện ngay trên mục đang đọc (hai dòng)
+    expect(bar().querySelector('[data-testid="bar-lesson-title"]')!.textContent).toBe("Bài khoá 1");
+    expect(bar().querySelectorAll('[data-testid="bar-section-progress"] > div')).toHaveLength(3);
+    await click(bar().querySelector('button[aria-label="Danh sách bài"]')!);
+    const list = host.querySelector('[data-testid="bar-sections-list"]')!;
+    expect([...list.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["01Tình huống", "02Hội thoại", "03Từ mới"]);
+    // tên bài và vị trí trong unit chuyển vào đầu ngăn mở; không còn nút ← và AI ở thanh trên
+    expect(bar().textContent).toContain("2/5 · Bài khoá 1");
+    expect(bar().querySelector('a[aria-label="Về trang khoá học"]')).toBeNull();
+    c.remove();
+  });
+
+  it("bài không có mục có số: nhãn là vị trí và tên bài như trước", async () => {
+    await renderBar();
+    expect(bar().querySelector('[data-testid="bar-section-label"]')).toBeNull();
+    expect(bar().textContent).toContain("2/5");
+    expect(bar().textContent).toContain("Bài khoá 1");
+  });
+});

@@ -7,10 +7,12 @@ export type TextSize = "m" | "l" | "xl";
 
 export interface ReaderPrefs {
   pinyin: PinyinMode;
+  /** Bản dịch (lời thoại…): cùng ba mức với pinyin, nhưng MẶC ĐỊNH ẨN. */
+  translation: PinyinMode;
   size: TextSize;
 }
 
-export const DEFAULT_READER_PREFS: ReaderPrefs = { pinyin: "show", size: "m" };
+export const DEFAULT_READER_PREFS: ReaderPrefs = { pinyin: "show", translation: "off", size: "m" };
 export const PINYIN_MODES: readonly PinyinMode[] = ["show", "tap", "off"];
 export const TEXT_SIZES: readonly TextSize[] = ["m", "l", "xl"];
 
@@ -23,6 +25,7 @@ export function parseReaderPrefs(raw: string | null | undefined): ReaderPrefs {
     const v = JSON.parse(raw) as Partial<Record<keyof ReaderPrefs, unknown>> | null;
     return {
       pinyin: PINYIN_MODES.includes(v?.pinyin as PinyinMode) ? (v!.pinyin as PinyinMode) : DEFAULT_READER_PREFS.pinyin,
+      translation: PINYIN_MODES.includes(v?.translation as PinyinMode) ? (v!.translation as PinyinMode) : DEFAULT_READER_PREFS.translation,
       size: TEXT_SIZES.includes(v?.size as TextSize) ? (v!.size as TextSize) : DEFAULT_READER_PREFS.size,
     };
   } catch {
@@ -34,6 +37,9 @@ export const serializeReaderPrefs = (p: ReaderPrefs): string => JSON.stringify(p
 
 /** Các phần tử pinyin của bài (cùng danh sách với quy tắc CSS `data-rd-pinyin` ở globals.css). */
 export const PINYIN_SELECTOR = "ruby.ruby-han > rt, .hsk-py, .hsk-fc-b-py, .py-latin";
+
+/** Bản dịch của bài (đoạn có `data-rd-tr`): hiện/ẩn theo tuỳ chọn "Bản dịch" của bảng Aa. */
+export const TRANSLATION_SELECTOR = "[data-rd-tr]";
 
 /** Khối được "chạm để xem": phần tử khối gần nhất quanh chỗ chạm. Chạm vào điều khiển (nút, liên kết, ô nhập…) thì không tính. */
 export function tapBlockOf(target: Element | null): Element | null {

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Headphones, ListChecks, Mic, Shuffle, TextCursorInput, type LucideIcon } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
-import { PRACTICE_KIND_LABEL, PRACTICE_PROGRESS_EVENT, type PracticeKind, type PracticeProgressDetail, type PracticeTabMeta } from "@/lib/practiceTabMeta";
+import { PRACTICE_COMPLETE_EVENT, PRACTICE_KIND_LABEL, PRACTICE_PROGRESS_EVENT, type PracticeKind, type PracticeProgressDetail, type PracticeTabMeta } from "@/lib/practiceTabMeta";
 
 export interface PracticeTab {
   id: string;
@@ -68,6 +68,13 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
     window.addEventListener(PRACTICE_PROGRESS_EVENT, onProgress);
     return () => window.removeEventListener(PRACTICE_PROGRESS_EVENT, onProgress);
   }, []);
+  // Báo cho thanh đáy: mọi bài tập có câu đã được kiểm hết chưa (nút "Tiếp" đổi mức nhấn). Chỉ báo khi có ít nhất một bài tập có câu.
+  const allChecked = tabs.some((tb) => (tb.meta?.ids?.length ?? 0) > 0) && tabs.every((tb) => (tb.meta?.ids?.length ?? 0) === 0 || progressOf(tb.meta, live).done);
+  const hasQuestions = tabs.some((tb) => (tb.meta?.ids?.length ?? 0) > 0);
+  useEffect(() => {
+    if (!hasQuestions) return;
+    window.dispatchEvent(new CustomEvent(PRACTICE_COMPLETE_EVENT, { detail: { done: allChecked } }));
+  }, [allChecked, hasQuestions]);
   // Hàng thẻ cuộn ngang: biết còn thẻ bị che ở mép nào để mờ mép và hiện nút mũi tên.
   const barRef = useRef<HTMLDivElement>(null);
   const [edge, setEdge] = useState({ left: false, right: false });

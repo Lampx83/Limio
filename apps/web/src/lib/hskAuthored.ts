@@ -161,3 +161,33 @@ export function planAuthored(items: ItemLike[], kinds: string[], startNo = 0): {
   });
   return { segs, count: no };
 }
+
+/**
+ * Mục phụ của bài khoá gập sẵn (docs/tieu-chi/limio-language-ux-p1-ly-thuyet.md, mục E): tên Việt của mục khớp CHÍNH XÁC một trong các tên này.
+ * Các mục "Ôn ngữ pháp", "Ôn văn hoá"… của bài tổng hợp không nằm trong danh sách nên không đổi.
+ */
+export const FOLDED_SECTIONS: ReadonlySet<string> = new Set(["Ngữ pháp", "Văn hoá", "Lưu ý về từ"]);
+
+export const isFoldedSection = (vi: string | undefined): boolean => !!vi && FOLDED_SECTIONS.has(vi.trim());
+
+const plain = (inner: string, keepTokens = false): string => {
+  // Giữ token pinyin `{{汉字^pīnyīn}}` (bỏ thẻ bọc chữ Hán) để dòng tóm tắt vẫn có pinyin dưới chữ khi dựng ở trình duyệt.
+  const src = keepTokens ? inner.replace(PINYIN_TOKEN, (_m, han: string, py: string) => `{{${han}^${py}}}`) : stripPinyinTokens(inner);
+  return decode(src.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
+};
+
+/**
+ * Dòng tóm tắt của một mục gập: tiêu đề các điểm (`<h3>`: với ngữ pháp đó chính là công thức); không có thì các từ ở cột đầu của bảng
+ * (mục "Lưu ý về từ"); không có nữa thì câu đầu của đoạn văn đầu tiên (mục Văn hoá), cắt gọn.
+ */
+export function foldSummary(html: string, max = 120, keepTokens = false): string[] {
+  const h3 = [...html.matchAll(/<h3\b[^>]*>([\s\S]*?)<\/h3>/gi)].map((m) => plain(m[1]!, keepTokens)).filter(Boolean);
+  if (h3.length > 0) return h3;
+  const firstCol = [...html.matchAll(/<tr\b[^>]*>\s*<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map((m) => plain(m[1]!, keepTokens).replace(/\s*\([^)]*\)\s*$/, "")).filter(Boolean);
+  if (firstCol.length > 0) return [firstCol.slice(0, 8).join("、")];
+  const p = /<p\b[^>]*>([\s\S]*?)<\/p>/i.exec(html);
+  if (!p) return [];
+  const text = plain(p[1]!, keepTokens);
+  const sentence = /^.*?[.!?。！？](?=\s|$)/.exec(text)?.[0] ?? text;
+  return [sentence.length > max ? `${sentence.slice(0, max - 1).trimEnd()}…` : sentence];
+}

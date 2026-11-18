@@ -18,6 +18,9 @@ vi.mock("@/components/LessonActions", () => ({ LessonNotes: () => null }));
 
 import LessonFrameLayout, { LessonCrumbs, LessonNavBar, LessonViewTabs, RailCourseHeader } from "./LessonFrame";
 
+/** Bài trước/bài kế trong dữ liệu khung (mặc định cùng unit). */
+const L = (id: string, title: string, o: Partial<{ unitTitle: string; sameUnit: boolean }> = {}) => ({ id, title, unitTitle: "Unit 1 · Lifestyles", sameUnit: true, ...o });
+
 const text = (h: string) => h.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
 
 const frame = (o: Partial<LessonFrameData> = {}): LessonFrameData => ({
@@ -30,8 +33,8 @@ const frame = (o: Partial<LessonFrameData> = {}): LessonFrameData => ({
     { id: "l3", title: "Reading Comprehension", minutes: null, state: "todo" },
     { id: "l4", title: "Vocabulary Skill", minutes: 7, state: "locked" },
   ],
-  next: { id: "l3", title: "Reading Comprehension" },
-  prev: { id: "l1", title: "Before You Read" },
+  next: L("l3", "Reading Comprehension"),
+  prev: L("l1", "Before You Read"),
   ...o,
 });
 
@@ -207,7 +210,7 @@ describe("LessonViewTabs", () => {
 describe("LessonNavBar", () => {
   it("có cả bài trước và bài kế: hai liên kết đúng bài, nhãn 'Bài trước' / 'Bài tiếp theo'", () => {
     const html = renderToStaticMarkup(
-      <LessonNavBar slug="ielts" prev={{ id: "l1", title: "Before You Read" }} next={{ id: "l3", title: "Reading Comprehension" }} />,
+      <LessonNavBar slug="ielts" prev={L("l1", "Before You Read")} next={L("l3", "Reading Comprehension")} />,
     );
     expect(text(html)).toContain("Bài trước");
     expect(text(html)).toContain("Bài tiếp theo");
@@ -216,19 +219,40 @@ describe("LessonNavBar", () => {
     expect(html).toContain("sticky bottom-0");
   });
   it("bài đầu tiên: không có 'Bài trước'", () => {
-    const html = renderToStaticMarkup(<LessonNavBar slug="ielts" prev={null} next={{ id: "l3", title: "Reading Comprehension" }} />);
+    const html = renderToStaticMarkup(<LessonNavBar slug="ielts" prev={null} next={L("l3", "Reading Comprehension")} />);
     expect(text(html)).not.toContain("Bài trước");
     expect(text(html)).toContain("Bài tiếp theo");
   });
   it("bài cuối: 'Bài tiếp theo' thành 'Về khoá học'", () => {
-    const html = renderToStaticMarkup(<LessonNavBar slug="ielts" prev={{ id: "l1", title: "A" }} next={null} />);
+    const html = renderToStaticMarkup(<LessonNavBar slug="ielts" prev={L("l1", "A")} next={null} />);
     expect(text(html)).toContain("Về khoá học");
     expect(text(html)).not.toContain("Bài tiếp theo");
     expect(html).toContain('href="/learn/ielts"');
   });
+  it("bài đầu của chủ đề: 'Bài trước' ghi kèm tên ngắn của chủ đề trước; 'Tiếp' trong cùng chủ đề ghi 'Bài tiếp theo'", () => {
+    const html = renderToStaticMarkup(
+      <LessonNavBar slug="h" prev={L("p", "Bài tập tổng hợp · 综合练习", { unitTitle: "Chủ đề 1 · 搬进新家 — Dọn về nhà mới", sameUnit: false })} next={L("n", "Bài khoá 1")} />,
+    );
+    expect(text(html)).toContain("Chủ đề 1 · Bài tập tổng hợp");
+    expect(text(html)).toContain("Bài tiếp theo");
+  });
+  it("bài cuối của chủ đề: nút phải mang tên chủ đề kế, dòng dưới là bài đầu của nó (không ghi 'Bài tiếp theo')", () => {
+    const html = renderToStaticMarkup(
+      <LessonNavBar slug="h" prev={L("p", "Bài khoá 3")} next={L("n", "Khởi động · 热身", { unitTitle: "Chủ đề 2 · 退货这件事 — Mua sắm", sameUnit: false })} />,
+    );
+    expect(text(html)).toContain("Chủ đề 2 →");
+    expect(text(html)).toContain("Khởi động · 热身");
+    expect(text(html)).not.toContain("Bài tiếp theo");
+  });
+  it("mức nhấn của 'Tiếp': nút viền khi còn Bài luyện chưa kiểm (nextQuiet), nút đặc khi không", () => {
+    const quiet = renderToStaticMarkup(<LessonNavBar slug="s" prev={null} next={L("n", "N")} nextQuiet />);
+    expect(quiet).toContain('data-tone="quiet"');
+    const primary = renderToStaticMarkup(<LessonNavBar slug="s" prev={null} next={L("n", "N")} />);
+    expect(primary).toContain('data-tone="primary"');
+  });
   it("tên bài dài được rút gọn", () => {
     const long = "Tên bài rất rất dài ".repeat(6);
-    const html = renderToStaticMarkup(<LessonNavBar slug="s" prev={null} next={{ id: "n", title: long }} />);
+    const html = renderToStaticMarkup(<LessonNavBar slug="s" prev={null} next={L("n", long)} />);
     expect(text(html)).toContain("…");
   });
 });

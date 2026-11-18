@@ -3,6 +3,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import PracticeTabs from "./PracticeTabs";
+import { PRACTICE_COMPLETE_EVENT, PRACTICE_PROGRESS_EVENT } from "@/lib/practiceTabMeta";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -194,5 +195,32 @@ describe("PracticeTabs — thanh bài tập gọn « 3/7 · tên bài »", () =>
   it("chỉ một bài tập thì không có thanh chuyển", async () => {
     await render([three[0]!]);
     expect(nav()).toBeNull();
+  });
+});
+
+describe("PracticeTabs — báo hoàn tất cho nút 'Tiếp' của thanh đáy", () => {
+  const meta = (ids: string[], checked: string[]) => ({ kind: "choose" as const, ids, answered: checked, checked });
+  const two = (c1: string[], c2: string[]) => [
+    { id: "a", label: "1 · Một", content: <p>1</p>, meta: meta(["q1"], c1) },
+    { id: "b", label: "2 · Hai", content: <p>2</p>, meta: meta(["q2"], c2) },
+  ];
+  it("chưa kiểm hết thì báo done=false; kiểm hết thì done=true (cả khi đổi trong lúc làm)", async () => {
+    const seen: boolean[] = [];
+    const on = (e: Event) => seen.push((e as CustomEvent<{ done: boolean }>).detail.done);
+    window.addEventListener(PRACTICE_COMPLETE_EVENT, on);
+    await act(async () => root.render(<PracticeTabs tabs={two(["q1"], [])} />));
+    expect(seen.at(-1)).toBe(false);
+    // học viên kiểm nốt câu của bài tập 2
+    await act(async () => void window.dispatchEvent(new CustomEvent(PRACTICE_PROGRESS_EVENT, { detail: { ids: ["q2"], answered: ["q2"], checked: ["q2"] } })));
+    expect(seen.at(-1)).toBe(true);
+    window.removeEventListener(PRACTICE_COMPLETE_EVENT, on);
+  });
+  it("không có bài tập nào có câu thì không báo gì", async () => {
+    const seen: boolean[] = [];
+    const on = (e: Event) => seen.push((e as CustomEvent<{ done: boolean }>).detail.done);
+    window.addEventListener(PRACTICE_COMPLETE_EVENT, on);
+    await act(async () => root.render(<PracticeTabs tabs={[{ id: "a", label: "1 · Một", content: <p>1</p> }, { id: "b", label: "2 · Hai", content: <p>2</p> }]} />));
+    expect(seen).toEqual([]);
+    window.removeEventListener(PRACTICE_COMPLETE_EVENT, on);
   });
 });

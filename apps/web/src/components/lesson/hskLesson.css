@@ -1802,3 +1802,39 @@
 .lesson-hsk .hsk-note-sum .hsk-note-ul > li::before {
   background: rgb(var(--hk-pink));
 }
+
+/* ---------- Hội thoại: bản dịch căn thẳng hàng với lời thoại, có vạch bên trái ---------- */
+/* Cột avatar đủ rộng cho avatar 2,9 rem (trước đây cột 2,25 rem làm avatar tràn vào khe) để lời thoại và bản dịch thẳng hàng giữa các lượt. */
+.lesson-hsk .hsk-dlg ul > li.hsk-turn {
+  grid-template-columns: 3rem minmax(0, 1fr);
+  column-gap: 0.9rem;
+}
+@media (min-width: 768px) {
+  .lesson-hsk .hsk-dlg ul > li.hsk-turn {
+    grid-template-columns: 3rem minmax(0, 1.2fr) minmax(0, 1fr);
+    column-gap: 1.25rem;
+  }
+}
+/* Bản dịch: vạch xanh nhạt bên trái, chữ nhỏ hơn lời thoại nhưng đậm hơn xám cũ; dòng đầu ngang dòng đầu của lời thoại (bỏ qua dòng tên người nói). */
+.lesson-hsk .hsk-dlg .hsk-dlg-tr {
+  align-self: start;
+  margin-top: 0.15rem;
+  padding: 0.1rem 0 0.1rem 0.9rem;
+  border-left: 3px solid var(--hk-line);
+  color: rgb(var(--text) / 0.78);
+  font-size: 0.98rem;
+  line-height: 1.9;
+}
+@media (min-width: 768px) {
+  .lesson-hsk .hsk-dlg .hsk-dlg-tr {
+    margin-top: 1.55rem;
+  }
+}
+
+/* Bản dịch ẩn (tuỳ chọn Aa): hội thoại còn hai cột, lời thoại dùng hết bề ngang thay vì chừa cột trống bên phải. */
+@media (min-width: 768px) {
+  [data-rd-translation="off"] .lesson-hsk .hsk-dlg ul > li.hsk-turn,
+  [data-rd-translation="tap"] .lesson-hsk .hsk-dlg ul > li.hsk-turn:not(:has([data-rd-shown])) {
+    grid-template-columns: 3rem minmax(0, 1fr);
+  }
+}

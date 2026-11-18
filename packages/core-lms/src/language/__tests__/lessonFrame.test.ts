@@ -53,15 +53,25 @@ describe("buildLessonFrame (hàm thuần)", () => {
 
   it("bài kế tiếp: theo thứ tự khoá, nhảy qua Unit, bỏ qua bài khoá", () => {
     const p = progress([[{ id: "a" }, { id: "b", locked: true }], [{ id: "c", locked: true }, { id: "d" }]]);
-    expect(buildLessonFrame(p, "a", dur())!.next).toEqual({ id: "d", title: "Bài d" });
+    expect(buildLessonFrame(p, "a", dur())!.next).toEqual({ id: "d", title: "Bài d", unitTitle: "Unit 2", sameUnit: false });
     expect(buildLessonFrame(p, "d", dur())!.next).toBeNull();
   });
 
   it("bài trước: theo thứ tự khoá, nhảy qua Unit, bỏ qua bài khoá; bài đầu tiên không có bài trước", () => {
     const p = progress([[{ id: "a" }, { id: "b", locked: true }], [{ id: "c", locked: true }, { id: "d" }, { id: "e" }]]);
     expect(buildLessonFrame(p, "a", dur())!.prev).toBeNull();
-    expect(buildLessonFrame(p, "d", dur())!.prev).toEqual({ id: "a", title: "Bài a" });
-    expect(buildLessonFrame(p, "e", dur())!.prev).toEqual({ id: "d", title: "Bài d" });
+    expect(buildLessonFrame(p, "d", dur())!.prev).toEqual({ id: "a", title: "Bài a", unitTitle: "Unit 1", sameUnit: false });
+    expect(buildLessonFrame(p, "e", dur())!.prev).toEqual({ id: "d", title: "Bài d", unitTitle: "Unit 2", sameUnit: true });
+  });
+
+  it("bài trước/bài kế ghi unit của chính nó và sameUnit: cùng unit thì true, sang unit khác thì false", () => {
+    const p = progress([[{ id: "a" }, { id: "b" }], [{ id: "c" }, { id: "d" }]]);
+    const b = buildLessonFrame(p, "b", dur())!;
+    expect(b.prev).toMatchObject({ id: "a", sameUnit: true });
+    expect(b.next).toMatchObject({ id: "c", unitTitle: "Unit 2", sameUnit: false });
+    const c = buildLessonFrame(p, "c", dur())!;
+    expect(c.prev).toMatchObject({ id: "b", unitTitle: "Unit 1", sameUnit: false });
+    expect(c.next).toMatchObject({ id: "d", sameUnit: true });
   });
 
   it("bài không có trong tiến độ (bài/module ẩn) → null để giữ bố cục thường", () => {

@@ -319,7 +319,8 @@ describe("DialogueView — G2.3.3 / 2.3.4 / 2.3.5", () => {
   });
 
   it("nút 'Bản dịch' bật/tắt: tắt thì bản dịch được che, lời gốc vẫn hiện", () => {
-    expect(text(render())).toContain("Bản dịch");
+    // nút bản dịch: biểu tượng + chữ 'Ẩn bản dịch' khi đang hiện
+    expect(text(render())).toContain("Ẩn bản dịch");
     expect(count(render(), /data-masked="true"/g)).toBe(0);
     const hidden = render({ initialShowTranslation: false });
     expect(count(hidden, /data-masked="true"/g)).toBe(2); // t1 và t2 có bản dịch

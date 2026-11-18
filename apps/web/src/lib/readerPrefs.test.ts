@@ -10,12 +10,16 @@ describe("parseReaderPrefs", () => {
     expect(parseReaderPrefs("null")).toEqual(DEFAULT_READER_PREFS);
   });
   it("đọc lại đúng giá trị đã lưu", () => {
-    const p = { pinyin: "tap", size: "xl" } as const;
+    const p = { pinyin: "tap", translation: "show", size: "xl" } as const;
     expect(parseReaderPrefs(serializeReaderPrefs(p))).toEqual(p);
   });
   it("trường sai chỉ trường đó về mặc định", () => {
-    expect(parseReaderPrefs('{"pinyin":"off","size":"khổng lồ"}')).toEqual({ pinyin: "off", size: "m" });
-    expect(parseReaderPrefs('{"pinyin":"lạ","size":"l"}')).toEqual({ pinyin: "show", size: "l" });
+    expect(parseReaderPrefs('{"pinyin":"off","size":"khổng lồ"}')).toEqual({ pinyin: "off", translation: "off", size: "m" });
+    expect(parseReaderPrefs('{"pinyin":"lạ","translation":"tap","size":"l"}')).toEqual({ pinyin: "show", translation: "tap", size: "l" });
+  });
+  it("mặc định bản dịch ẩn; dữ liệu cũ chưa có bản dịch cũng về ẩn", () => {
+    expect(DEFAULT_READER_PREFS.translation).toBe("off");
+    expect(parseReaderPrefs('{"pinyin":"tap","size":"l"}')).toEqual({ pinyin: "tap", translation: "off", size: "l" });
   });
   it("khoá lưu theo slug khoá", () => {
     expect(readerPrefsKey("hsk-4-goc")).toBe("limio:reader:hsk-4-goc");

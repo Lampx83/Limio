@@ -2,11 +2,12 @@
 
 import { accentVar } from "@/lib/courseAccent";
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, ChevronDown, Sparkles, X } from "lucide-react";
+import { ChevronDown, Sparkles, X } from "lucide-react";
 import AiTutorPanel from "@/components/AiTutorPanel";
 import { useT } from "@/lib/i18n/client";
 import { LessonNotes } from "@/components/LessonActions";
+import { LessonFrameActionsProvider } from "./LessonFrameContext";
+import { useLessonSections } from "./useLessonSections";
 import { ReaderPrefsProvider, useReaderPrefsState, useTapReveal } from "./ReaderPrefs";
 import {
   defaultPanelOpen,
@@ -37,7 +38,6 @@ export default function LessonFrameShell({
   accent = null,
   slug,
   lessonTitle,
-  backHref,
   posLabel,
   unitPct = 0,
   mobileExtra,
@@ -57,7 +57,6 @@ export default function LessonFrameShell({
   slug?: string;
   /** Có tên bài thì dưới `lg` dùng thanh điều hướng một dòng (docs/tieu-chi/limio-language-ux-p0.md, mục A) thay cho thẻ "Bài trong unit" và đường dẫn. */
   lessonTitle?: string;
-  backHref?: string;
   /** "4/21": vị trí bài trong unit. */
   posLabel?: string;
   /** Phần trăm bài đã xong của unit (vạch tiến độ dưới thanh). */
@@ -71,8 +70,11 @@ export default function LessonFrameShell({
   const t = useT();
   const rootRef = useRef<HTMLDivElement>(null);
   const reader = useReaderPrefsState(slug);
-  useTapReveal(rootRef, reader.prefs.pinyin);
+  useTapReveal(rootRef, { pinyin: reader.prefs.pinyin, translation: reader.prefs.translation });
   const [barOpen, setBarOpen] = useState(false);
+  // Thanh trên dưới lg: nhãn là MỤC đang đọc (01 Tình huống, 02 Hội thoại…) khi bài có từ 2 mục có số; không thì tên bài.
+  const { secs, cur: curSec } = useLessonSections();
+  const bySections = secs.length >= 2;
   // Lần dựng đầu (kể cả trên máy chủ) luôn đóng; chiều ngang thật chỉ biết sau khi mount.
   const [cls, setCls] = useState<PanelWidthClass>("narrow");
   const [open, setOpen] = useState(false);
@@ -169,10 +171,12 @@ export default function LessonFrameShell({
   const notesLabel = notes > 0 ? t("ai.panel.tabNotesN", { n: notes }) : t("ai.panel.tabNotes");
 
   return (
+    <LessonFrameActionsProvider value={{ openPanel: () => openPanel() }}>
     <ReaderPrefsProvider value={{ prefs: reader.prefs, setPrefs: reader.setPrefs, pinyinAvailable: readerPinyin }}>
     <div
       ref={rootRef}
       data-rd-pinyin={reader.prefs.pinyin}
+      data-rd-translation={reader.prefs.translation}
       data-rd-size={reader.prefs.size}
       // Dấu hiệu cho CSS: trong khung, nút nổi "Về trang chủ học viên" (góc dưới trái) bị rail che/đè chữ nên ẩn từ `lg` (globals.css).
       data-lesson-frame=""
@@ -194,25 +198,68 @@ export default function LessonFrameShell({
         {lessonTitle ? (
           <div data-testid="lesson-mobile-bar" className="sticky top-[4.5rem] z-30 -mx-4 mb-3 border-b border-token bg-[rgb(var(--surface)/0.97)] backdrop-blur lg:hidden">
             <div className="flex items-stretch">
-              {backHref && (
-                <Link href={backHref} aria-label={t("reader.bar.back")} className="flex w-11 shrink-0 items-center justify-center bg-brand-600 text-white hover:bg-brand-700">
-                  <ArrowLeft size={18} aria-hidden />
-                </Link>
-              )}
               <button type="button" onClick={() => setBarOpen((v) => !v)} aria-expanded={barOpen} aria-label={t("reader.bar.list")} className="flex min-w-0 flex-1 items-center gap-2 px-3 py-2 text-left">
-                {posLabel && <b className="shrink-0 text-sm tabular-nums text-brand-700">{posLabel}</b>}
-                <span className="min-w-0 flex-1 truncate text-sm font-medium">{lessonTitle}</span>
+                {bySections ? (
+                  // Hai dòng: tên bài (nhỏ, mờ) rồi mục đang đọc (chính): cuộn sâu vẫn biết đang ở bài nào và mục nào.
+                  <span className="flex min-w-0 flex-1 flex-col leading-tight">
+                    <span className="block truncate text-[0.7rem] text-muted" data-testid="bar-lesson-title">
+                      {lessonTitle}
+                    </span>
+                    <span className="flex items-baseline gap-1.5">
+                      <b className="shrink-0 text-sm tabular-nums text-brand-700" data-testid="bar-section-no">
+                        {secs[curSec]?.no}
+                      </b>
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium" data-testid="bar-section-label">
+                        {secs[curSec]?.label}
+                      </span>
+                    </span>
+                  </span>
+                ) : (
+                  <>
+                    {posLabel && <b className="shrink-0 text-sm tabular-nums text-brand-700">{posLabel}</b>}
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium">{lessonTitle}</span>
+                  </>
+                )}
                 <ChevronDown size={16} aria-hidden className={`shrink-0 text-muted transition-transform ${barOpen ? "rotate-180" : ""}`} />
               </button>
-              <button type="button" onClick={() => openPanel()} aria-label={t("ai.panel.openAria")} className="flex w-11 shrink-0 items-center justify-center text-brand-700 hover:bg-black/5">
-                <Sparkles size={18} aria-hidden />
-              </button>
             </div>
-            <div className="h-0.5 bg-brand-100" aria-hidden>
-              <div className="h-full bg-brand-600" style={{ width: `${Math.max(0, Math.min(100, unitPct))}%` }} />
-            </div>
+            {bySections ? (
+              <div className="flex gap-0.5" aria-hidden data-testid="bar-section-progress">
+                {secs.map((_, i) => (
+                  <div key={i} className={`h-0.5 flex-1 ${i < curSec ? "bg-gray-400 dark:bg-gray-500" : i === curSec ? "bg-gray-700 dark:bg-gray-200" : "bg-gray-200 dark:bg-gray-700"}`} />
+                ))}
+              </div>
+            ) : (
+              <div className="h-0.5 bg-gray-200 dark:bg-gray-700" aria-hidden>
+                <div className="h-full bg-gray-500 dark:bg-gray-300" style={{ width: `${Math.max(0, Math.min(100, unitPct))}%` }} />
+              </div>
+            )}
             {barOpen && (
               <div className="max-h-[60vh] overflow-y-auto border-t border-token px-4 pb-4 pt-3">
+                {bySections && (
+                  <div className="mb-4" data-testid="bar-sections-list">
+                    <p className="mb-1 text-xs font-bold uppercase tracking-wider text-muted">{t("reader.bar.sections")}</p>
+                    <ol className="border-l border-token pl-1">
+                      {secs.map((s, i) => (
+                        <li key={i}>
+                          <button
+                            type="button"
+                            aria-current={i === curSec ? "location" : undefined}
+                            onClick={() => {
+                              setBarOpen(false);
+                              s.el.scrollIntoView({ block: "start", behavior: "smooth" });
+                            }}
+                            className={`flex w-full items-baseline gap-2 px-2 py-2 text-left text-sm hover:bg-black/5 ${i === curSec ? "bg-brand-50 font-bold text-brand-800" : ""}`}
+                          >
+                            <span className="shrink-0 tabular-nums text-muted">{s.no}</span>
+                            <span className="min-w-0 flex-1">{s.label}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+                {lessonTitle && <p className="mb-1 text-xs font-semibold text-muted">{[posLabel, lessonTitle].filter(Boolean).join(" · ")}</p>}
                 {rail}
                 {mobileExtra && <div className="mt-3">{mobileExtra}</div>}
               </div>
@@ -310,5 +357,6 @@ export default function LessonFrameShell({
       )}
     </div>
     </ReaderPrefsProvider>
+    </LessonFrameActionsProvider>
   );
 }

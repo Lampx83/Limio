@@ -9,6 +9,7 @@ import {
   PINYIN_MODES,
   PINYIN_SELECTOR,
   TEXT_SIZES,
+  TRANSLATION_SELECTOR,
   parseReaderPrefs,
   readerPrefsKey,
   serializeReaderPrefs,
@@ -64,32 +65,35 @@ export function useReaderPrefsState(slug: string | undefined) {
 }
 
 /** "Chạm để xem": chạm vào một khối thì hiện/ẩn pinyin của khối đó (đặt `data-rd-shown` lên từng phần tử pinyin; CSS ẩn phần tử chưa có dấu). */
-export function useTapReveal(rootRef: React.RefObject<HTMLElement>, mode: PinyinMode) {
+export function useTapReveal(rootRef: React.RefObject<HTMLElement>, modes: { pinyin: PinyinMode; translation: PinyinMode }) {
+  const { pinyin, translation } = modes;
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
     root.querySelectorAll("[data-rd-shown]").forEach((el) => el.removeAttribute("data-rd-shown"));
-    if (mode !== "tap") return;
+    const sel = [pinyin === "tap" ? PINYIN_SELECTOR : "", translation === "tap" ? TRANSLATION_SELECTOR : ""].filter(Boolean).join(", ");
+    if (!sel) return;
     const onClick = (e: MouseEvent) => {
       const block = tapBlockOf(e.target instanceof Element ? e.target : null);
       if (!block || !root.contains(block)) return;
-      const els = [...block.querySelectorAll(PINYIN_SELECTOR)];
+      const els = [...block.querySelectorAll(sel)];
       if (els.length === 0) return;
       const on = els.every((el) => el.hasAttribute("data-rd-shown"));
       els.forEach((el) => (on ? el.removeAttribute("data-rd-shown") : el.setAttribute("data-rd-shown", "")));
     };
     root.addEventListener("click", onClick);
     return () => root.removeEventListener("click", onClick);
-  }, [rootRef, mode]);
+  }, [rootRef, pinyin, translation]);
 }
 
 const SEEN_KEY = "limio:reader:seen";
 
 /** Mẫu chữ ngay trong bảng: học viên thấy kết quả của lựa chọn (pinyin + cỡ chữ) trước khi đóng bảng. */
-function Preview({ prefs, pinyinAvailable }: { prefs: ReaderPrefs; pinyinAvailable: boolean }) {
+function Preview({ prefs, pinyinAvailable, hasTranslation }: { prefs: ReaderPrefs; pinyinAvailable: boolean; hasTranslation: boolean }) {
   const t = useT();
   const scale = prefs.size === "xl" ? 1.25 : prefs.size === "l" ? 1.12 : 1;
   const zh: Array<[string, string]> = [["你", "nǐ"], ["好", "hǎo"], ["吗", "ma"]];
+  const tapHint = (pinyinAvailable && prefs.pinyin === "tap") || (hasTranslation && prefs.translation === "tap");
   return (
     <div className="mb-4 border border-token bg-brand-50 px-4 py-3" aria-hidden data-testid="reader-prefs-preview">
       <div style={{ fontSize: `${scale}rem` }} className="leading-snug">
@@ -101,10 +105,16 @@ function Preview({ prefs, pinyinAvailable }: { prefs: ReaderPrefs; pinyinAvailab
                 <span className="text-[1.6em] font-medium text-brand-800">{han}</span>
               </span>
             ))}
-            {prefs.pinyin === "tap" && <span className="ml-2 inline-flex items-center gap-1 text-[0.6em] text-muted"><MousePointerClick size={14} />{t("reader.prefs.tapHint")}</span>}
           </span>
         ) : (
           <span>{t("reader.prefs.sampleText")}</span>
+        )}
+        {hasTranslation && prefs.translation === "show" && <p className="mt-1 text-[0.8em] text-muted">{t("reader.prefs.sampleTranslation")}</p>}
+        {tapHint && (
+          <p className="mt-1 inline-flex items-center gap-1 text-[0.6em] text-muted">
+            <MousePointerClick size={14} />
+            {t("reader.prefs.tapHint")}
+          </p>
         )}
       </div>
     </div>
@@ -160,6 +170,8 @@ export function ReaderPrefsMenu({ className = "", showLabel = false }: { classNa
   const [open, setOpen] = useState(false);
   const [seen, setSeen] = useState(true);
   const [pos, setPos] = useState({ bottom: 0, left: 0 });
+  // Bài có bản dịch (đoạn `data-rd-tr`) thì bảng có nhóm "Bản dịch"; đo lúc mở bảng.
+  const [hasTr, setHasTr] = useState(false);
   const btn = useRef<HTMLButtonElement>(null);
   const sheet = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -191,6 +203,7 @@ export function ReaderPrefsMenu({ className = "", showLabel = false }: { classNa
       // Nút nằm ở thanh đáy: bảng mở LÊN trên nút, căn giữa theo nút nhưng không tràn ra ngoài màn hình.
       if (r) setPos({ bottom: window.innerHeight - r.top + 8, left: Math.min(Math.max(r.left + r.width / 2, 184), window.innerWidth - 184) });
       setSeen(true);
+      setHasTr(!!document.querySelector("#lesson-content [data-rd-tr]"));
       try {
         window.localStorage.setItem(SEEN_KEY, "1");
       } catch {
@@ -199,7 +212,7 @@ export function ReaderPrefsMenu({ className = "", showLabel = false }: { classNa
     }
     setOpen((v) => !v);
   };
-  const changed = ctx.prefs.pinyin !== DEFAULT_READER_PREFS.pinyin || ctx.prefs.size !== DEFAULT_READER_PREFS.size;
+  const changed = ctx.prefs.pinyin !== DEFAULT_READER_PREFS.pinyin || ctx.prefs.translation !== DEFAULT_READER_PREFS.translation || ctx.prefs.size !== DEFAULT_READER_PREFS.size;
   const pinyinOpts: Array<{ v: PinyinMode; text: string; icon: React.ReactNode }> = [
     { v: "show", text: t("reader.prefs.pinyin.show"), icon: <Eye size={22} /> },
     { v: "tap", text: t("reader.prefs.pinyin.tap"), icon: <MousePointerClick size={22} /> },
@@ -234,8 +247,9 @@ export function ReaderPrefsMenu({ className = "", showLabel = false }: { classNa
             </button>
           </div>
         </div>
-        <Preview prefs={ctx.prefs} pinyinAvailable={ctx.pinyinAvailable} />
+        <Preview prefs={ctx.prefs} pinyinAvailable={ctx.pinyinAvailable} hasTranslation={hasTr} />
         {ctx.pinyinAvailable && <Seg label={t("reader.prefs.pinyin")} value={ctx.prefs.pinyin} options={pinyinOpts} onPick={(pinyin) => ctx.setPrefs({ pinyin })} />}
+        {hasTr && <Seg label={t("reader.prefs.translation")} value={ctx.prefs.translation} options={pinyinOpts} onPick={(translation) => ctx.setPrefs({ translation })} />}
         <Seg label={t("reader.prefs.size")} value={ctx.prefs.size} options={sizeOpts} onPick={(size) => ctx.setPrefs({ size })} />
       </div>
     </>

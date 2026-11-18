@@ -16,7 +16,7 @@ vi.mock("next/link", () => ({
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => undefined, push: () => undefined }) }));
 
 import LessonPractice from "./LessonPractice";
-import { splitTransform } from "./PracticeSheet";
+import { COMPACT_OPTION_CHARS, splitTransform } from "./PracticeSheet";
 
 /**
  * Phiếu bài tập (docs/tieu-chi/limio-language-phieu-bai-tap.md): tab bài tập, mỗi câu một dòng, trả lời ngay trong dòng, không kéo thả,
@@ -608,5 +608,36 @@ describe("Phiếu bài tập — dòng yêu cầu và tên khối", () => {
     const head = panel().querySelector(".ps-tabtitle")!;
     expect(head.textContent).toContain("Ex 1A · Present forms");
     expect(head.textContent).toMatch(/\d+ câu/);
+  });
+});
+
+describe("PracticeSheet — phương án trắc nghiệm ngắn xếp một hàng ngang", () => {
+  const optsOf = () => host.querySelector<HTMLElement>(".ps-opts")!;
+  const opt = (id: string, label: string) => ({ id, label });
+
+  beforeEach(() => {
+    host = document.createElement("div");
+    document.body.appendChild(host);
+    root = createRoot(host);
+    mockFetch();
+  });
+  afterEach(() => {
+    act(() => root.unmount());
+    host.remove();
+  });
+
+  const show = async (options: Array<{ id: string; label: string }>) => {
+    const e = embed();
+    await act(async () => root.render(<LessonPractice slug="c" embed={{ ...e, questions: [q("c1", "mcq", "Chọn.", "p1", { options })] }} sheet />));
+  };
+
+  it("mọi phương án ngắn → hàng ngang (ps-opts-row)", async () => {
+    await show([opt("o1", "里面"), opt("o2", "后面"), opt("o3", "旁边"), opt("o4", "对面")]);
+    expect(optsOf().classList.contains("ps-opts-row")).toBe(true);
+  });
+
+  it("có phương án dài → vẫn danh sách dọc", async () => {
+    await show([opt("o1", "里面"), opt("o2", "后面"), opt("o3", "旁边"), opt("o4", "x".repeat(COMPACT_OPTION_CHARS + 1))]);
+    expect(optsOf().classList.contains("ps-opts-row")).toBe(false);
   });
 });

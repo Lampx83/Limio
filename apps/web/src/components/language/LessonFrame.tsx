@@ -3,7 +3,11 @@ import { Check, Lock } from "lucide-react";
 import type { LessonFrameData, LessonRailItem } from "@feedbackme/core-lms";
 import { lessonViewHref, previewHref, type LessonView } from "@/lib/lessonFrameView";
 import LessonFrameShell from "./LessonFrameShell";
+import LessonSectionsNav from "./LessonSectionsNav";
 import { ReaderPrefsMenu } from "./ReaderPrefs";
+import { AiOpenButton } from "./LessonFrameContext";
+import NextLessonLink from "./NextLessonLink";
+import { navSub, nextHeadline } from "@/lib/lessonNavLabels";
 import LessonTocDrawer from "@/components/lesson/LessonTocDrawer";
 import { tFor } from "@/lib/i18n/tFor";
 import LessonVideoBadge from "@/components/ui/LessonVideoBadge";
@@ -72,6 +76,7 @@ function RailList({ slug, frame, preview, lang, videos }: { slug: string; frame:
                 {row}
               </Link>
             )}
+            {it.state === "current" && <LessonSectionsNav />}
           </li>
         );
       })}
@@ -187,39 +192,54 @@ export function LessonViewTabs({ slug, lessonId, view, vocabCount, preview, lang
   );
 }
 
-/** Rút gọn tên bài để vừa thanh điều hướng. */
-function short(t: string, n = 38): string {
-  return t.length > n ? `${t.slice(0, n - 1)}…` : t;
-}
-
 /**
- * Thanh "← Bài trước / Bài tiếp theo →" cố định ở đáy cột nội dung (thầy chốt 10/11/2026): theo thứ tự bài trong khoá, bỏ qua
- * bài khoá; bài đầu không có "Bài trước"; bài cuối thay "Bài tiếp theo" bằng "Về khoá học". Không đánh dấu hoàn thành.
+ * Thanh đáy cột nội dung (docs/tieu-chi/limio-language-ux-dieu-huong-bai.md): trái "Bài trước", giữa Aa và AI, phải "Tiếp". Nhãn hai dòng (việc, rồi tên đích);
+ * sang unit/chủ đề khác thì ghi kèm tên chủ đề; bài cuối unit thì nút phải mang tên chủ đề kế. Bài đầu khoá không có nút trái; bài cuối khoá nút phải là
+ * "Về khoá học". Theo thứ tự bài trong khoá, bỏ qua bài khoá. `nextQuiet`: bài còn Bài luyện chưa kiểm hết → "Tiếp" là nút viền (phụ).
  */
-export function LessonNavBar({ slug, prev, next, preview, lang }: { slug: string; prev: LessonFrameData["prev"]; next: LessonFrameData["next"]; preview?: boolean; lang?: UiLang }) {
+export function LessonNavBar({
+  slug,
+  prev,
+  next,
+  preview,
+  lang,
+  nextQuiet = false,
+}: {
+  slug: string;
+  prev: LessonFrameData["prev"];
+  next: LessonFrameData["next"];
+  preview?: boolean;
+  lang?: UiLang;
+  nextQuiet?: boolean;
+}) {
   const t = tFor(lang);
   return (
     <nav
       aria-label={t("learn.nav.aria")}
-      className="sticky bottom-0 z-20 -mx-4 mt-8 flex items-center justify-between gap-3 border-t border-token bg-[rgb(var(--surface)/0.94)] px-4 py-2 backdrop-blur lg:mx-0 lg:rounded-t-xl"
+      className="sticky bottom-0 z-20 -mx-4 mt-8 flex items-center justify-between gap-2 border-t border-token bg-[rgb(var(--surface)/0.94)] px-4 py-2 backdrop-blur lg:mx-0 lg:rounded-t-xl"
     >
       {prev ? (
-        <Link href={lessonViewHref(slug, prev.id, "lesson", preview)} className="btn-ghost btn-sm inline-flex min-w-0 items-center gap-1.5" title={prev.title}>
-          <span aria-hidden>←</span>
-          <span className="shrink-0">{t("learn.nav.prev")}</span>
-          <span className="hidden min-w-0 truncate text-muted md:inline">· {short(prev.title)}</span>
+        <Link
+          href={lessonViewHref(slug, prev.id, "lesson", preview)}
+          className="btn btn-sm min-w-0 max-w-[9.5rem] flex-col items-start gap-0 py-1 text-left leading-tight text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))] sm:max-w-[16rem]"
+          title={prev.title}
+        >
+          <span className="whitespace-nowrap font-semibold">
+            ← <span className="sm:hidden">{t("reader.nav.prevShort")}</span>
+            <span className="hidden sm:inline">{t("learn.nav.prev")}</span>
+          </span>
+          <small className="block w-full truncate text-[0.7rem] font-normal">{navSub(prev)}</small>
         </Link>
       ) : (
         <span aria-hidden />
       )}
-      {/* "Aa" ở giữa thanh đáy: vùng ngón cái với tới được, luôn thấy khi cuộn (docs/tieu-chi/limio-language-ux-p0.md, D). */}
-      <ReaderPrefsMenu showLabel />
+      {/* Giữa thanh đáy: vùng ngón cái với tới được, luôn thấy khi cuộn (Aa: tuỳ chọn đọc; AI: trợ giảng, chỉ dưới lg). */}
+      <div className="flex shrink-0 items-center gap-1.5">
+        <ReaderPrefsMenu showLabel />
+        <AiOpenButton />
+      </div>
       {next ? (
-        <Link href={lessonViewHref(slug, next.id, "lesson", preview)} className="btn-primary btn-sm inline-flex min-w-0 items-center gap-1.5" title={next.title}>
-          <span className="shrink-0">{t("learn.nav.next")}</span>
-          <span className="hidden min-w-0 truncate opacity-90 md:inline">· {short(next.title)}</span>
-          <span aria-hidden>→</span>
-        </Link>
+        <NextLessonLink href={lessonViewHref(slug, next.id, "lesson", preview)} headline={nextHeadline(next, t("learn.nav.next"))} headlineShort={next.sameUnit ? t("reader.nav.nextShort") : undefined} sub={navSub({ ...next, sameUnit: true })} title={next.title} quiet={nextQuiet} />
       ) : (
         <Link href={previewHref(`/learn/${slug}`, preview)} className="btn-primary btn-sm">
           {t("learn.nav.toCourse")}
@@ -249,6 +269,7 @@ export default function LessonFrameLayout({
   accent = null,
   lang,
   readerPinyin = false,
+  nextQuiet = false,
   children,
 }: {
   slug: string;
@@ -275,6 +296,8 @@ export default function LessonFrameLayout({
   lang?: UiLang;
   /** Khoá có pinyin: bảng tuỳ chọn đọc "Aa" có nhóm Pinyin. */
   readerPinyin?: boolean;
+  /** Bài còn Bài luyện chưa kiểm hết: nút "Tiếp" là nút viền (phụ) cho tới khi kiểm xong. */
+  nextQuiet?: boolean;
   children: React.ReactNode;
 }) {
   const t = tFor(lang);
@@ -285,7 +308,6 @@ export default function LessonFrameLayout({
       accent={accent}
       slug={slug}
       lessonTitle={lessonTitle}
-      backHref={previewHref(`/learn/${slug}`, preview)}
       posLabel={curIdx >= 0 ? `${curIdx + 1}/${frame.items.length}` : undefined}
       unitPct={frame.unitTotal > 0 ? Math.round((frame.unitDone / frame.unitTotal) * 100) : 0}
       readerPinyin={readerPinyin}
@@ -304,7 +326,7 @@ export default function LessonFrameLayout({
           </div>
         </div>
       }
-      nav={<LessonNavBar slug={slug} prev={frame.prev} next={frame.next} preview={preview} lang={lang} />}
+      nav={<LessonNavBar slug={slug} prev={frame.prev} next={frame.next} preview={preview} lang={lang} nextQuiet={nextQuiet} />}
     >
       {children}
     </LessonFrameShell>

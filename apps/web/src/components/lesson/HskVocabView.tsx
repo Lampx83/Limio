@@ -11,6 +11,7 @@ import { cleanVocabItems, hasHanChars, markTermTokens, shortVocabTag, splitVocab
 import { hskT } from "./hskT";
 import HanziStrokeDialog from "./HanziStrokeDialog";
 import type { UiLang } from "@/lib/i18n/core";
+import { useReaderPrefs } from "@/components/language/ReaderPrefs";
 
 /**
  * Mục Từ mới của bài HSK do tác giả soạn (khối `vocab_list`), cùng kiểu với bài HSK nhập từ sách (HskVocabSwitch): nút chuyển "Thẻ từ | Flashcard", mở sẵn ở "Thẻ từ".
@@ -29,7 +30,10 @@ export default function HskVocabView({ items: raw, lang = "vi", trackUrl }: { ti
   const t = (key: Parameters<typeof hskT>[1], params?: Record<string, string | number>) => hskT(lang, key, params);
   const items = useMemo(() => cleanVocabItems<VocabViewItem>(raw), [raw]);
   const [view, setView] = useState<"cards" | "flash">("cards");
-  const [showReading, setShowReading] = useState(true);
+  // Trong khung bài (có tuỳ chọn đọc "Aa") pinyin do bảng Aa điều khiển nên không có nút Pinyin riêng ở đây (tránh hai công tắc mâu thuẫn).
+  const prefsOwnDisplay = !!useReaderPrefs();
+  const [readingOn, setShowReading] = useState(true);
+  const showReading = prefsOwnDisplay || readingOn;
   const [open, setOpen] = useState<VocabViewItem | null>(null);
   const { playingId, toggle } = useExclusiveAudio();
   // Audio tổng hợp đang phát: thẻ của từ đang được đọc sáng lên (mốc `trackStartSec` của từng thẻ).
@@ -45,13 +49,12 @@ export default function HskVocabView({ items: raw, lang = "vi", trackUrl }: { ti
     <section className="hsk-vv">
       {trackUrl && (
         <div className="hsk-vv-track">
-          <p className="hsk-vv-track-t">{t("learn.hsk.vocab.track")}</p>
           {/* Trình phát của Limio (thanh tua, tốc độ 0,75×/1×/1,25×, lặp lại), cùng kiểu với hội thoại. */}
           <AudioLessonPlayer url={trackUrl} showTranscript={false} compact onTimeChange={setTrackTime} onPlayingChange={setTrackPlaying} />
         </div>
       )}
       <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
-        {view === "flash" && (
+        {view === "flash" && !prefsOwnDisplay && (
           <button
             type="button"
             aria-pressed={showReading}
