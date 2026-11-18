@@ -228,3 +228,23 @@ describe("giọng cố định và ngắt nghỉ (khoá HSK)", () => {
     expect([b.get("林雨"), b.get("赵叔叔"), b.get("方强")]).toEqual(["zf_xiaobei", "zm_yunjian", "zm_yunxi"]);
   });
 });
+
+describe("ảnh trong ô bảng", () => {
+  it("![mô tả](/api/lesson-media/images/…) trong ô bảng thành thẻ <img> tròn; URL ngoài kho ảnh không thành ảnh", () => {
+    const html = markdownToHtml("| Chân dung | Tên |\n|---|---|\n| ![Lâm Vũ](/api/lesson-media/images/avatar-1-ab.webp) | Lâm Vũ |\n| ![x](https://evil.example/a.png) | X |", { toc: false });
+    expect(html).toContain('<img src="/api/lesson-media/images/avatar-1-ab.webp" alt="Lâm Vũ"');
+    expect(html).not.toContain('<img src="https://'); // ảnh ngoài kho không thành <img> (chỉ còn là liên kết)
+  });
+});
+
+describe("thẻ nhân vật (:::nhanvat)", () => {
+  it("mỗi dòng thành một thẻ có ảnh, tên, chữ Hán, vai trò; ảnh ngoài kho thì bỏ ảnh", () => {
+    const html = markdownToHtml(":::nhanvat\n![Lâm Vũ](/api/lesson-media/images/p-1.webp) | Lâm Vũ | 林雨 | Sinh viên năm ba\n![x](https://evil.example/a.png) | Khách | 客 | Vai phụ\n:::\n\nHết.", { toc: false });
+    expect(html).toContain('<div class="char-cards">');
+    expect(html).toContain('<img class="char-photo" src="/api/lesson-media/images/p-1.webp" alt="Lâm Vũ"');
+    expect(html).toContain('<p class="char-name">Lâm Vũ</p>');
+    expect(html.match(/<article class="char-card">/g)!.length).toBe(2);
+    expect(html).not.toContain("evil.example");
+    expect(html).toContain("Hết.");
+  });
+});

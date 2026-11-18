@@ -725,6 +725,11 @@ function inline(raw: string): string {
     return `\uE000${maths.length - 1}\uE001`;
   });
   const html = esc(stashed)
+    // Ảnh trong dòng (vd. chân dung nhân vật trong ô bảng): `![mô tả](/api/lesson-media/images/<tệp>)`; ảnh đứng riêng một dòng vẫn do nhánh `![…]` ở markdownToHtml xử lý.
+    .replace(
+      /!\[([^\]]*)\]\((\/api\/lesson-media\/images\/[\w.-]+)\)/g,
+      `<img src="$2" alt="$1" loading="lazy" width="64" height="64" style="width:4rem;height:4rem;border-radius:9999px;object-fit:cover">`,
+    )
     .replace(
       // Dạng "unrolled loop": tuyến tính, không có định lượng lồng nhau. Vẫn
       // nhận URL có một cấp ngoặc (trang File của Wikimedia), nhưng không thể
@@ -858,6 +863,26 @@ export function markdownToHtml(
       }
       i++; // bỏ dòng đóng
       out.push(raw.join("\n"));
+      continue;
+    }
+
+    // Thẻ nhân vật:  :::nhanvat  rồi mỗi dòng `![mô tả](ảnh) | Tên | Chữ Hán | Vai trò`  rồi `:::`.
+    // Thay cho bảng giới thiệu nhân vật: chân dung lớn trong thẻ riêng (lưới 3 cột, 1 cột trên điện thoại); kiểu dáng do CSS của giao diện bài (`.char-cards`).
+    if (/^:::nhanvat\s*$/.test(t)) {
+      i++;
+      const cards: string[] = [];
+      while (i < lines.length && lines[i]!.trim() !== ":::") {
+        const row = lines[i]!.trim();
+        i++;
+        if (!row) continue;
+        const [img, name = "", han = "", role = ""] = row.split(/\s*\|\s*/);
+        const m = /^!\[([^\]]*)\]\(((?:\/api\/lesson-media\/images\/)[\w.-]+)\)$/.exec((img ?? "").trim());
+        cards.push(
+          `<article class="char-card">${m ? `<img class="char-photo" src="${esc(m[2]!)}" alt="${esc(m[1]!)}" loading="lazy">` : ""}<p class="char-name">${inline(name)}</p>${han ? `<p class="char-han">${inline(han)}</p>` : ""}${role ? `<p class="char-role">${inline(role)}</p>` : ""}</article>`,
+        );
+      }
+      i++; // bỏ dòng đóng
+      out.push(`<div class="char-cards">${cards.join("")}</div>`);
       continue;
     }
 

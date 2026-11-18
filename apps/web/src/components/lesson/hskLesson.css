@@ -595,12 +595,18 @@
 /* Một màu cho mọi người nói (trước đây hồng/xanh theo thứ tự nên cùng một nhân vật đổi màu giữa hội thoại A và B): người nói nhận ra bằng
    avatar khuôn mặt + tên. Không có ảnh thì vòng tròn chữ cái đầu, nền nhạt cùng tông. */
 .lesson-hsk .hsk-av {
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.9rem;
+  height: 2.9rem;
   color: var(--hk-deep);
-  font: 400 1.05rem var(--hk-han);
+  font: 400 1.35rem var(--hk-han);
   background: var(--hk-soft2);
-  border: 1px solid var(--hk-line);
+  border: 2px solid var(--hk-line);
+}
+@media (max-width: 640px) {
+  .lesson-hsk .hsk-av {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
 }
 .lesson-hsk .hsk-av img {
   display: block;
@@ -1634,4 +1640,62 @@
 .lesson-hsk .rp-key {
   color: rgb(var(--hk-pink-deep));
   font-weight: 700;
+}
+
+/* Thẻ nhân vật (bài Khởi động): chân dung lớn trong thẻ riêng, lưới 3 cột. */
+.lesson-hsk .char-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0.6rem 0 1rem;
+}
+.lesson-hsk .char-card {
+  position: relative;
+  padding: 1.25rem 1rem 1.15rem;
+  text-align: center;
+  border: 1px solid var(--hk-line);
+  border-radius: 1.5rem;
+  background: linear-gradient(180deg, var(--hk-soft) 0%, rgb(var(--surface)) 62%);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.05);
+}
+.lesson-hsk #lesson-content .char-card .char-photo {
+  display: block;
+  width: 9.5rem;
+  height: 9.5rem;
+  max-width: none;
+  margin: 0 auto 0.85rem;
+  border-radius: 9999px;
+  object-fit: cover;
+  object-position: 50% 8%;
+  border: 4px solid rgb(var(--surface));
+  box-shadow: 0 0 0 3px rgb(var(--brand) / 0.55), 0 10px 22px rgb(0 0 0 / 0.12);
+  background: rgb(var(--surface));
+}
+.lesson-hsk .char-card .char-name {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--hk-deep);
+}
+.lesson-hsk .char-card .char-han {
+  margin: 0.2rem 0 0.55rem;
+  font-size: 1.5rem;
+  line-height: 1.5;
+  color: rgb(var(--hk-pink-deep));
+}
+.lesson-hsk .char-card .char-role {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: rgb(var(--text-muted, 100 100 100));
+}
+@media (max-width: 760px) {
+  .lesson-hsk .char-cards {
+    grid-template-columns: 1fr;
+  }
+  .lesson-hsk #lesson-content .char-card .char-photo {
+    width: 8rem;
+    height: 8rem;
+  }
 }
