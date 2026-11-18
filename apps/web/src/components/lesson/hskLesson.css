@@ -1751,3 +1751,54 @@
 .lesson-hsk :is(.hsk-grammar, .hsk-ap) :is(.hsk-ex, .hsk-gnote, .hsk-gexp, .hsk-step, .hsk-aside, .hsk-tw) {
   background: rgb(var(--surface));
 }
+
+/* ---------- Khung Mục tiêu / Tổng kết có điểm nhấn: vạch dày bên trái, nhãn đặc màu, ý đánh số trong ô vuông ---------- */
+.lesson-hsk .hsk-note {
+  border-left: 6px solid rgb(var(--brand));
+  padding-left: 1.4rem;
+}
+.lesson-hsk .hsk-note-sum {
+  border-left-color: rgb(var(--hk-pink));
+}
+.lesson-hsk .hsk-note-t {
+  display: inline-block;
+  margin: 0 0 0.7rem;
+  padding: 0.28rem 0.75rem;
+  background: rgb(var(--brand));
+  color: #fff;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+}
+.lesson-hsk .hsk-note-sum .hsk-note-t {
+  background: rgb(var(--hk-pink));
+  color: #fff;
+}
+.lesson-hsk .hsk-note-ul {
+  counter-reset: hn;
+  gap: 0.75rem;
+}
+.lesson-hsk .hsk-note-ul > li {
+  counter-increment: hn;
+  padding-left: 2.4rem;
+}
+.lesson-hsk .hsk-note-ul > li::before,
+.lesson-hsk .hsk-note-sum .hsk-note-ul > li::before {
+  content: counter(hn);
+  left: 0;
+  top: 0.28rem;
+  display: grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 0;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.lesson-hsk .hsk-note-ul > li::before {
+  background: rgb(var(--brand));
+}
+.lesson-hsk .hsk-note-sum .hsk-note-ul > li::before {
+  background: rgb(var(--hk-pink));
+}
