@@ -652,7 +652,7 @@ var PROD=/(^|\.)limio\.vn$|(^|\.)limio\.hust\.edu\.vn$/.test(location.hostname);
 var BASE=PROD?location.origin:lget('limio-demo-base','https://limio.vn');
 var JUMP=[
  {g:'Giảng viên',l:[
-  ['Bảng điều khiển','/instructor/dashboard','Việc cần xử lý gấp, lịch tuần'],
+  ['Trang chủ','/instructor/dashboard','Tìm kiếm, hỏi Lily, việc đang chờ'],
   ['Khoá học của tôi','/instructor/courses','Soạn và quản lý khoá học'],
   ['Limio-Live','/instructor/limio-live','Bài giảng tương tác trực tiếp'],
   ['Công cụ tương tác nhanh','/instructor/teaching-tools','Vote, Word Cloud, Padlet…'],
@@ -1230,32 +1230,33 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <h2 class="h2 rv">Từ soạn bài đến chấm bài, trong một nơi</h2>
 
     <div class="tabs rv" id="s04-tabs" role="tablist" aria-label="Các màn hình dành cho giảng viên">
-      <button type="button" data-tab="dash">Bảng điều khiển</button>
+      <button type="button" data-tab="dash">Trang chủ</button>
       <button type="button" data-tab="courses">Khoá học</button>
       <button type="button" data-tab="live">Limio-Live</button>
       <button type="button" data-tab="exam">Kiểm tra đánh giá</button>
       <button type="button" data-tab="viva">Vấn đáp AI</button>
       <button type="button" data-tab="grade">Chấm bài</button>
+      <button type="button" data-tab="insight">Nắm kiến thức lớp</button>
       <i class="tab-progress"></i>
     </div>
 
     <div class="s04-stage rv">
       <!-- 1. Bảng điều khiển -->
       <div class="panel" data-panel="dash">
-        <div class="s04-fr" style="--dw:39rem"><div class="demo" data-src="img/ui1.jpg" data-url="limio.vn/instructor/dashboard" data-video="video/dashboard.mp4" data-alt="Bảng điều khiển giảng viên: bốn thẻ số, danh sách cần xử lý gấp và lịch tuần" data-steps='[{"x":62.5,"y":34.4,"z":2.2,"cx":61,"cy":35,"click":1,"hl":[52.8,29.3,19.2,10.2],"t":"Việc cần xử lý, gom về một chỗ","d":2000},{"x":38.7,"y":71,"z":1.6,"cx":45,"cy":57,"click":1,"hl":[12.2,51.5,53,39],"t":"Cần xử lý gấp, xếp theo mức độ ưu tiên","d":2000},{"x":79.6,"y":70.6,"z":1.7,"cx":76,"cy":66,"hl":[66.9,43.6,25.4,53.9],"t":"Lịch tuần kèm hạn nộp bài","d":2000},{"x":50,"y":50,"z":1,"cx":30,"cy":20,"t":"Cả buổi dạy trong một màn hình","d":2000}]'></div></div>
+        <div class="s04-fr" style="--dw:39rem"><div class="demo" data-src="img/ui1.jpg" data-url="limio.vn/instructor/dashboard" data-video="video/dashboard.mp4" data-alt="Trang chủ giảng viên: ô tìm kiếm, trợ lý Lily trả lời kèm đường dẫn, việc đang chờ và danh sách bài cần chấm" data-steps='[{"x":62.5,"y":34.4,"z":2.2,"cx":61,"cy":35,"click":1,"hl":[52.8,29.3,19.2,10.2],"t":"Việc cần xử lý, gom về một chỗ","d":2000},{"x":38.7,"y":71,"z":1.6,"cx":45,"cy":57,"click":1,"hl":[12.2,51.5,53,39],"t":"Cần xử lý gấp, xếp theo mức độ ưu tiên","d":2000},{"x":79.6,"y":70.6,"z":1.7,"cx":76,"cy":66,"hl":[66.9,43.6,25.4,53.9],"t":"Lịch tuần kèm hạn nộp bài","d":2000},{"x":50,"y":50,"z":1,"cx":30,"cy":20,"t":"Cả buổi dạy trong một màn hình","d":2000}]'></div></div>
         <div class="s04-tx">
           <span class="chip"><svg class="i"><use href="#i-chart"/></svg>Tổng quan</span>
-          <h3 class="h3 s04-h">Mọi việc gom về một chỗ</h3>
+          <h3 class="h3 s04-h">Hỏi là có đường đi</h3>
           <ul class="s04-ul">
-            <li>Cần xử lý gấp, xếp theo ba mức</li>
-            <li>Lịch tuần kèm hạn nộp bài</li>
+            <li>Trợ lý <strong>Lily</strong> chỉ tận trang cần mở</li>
+            <li>Việc đang chờ <strong>nhắc ngay</strong> trên trang chủ</li>
           </ul>
         </div>
       </div>
 
       <!-- 2. Khoá học -->
       <div class="panel" data-panel="courses">
-        <div class="s04-fr" style="--dw:43.8rem"><div class="demo" data-src="img/ui2.jpg" data-url="limio.vn/instructor/courses" data-video="video/courses.mp4" data-alt="Khoá học của tôi: thẻ khoá học, nhãn AI feedback, trạng thái Đã publish và Nháp" data-steps='[{"x":94.1,"y":17.8,"z":2.4,"cx":94,"cy":17.8,"click":1,"hl":[89.8,15.5,8.5,4.6],"t":"Tạo khoá học mới","d":2000},{"x":41.2,"y":34.7,"z":2.0,"cx":55.6,"cy":40,"click":1,"hl":[22.5,25.4,37.3,18.8],"t":"Mỗi khoá là một thẻ: module, học viên, nút Mở","d":2000},{"x":90.6,"y":28.6,"z":2.4,"cx":88,"cy":28.6,"hl":[83.8,26.4,13.6,4.6],"t":"Nhãn AI feedback và trạng thái Đã publish","d":2000},{"x":50,"y":50,"z":1,"cx":12,"cy":24,"t":"Toàn bộ khoá học trong một danh sách","d":2000}]'></div></div>
+        <div class="s04-fr" style="--dw:43.8rem"><div class="demo" data-src="img/ui2.jpg" data-url="limio.vn/instructor/courses" data-video="video/courses.mp4" data-alt="Quản lý khoá học: nội dung, lớp học, học viên, điểm và huy hiệu" data-steps='[{"x":94.1,"y":17.8,"z":2.4,"cx":94,"cy":17.8,"click":1,"hl":[89.8,15.5,8.5,4.6],"t":"Tạo khoá học mới","d":2000},{"x":41.2,"y":34.7,"z":2.0,"cx":55.6,"cy":40,"click":1,"hl":[22.5,25.4,37.3,18.8],"t":"Mỗi khoá là một thẻ: module, học viên, nút Mở","d":2000},{"x":90.6,"y":28.6,"z":2.4,"cx":88,"cy":28.6,"hl":[83.8,26.4,13.6,4.6],"t":"Nhãn AI feedback và trạng thái Đã publish","d":2000},{"x":50,"y":50,"z":1,"cx":12,"cy":24,"t":"Toàn bộ khoá học trong một danh sách","d":2000}]'></div></div>
         <div class="s04-tx">
           <span class="chip"><svg class="i"><use href="#i-book"/></svg>Dạy học</span>
           <h3 class="h3 s04-h">Soạn và vận hành khoá học</h3>
@@ -1268,7 +1269,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
       <!-- 3. Limio-Live -->
       <div class="panel" data-panel="live">
-        <div class="s04-fr" style="--dw:43rem"><div class="demo" data-src="img/ui4.jpg" data-url="limio.vn/instructor/limio-live" data-video="video/live.mp4" data-alt="Limio-Live: hoạt động nhanh, đang chiếu Word Cloud kèm mã QR" data-steps='[{"x":12.9,"y":67.4,"z":2.0,"cx":12,"cy":62,"click":1,"hl":[5.9,48.3,14.1,38.5],"t":"Vote, Word Cloud, Padlet, Draw-it, Whiteboard","d":2000},{"x":61.5,"y":59.1,"z":2.2,"cx":61.5,"cy":59,"hl":[55.3,46.9,12.4,24.6],"t":"Mã QR: người học quét bằng điện thoại để tham gia","d":2000},{"x":60,"y":90,"z":1.6,"cx":60,"cy":90,"hl":[25,81.9,73,18.1],"t":"Word Cloud hiện ngay trên màn hình chiếu","d":2000},{"x":50,"y":50,"z":1,"cx":37,"cy":40,"t":"Chiếu một hoạt động, cả lớp cùng tham gia","d":2000}]'></div></div>
+        <div class="s04-fr" style="--dw:43rem"><div class="demo" data-src="img/ui4.jpg" data-url="limio.vn/instructor/limio-live" data-video="video/live.mp4" data-alt="Limio-Live: bài giảng tương tác, hoạt động nhanh Vote, Word Cloud, Padlet, Whiteboard và công cụ điều hành lớp" data-steps='[{"x":12.9,"y":67.4,"z":2.0,"cx":12,"cy":62,"click":1,"hl":[5.9,48.3,14.1,38.5],"t":"Vote, Word Cloud, Padlet, Draw-it, Whiteboard","d":2000},{"x":61.5,"y":59.1,"z":2.2,"cx":61.5,"cy":59,"hl":[55.3,46.9,12.4,24.6],"t":"Mã QR: người học quét bằng điện thoại để tham gia","d":2000},{"x":60,"y":90,"z":1.6,"cx":60,"cy":90,"hl":[25,81.9,73,18.1],"t":"Word Cloud hiện ngay trên màn hình chiếu","d":2000},{"x":50,"y":50,"z":1,"cx":37,"cy":40,"t":"Chiếu một hoạt động, cả lớp cùng tham gia","d":2000}]'></div></div>
         <div class="s04-tx">
           <span class="chip"><svg class="i"><use href="#i-live"/></svg>Limio-Live</span>
           <h3 class="h3 s04-h">Dạy trực tiếp ngay trên lớp</h3>
@@ -1309,20 +1310,20 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
       <!-- 5. Vấn đáp AI -->
       <div class="panel" data-panel="viva">
-        <div class="s04-fr" style="--dw:45.7rem"><div class="demo" data-src="img/ui6.jpg" data-url="limio.vn/instructor/oral-exams" data-video="video/oral.mp4" data-alt="Vấn đáp AI: theo dõi thời gian thực các thí sinh đang thi, tiến độ câu hỏi và cảnh báo rời tab" data-steps='[{"x":41.6,"y":36.8,"z":2.4,"cx":40,"cy":36.8,"click":1,"hl":[22.5,34.2,38.5,5],"t":"Lọc theo trạng thái: Đang thi, Đã nộp, Mất kết nối","d":2000},{"x":34.9,"y":48.9,"z":2.2,"cx":30,"cy":53.4,"hl":[22.7,41.4,24.4,15],"t":"Số câu đã hỏi và thanh tiến độ của từng thí sinh","d":2000},{"x":34.9,"y":68,"z":2.2,"cx":30,"cy":73.5,"hl":[22.7,58.5,24.4,19],"t":"Cảnh báo rời tab: căn cứ để giảng viên xem xét","d":2000},{"x":50,"y":50,"z":1,"cx":25,"cy":37,"t":"Giám sát cả phòng thi theo thời gian thực","d":2000}]'></div></div>
+        <div class="s04-fr" style="--dw:45.7rem"><div class="demo" data-src="img/ui6.jpg" data-url="limio.vn/instructor/oral-exams" data-video="video/oral.mp4" data-alt="Vấn đáp AI: tạo đề vấn đáp, nhập tiêu đề và hướng dẫn phong cách hỏi cho AI" data-steps='[{"x":41.6,"y":36.8,"z":2.4,"cx":40,"cy":36.8,"click":1,"hl":[22.5,34.2,38.5,5],"t":"Lọc theo trạng thái: Đang thi, Đã nộp, Mất kết nối","d":2000},{"x":34.9,"y":48.9,"z":2.2,"cx":30,"cy":53.4,"hl":[22.7,41.4,24.4,15],"t":"Số câu đã hỏi và thanh tiến độ của từng thí sinh","d":2000},{"x":34.9,"y":68,"z":2.2,"cx":30,"cy":73.5,"hl":[22.7,58.5,24.4,19],"t":"Cảnh báo rời tab: căn cứ để giảng viên xem xét","d":2000},{"x":50,"y":50,"z":1,"cx":25,"cy":37,"t":"Giám sát cả phòng thi theo thời gian thực","d":2000}]'></div></div>
         <div class="s04-tx">
-          <span class="chip hi"><span class="s04-dot"></span>Thời gian thực</span>
-          <h3 class="h3 s04-h">Vấn đáp AI, giám sát trực tiếp</h3>
+          <span class="chip hi"><span class="s04-dot"></span>Giai đoạn đầu</span>
+          <h3 class="h3 s04-h">Vấn đáp AI, bám tài liệu của thầy cô</h3>
           <ul class="s04-ul">
-            <li>Theo dõi <strong>tiến độ</strong> từng thí sinh</li>
-            <li class="em">Cảnh báo rời tab chỉ để <strong>xem xét</strong></li>
+            <li>AI hỏi đáp dựa trên <strong>tài liệu bạn nộp</strong></li>
+            <li class="em">Điểm do thầy cô <strong>duyệt</strong>, AI chỉ gợi ý</li>
           </ul>
         </div>
       </div>
 
       <!-- 6. Chấm bài -->
       <div class="panel" data-panel="grade">
-        <div class="s04-fr" style="--dw:52rem"><div class="demo" data-src="img/ui3.jpg" data-url="limio.vn/instructor/grade-essays" data-video="video/grading.mp4" data-alt="Màn chấm bài: nút Gợi ý điểm bằng AI, ô điểm trên 10 và ô nhận xét" data-steps='[{"x":32.8,"y":42,"z":2.4,"cx":32.8,"cy":42,"click":1,"hl":[27.1,39.4,11.5,5.3],"t":"Gợi ý điểm bằng AI","d":2000},{"x":50,"y":53.5,"z":1.8,"cx":40,"cy":56,"hl":[27,45.7,46.3,15.7],"t":"AI chỉ điền tạm điểm và nhận xét, không tự lưu","d":2000},{"x":50,"y":79.5,"z":1.8,"cx":34,"cy":67.7,"click":1,"hl":[27,64,46.3,31],"t":"Điểm /10 và nhận xét: giảng viên chỉnh sửa, quyết định","d":2000},{"x":50,"y":50,"z":1,"cx":50,"cy":20,"t":"AI gợi ý, giảng viên quyết định kết quả cuối","d":2000}]'></div></div>
+        <div class="s04-fr" style="--dw:52rem"><div class="demo" data-src="img/ui3.jpg" data-url="limio.vn/instructor/grade-essays" data-video="video/grading.mp4" data-alt="Màn chấm bài: rubric, bài làm của học viên, điểm và nhận xét do AI gợi ý" data-steps='[{"x":32.8,"y":42,"z":2.4,"cx":32.8,"cy":42,"click":1,"hl":[27.1,39.4,11.5,5.3],"t":"Gợi ý điểm bằng AI","d":2000},{"x":50,"y":53.5,"z":1.8,"cx":40,"cy":56,"hl":[27,45.7,46.3,15.7],"t":"AI chỉ điền tạm điểm và nhận xét, không tự lưu","d":2000},{"x":50,"y":79.5,"z":1.8,"cx":34,"cy":67.7,"click":1,"hl":[27,64,46.3,31],"t":"Điểm /10 và nhận xét: giảng viên chỉnh sửa, quyết định","d":2000},{"x":50,"y":50,"z":1,"cx":50,"cy":20,"t":"AI gợi ý, giảng viên quyết định kết quả cuối","d":2000}]'></div></div>
         <div class="s04-tx">
           <span class="chip"><svg class="i"><use href="#i-pen"/></svg>Chấm và chữa bài</span>
           <h3 class="h3 s04-h">Chấm bài có AI hỗ trợ</h3>
@@ -1332,14 +1333,27 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
           </ul>
         </div>
       </div>
+
+      <!-- 7. Nắm kiến thức lớp -->
+      <div class="panel" data-panel="insight">
+        <div class="s04-fr" style="--dw:45.7rem"><div class="demo" data-src="img/ui10.jpg" data-url="limio.vn/instructor/learner-insights" data-video="video/insights.mp4" data-alt="Learner Insights: mức nắm vững của cả lớp theo từng chủ đề, ma trận học viên và kỹ năng yếu nhất" data-steps='[]'></div></div>
+        <div class="s04-tx">
+          <span class="chip"><svg class="i"><use href="#i-chart"/></svg>Học liệu từ dữ liệu</span>
+          <h3 class="h3 s04-h">Biết lớp đang yếu ở đâu</h3>
+          <ul class="s04-ul">
+            <li>Mức nắm vững <strong>từng chủ đề</strong>, cả lớp</li>
+            <li class="em">Người học chỉ thấy <strong>nhãn</strong>, không thấy con số</li>
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
 
   <aside class="notes">
-    <p>(≈ 100 giây; sáu tab tự xoay vòng, mỗi tab khoảng 16 giây. Rê chuột vào khung demo thì vòng xoay tạm dừng; bấm vào khung để tạm dừng hoặc tiếp tục chính đoạn demo; bấm một tab để dừng xoay hẳn ở đó.)</p>
-    <p>Mỗi tab là một đoạn demo ngắn dựng từ giao diện thật của giảng viên: ảnh phóng vào từng vùng, con trỏ di chuyển và bấm, kèm chú thích. Ý cần nhấn là mọi thứ nằm trong một nơi: bảng điều khiển gom việc cần xử lý theo mức độ; khoá học, lớp và hạn nộp; Limio-Live cho hoạt động ngay trên lớp; thi và kiểm tra đánh giá từ ngân hàng câu hỏi đến phòng thi. Hai tab cuối nên dừng lại: ở vấn đáp AI, giảng viên giám sát thời gian thực, cảnh báo rời tab chỉ là căn cứ để xem xét; ở chấm bài, AI chỉ gợi ý, giảng viên quyết định kết quả cuối.</p>
-    <p>Chi tiết từng tab (nói miệng, không in lên màn hình). Bảng điều khiển: bốn chỉ số đầu trang gồm khoá đang dạy, học viên, việc cần xử lý và học viên im ắng quá 14 ngày; mục Cần xử lý gấp chia ba mức Gấp, Trung bình, Có thể chờ; lịch tuần theo kỳ học của tổ chức. Khoá học: soạn khoá học và học liệu có AI hỗ trợ; chia lớp, mời học viên qua đường liên kết, hạn nộp bài và hạn quiz đặt riêng từng lớp; mỗi thẻ cho thấy trạng thái Đã publish hoặc Nháp và nhãn AI feedback. Limio-Live: Vote, Word Cloud, Padlet, Draw-it, Whiteboard; khi chiếu Word Cloud, người học quét mã QR để tham gia; kết quả buổi học ghi vào hồ sơ người học và điểm thưởng. Kiểm tra đánh giá: ngân hàng câu hỏi dùng lại cho nhiều đề thi; thí sinh vào bằng mã hoặc tài khoản đã ghi danh; có câu ghép nối, sắp xếp thứ tự; hai chế độ giao diện Cơ bản và Nâng cao cho đánh giá quá trình, giữa kỳ, cuối kỳ. Vấn đáp AI: tiết kiệm thời gian so với vấn đáp truyền thống; theo dõi từng thí sinh đang thi, số câu đã hỏi, tiến độ; cảnh báo rời tab hoặc thoát toàn màn hình chỉ là căn cứ để giảng viên xem xét, không tự động kết luận vi phạm. Chấm bài: nút Gợi ý điểm bằng AI đọc đề bài, rubric và bài nộp rồi điền tạm điểm và nhận xét; giảng viên xem lại, chỉnh sửa rồi mới bấm Chấm điểm, AI không tự lưu gì cả.</p>
-    <p>Muốn dùng video quay thật: đặt file mp4 vào thư mục video/ với đúng tên dashboard, courses, live, exam, oral, grading; khung demo sẽ tự chuyển sang phát video. Tiếp theo: các màn hình này cùng đọc và ghi trên một dòng dữ liệu học tập.</p>
+    <p>(≈ 100 giây; bảy tab tự xoay vòng, mỗi tab khoảng 40 giây, đủ cho một đoạn quay. Rê chuột vào khung demo thì vòng xoay tạm dừng; bấm một tab để dừng xoay hẳn ở đó. Có thể bấm tab nào cần, không bắt buộc đi hết cả bảy.)</p>
+    <p>Mỗi tab là một đoạn quay thật trên bản Limio hiện tại, có con trỏ và chú thích ngay trong video. Dữ liệu là dữ liệu mẫu giả (một lớp 36 học viên tạo riêng cho buổi này), không có thông tin của người học thật. Ý cần nhấn là mọi thứ nằm trong một nơi: trang chủ có ô tìm kiếm và trợ lý Lily, việc đang chờ nhắc ngay; khoá học, lớp, học viên và điểm; Limio-Live cho hoạt động ngay trên lớp; thi và kiểm tra đánh giá từ ngân hàng câu hỏi đến phòng thi; chấm bài có AI gợi ý; và bản đồ mức nắm vững của cả lớp.</p>
+    <p>Chi tiết từng tab (nói miệng, không in lên màn hình). Trang chủ: gõ vào ô tìm kiếm hoặc hỏi Lily cách làm một việc, Lily trả lời từng bước kèm đường dẫn tới đúng trang; dòng Đang chờ thầy/cô cho biết số bài chờ chấm, bấm vào thấy ai vừa nộp. Khoá học: các tab Nội dung, Lớp học, Học viên, Gamification; chia lớp theo học kỳ, xem XP và huy hiệu từng học viên. Limio-Live: Vote, Word Cloud, Padlet, Draw-it, Whiteboard và công cụ điều hành lớp (đếm ngược, gọi tên, chia nhóm, gameshow); người học tham gia bằng điện thoại. Kiểm tra đánh giá: ba bước Ngân hàng câu hỏi, Thiết kế đề thi, Tổ chức thi; thí sinh vào bằng mã hoặc tài khoản đã ghi danh. Vấn đáp AI: video chỉ cho thấy màn tạo đề; AI hỏi đáp dựa trên tài liệu giảng viên nộp, điểm do giảng viên duyệt, AI chỉ gợi ý; tính năng đang ở giai đoạn đầu, nói đúng như vậy. Chấm bài: giảng viên viết rubric một lần, nút Gợi ý điểm bằng AI đọc đề, rubric và bài nộp rồi điền tạm điểm và nhận xét; giảng viên xem lại, chỉnh sửa rồi mới lưu, AI không tự lưu gì cả. Nắm kiến thức lớp: ma trận học viên và chủ đề, chủ đề yếu nhất của cả lớp; người học chỉ thấy nhãn Vững, Nên luyện thêm, Cần ôn.</p>
+    <p>Muốn thay video: đặt file mp4 vào thư mục video/ với đúng tên dashboard, courses, live, exam, oral, grading, insights; khung demo tự phát video, nếu thiếu file thì quay lại ảnh tĩnh có chú thích. Tiếp theo: các màn hình này cùng đọc và ghi trên một dòng dữ liệu học tập.</p>
   </aside>
 
   <style>
@@ -1398,7 +1412,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     Deck.on('s04',{
       enter:function(c){
         var R=c.root,bar=R.querySelector('#s04-tabs'),ctl=null,cur=0,hold=false,userTab=false,rot=null;
-        var btns=[].slice.call(bar.querySelectorAll('[data-tab]')),prog=bar.querySelector('.tab-progress'),AUTO=16500;
+        var btns=[].slice.call(bar.querySelectorAll('[data-tab]')),prog=bar.querySelector('.tab-progress'),AUTO=41000;
         function runProg(){
           if(!prog||!btns[cur])return;
           prog.style.transition='none';prog.style.width='0';prog.style.left=btns[cur].offsetLeft+'px';
@@ -1407,6 +1421,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         function stopRot(){if(rot){clearInterval(rot);rot=null}}
         ctl=Deck.tabs(c,bar,{auto:AUTO,onChange:function(i){
           cur=i;
+          /* video của tab đang xem chạy từ đầu; các tab khác dừng để khỏi tốn máy */
+          var key=btns[i].getAttribute('data-tab');
+          R.querySelectorAll('.panel').forEach(function(p){var v=p.querySelector('video');if(!v)return;if(p.getAttribute('data-panel')===key){try{v.currentTime=0}catch(e){}var pr=v.play&&v.play();if(pr&&pr.catch)pr.catch(function(){})}else v.pause()});
           if(rot&&!userTab&&!hold)runProg();
         }});
         /* người dùng bấm tab: dừng hẳn xoay vòng */
@@ -3124,7 +3141,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
           <ol class="s13-steps">
             <li class="s13-st rv rv-l" data-go="/instructor/dashboard" title="Bấm để mở trang này" data-rv="3">
               <span class="s13-n">1</span>
-              <div class="s13-t"><div class="h3">Bảng điều khiển giảng viên</div></div>
+              <div class="s13-t"><div class="h3">Trang chủ giảng viên</div></div>
               <span class="chip s13-time">≈ 30 giây</span>
             </li>
             <li class="s13-st rv rv-l" data-go="/instructor/limio-live" title="Bấm để mở trang này" data-rv="4">
@@ -3338,7 +3355,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         <div class="eyebrow rv">Dành cho nhà trường</div>
         <h2 class="h2 rv">Một nền tảng, một dòng dữ liệu</h2>
         <div class="rv rv-l">
-        <div class="demo s15-demo" data-src="img/ui1.jpg" data-url="limio.vn/instructor/dashboard" data-video="video/dashboard.mp4" data-alt="Bảng điều khiển giảng viên: việc cần xử lý gấp, học viên im ắng, lịch tuần" data-steps='[
+        <div class="demo s15-demo" data-src="img/ui1.jpg" data-url="limio.vn/instructor/dashboard" data-video="video/dashboard.mp4" data-alt="Trang chủ giảng viên: tìm kiếm, trợ lý Lily, việc đang chờ và danh sách bài cần chấm" data-steps='[
           {"x":35,"y":50,"z":1.8,"cx":58.8,"cy":56.9,"click":1,"hl":[12.2,44,53,18.5],"t":"Việc cần xử lý gấp","d":3200},
           {"x":70,"y":38,"z":2,"cx":76.5,"cy":34.2,"click":1,"hl":[73.1,29.4,19.2,9.9],"t":"Học viên im ắng","d":3200},
           {"x":35,"y":78,"z":1.9,"cx":63.2,"cy":85.2,"click":1,"hl":[12.3,80.2,52.7,10.4],"t":"Gợi ý nhắc học viên","d":3200},
