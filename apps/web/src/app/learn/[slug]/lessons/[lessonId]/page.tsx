@@ -48,6 +48,7 @@ import { LESSON_FRAME_ALL_COURSES_KEY, isLessonFrameAllCoursesEnabled, lessonFra
 import { getSiteSetting } from "@/lib/site-settings";
 import { ExamRefLearnerBlock, ExamRefPreviewBlock } from "@/components/exam/ExamRefBlock";
 import LessonPractice from "@/components/language/LessonPractice";
+import { courseHasPinyin } from "@/lib/readerPrefs";
 import PassageView from "@/components/exam/PassageView";
 import PracticeBlockNotice from "@/components/language/PracticeBlockNotice";
 import LessonContent from "@/components/LessonContent";
@@ -1448,6 +1449,7 @@ export default async function LessonPage({
       videos={lessonVideos}
       preview={previewMode}
       lang={lang}
+      readerPinyin={courseHasPinyin(lesson.module.course.language)}
     >
       {body}
     </LessonFrameLayout>

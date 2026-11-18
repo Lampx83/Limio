@@ -2,10 +2,12 @@
 
 import { accentVar } from "@/lib/courseAccent";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Sparkles, X } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, ChevronDown, Sparkles, X } from "lucide-react";
 import AiTutorPanel from "@/components/AiTutorPanel";
 import { useT } from "@/lib/i18n/client";
 import { LessonNotes } from "@/components/LessonActions";
+import { ReaderPrefsProvider, useReaderPrefsState, useTapReveal } from "./ReaderPrefs";
 import {
   defaultPanelOpen,
   panelIsDocked,
@@ -33,6 +35,13 @@ export default function LessonFrameShell({
   crumbs,
   nav,
   accent = null,
+  slug,
+  lessonTitle,
+  backHref,
+  posLabel,
+  unitPct = 0,
+  mobileExtra,
+  readerPinyin = false,
   children,
 }: {
   lessonId: string;
@@ -44,9 +53,26 @@ export default function LessonFrameShell({
   nav: React.ReactNode;
   /** Màu nhấn của bộ sách (`Course.themeColor`); trống = màu Limio. */
   accent?: string | null;
+  /** Slug khoá: khoá lưu tuỳ chọn đọc "Aa". */
+  slug?: string;
+  /** Có tên bài thì dưới `lg` dùng thanh điều hướng một dòng (docs/tieu-chi/limio-language-ux-p0.md, mục A) thay cho thẻ "Bài trong unit" và đường dẫn. */
+  lessonTitle?: string;
+  backHref?: string;
+  /** "4/21": vị trí bài trong unit. */
+  posLabel?: string;
+  /** Phần trăm bài đã xong của unit (vạch tiến độ dưới thanh). */
+  unitPct?: number;
+  /** Nội dung thêm cuối danh sách bài trên thanh một dòng (nút "Mục lục khoá học"). */
+  mobileExtra?: React.ReactNode;
+  /** Khoá có pinyin: bảng "Aa" có nhóm Pinyin. */
+  readerPinyin?: boolean;
   children: React.ReactNode;
 }) {
   const t = useT();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const reader = useReaderPrefsState(slug);
+  useTapReveal(rootRef, reader.prefs.pinyin);
+  const [barOpen, setBarOpen] = useState(false);
   // Lần dựng đầu (kể cả trên máy chủ) luôn đóng; chiều ngang thật chỉ biết sau khi mount.
   const [cls, setCls] = useState<PanelWidthClass>("narrow");
   const [open, setOpen] = useState(false);
@@ -143,7 +169,11 @@ export default function LessonFrameShell({
   const notesLabel = notes > 0 ? t("ai.panel.tabNotesN", { n: notes }) : t("ai.panel.tabNotes");
 
   return (
+    <ReaderPrefsProvider value={{ prefs: reader.prefs, setPrefs: reader.setPrefs, pinyinAvailable: readerPinyin }}>
     <div
+      ref={rootRef}
+      data-rd-pinyin={reader.prefs.pinyin}
+      data-rd-size={reader.prefs.size}
       // Dấu hiệu cho CSS: trong khung, nút nổi "Về trang chủ học viên" (góc dưới trái) bị rail che/đè chữ nên ẩn từ `lg` (globals.css).
       data-lesson-frame=""
       // Khoá có màu bộ sách: biến --brand của khung (thanh bài, nút, đường kẻ) đổi theo; CSS `[data-lesson-accent]` (globals.css) đổi các lớp brand cố định.
@@ -161,11 +191,40 @@ export default function LessonFrameShell({
 
       {/* Panel đóng: chừa lề phải ~4rem để hai nút nổi (cuộn lên/xuống + mở panel, rộng 40px cách mép 17px) nằm NGOÀI nội dung chứ không đè lên chữ. */}
       <div className={`min-w-0 px-4 pt-4 lg:pl-5 ${open ? "lg:pr-5" : "lg:pr-16"}`}>
-        <details className="mb-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-3 lg:hidden">
-          <summary className="cursor-pointer text-sm font-semibold">{railSummary}</summary>
-          <div className="mt-3">{rail}</div>
-        </details>
-        {crumbs}
+        {lessonTitle ? (
+          <div data-testid="lesson-mobile-bar" className="sticky top-[4.5rem] z-30 -mx-4 mb-3 border-b border-token bg-[rgb(var(--surface)/0.97)] backdrop-blur lg:hidden">
+            <div className="flex items-stretch">
+              {backHref && (
+                <Link href={backHref} aria-label={t("reader.bar.back")} className="flex w-11 shrink-0 items-center justify-center bg-brand-600 text-white hover:bg-brand-700">
+                  <ArrowLeft size={18} aria-hidden />
+                </Link>
+              )}
+              <button type="button" onClick={() => setBarOpen((v) => !v)} aria-expanded={barOpen} aria-label={t("reader.bar.list")} className="flex min-w-0 flex-1 items-center gap-2 px-3 py-2 text-left">
+                {posLabel && <b className="shrink-0 text-sm tabular-nums text-brand-700">{posLabel}</b>}
+                <span className="min-w-0 flex-1 truncate text-sm font-medium">{lessonTitle}</span>
+                <ChevronDown size={16} aria-hidden className={`shrink-0 text-muted transition-transform ${barOpen ? "rotate-180" : ""}`} />
+              </button>
+              <button type="button" onClick={() => openPanel()} aria-label={t("ai.panel.openAria")} className="flex w-11 shrink-0 items-center justify-center text-brand-700 hover:bg-black/5">
+                <Sparkles size={18} aria-hidden />
+              </button>
+            </div>
+            <div className="h-0.5 bg-brand-100" aria-hidden>
+              <div className="h-full bg-brand-600" style={{ width: `${Math.max(0, Math.min(100, unitPct))}%` }} />
+            </div>
+            {barOpen && (
+              <div className="max-h-[60vh] overflow-y-auto border-t border-token px-4 pb-4 pt-3">
+                {rail}
+                {mobileExtra && <div className="mt-3">{mobileExtra}</div>}
+              </div>
+            )}
+          </div>
+        ) : (
+          <details className="mb-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-3 lg:hidden">
+            <summary className="cursor-pointer text-sm font-semibold">{railSummary}</summary>
+            <div className="mt-3">{rail}</div>
+          </details>
+        )}
+        <div className={lessonTitle ? "hidden lg:block" : undefined}>{crumbs}</div>
         {children}
         {nav}
       </div>
@@ -250,5 +309,6 @@ export default function LessonFrameShell({
         </button>
       )}
     </div>
+    </ReaderPrefsProvider>
   );
 }

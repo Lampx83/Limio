@@ -148,3 +148,51 @@ describe("PracticeTabs — nhiều thẻ: mũi tên và mờ mép", () => {
     expect(arrow("trái")).toBeNull();
   });
 });
+
+describe("PracticeTabs — thanh bài tập gọn « 3/7 · tên bài »", () => {
+  const three = [
+    { id: "a", label: "1 · Một", content: <p>Nội dung 1</p> },
+    { id: "b", label: "2 · Hai", content: <p>Nội dung 2</p> },
+    { id: "c", label: "3 · Ba", content: <p>Nội dung 3</p> },
+  ];
+  const nav = () => host.querySelector<HTMLElement>('[data-testid="practice-step-nav"]');
+  const navBtn = (label: string) => nav()!.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)!;
+  const counter = () => nav()!.querySelector('span[aria-label]')!.textContent;
+  const listBox = () => host.querySelector<HTMLElement>('[role="tablist"]')!.parentElement as HTMLElement;
+
+  it("hiện số bài tập hiện tại trên tổng số cùng tên bài; bài đầu thì nút lùi bị khoá", async () => {
+    await render(three);
+    expect(counter()).toBe("1/3");
+    expect(nav()!.textContent).toContain("1 · Một");
+    expect(navBtn("Bài tập trước").disabled).toBe(true);
+    expect(navBtn("Bài tập tiếp theo").disabled).toBe(false);
+  });
+
+  it("bấm tiếp/lùi đổi tab đang mở và số trên thanh; bài cuối thì nút tiến bị khoá", async () => {
+    await render(three);
+    await click(navBtn("Bài tập tiếp theo"));
+    expect(counter()).toBe("2/3");
+    expect(tabEls()[1]!.getAttribute("aria-selected")).toBe("true");
+    expect(panels()[1]!.hidden).toBe(false);
+    await click(navBtn("Bài tập tiếp theo"));
+    expect(counter()).toBe("3/3");
+    expect(navBtn("Bài tập tiếp theo").disabled).toBe(true);
+    await click(navBtn("Bài tập trước"));
+    expect(counter()).toBe("2/3");
+  });
+
+  it("danh sách thẻ ẩn sẵn, bấm vào tên bài thì mở; chọn một thẻ thì chuyển bài và đóng lại", async () => {
+    await render(three);
+    expect(listBox().style.display).toBe("none");
+    await click(navBtn("Danh sách bài tập"));
+    expect(listBox().style.display).not.toBe("none");
+    await click(tabEls()[2]!);
+    expect(counter()).toBe("3/3");
+    expect(listBox().style.display).toBe("none");
+  });
+
+  it("chỉ một bài tập thì không có thanh chuyển", async () => {
+    await render([three[0]!]);
+    expect(nav()).toBeNull();
+  });
+});

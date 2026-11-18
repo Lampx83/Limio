@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  courseSlugFromReferer,
   parseUiLang,
   resolveUiLang,
   translate,
@@ -80,5 +81,21 @@ describe("từ điển thật", () => {
   it("không có chuỗi rỗng", () => {
     expect(Object.entries(VI).filter(([, v]) => !v.trim()).map(([k]) => k)).toEqual([]);
     expect(Object.entries(EN).filter(([, v]) => typeof v === "string" && !v.trim()).map(([k]) => k)).toEqual([]);
+  });
+});
+
+describe("courseSlugFromReferer", () => {
+  it("lấy slug từ trang khoá cùng nguồn đã gọi API", () => {
+    expect(courseSlugFromReferer("https://limio.vn/learn/speakout-a2/lessons/abc?preview=1", "limio.vn")).toBe("speakout-a2");
+    expect(courseSlugFromReferer("https://limio.vn/catalog/hsk-4-goc", "limio.vn")).toBe("hsk-4-goc");
+  });
+  it("bỏ basePath trước khi so đường dẫn", () => {
+    expect(courseSlugFromReferer("https://x.edu.vn/limio/learn/abc/lessons/1", "x.edu.vn", "/limio")).toBe("abc");
+  });
+  it("không tin Referer khác nguồn, hỏng hoặc không phải trang khoá", () => {
+    expect(courseSlugFromReferer("https://evil.test/learn/abc", "limio.vn")).toBeNull();
+    expect(courseSlugFromReferer("khong-phai-url", "limio.vn")).toBeNull();
+    expect(courseSlugFromReferer("https://limio.vn/instructor/courses/1", "limio.vn")).toBeNull();
+    expect(courseSlugFromReferer(null, "limio.vn")).toBeNull();
   });
 });

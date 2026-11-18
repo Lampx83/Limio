@@ -144,11 +144,14 @@ describe("LessonFrameLayout — thanh bài trong Unit/Module", () => {
     expect(html).toContain('href="/learn/ielts#luyen-thi"');
   });
 
-  it("dưới lg có khối mở/đóng 'Bài trong unit', từ lg có thanh bên (đúng breakpoint §4.6)", () => {
+  it("dưới lg có MỘT thanh điều hướng (n/N + tên bài, mở ra danh sách bài), từ lg có thanh bên (đúng breakpoint §4.6)", () => {
     const html = render();
     expect(html).toContain("lg:hidden");
     expect(html).toMatch(/<aside[^>]*class="hidden [^"]*lg:block"/);
-    expect(text(html)).toContain("Bài trong unit · 1 / 4");
+    expect(html).toContain('data-testid="lesson-mobile-bar"');
+    // vị trí bài trong unit ("2/4") và tên bài nằm trên thanh; không còn thẻ "Bài trong unit · 1 / 4" riêng
+    expect(text(html)).toContain("2/4");
+    expect(text(html)).not.toContain("Bài trong unit · 1 / 4");
   });
 
   it("nhãn cấp trên bài theo khoá: UNIT ở khoá ngoại ngữ, MODULE ở khoá khác (rail, khối thu gọn và aria-label)", () => {
@@ -157,7 +160,6 @@ describe("LessonFrameLayout — thanh bài trong Unit/Module", () => {
     expect(unit).toContain('aria-label="Bài trong unit"');
     const mod = render(frame(), false, "Module");
     expect(text(mod)).toContain("Module");
-    expect(text(mod)).toContain("Bài trong module · 1 / 4");
     expect(mod).toContain('aria-label="Bài trong module"');
     expect(mod).not.toContain("Bài trong unit");
   });

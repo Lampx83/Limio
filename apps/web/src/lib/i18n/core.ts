@@ -32,6 +32,34 @@ export function resolveUiLang(opts: { cookie?: string | null; courseLanguage?: s
   return DEFAULT_UI_LANG;
 }
 
+/** Đường dẫn trang của một khoá: /catalog/<slug> hoặc /learn/<slug>… (đã bỏ basePath). */
+const COURSE_PAGE_RE = /^\/(?:catalog|learn)\/([^/?#]+)/;
+
+/**
+ * Slug khoá của trang đã gọi một request API, lấy từ `Referer` cùng nguồn. Request API không có đường dẫn khoá, nên trước đây lời nhận xét AI
+ * và các chuỗi do máy chủ dựng rơi về tiếng Việt trong khi trang (đã chọn giao diện theo `course.language`) hiện tiếng Anh, hoặc ngược lại.
+ * Chỉ nhận Referer cùng `host`; giá trị chỉ dùng để chọn ngôn ngữ nên không cần tin cậy hơn thế.
+ */
+export function courseSlugFromReferer(referer: string | null | undefined, host: string | null | undefined, basePath = ""): string | null {
+  if (!referer || !host) return null;
+  let url: URL;
+  try {
+    url = new URL(referer);
+  } catch {
+    return null;
+  }
+  if (url.host !== host) return null;
+  let path = url.pathname;
+  if (basePath && path.startsWith(basePath)) path = path.slice(basePath.length) || "/";
+  const slug = COURSE_PAGE_RE.exec(path)?.[1];
+  if (!slug) return null;
+  try {
+    return decodeURIComponent(slug);
+  } catch {
+    return null;
+  }
+}
+
 export type Dict = Record<string, string>;
 export type PartialDict<T extends Dict> = Partial<Record<keyof T, string>>;
 export type TParams = Record<string, string | number>;

@@ -3,6 +3,7 @@ import { Check, Lock } from "lucide-react";
 import type { LessonFrameData, LessonRailItem } from "@feedbackme/core-lms";
 import { lessonViewHref, previewHref, type LessonView } from "@/lib/lessonFrameView";
 import LessonFrameShell from "./LessonFrameShell";
+import { ReaderPrefsMenu } from "./ReaderPrefs";
 import LessonTocDrawer from "@/components/lesson/LessonTocDrawer";
 import { tFor } from "@/lib/i18n/tFor";
 import LessonVideoBadge from "@/components/ui/LessonVideoBadge";
@@ -96,7 +97,7 @@ export function RailCourseHeader({ slug, coverUrl, preview, lang }: { slug: stri
   }
   return (
     <div data-testid="rail-cover" className="flex flex-col items-center">
-      <Link href={href} tabIndex={-1} aria-hidden className="block w-24">
+      <Link href={href} tabIndex={-1} aria-hidden className="block w-24 max-lg:hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={coverUrl} alt="" className="h-auto w-full rounded-sm object-cover shadow-md ring-1 ring-black/10" />
       </Link>
@@ -211,6 +212,8 @@ export function LessonNavBar({ slug, prev, next, preview, lang }: { slug: string
       ) : (
         <span aria-hidden />
       )}
+      {/* "Aa" ở giữa thanh đáy: vùng ngón cái với tới được, luôn thấy khi cuộn (docs/tieu-chi/limio-language-ux-p0.md, D). */}
+      <ReaderPrefsMenu showLabel />
       {next ? (
         <Link href={lessonViewHref(slug, next.id, "lesson", preview)} className="btn-primary btn-sm inline-flex min-w-0 items-center gap-1.5" title={next.title}>
           <span className="shrink-0">{t("learn.nav.next")}</span>
@@ -245,6 +248,7 @@ export default function LessonFrameLayout({
   preview,
   accent = null,
   lang,
+  readerPinyin = false,
   children,
 }: {
   slug: string;
@@ -269,13 +273,23 @@ export default function LessonFrameLayout({
   accent?: string | null;
   /** Ngôn ngữ giao diện (trang cha lấy bằng `await getUiLang()`); mặc định "vi". */
   lang?: UiLang;
+  /** Khoá có pinyin: bảng tuỳ chọn đọc "Aa" có nhóm Pinyin. */
+  readerPinyin?: boolean;
   children: React.ReactNode;
 }) {
   const t = tFor(lang);
+  const curIdx = frame.items.findIndex((it) => it.state === "current");
   const levelLower = levelLabel.toLowerCase();
   return (
     <LessonFrameShell
       accent={accent}
+      slug={slug}
+      lessonTitle={lessonTitle}
+      backHref={previewHref(`/learn/${slug}`, preview)}
+      posLabel={curIdx >= 0 ? `${curIdx + 1}/${frame.items.length}` : undefined}
+      unitPct={frame.unitTotal > 0 ? Math.round((frame.unitDone / frame.unitTotal) * 100) : 0}
+      readerPinyin={readerPinyin}
+      mobileExtra={tocModules && tocModules.length > 0 ? <LessonTocDrawer slug={slug} currentLessonId={lessonId} modules={tocModules} trigger="inline" side="right" preview={preview} /> : undefined}
       lessonId={lessonId}
       notesCount={notesCount}
       rail={<RailBody slug={slug} frame={frame} hasExams={hasExams} levelLabel={levelLabel} preview={preview} coverUrl={coverUrl} lang={lang} videos={videos} />}
@@ -285,11 +299,9 @@ export default function LessonFrameLayout({
         // Mục lục toàn khoá nằm ở hàng đường dẫn (căn phải), tách khỏi danh sách bài của unit ở thanh bên để không lẫn hai loại mục lục.
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <LessonCrumbs slug={slug} courseTitle={courseTitle} unitTitle={frame.unitTitle} lessonTitle={lessonTitle} preview={preview} lang={lang} />
-          {tocModules && tocModules.length > 0 && (
-            <div className="ml-auto">
-              <LessonTocDrawer slug={slug} currentLessonId={lessonId} modules={tocModules} trigger="inline" side="right" preview={preview} />
-            </div>
-          )}
+          <div className="ml-auto flex items-center gap-2">
+            {tocModules && tocModules.length > 0 && <LessonTocDrawer slug={slug} currentLessonId={lessonId} modules={tocModules} trigger="inline" side="right" preview={preview} />}
+          </div>
         </div>
       }
       nav={<LessonNavBar slug={slug} prev={frame.prev} next={frame.next} preview={preview} lang={lang} />}

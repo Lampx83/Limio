@@ -2130,8 +2130,10 @@ ruby.ruby-han > rt {
   color: rgb(var(--text-muted));
   user-select: none; /* bôi đen để sao chép/tra từ chỉ lấy chữ Hán, không lẫn pinyin xen giữa */
 }
+/* Pinyin / nghĩa đang tắt (nút "Phiên âm", "Nghĩa", "Bản dịch"): ẩn hẳn khỏi màn hình thay vì làm mờ — chữ mờ vẫn gây xao nhãng và vẫn đọc được. */
+[data-masked="true"],
 ruby.ruby-han > rt[data-masked="true"] {
-  filter: blur(4px);
+  display: none !important;
 }
 .rp-miss {
   color: var(--ps-no, #c62828);
@@ -3395,4 +3397,28 @@ textarea.fc-input {
 .fc .fc-chip:has(.ps-han) {
   white-space: normal;
   border-radius: 1.25rem;
+}
+
+/* ---------- Tuỳ chọn đọc "Aa" của khoá ngoại ngữ (components/language/ReaderPrefs.tsx) ---------- */
+/* Pinyin "Ẩn": biến mất hẳn. "Chạm để xem": ẩn cho tới khi chạm vào khối (JS đặt data-rd-shown lên phần tử pinyin của khối đó). */
+[data-rd-pinyin="off"] :is(ruby.ruby-han > rt, .hsk-py, .hsk-fc-b-py, .py-latin),
+[data-rd-pinyin="tap"] :is(ruby.ruby-han > rt, .hsk-py, .hsk-fc-b-py, .py-latin):not([data-rd-shown]) {
+  display: none !important;
+}
+[data-rd-pinyin="tap"] #lesson-content :is(p, li, td, .hsk-turn, .hsk-wc, .rp-turn) {
+  cursor: pointer;
+}
+/* Cỡ chữ của nội dung bài (không đổi thanh điều hướng). */
+[data-rd-size="l"] #lesson-content {
+  zoom: 1.12;
+}
+[data-rd-size="xl"] #lesson-content {
+  zoom: 1.25;
+}
+/* Dưới lg thanh điều hướng đã có nút AI và các nút cuộn nổi che chữ: ẩn các nút nổi trong khung bài. */
+@media (max-width: 1023px) {
+  [data-lesson-frame] .lesson-fab-panel,
+  [data-lesson-frame] .lesson-fab-scroll {
+    display: none !important;
+  }
 }
