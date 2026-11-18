@@ -832,6 +832,7 @@ export function DialogueEditor({
               caption={value.caption.trim() || undefined}
               audioUrl={value.audioUrl || undefined}
               turns={previewTurns}
+              speakers={value.speakers}
             />
           )}
         </div>

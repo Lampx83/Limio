@@ -175,10 +175,17 @@ const DialogueItemTurn = z.object({
   audio: z.string().min(1).max(300).optional(),
 });
 
+/** Người nói và avatar khuôn mặt: `avatar` là tệp tương đối trong thư mục assets, importer tải lên kho ảnh bài học rồi ghi URL vào `speakers[].avatarUrl`. */
+const DialogueItemSpeaker = z.object({
+  name: z.string().min(1).max(40),
+  avatar: z.string().min(1).max(300).optional(),
+});
+
 const DialogueItemSpec = z.object({
   title: z.string().max(200).optional(),
   caption: z.string().max(600).optional(),
   readingLabel: z.string().max(40).optional(),
+  speakers: z.array(DialogueItemSpeaker).max(20).optional(),
   turns: z.array(DialogueItemTurn).min(1).max(100),
 });
 type DialogueItemSpecT = z.infer<typeof DialogueItemSpec>;
@@ -198,12 +205,23 @@ export function audioPayload(a: AudioItemSpecT, url: string): { url: string } & 
   return { url, ...(a.title ? { title: a.title } : {}), ...(a.caption ? { caption: a.caption } : {}) };
 }
 
-/** Payload của mục `dialogue` (chưa có audio). */
-export function dialoguePayload(d: DialogueItemSpecT): { turns: Array<{ speaker: string; text: string; reading?: string; translation?: string; audioUrl?: string }> } & Record<string, unknown> {
+/**
+ * Payload của mục `dialogue` (chưa có audio). `avatarUrls` = tệp avatar → URL đã tải lên; người nói chưa có URL (kiểm khô, chưa tải) vẫn
+ * được ghi theo tên để hiện vòng tròn chữ cái đầu.
+ */
+export function dialoguePayload(d: DialogueItemSpecT, avatarUrls?: ReadonlyMap<string, string>): { turns: Array<{ speaker: string; text: string; reading?: string; translation?: string; audioUrl?: string }> } & Record<string, unknown> {
   return {
     ...(d.title ? { title: d.title } : {}),
     ...(d.caption ? { caption: d.caption } : {}),
     readingLabel: d.readingLabel ?? "Pinyin",
+    ...(d.speakers?.length
+      ? {
+          speakers: d.speakers.map((sp) => {
+            const url = sp.avatar ? avatarUrls?.get(sp.avatar) : undefined;
+            return { name: sp.name, ...(url ? { avatarUrl: url } : {}) };
+          }),
+        }
+      : {}),
     turns: d.turns.map((t) => ({
       speaker: t.speaker,
       text: t.text,
@@ -1920,7 +1938,19 @@ export async function populateLessonContent(
       await createContentItem(actor, lessonId, { type: "audio", orderIndex: ci, payload: audioPayload(a, url) });
     } else if ("dialogue" in b) {
       const dlg = l.dialogues![b.dialogue]!;
-      const payload = dialoguePayload(dlg);
+      // Avatar người nói: tải lên kho ảnh bài học, mỗi tệp một lần.
+      const avatarUrls = new Map<string, string>();
+      for (const sp of dlg.speakers ?? []) {
+        if (!sp.avatar) continue;
+        let url = dialogueFileCache.get(sp.avatar);
+        if (!url) {
+          const stored = await storePublicFile("lesson-media/images", resolve(assetsDir, sp.avatar), actor);
+          url = `/api/lesson-media/images/${stored.filename}`;
+          dialogueFileCache.set(sp.avatar, url);
+        }
+        avatarUrls.set(sp.avatar, url);
+      }
+      const payload = dialoguePayload(dlg, avatarUrls);
       // Audio đã có sẵn (tệp trong assets): tải lên kho bài học, mỗi tệp một lần.
       for (const [ti, t] of dlg.turns.entries()) {
         if (!t.audio) continue;
@@ -2032,6 +2062,11 @@ async function main() {
           for (const t of d.turns) {
             if (t.audio && !existsSync(resolve(assetsDir, t.audio))) {
               problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}" / hội thoại ${di + 1}: không thấy audio "${t.audio}" trong ${assetsDir}`);
+            }
+          }
+          for (const sp of d.speakers ?? []) {
+            if (sp.avatar && !existsSync(resolve(assetsDir, sp.avatar))) {
+              problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}" / hội thoại ${di + 1}: không thấy avatar "${sp.avatar}" của "${sp.name}" trong ${assetsDir}`);
             }
           }
         }

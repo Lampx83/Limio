@@ -246,16 +246,39 @@ describe("DialogueView — G2.3.3 / 2.3.4 / 2.3.5", () => {
     expect(idx).toEqual(["0", "1", "0"]); // A, B, A: cùng người nói luôn cùng số
   });
 
-  it("nhiều người nói (A B C D E F G): mỗi người một màu avatar; người nói cùng tên dùng lại đúng màu; quá số màu thì quay vòng", () => {
-    const names = ["A", "B", "C", "D", "E", "F", "G"];
-    const many = [...names, "A"].map((speaker, i) => ({ id: `m${i}`, speaker, text: `câu ${i}` }));
+  it("nhiều người nói: mọi người dùng MỘT màu cho avatar chữ cái và tên (không đổi màu theo thứ tự xuất hiện)", () => {
+    const names = ["林雨", "方强", "赵叔叔", "中介", "E", "F", "G"];
+    const many = [...names, "林雨"].map((speaker, i) => ({ id: `m${i}`, speaker, text: `câu ${i}` }));
     const out = render({ turns: many });
     const avatar = (i: number) =>
       out.split(`id="dlg-turn-m${i}"`)[1]!.match(/<span aria-hidden="true"[^>]*class="([^"]+)"/)![1]!.replace(/\s*ring-2 ring-brand-400\s*/, " ").trim();
-    const tones = names.map((_, i) => avatar(i));
-    expect(new Set(tones.slice(0, 6)).size).toBe(6); // 6 người đầu: 6 màu khác nhau
-    expect(tones[6]).toBe(tones[0]); // người thứ 7 quay vòng về màu thứ nhất
-    expect(avatar(7)).toBe(tones[0]); // A nói lại: cùng màu lần trước
+    const classes = [...names, "林雨"].map((_, i) => avatar(i));
+    expect(new Set(classes).size).toBe(1);
+    const nameClasses = [...out.matchAll(/<p class="text-caption font-semibold ([^"]*)">/g)].map((m) => m[1]);
+    expect(nameClasses.length).toBeGreaterThan(0);
+    expect(new Set(nameClasses).size).toBe(1);
+  });
+
+  it("speakers có avatarUrl: hiện ảnh tròn + tên; người nói không có ảnh hiện chữ cái đầu; cùng nhân vật cùng ảnh ở mọi hội thoại", () => {
+    const speakers = [{ name: "林雨", avatarUrl: "/api/lesson-media/images/lamvu.webp" }, { name: "中介" }];
+    const turnsA = [
+      { id: "a1", speaker: "林雨", text: "你好。" },
+      { id: "a2", speaker: "中介", text: "您好。" },
+    ];
+    const turnsB = [{ id: "b1", speaker: "中介", text: "再见。" }, { id: "b2", speaker: "林雨", text: "再见！" }];
+    const outA = render({ turns: turnsA, speakers });
+    const outB = render({ turns: turnsB, speakers });
+    const img = (o: string, id: string) => o.split(`id="dlg-turn-${id}"`)[1]!.match(/<img src="([^"]+)"/)?.[1];
+    expect(img(outA, "a1")).toBe("/api/lesson-media/images/lamvu.webp");
+    expect(img(outB, "b2")).toBe("/api/lesson-media/images/lamvu.webp");
+    expect(img(outA, "a2")).toBeUndefined(); // không có ảnh: chữ cái đầu
+    expect(outA).toContain('data-avatar="initial"');
+    expect(plain(outA)).toContain("林雨"); // tên vẫn hiện cạnh avatar ảnh
+    expect(outA).toContain('alt=""'); // ảnh trang trí, tên đã có bằng chữ
+  });
+
+  it("không có speakers (hội thoại cũ) vẫn dựng như trước, không ảnh", () => {
+    expect(render()).not.toContain("<img");
   });
 
   it("nút nghe riêng chỉ có ở lượt có audio", () => {

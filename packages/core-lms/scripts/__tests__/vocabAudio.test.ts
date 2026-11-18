@@ -241,37 +241,92 @@ describe("audio câu ví dụ (một giọng nữ chuẩn)", () => {
   });
 });
 
-describe("OpenAI TTS: một giọng, mỗi từ hai lần trong một lượt", () => {
-  const okFetch = (log: Array<{ voice: string; input: string; instructions?: string }>) =>
+describe("OpenAI TTS: một giọng, mỗi từ đọc 1 lần rồi nhắc lại sau 1 s; giữa hai từ nghỉ 2 s", () => {
+  // 0,5 s tiếng (biên độ 3000) có 0,1 s lặng ở mỗi đầu, ở 24 kHz — như đoạn thô OpenAI trả.
+  const rawPcm = () => {
+    const a = new Int16Array(24000 * 0.7);
+    a.fill(3000, 2400, 2400 + 12000);
+    return Buffer.from(a.buffer);
+  };
+  const mkFetch = (log: Array<{ voice: string; input: string; instructions?: string; response_format: string }>) =>
     (async (_u: unknown, init: { body: string }) => {
       log.push(JSON.parse(init.body));
-      return new Response(Buffer.from("mp3"), { status: 200 });
+      return new Response(rawPcm(), { status: 200 });
     }) as unknown as typeof fetch;
   const dummy: VocabSynth = { voiceFor: () => "x", synthesize: async () => Buffer.from("") };
-  it("attachVocabAudio / Examples / Track gọi OpenAI đúng giọng, đúng chữ lặp, kèm lời dặn đọc chậm", async () => {
-    const { attachVocabExamples, attachVocabTrack } = await import("../vocab-audio");
-    const log: Array<{ voice: string; input: string; instructions?: string }> = [];
+  it("trimSilence cắt lặng hai đầu, giữ 0,03 s; gapFor trừ phần chừa", async () => {
+    const { trimSilence, gapFor } = await import("../openai-tts");
+    const t = trimSilence({ sampleRate: 24000, samples: (() => { const a = new Int16Array(24000 * 0.7); a.fill(3000, 2400, 14400); return a; })() });
+    expect(t.samples.length).toBeGreaterThan(12000);
+    expect(t.samples.length).toBeLessThan(12000 + 2 * Math.round(24000 * 0.03) + 5);
+    expect(gapFor(1)).toBeCloseTo(0.94, 5);
+    expect(gapFor(2)).toBeCloseTo(1.94, 5);
+  });
+  it("openAiWordPair = đoạn + 1 s + đoạn; attachVocabAudio gọi OpenAI 3 lần mỗi từ để chọn đoạn tốt (định dạng pcm, giọng ash, dặn đọc chậm)", async () => {
+    const log: Array<{ voice: string; input: string; instructions?: string; response_format: string }> = [];
     const stored: Buffer[] = [];
-    const ctx = { synth: dummy, language: "zh", store: async (b: Buffer) => (stored.push(b), `/a/${stored.length}.mp3`), openai: { apiKey: "k", voice: "ash", fetchImpl: okFetch(log) } };
-    const payload: { items: Array<{ term: string; example?: string; audioUrl?: string; exampleAudioUrl?: string }>; audioUrl?: string } = {
-      items: [{ term: "钥匙", example: "我找不到钥匙了。" }, { term: "房东" }],
-    };
-    expect(await attachVocabAudio(payload.items, ctx, new Map())).toEqual({ attached: 2, failed: 0 });
-    expect(await attachVocabExamples(payload.items, ctx, new Map())).toEqual({ attached: 1, failed: 0 });
-    expect(await attachVocabTrack(payload, ctx)).toBe(true);
-    expect(log.map((l) => [l.voice, l.input])).toEqual([
-      ["ash", "钥匙。 钥匙。"],
-      ["ash", "房东。 房东。"],
-      ["ash", "我找不到钥匙了。"],
-      ["ash", "钥匙。 钥匙。\n房东。 房东。"],
-    ]);
+    const ctx = { synth: dummy, language: "zh", store: async (b: Buffer) => (stored.push(b), `/a/${stored.length}.mp3`), openai: { apiKey: "k", voice: "ash", fetchImpl: mkFetch(log) }, pairPcm: new Map() };
+    const items = [{ term: "钥匙" }, { term: "房东" }];
+    expect(await attachVocabAudio(items, ctx, new Map())).toEqual({ attached: 2, failed: 0 });
+    expect(log.map((l) => [l.voice, l.input, l.response_format])).toEqual([
+      ["ash", "钥匙。", "pcm"], ["ash", "钥匙。", "pcm"], ["ash", "钥匙。", "pcm"],
+      ["ash", "房东。", "pcm"], ["ash", "房东。", "pcm"], ["ash", "房东。", "pcm"],
+    ]); // 3 lần đọc mỗi từ rồi chọn đoạn tốt nhất
     expect(log[0]!.instructions).toMatch(/slowly and clearly/);
-    expect(payload.items[0]!.audioUrl).toBe("/a/1.mp3");
+    const pair = ctx.pairPcm.get("钥匙")!;
+    const clip = (12000 + 2 * Math.round(24000 * 0.03));
+    expect(pair.samples.length).toBeGreaterThan(2 * 12000 + 24000 * 0.9); // hai đoạn + ≈ 1 s
+    expect(pair.samples.length).toBeLessThan(2 * clip + 24000 * 1.0 + 10);
+  });
+  it("audio tổng hợp ghép các từ (mỗi từ 2 lần) cách nhau ≈ 2 s và KHÔNG gọi lại OpenAI; câu ví dụ đọc cả câu một lần", async () => {
+    const { attachVocabExamples, attachVocabTrack } = await import("../vocab-audio");
+    const log: Array<{ voice: string; input: string; instructions?: string; response_format: string }> = [];
+    const stored: Buffer[] = [];
+    const ctx = { synth: dummy, language: "zh", store: async (b: Buffer) => (stored.push(b), `/a/${stored.length}.mp3`), openai: { apiKey: "k", voice: "ash", fetchImpl: mkFetch(log) }, pairPcm: new Map() };
+    const payload: { items: Array<{ term: string; example?: string; exampleAudioUrl?: string }>; audioUrl?: string } = { items: [{ term: "钥匙", example: "我找不到钥匙了。" }, { term: "房东" }] };
+    await attachVocabAudio(payload.items, ctx, new Map());
+    const before = log.length;
+    expect(await attachVocabTrack(payload, ctx)).toBe(true);
+    expect(log.length).toBe(before);
     expect(payload.audioUrl).toBeDefined();
+    expect(await attachVocabExamples(payload.items, ctx, new Map())).toEqual({ attached: 1, failed: 0 });
+    expect(log[log.length - 1]!.input).toBe("我找不到钥匙了。");
   });
   it("lỗi OpenAI không làm hỏng cả lô: đếm failed", async () => {
     const bad = (async () => new Response("no", { status: 401 })) as unknown as typeof fetch;
     const ctx = { synth: dummy, language: "zh", store: async () => "/a.mp3", openai: { apiKey: "k", voice: "ash", fetchImpl: bad } };
     expect(await attachVocabAudio([{ term: "钥匙" }], ctx, new Map())).toEqual({ attached: 0, failed: 1 });
+  });
+});
+
+describe("lời dặn đọc theo giọng OpenAI", () => {
+  it("giọng nữ có thêm dặn giọng nữ trẻ; giọng nam thì không", async () => {
+    const { sentenceInstructionsFor } = await import("../openai-tts");
+    expect(sentenceInstructionsFor("nova")).toMatch(/feminine/);
+    expect(sentenceInstructionsFor("echo")).not.toMatch(/feminine/);
+  });
+});
+
+describe("chọn đoạn đọc tốt nhất (loại đọc lặp, âm thừa, rỗng)", () => {
+  const clip = (spans: Array<[number, number]>, total = 4) => {
+    const a = new Int16Array(24000 * total);
+    for (const [x, y] of spans) a.fill(3000, Math.round(x * 24000), Math.round(y * 24000));
+    return { sampleRate: 24000, samples: a };
+  };
+  it("analyzeClip đếm cụm tiếng và gộp khoảng lặng ngắn", async () => {
+    const { analyzeClip } = await import("../openai-tts");
+    expect(analyzeClip(clip([[0.2, 0.5], [0.6, 0.9]])).bursts).toBe(1); // nghỉ 0,1 s: một cụm
+    expect(analyzeClip(clip([[0.2, 0.6], [1.6, 2.0]])).bursts).toBe(2); // nghỉ 1 s: đọc lặp
+    expect(analyzeClip(clip([])).bursts).toBe(0);
+  });
+  it("pickBestClip bỏ đoạn đọc lặp và đoạn quá dài (âm tiết thừa), lấy đoạn ngắn nhất còn lại", async () => {
+    const { pickBestClip } = await import("../openai-tts");
+    const good = clip([[0.2, 0.75]]);
+    const slightlyLonger = clip([[0.2, 0.9]]);
+    const repeated = clip([[0.2, 0.6], [1.6, 2.0]]);
+    const tooLong = clip([[0.2, 1.6]]);
+    expect(pickBestClip([repeated, tooLong, slightlyLonger, good], 1)).toBe(good);
+    expect(pickBestClip([repeated, tooLong, clip([])], 1)).toBeNull();
+    expect(pickBestClip([tooLong], 2)).not.toBeNull(); // hai chữ: ngưỡng cao hơn (1,45 s)
   });
 });

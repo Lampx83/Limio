@@ -13,15 +13,18 @@ import { useExclusiveAudio } from "./useExclusiveAudio";
 import { hskT } from "./lesson/hskT";
 import { useT } from "@/lib/i18n/client";
 
-/** Màu avatar + tên theo thứ tự người nói. Chuỗi class viết đủ để Tailwind quét được. */
-const SPEAKER_TONES = [
-  { avatar: "bg-brand-100 text-brand-800", name: "text-brand-800" },
-  { avatar: "bg-accent-100 text-accent-800", name: "text-accent-800" },
-  { avatar: "bg-sky-100 text-sky-800", name: "text-sky-800" },
-  { avatar: "bg-rose-100 text-rose-800", name: "text-rose-800" },
-  { avatar: "bg-violet-100 text-violet-800", name: "text-violet-800" },
-  { avatar: "bg-teal-100 text-teal-800", name: "text-teal-800" },
-] as const;
+/**
+ * Mọi người nói dùng MỘT màu cho tên và avatar chữ cái (trung tính). Trước đây màu chạy theo thứ tự xuất hiện nên cùng một nhân vật
+ * đổi màu giữa hội thoại A và B; giờ người nói được nhận ra bằng avatar khuôn mặt (nếu có) cùng tên.
+ */
+const SPEAKER_AVATAR_CLASS = "bg-brand-100 text-brand-800";
+const SPEAKER_NAME_CLASS = "text-brand-800";
+
+/** Người nói của hội thoại: tên khớp `DialogueViewTurn.speaker`; `avatarUrl` là ảnh khuôn mặt (vuông, hiện tròn). */
+export interface DialogueViewSpeaker {
+  name: string;
+  avatarUrl?: string;
+}
 
 export interface DialogueViewTurn {
   id: string;
@@ -37,7 +40,7 @@ export interface DialogueViewTurn {
 /**
  * LANG G2 — hội thoại cho học viên: các lượt xếp thành một cột như khung chat. Mọi
  * lượt cùng một bên (có thể có A, B, C, D… nên không chia trái/phải); mỗi người nói
- * một màu avatar cố định theo thứ tự xuất hiện, quá 6 người thì quay vòng. Nút nghe riêng ở lượt có audio;
+ * có avatar tròn (ảnh khuôn mặt khi `speakers` có `avatarUrl`, không thì chữ cái đầu) và tên cùng một màu. Nút nghe riêng ở lượt có audio;
  * audio cả bài (nếu có) dùng trình phát đầy đủ ở đầu khối.
  *
  * K1: lượt đang phát được tô sáng và tự cuộn vào tầm nhìn; "Nghe cả đoạn" phát
@@ -60,6 +63,7 @@ export default function DialogueView({
   readingLabel,
   audioUrl,
   turns,
+  speakers: speakerInfo,
   initialShowReading = true,
   initialShowTranslation = true,
   hsk = false,
@@ -74,6 +78,8 @@ export default function DialogueView({
   readingLabel?: string;
   audioUrl?: string;
   turns: DialogueViewTurn[];
+  /** Ảnh đại diện từng người nói (tuỳ chọn); người nói không có ở đây hiện chữ cái đầu. */
+  speakers?: DialogueViewSpeaker[];
   initialShowReading?: boolean;
   initialShowTranslation?: boolean;
 }) {
@@ -212,7 +218,7 @@ export default function DialogueView({
       <ul className="divide-y divide-[rgb(var(--border))]">
         {turns.map((t) => {
           const speakerIdx = speakers.indexOf(t.speaker);
-          const tone = SPEAKER_TONES[speakerIdx % SPEAKER_TONES.length]!;
+          const avatarUrl = speakerInfo?.find((x) => x.name === t.speaker)?.avatarUrl;
           const playing = litId === t.id; // tô sáng: audio riêng HOẶC audio cả đoạn đang ở lượt này
           const ownPlaying = playingId === t.id; // nút loa riêng chỉ phản ánh audio riêng của lượt
           const hasMark = timed && t.startSec !== undefined;
@@ -227,15 +233,14 @@ export default function DialogueView({
           const clickable = clickAction() !== "none";
           const graphemes = Array.from(t.speaker.trim());
           const initial = (graphemes[0] ?? "?").toUpperCase();
-          // Tên dài hơn một ký tự thì avatar không đủ phân biệt → in tên nhỏ trước lời.
-          const showName = graphemes.length > 1;
+          // Tên dài hơn một ký tự hoặc avatar là ảnh thì chữ cái không nói được là ai → in tên nhỏ trước lời.
+          const showName = graphemes.length > 1 || !!avatarUrl;
           const plan = rubyPlan(t.text, t.reading);
           return (
             <li
               key={t.id}
               id={turnDomId(t.id)}
               data-speaker={speakerIdx}
-              data-tone={hsk ? speakerIdx % 2 : undefined}
               data-playing={playing ? "true" : undefined}
               onClick={
                 clickable
@@ -258,18 +263,24 @@ export default function DialogueView({
               }
               // Hàng gọn, không khung: mobile xếp dọc (lời → phiên âm → dịch); từ md
               // bản dịch sang cột phải cùng hàng để mỗi lượt chỉ cao bằng 2 dòng.
-              className={`${hsk ? "hsk-turn " : ""}grid grid-cols-[1.75rem_minmax(0,1fr)] items-start gap-x-3 gap-y-0.5 rounded-lg px-2 py-2 transition-colors md:grid-cols-[1.75rem_minmax(0,1.15fr)_minmax(0,1fr)] ${
+              className={`${hsk ? "hsk-turn " : ""}grid grid-cols-[2.25rem_minmax(0,1fr)] items-start gap-x-3 gap-y-0.5 rounded-lg px-2 py-2 transition-colors md:grid-cols-[2.25rem_minmax(0,1.15fr)_minmax(0,1fr)] ${
                 playing ? "bg-brand-soft ring-2 ring-brand-300" : ""
               } ${clickable ? "cursor-pointer hover:bg-[rgb(var(--surface-muted))/0.5]" : ""}`}
             >
               <span
                 aria-hidden
                 title={t.speaker}
-                className={`${hsk ? "hsk-av " : ""}row-span-2 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold md:row-span-1 ${
-                  hsk ? "" : tone.avatar
+                data-avatar={avatarUrl ? "image" : "initial"}
+                className={`${hsk ? "hsk-av " : ""}row-span-2 mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-semibold md:row-span-1 ${
+                  hsk ? "" : SPEAKER_AVATAR_CLASS
                 } ${playing ? "ring-2 ring-brand-400" : ""}`}
               >
-                {initial}
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt="" width={36} height={36} loading="lazy" draggable={false} className="h-full w-full object-cover" />
+                ) : (
+                  initial
+                )}
               </span>
               <div className="min-w-0">
                 <div className="flex items-start gap-2">
@@ -295,7 +306,7 @@ export default function DialogueView({
                   {!t.audioUrl && hasTurnAudio && <span className="h-7 w-7 shrink-0" aria-hidden />}
                   <div className="min-w-0">
                     <HanFontLoader lang={plan.lang} />
-                    {showName && <p className={`${hsk ? "hsk-name " : ""}text-caption font-semibold ${hsk ? "" : tone.name}`}>{t.speaker}</p>}
+                    {showName && <p className={`${hsk ? "hsk-name " : ""}text-caption font-semibold ${hsk ? "" : SPEAKER_NAME_CLASS}`}>{t.speaker}</p>}
                     {/* Pinyin ghép được từng chữ thì hiện thẳng hàng dưới chữ Hán; không thì để ở dòng riêng bên dưới. */}
                     <p
                       lang={plan.lang}

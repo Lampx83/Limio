@@ -14,7 +14,7 @@ import { updateContentItem } from "../src/courses/contents";
 import { getIntegrationSecret } from "../src/integrations/integrations";
 import { attachDialogueAudio, prepareDialogueAudio, type Gender } from "./dialogue-audio";
 import { lessonAudioStore } from "./vocab-audio";
-import { openAiSpeech, SENTENCE_INSTRUCTIONS } from "./openai-tts";
+import { openAiSpeech, sentenceInstructionsFor } from "./openai-tts";
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);
@@ -59,7 +59,7 @@ async function main() {
           const names = [...new Set(Object.values(voiceMap ?? {}))];
           console.log(`Giọng OpenAI: ${names.join(", ")}`);
           return {
-            synth: { synthesize: (text: string, voice: string) => openAiSpeech({ apiKey, voice, input: text, instructions: SENTENCE_INSTRUCTIONS }) },
+            synth: { synthesize: (text: string, voice: string) => openAiSpeech({ apiKey, voice, input: text, instructions: sentenceInstructionsFor(voice) }) },
             voices: names.length ? names : ["nova", "ash", "onyx", "echo"],
             store: lessonAudioStore(owner.id),
             warn: (m: string) => console.warn(`⚠ ${m}`),

@@ -176,3 +176,15 @@ describe("hội thoại: mốc thời gian startSec (K2)", () => {
     expect(validateDialogueEditor(v).some((e) => /lượt 2/i.test(e))).toBe(true);
   });
 });
+
+describe("hội thoại: avatar người nói (speakers)", () => {
+  const A = "11111111-1111-4111-8111-111111111111";
+  it("editor không làm mất speakers khi mở rồi lưu lại; không có thì không thêm khoá", () => {
+    const payload = {
+      turns: [{ id: A, speaker: "林雨", text: "你好" }],
+      speakers: [{ name: "林雨", avatarUrl: "/api/lesson-media/images/lamvu.webp" }, { name: "中介" }],
+    };
+    expect(dialoguePayloadFromEditor(dialogueEditorFromPayload(payload))).toEqual(payload);
+    expect(dialoguePayloadFromEditor(dialogueEditorFromPayload({ turns: [{ id: A, speaker: "A", text: "x" }] }))).not.toHaveProperty("speakers");
+  });
+});

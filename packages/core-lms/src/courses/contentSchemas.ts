@@ -254,12 +254,20 @@ function increasingStartSec(turns: Array<{ startSec?: number }>, ctx: z.Refineme
   });
 }
 
+/** Người nói của hội thoại: `name` khớp `turns[].speaker`; `avatarUrl` là ảnh khuôn mặt, cùng luật URL như audio (https hoặc cùng-origin, vd `/api/lesson-media/images/…`). */
+export const DialogueSpeaker = z.object({
+  name: reqText(40),
+  avatarUrl: AudioUrl.optional(),
+});
+
 export const DialoguePayload = z.object({
   title: optText(200),
   caption: optText(600),
   readingLabel: optText(40),
   /** Audio cả bài (tuỳ chọn), ngoài audio riêng từng lượt. */
   audioUrl: AudioUrl.optional(),
+  /** Avatar từng người nói (tuỳ chọn). Người nói không có ở đây hiện vòng tròn chữ cái đầu. */
+  speakers: z.array(DialogueSpeaker).max(20).optional(),
   turns: z
     .array(DialogueTurn)
     .min(1)

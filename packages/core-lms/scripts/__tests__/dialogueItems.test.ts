@@ -64,6 +64,35 @@ describe("payload hội thoại", () => {
   });
 });
 
+describe("avatar người nói", () => {
+  const withSpeakers = {
+    ...{ turns: [{ speaker: "林雨", text: "你好。" }, { speaker: "中介", text: "您好。" }] },
+    speakers: [{ name: "林雨", avatar: "img/avatar-lamvu.webp" }, { name: "中介" }],
+  };
+
+  it("chưa tải ảnh (kiểm khô): ghi người nói theo tên, không có avatarUrl; vẫn hợp lệ", () => {
+    const p = dialoguePayload(withSpeakers);
+    expect(p.speakers).toEqual([{ name: "林雨" }, { name: "中介" }]);
+    expect(() => validateContentPayload("dialogue", p)).not.toThrow();
+  });
+
+  it("đã tải: avatarUrl là URL kho ảnh bài học; người nói không có avatar thì không có khoá", () => {
+    const p = dialoguePayload(withSpeakers, new Map([["img/avatar-lamvu.webp", "/api/lesson-media/images/abc.webp"]]));
+    expect(p.speakers).toEqual([{ name: "林雨", avatarUrl: "/api/lesson-media/images/abc.webp" }, { name: "中介" }]);
+    const out = validateContentPayload("dialogue", p) as { speakers?: unknown };
+    expect(out.speakers).toEqual(p.speakers);
+  });
+
+  it("không khai speakers thì payload không có khoá speakers (khoá cũ không đổi)", () => {
+    expect(dialoguePayload({ turns: [{ speaker: "A", text: "你好" }] })).not.toHaveProperty("speakers");
+  });
+
+  it("schema từ chối avatarUrl không phải https/cùng-origin", () => {
+    expect(() => validateContentPayload("dialogue", { turns: [{ speaker: "A", text: "x" }], speakers: [{ name: "A", avatarUrl: "//evil.example/a.png" }] })).toThrow();
+    expect(() => validateContentPayload("dialogue", { turns: [{ speaker: "A", text: "x" }], speakers: [{ name: "A", avatarUrl: "javascript:alert(1)" }] })).toThrow();
+  });
+});
+
 describe("tên tệp audio của lượt", () => {
   it("sha1 của người nói|chữ, 16 ký tự đầu (Python build/common.py dùng đúng công thức này)", () => {
     expect(dialogueAudioFile("刘明", "这是杨同乐吗？他怎么跟白家月在一起？")).toBe("audio/dialogue/cec0f45dd19eb80d.mp3");

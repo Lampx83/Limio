@@ -21,7 +21,7 @@ import { planHskSections, type HskKind } from "@/lib/hskLesson";
 import { readGrammarData } from "@/lib/hskGrammar";
 import AudioLessonPlayer from "./AudioLessonPlayer";
 import VocabListView, { type VocabViewItem } from "./VocabListView";
-import DialogueView, { type DialogueViewTurn } from "./DialogueView";
+import DialogueView, { type DialogueViewSpeaker, type DialogueViewTurn } from "./DialogueView";
 
 const ScormPlayer = dynamic(() => import("./ScormPlayer"), { ssr: false });
 const LtiLaunch = dynamic(() => import("./LtiLaunch"), { ssr: false });
@@ -388,6 +388,7 @@ function ContentBlock({
         readingLabel?: string;
         audioUrl?: string;
         turns?: DialogueViewTurn[];
+        speakers?: DialogueViewSpeaker[];
       };
       const turns = Array.isArray(p.turns) ? p.turns : [];
       if (turns.length === 0) return null;
@@ -398,6 +399,7 @@ function ContentBlock({
           readingLabel={p.readingLabel}
           audioUrl={p.audioUrl}
           turns={turns}
+          speakers={Array.isArray(p.speakers) ? p.speakers : undefined}
           hsk={hskKind === "dialogue"}
           hskLang={hskLang}
         />

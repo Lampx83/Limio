@@ -12,7 +12,7 @@
 
 import { getIntegrationSecret } from "../src/integrations/integrations";
 import { encodeMp3, parseWav, type Pcm } from "../src/narration/audio";
-import { openAiSpeech, repeatTwice, SENTENCE_INSTRUCTIONS, VOCAB_INSTRUCTIONS } from "./openai-tts";
+import { gapFor, openAiSpeech, openAiSpeechPcm, pickBestClip, SENTENCE_INSTRUCTIONS, trimSilence, VOCAB_INSTRUCTIONS, WORD_GAP_SEC, WORD_REPEAT_GAP_SEC } from "./openai-tts";
 import { storePublicBuffer } from "./practice-spec";
 
 /** NEU TTS từ chối đoạn dài (413 từ ~3000 ký tự); một từ vựng không bao giờ gần mức đó. */
@@ -128,6 +128,32 @@ export function itemsNeedingAudio(items: VocabItemLike[], language: string, forc
   return out;
 }
 
+/**
+ * Một TỪ vựng bằng OpenAI: đọc MỘT lần (dặn đọc chậm, rõ), cắt lặng thừa, rồi nhắc lại đúng đoạn đó sau {@link WORD_REPEAT_GAP_SEC} giây.
+ * Khoảng nghỉ chính xác nên phải ghép; đoạn gốc của OpenAI sạch nên ghép không còn giật như NEU.
+ */
+export async function openAiWordPair(text: string, o: { apiKey: string; voice: string; fetchImpl?: typeof fetch }, cache: Map<string, Pcm>): Promise<Pcm> {
+  const hit = cache.get(text);
+  if (hit) return hit;
+  // Đọc tối đa 3 lần (rồi 3 lần nữa nếu cả ba hỏng) và chọn đoạn tốt nhất: bỏ đoạn đọc lặp, đoạn thêm âm tiết thừa (dài bất thường), đoạn rỗng.
+  const syllables = [...text].filter((ch) => /[㐀-鿿]/.test(ch)).length || 1;
+  let chosen: Pcm | null = null;
+  for (let round = 0; round < 2 && !chosen; round++) {
+    const tries: Pcm[] = [];
+    for (let k = 0; k < 3; k++) tries.push(await openAiSpeechPcm({ apiKey: o.apiKey, voice: o.voice, input: round === 0 ? `${text}。` : text, instructions: VOCAB_INSTRUCTIONS, fetchImpl: o.fetchImpl }));
+    chosen = pickBestClip(tries, syllables);
+  }
+  if (!chosen) throw new Error(`Không có lần đọc nào hợp lệ cho "${text}" (đọc lặp / thêm âm / rỗng)`);
+  const clip = trimSilence(chosen);
+  const gap = Math.round(clip.sampleRate * gapFor(WORD_REPEAT_GAP_SEC));
+  const samples = new Int16Array(clip.samples.length * 2 + gap);
+  samples.set(clip.samples, 0);
+  samples.set(clip.samples, clip.samples.length + gap);
+  const pair = { sampleRate: clip.sampleRate, samples };
+  cache.set(text, pair);
+  return pair;
+}
+
 export interface VocabAudioResult {
   /** Số mục được gắn audio mới. */
   attached: number;
@@ -169,7 +195,8 @@ export async function attachVocabAudio(
       let url = cache.get(key);
       if (!url) {
         try {
-          url = await ctx.store(await openAiSpeech({ apiKey: o.apiKey, voice: o.voice, input: repeatTwice(text), instructions: VOCAB_INSTRUCTIONS, fetchImpl: o.fetchImpl }));
+          const pair = await openAiWordPair(text, o, (ctx.pairPcm ??= new Map<string, Pcm>()));
+          url = await ctx.store(encodeMp3(pair));
           cache.set(key, url);
         } catch (e) {
           result.failed += 1;
@@ -288,18 +315,22 @@ export async function attachVocabTrack(
   if (ctx.openai) {
     if (!ctx.force && typeof payload.audioUrl === "string" && payload.audioUrl) return false;
     const o = ctx.openai;
-    const words = (payload.items ?? []).flatMap((it) => {
+    const texts = (payload.items ?? []).flatMap((it) => {
       if (typeof it.term !== "string") return [];
-      const t = speakableTerm(it.term, ctx.language);
-      return t && t.length <= MAX_TERM_CHARS ? [repeatTwice(t)] : [];
+      const tx = speakableTerm(it.term, ctx.language);
+      return tx && tx.length <= MAX_TERM_CHARS ? [tx] : [];
     });
-    if (words.length === 0) return false;
+    if (texts.length === 0) return false;
     try {
-      // Cả bảng từ trong một yêu cầu (mỗi từ một dòng): máy tự nghỉ giữa các dòng, không cắt ghép tệp.
-      payload.audioUrl = await ctx.store(await openAiSpeech({ apiKey: o.apiKey, voice: o.voice, input: words.join("\n"), instructions: VOCAB_INSTRUCTIONS, fetchImpl: o.fetchImpl }));
+      // Mỗi từ = [đọc, nghỉ 1 s, đọc lại]; giữa hai từ nghỉ 2 s. Dùng lại PCM đã đọc ở từng thẻ (không gọi OpenAI lần nữa).
+      const cache = (ctx.pairPcm ??= new Map<string, Pcm>());
+      const pairs: Pcm[] = [];
+      for (const tx of texts) pairs.push(await openAiWordPair(tx, o, cache));
+      const track = joinPcm(pairs, gapFor(WORD_GAP_SEC));
+      payload.audioUrl = await ctx.store(encodeMp3(track));
       return true;
     } catch (e) {
-      ctx.warn?.(`Không đọc được audio tổng hợp: ${(e as Error).message}`);
+      ctx.warn?.(`Không ghép được audio tổng hợp: ${(e as Error).message}`);
       return false;
     }
   }

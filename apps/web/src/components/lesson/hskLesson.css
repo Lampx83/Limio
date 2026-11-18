@@ -592,29 +592,29 @@
   background: var(--hk-soft2);
   box-shadow: none;
 }
+/* Một màu cho mọi người nói (trước đây hồng/xanh theo thứ tự nên cùng một nhân vật đổi màu giữa hội thoại A và B): người nói nhận ra bằng
+   avatar khuôn mặt + tên. Không có ảnh thì vòng tròn chữ cái đầu, nền nhạt cùng tông. */
 .lesson-hsk .hsk-av {
-  width: 1.9rem;
-  height: 1.9rem;
-  color: #fff;
-  font: 400 1rem var(--hk-han);
-  background: rgb(var(--brand));
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--hk-deep);
+  font: 400 1.05rem var(--hk-han);
+  background: var(--hk-soft2);
+  border: 1px solid var(--hk-line);
 }
-.lesson-hsk li[data-tone="1"] .hsk-av {
-  background: rgb(var(--hk-pink));
+.lesson-hsk .hsk-av img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .lesson-hsk .hsk-name {
   margin: 0 0 0.1rem;
-  font-size: 0.78rem;
+  font-size: 0.84rem;
   color: var(--hk-deep);
-}
-.lesson-hsk li[data-tone="1"] .hsk-name {
-  color: rgb(var(--hk-pink-deep));
 }
 .lesson-hsk .hsk-han {
   color: var(--hk-deep);
-}
-.lesson-hsk li[data-tone="1"] .hsk-han {
-  color: rgb(var(--text));
 }
 
 /* ---------- Ngữ pháp: cụm khoá, giải thích, ví dụ ---------- */

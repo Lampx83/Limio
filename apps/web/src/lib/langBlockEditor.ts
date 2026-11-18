@@ -41,6 +41,8 @@ export interface DialogueEditorValue {
   readingLabel: string;
   audioUrl: string;
   turns: TurnEditorItem[];
+  /** Avatar người nói do importer đặt: editor không sửa, chỉ giữ lại để lưu không làm mất. */
+  speakers?: Array<{ name: string; avatarUrl?: string }>;
 }
 
 export const emptyVocabItem = (): VocabEditorItem => ({
@@ -144,12 +146,17 @@ export function dialogueEditorFromPayload(payload: unknown): DialogueEditorValue
     audioUrl: s(t.audioUrl),
     ...(typeof t.startSec === "number" && Number.isFinite(t.startSec) ? { startSec: t.startSec } : {}),
   }));
+  const speakers = list(p.speakers)
+    .map((x) => ({ name: s(x.name), avatarUrl: s(x.avatarUrl) }))
+    .filter((x) => x.name)
+    .map((x) => ({ name: x.name, ...(x.avatarUrl ? { avatarUrl: x.avatarUrl } : {}) }));
   return {
     title: s(p.title),
     caption: s(p.caption),
     readingLabel: s(p.readingLabel),
     audioUrl: s(p.audioUrl),
     turns: turns.length ? turns : [emptyTurn()],
+    ...(speakers.length ? { speakers } : {}),
   };
 }
 
@@ -162,6 +169,7 @@ export function dialoguePayloadFromEditor(v: DialogueEditorValue) {
   put(out, "caption", v.caption);
   put(out, "readingLabel", v.readingLabel);
   put(out, "audioUrl", v.audioUrl);
+  if (v.speakers?.length) out.speakers = v.speakers;
   for (const t of v.turns) {
     if (turnBlank(t)) continue;
     const row: Record<string, unknown> = { id: t.id };
