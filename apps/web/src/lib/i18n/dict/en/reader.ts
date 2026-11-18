@@ -151,4 +151,6 @@ export const enReader: PartialDict<typeof viReader> = {
   "reader.nav.prevShort": "Prev",
   "reader.nav.nextShort": "Next",
   "reader.bar.sections": "In this lesson",
+  "reader.nav.sectionsCollapse": "Collapse lesson sections",
+  "reader.nav.sectionsExpand": "Expand lesson sections",
 };

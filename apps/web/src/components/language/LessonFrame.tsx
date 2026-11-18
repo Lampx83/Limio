@@ -7,6 +7,7 @@ import LessonSectionsNav from "./LessonSectionsNav";
 import { ReaderPrefsMenu } from "./ReaderPrefs";
 import { AiOpenButton } from "./LessonFrameContext";
 import NextLessonLink from "./NextLessonLink";
+import CurrentLessonLink from "./CurrentLessonLink";
 import { navSub, nextHeadline } from "@/lib/lessonNavLabels";
 import LessonTocDrawer from "@/components/lesson/LessonTocDrawer";
 import { tFor } from "@/lib/i18n/tFor";
@@ -64,15 +65,19 @@ function RailList({ slug, frame, preview, lang, videos }: { slug: string; frame:
             </span>
           </>
         );
-        const cls = `flex items-start gap-2.5 rounded-lg border-l-2 px-2.5 py-2 ${it.state === "current" ? "border-brand-600 bg-brand-50" : "border-transparent"}`;
+        const cls = `flex items-start gap-2.5 rounded-lg border-l-2 px-2.5 py-2 ${it.state === "current" ? "border-brand-600 bg-brand-50 lg:pr-10" : "border-transparent"}`;
         return (
-          <li key={it.id}>
+          <li key={it.id} className="relative">
             {it.state === "locked" ? (
               <div className={`${cls} opacity-70`} aria-disabled="true">
                 {row}
               </div>
+            ) : it.state === "current" ? (
+              <CurrentLessonLink href={lessonViewHref(slug, it.id, "lesson", preview)} className={`${cls} cursor-pointer hover:bg-[rgb(var(--surface-muted))]`}>
+                {row}
+              </CurrentLessonLink>
             ) : (
-              <Link href={lessonViewHref(slug, it.id, "lesson", preview)} aria-current={it.state === "current" ? "page" : undefined} className={`${cls} hover:bg-[rgb(var(--surface-muted))]`}>
+              <Link href={lessonViewHref(slug, it.id, "lesson", preview)} className={`${cls} hover:bg-[rgb(var(--surface-muted))]`}>
                 {row}
               </Link>
             )}

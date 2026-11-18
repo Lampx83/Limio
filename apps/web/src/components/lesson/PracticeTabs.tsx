@@ -134,7 +134,7 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
         </button>
         <button type="button" onClick={() => setListOpen((v) => !v)} aria-expanded={listOpen} aria-label={tr("practice.tabs.list")} className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2 text-left">
           <span className="shrink-0 text-sm font-bold tabular-nums text-brand-700" aria-label={tr("practice.tabs.counter", { n: cur + 1, total: tabs.length })}>
-            {cur + 1}/{tabs.length}
+            {tr("practice.tabs.label")} {cur + 1}/{tabs.length}
           </span>
           <span className="min-w-0 flex-1 truncate text-sm font-medium">{barTitle(tabs[cur]!)}</span>
           {curDone && <Check size={16} aria-hidden className="shrink-0 text-lime-700" />}

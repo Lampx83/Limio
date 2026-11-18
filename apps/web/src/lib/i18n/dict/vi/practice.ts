@@ -329,6 +329,7 @@ export const viPractice = {
   "practice.say.stop": "Dừng",
   "practice.tabs.aria": "Bài luyện của bài học",
   "practice.tabs.counter": "Bài tập {n} trên {total}",
+  "practice.tabs.label": "Bài tập",
   "practice.tabs.list": "Danh sách bài tập",
   "practice.tabs.next": "Bài tập tiếp theo",
   "practice.tabs.prev": "Bài tập trước",

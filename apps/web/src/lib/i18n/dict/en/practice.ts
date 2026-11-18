@@ -332,6 +332,7 @@ export const enPractice: PartialDict<typeof viPractice> = {
   "practice.say.stop": "Stop",
   "practice.tabs.aria": "Exercises in this lesson",
   "practice.tabs.counter": "Exercise {n} of {total}",
+  "practice.tabs.label": "Exercise",
   "practice.tabs.list": "All exercises",
   "practice.tabs.next": "Next exercise",
   "practice.tabs.prev": "Previous exercise",

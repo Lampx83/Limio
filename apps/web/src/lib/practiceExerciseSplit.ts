@@ -58,25 +58,48 @@ export function splitEmbedByExercise(embed: PracticeEmbed): ExerciseGroup[] {
 }
 
 /**
- * Một exercise có nhiều đoạn (vd 5A gồm Agreeing / Disagreeing / Giving your opinion; 1A gồm hai bộ ảnh) → mỗi đoạn một khối riêng, xếp nối nhau
- * trong CÙNG tab bài tập, để không có tab nằm trong tab. Mỗi khối giữ tên đoạn làm tiêu đề và đánh số câu từ 1 như khi là tab con.
+ * Một bài luyện có nhiều phần (vd 5A gồm Agreeing / Disagreeing / Giving your opinion; hoặc một hình kèm vài câu nối/kéo thả rời) → mỗi phần một khối riêng,
+ * xếp nối nhau trong CÙNG trang, để không có tab nằm trong tab. Mỗi khối giữ tên đoạn làm tiêu đề và đánh số câu từ 1 như khi là tab con.
  *
- * Câu không thuộc đoạn nào (hoặc đoạn lạ) đi cùng đoạn đứng trước, đoạn đầu nếu chưa có. Dưới hai đoạn → mảng rỗng (không cần tách).
+ * Phần là: mỗi đoạn (kèm câu của nó), và mỗi dải câu LIỀN NHAU không thuộc đoạn nào (khối không đoạn, không tiêu đề), theo thứ tự soạn của câu hỏi. Đoạn không có
+ * câu hỏi (chỉ audio) vẫn là một khối, chèn theo thứ tự đoạn của đề. Dưới hai phần → mảng rỗng (không cần tách).
  */
 export function splitEmbedByPassage(embed: PracticeEmbed): PracticeEmbed[] {
-  if (embed.passages.length < 2) return [];
   const known = new Set(embed.passages.map((p) => p.id));
-  const owner = new Map<string, string>();
-  let prev = embed.passages[0]!.id;
+  type Seg = { passageId: string | null; questionIds: Set<string> };
+  const segs: Seg[] = [];
+  const byPassage = new Map<string, Seg>();
   for (const q of embed.questions) {
-    const own = q.passageId && known.has(q.passageId) ? q.passageId : prev;
-    owner.set(q.id, own);
-    prev = own;
+    if (q.passageId && known.has(q.passageId)) {
+      let seg = byPassage.get(q.passageId);
+      if (!seg) {
+        seg = { passageId: q.passageId, questionIds: new Set() };
+        byPassage.set(q.passageId, seg);
+        segs.push(seg);
+      }
+      seg.questionIds.add(q.id);
+    } else {
+      const last = segs[segs.length - 1];
+      if (last && last.passageId === null) last.questionIds.add(q.id);
+      else segs.push({ passageId: null, questionIds: new Set([q.id]) });
+    }
   }
-  return embed.passages.map((p) => ({
+  // Đoạn không có câu hỏi: chèn trước phần của đoạn đứng sau nó trong đề, không có thì xuống cuối.
+  const order = new Map(embed.passages.map((p, i) => [p.id, i]));
+  for (const p of embed.passages) {
+    if (byPassage.has(p.id)) continue;
+    const seg: Seg = { passageId: p.id, questionIds: new Set() };
+    byPassage.set(p.id, seg);
+    const at = order.get(p.id)!;
+    const i = segs.findIndex((x) => x.passageId !== null && (order.get(x.passageId) ?? -1) > at);
+    if (i >= 0) segs.splice(i, 0, seg);
+    else segs.push(seg);
+  }
+  if (segs.length < 2) return [];
+  return segs.map((seg) => ({
     ...embed,
-    passages: [p],
-    questions: embed.questions.filter((q) => owner.get(q.id) === p.id),
-    answers: embed.answers.filter((a) => owner.get(a.questionId) === p.id),
+    passages: seg.passageId ? embed.passages.filter((p) => p.id === seg.passageId) : [],
+    questions: embed.questions.filter((q) => seg.questionIds.has(q.id)),
+    answers: embed.answers.filter((a) => seg.questionIds.has(a.questionId)),
   }));
 }

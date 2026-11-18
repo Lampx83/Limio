@@ -148,4 +148,6 @@ export const viReader = {
   "reader.nav.prevShort": "Trước",
   "reader.nav.nextShort": "Tiếp",
   "reader.bar.sections": "Trong bài này",
+  "reader.nav.sectionsCollapse": "Thu gọn các mục trong bài",
+  "reader.nav.sectionsExpand": "Mở các mục trong bài",
 } as const;
