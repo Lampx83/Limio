@@ -336,6 +336,8 @@ export const enPractice: PartialDict<typeof viPractice> = {
   "practice.tabs.list": "All exercises",
   "practice.tabs.next": "Next exercise",
   "practice.tabs.prev": "Previous exercise",
+  "practice.tabs.prevShort": "Previous",
+  "practice.tabs.nextShort": "Next",
   "practice.say.listen": "Listen",
   "practice.say.listenFrame": "Listen to the sentence frame: {t}",
   "practice.say.targets": "Target phrases ({n}/{m} used)",

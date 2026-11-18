@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Headphones, ListChecks, Mic, Shuffle, TextCursorInput, type LucideIcon } from "lucide-react";
+import { BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, Headphones, ListChecks, Mic, Shuffle, TextCursorInput, type LucideIcon } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 import Collapse from "@/components/ui/Collapse";
 import { PRACTICE_COMPLETE_EVENT, PRACTICE_KIND_LABEL, PRACTICE_PROGRESS_EVENT, type PracticeKind, type PracticeProgressDetail, type PracticeTabMeta } from "@/lib/practiceTabMeta";
@@ -126,23 +126,61 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
     return tb.meta?.title && tb.meta.title !== head ? `${head} · ${tb.meta.title}` : tb.label;
   };
   const curDone = progressOf(tabs[cur]?.meta, live).done;
-  const stepBtn = "flex w-11 shrink-0 items-center justify-center bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-40";
+  // Nhảy thẳng tới một bài tập (bấm số bước): cùng cách về đầu khu bài luyện như `step`.
+  const jump = (i: number) => {
+    setActive(i);
+    setListOpen(false);
+    const el = secRef.current;
+    if (el && el.getBoundingClientRect().top < 72) el.scrollIntoView?.({ block: "start", behavior: "smooth" });
+  };
+  // Nút Trước / Tiếp theo có chữ (từ sm), không chỉ mũi tên: người học dễ bỏ qua các bài tập sau nếu thanh này khó thấy.
+  const stepBtn = "flex shrink-0 items-center gap-1 bg-brand-600 px-3 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-40";
+  // Các bước 1…n hiện sẵn (tối đa 12; nhiều hơn thì chỉ còn số đếm và danh sách): xong ✓, đang làm tô đậm, đã trả lời dở viền màu, chưa làm viền xám.
+  const showSteps = tabs.length <= 12;
   const stepBar =
     tabs.length > 1 ? (
       <div role="group" aria-label={tr("practice.tabs.aria")} data-testid="practice-step-nav" className="sticky top-[3.75rem] z-20 mb-3 flex items-stretch border border-token bg-[rgb(var(--surface))] shadow-sm">
         <button type="button" onClick={() => step(-1)} disabled={cur === 0} aria-label={tr("practice.tabs.prev")} className={stepBtn}>
-          <ChevronsLeft size={18} aria-hidden />
+          <ChevronLeft size={18} aria-hidden />
+          <span className="hidden sm:inline">{tr("practice.tabs.prevShort")}</span>
         </button>
-        <button type="button" onClick={() => setListOpen((v) => !v)} aria-expanded={listOpen} aria-label={tr("practice.tabs.list")} className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2 text-left">
-          <span className="shrink-0 text-sm font-bold tabular-nums text-brand-700" aria-label={tr("practice.tabs.counter", { n: cur + 1, total: tabs.length })}>
+        {/* Điện thoại: hàng số bước ở trên (không xuống dòng), "Bài tập n/m" và tên bài ở hàng dưới; từ sm: một hàng "Bài tập n/m · số bước · tên bài". */}
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1.5 px-3 py-2">
+          <span className="order-2 shrink-0 text-sm font-bold tabular-nums text-brand-700 sm:order-1" aria-label={tr("practice.tabs.counter", { n: cur + 1, total: tabs.length })}>
             {tr("practice.tabs.label")} {cur + 1}/{tabs.length}
           </span>
-          <span className="min-w-0 flex-1 truncate text-sm font-medium">{barTitle(tabs[cur]!)}</span>
-          {curDone && <Check size={16} aria-hidden className="shrink-0 text-lime-700" />}
-          <ChevronDown size={16} aria-hidden className={`shrink-0 text-muted transition-transform ${listOpen ? "rotate-180" : ""}`} />
-        </button>
+          {showSteps && (
+            <ol data-testid="practice-steps" className="order-1 flex w-full items-center justify-between gap-1 sm:order-2 sm:w-auto sm:justify-start sm:gap-1.5">
+                {tabs.map((tb, i) => {
+                  const pr = progressOf(tb.meta, live);
+                  const on = i === cur;
+                  const state = on ? "bg-brand-600 text-white ring-2 ring-brand-200" : pr.done ? "border border-lime-400 bg-lime-100 text-lime-800" : pr.answered > 0 ? "border border-brand-400 bg-brand-50 text-brand-700" : "border border-token bg-[rgb(var(--surface))] text-muted hover:bg-brand-50";
+                  return (
+                    <li key={tb.id}>
+                      <button
+                        type="button"
+                        onClick={() => jump(i)}
+                        aria-current={on ? "step" : undefined}
+                        aria-label={`${tr("practice.tabs.label")} ${i + 1}: ${barTitle(tb)}${pr.done ? " ✓" : ""}`}
+                        title={barTitle(tb)}
+                        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold tabular-nums transition-colors sm:h-7 sm:w-7 ${state}`}
+                      >
+                        {pr.done && !on ? <Check size={14} aria-hidden /> : i + 1}
+                      </button>
+                    </li>
+                  );
+                })}
+            </ol>
+          )}
+          <button type="button" onClick={() => setListOpen((v) => !v)} aria-expanded={listOpen} aria-label={tr("practice.tabs.list")} className="order-3 flex min-w-[5rem] flex-1 basis-0 items-center gap-2 text-left">
+            <span className="min-w-0 flex-1 truncate text-sm font-medium">{barTitle(tabs[cur]!)}</span>
+            {curDone && <Check size={16} aria-hidden className="shrink-0 text-lime-700" />}
+            <ChevronDown size={16} aria-hidden className={`shrink-0 text-muted transition-transform ${listOpen ? "rotate-180" : ""}`} />
+          </button>
+        </div>
         <button type="button" onClick={() => step(1)} disabled={cur === tabs.length - 1} aria-label={tr("practice.tabs.next")} className={stepBtn}>
-          <ChevronsRight size={18} aria-hidden />
+          <span className="hidden sm:inline">{tr("practice.tabs.nextShort")}</span>
+          <ChevronRight size={18} aria-hidden />
         </button>
       </div>
     ) : null;

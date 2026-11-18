@@ -333,6 +333,8 @@ export const viPractice = {
   "practice.tabs.list": "Danh sách bài tập",
   "practice.tabs.next": "Bài tập tiếp theo",
   "practice.tabs.prev": "Bài tập trước",
+  "practice.tabs.prevShort": "Trước",
+  "practice.tabs.nextShort": "Tiếp theo",
   "practice.say.listen": "Nghe",
   "practice.say.listenFrame": "Nghe mẫu câu: {t}",
   "practice.say.targets": "Cụm gợi ý ({n}/{m} đã dùng)",

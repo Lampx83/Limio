@@ -194,6 +194,27 @@ describe("PracticeTabs — thanh bài tập gọn « Bài tập 3/7 · tên bài
     expect(listOpen()).toBe(false);
   });
 
+  it("hiện sẵn các bước 1…n: bước đang làm có aria-current, bấm số bước thì nhảy thẳng tới bài đó", async () => {
+    await render(three);
+    const steps = () => [...nav()!.querySelectorAll<HTMLButtonElement>('[data-testid="practice-steps"] button')];
+    expect(steps().map((b) => b.textContent)).toEqual(["1", "2", "3"]);
+    expect(steps().map((b) => b.getAttribute("aria-current"))).toEqual(["step", null, null]);
+    await click(steps()[2]!);
+    expect(counter()).toBe("Bài tập 3/3");
+    expect(steps().map((b) => b.getAttribute("aria-current"))).toEqual([null, null, "step"]);
+    expect(panels()[2]!.hidden).toBe(false);
+  });
+
+  it("nút Trước / Tiếp theo có chữ để thấy rõ; nhiều hơn 12 bài tập thì chỉ còn số đếm (không có hàng bước)", async () => {
+    await render(three);
+    expect(navBtn("Bài tập tiếp theo").textContent).toContain("Tiếp theo");
+    expect(navBtn("Bài tập trước").textContent).toContain("Trước");
+    const many = Array.from({ length: 13 }, (_, i) => ({ id: `t${i}`, label: `${i + 1} · Bài ${i + 1}`, content: <p>{i}</p> }));
+    await render(many);
+    expect(nav()!.querySelector('[data-testid="practice-steps"]')).toBeNull();
+    expect(counter()).toBe("Bài tập 1/13");
+  });
+
   it("chỉ một bài tập thì không có thanh chuyển", async () => {
     await render([three[0]!]);
     expect(nav()).toBeNull();
