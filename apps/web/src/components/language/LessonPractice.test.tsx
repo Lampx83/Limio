@@ -121,7 +121,7 @@ describe("LessonPractice — bài luyện nhúng trong bài", () => {
     expect(host.querySelector(".lg\\:grid-cols-\\[1\\.1fr_1fr\\]")).not.toBeNull();
     expect((button(/Kiểm tra câu 1/) as HTMLButtonElement).disabled).toBe(true);
     expect(calls).toHaveLength(0);
-    expect(text()).toContain("bài luyện bắt đầu khi bạn chọn đáp án đầu tiên");
+    expect(text()).not.toContain("bài luyện bắt đầu khi bạn chọn đáp án đầu tiên");
   });
 
   it("chọn đáp án đầu tiên: tạo buổi luyện đúng một lần rồi lưu đáp án; chọn tiếp câu khác không tạo thêm buổi", async () => {
@@ -317,7 +317,7 @@ describe("LessonPractice — bài luyện nhúng trong bài", () => {
     expect(calls[0]!.body).toEqual({ answerJson: { optionIds: ["a"] } });
     expect(text()).toContain("Chính xác");
     expect(text()).toContain("Vì A đúng.");
-    expect(text()).toContain("Xem trước: không lưu đáp án");
+    expect(text()).not.toContain("Xem trước: không lưu đáp án");
     expect(button(/Kết thúc bài luyện/)).toBeUndefined();
   });
 });
@@ -829,7 +829,7 @@ describe("LessonPractice — chế độ tab con của một exercise (docs/tieu
     await click(radios()[0]!);
     await flush(600);
     expect(button(/Kiểm tra câu 1/)).toBeDefined();
-    expect(text()).toContain("Đã lưu câu trả lời");
+    expect(text()).not.toContain("Đã lưu câu trả lời");
   });
 });
 

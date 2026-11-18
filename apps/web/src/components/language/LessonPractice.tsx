@@ -902,25 +902,27 @@ export default function LessonPractice({
         </div>
       )}
       {!lead && stepPassage && parts && (
-        <div className={`mt-3 ${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} relative px-4 py-3`} data-testid="lp-instruction">
-          {toggleInHead && <div className="absolute right-3 top-3">{sheetToggle}</div>}
+        <div className={`mt-3 ${sheet ? "ps-paper-card flex flex-wrap items-baseline gap-x-3 gap-y-0.5" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} relative px-4 py-3 ${toggleInHead ? "lg:pr-28" : ""}`} data-testid="lp-instruction">
+          {toggleInHead && <div className="absolute right-3 top-2.5">{sheetToggle}</div>}
           {/* Tab đã có thẻ đề với "mã · tên" đậm (shortPartner): thẻ này chỉ còn lời mời bạn ảo, không lặp lại tên. */}
           {!(shortPartner && instructionText) && (
-            <h3 className={`text-h4 ${toggleInHead ? "lg:pr-24" : ""}`}>{passageDisplayTitle(sheet ? headingTitleOf(stepPassage.title, stepPassage.contentJson) : stepPassage.title)}</h3>
+            <h3 className="text-h4">{passageDisplayTitle(sheet ? headingTitleOf(stepPassage.title, stepPassage.contentJson) : stepPassage.title)}</h3>
           )}
-          {instructionText && <p className={`mt-1 whitespace-pre-line text-body leading-7 ${toggleInHead ? "lg:pr-24" : ""}`}>{instructionText}</p>}
+          {instructionText && <p className={`whitespace-pre-line text-body leading-7 ${sheet ? "" : "mt-1"}`}>{instructionText}</p>}
         </div>
       )}
     </>
   );
   const bodyBlock = (step &&
         (step.passageId && !lightIntro ? (
-          <div data-split={split ? "true" : undefined} className={`${sheet ? "mt-3" : "mt-4"} grid gap-4 ${split ? "lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-2.5" : ""}`}>
+          <div data-split={split ? "true" : undefined} className={`${sheet ? "mt-3" : "mt-4"} grid gap-4 ${split ? `lg:grid-cols-[1.1fr_1fr] ${sheet ? "lg:items-stretch" : "lg:items-start"} lg:gap-2.5` : ""}`}>
             {hasBody && !lightIntro && stepPassage && parts && (
               <div
-                className={`${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} p-5 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll ${split ? "lg:sticky lg:top-20" : ""} [&_p]:leading-8`}
+                className={`${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} p-5 ${sheet && split ? "" : "lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll"} ${split && !sheet ? "lg:sticky lg:top-20" : ""} [&_p]:leading-8`}
                 data-testid="lp-passage"
               >
+                {/* Phiếu chia đôi: thẻ giãn cao bằng cột câu hỏi (đường kẻ dọc suốt chiều cao); hình/đoạn bên trong dính theo cuộn. */}
+                <div className={sheet && split ? "lg:sticky lg:top-20 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll" : undefined}>
                 {blankMode && blankQ ? (
                   <PassageBlanks
                     nodes={blankMode.nodes}
@@ -942,6 +944,7 @@ export default function LessonPractice({
                     bodySize="body"
                   />
                 )}
+                </div>
               </div>
             )}
             {/* Chia đôi: cột câu hỏi cũng tự cuộn riêng (như cột đoạn văn) khi nhiều câu dài; thẻ đầu cột (bản đồ câu hỏi) dính ở đỉnh nên luôn thấy. */}
@@ -1007,20 +1010,15 @@ export default function LessonPractice({
         </>
       )}
 
-      {/* Một hàng chân khối: trạng thái lưu bên trái, "Kết thúc bài luyện" bên phải ở dạng nút phụ (nút hồng chính chỉ dành cho việc của câu đang làm: Kiểm tra / Nhận xét). */}
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <p className="text-caption text-muted" aria-live="polite">
-          {preview
-            ? `Xem trước: không lưu đáp án · ${answeredCount} / ${questions.length} câu`
-            : `${saveState === "error" ? "Chưa lưu được" : "Đã lưu câu trả lời"} · ${answeredCount} / ${questions.length} câu`}
-          {preview || sessionId ? "" : answeredCount === 0 ? " (bài luyện bắt đầu khi bạn chọn đáp án đầu tiên)" : ""}
-        </p>
-        {!preview && !subset && (
+      {/* Chân khối: chỉ còn "Kết thúc bài luyện" (nút phụ; nút hồng chính chỉ dành cho việc của câu đang làm: Kiểm tra / Nhận xét). Không còn dòng
+          "Đã lưu câu trả lời · n / m câu" / "Xem trước: không lưu đáp án": đáp án tự lưu, lỗi lưu đã có hộp cảnh báo riêng (`error`), tiến độ ở thanh tab. */}
+      {!preview && !subset && (
+        <div className="mt-2 flex justify-end">
           <button type="button" onClick={() => void finish()} disabled={finishing} className="btn-ghost btn-sm font-semibold disabled:opacity-50">
             {finishing ? "Đang kết thúc…" : "Kết thúc bài luyện"}
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </section>
   );
 }

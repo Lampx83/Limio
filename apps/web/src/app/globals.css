@@ -1414,6 +1414,24 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
   border-bottom: 1px solid var(--ps-edge);
   border-radius: 0.75rem 0.75rem 0 0;
 }
+/* Gọn không gian: thẻ tên bài mỏng hơn (tên và đề cùng một hàng), bớt lề quanh hình/đoạn, bớt lề trên của phiếu. */
+.ps-exercise > [data-testid="lp-instruction"] {
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+}
+.ps-exercise [data-testid="lp-passage"] {
+  padding: 1rem;
+}
+.ps-exercise [data-testid="lp-passage"] .prose :is(img, button) {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.ps-exercise .practice-sheet .ps-instr {
+  margin-top: 0.25rem;
+}
+.ps-exercise .ps-panel {
+  padding-top: 0.25rem;
+}
 .ps-exercise > div:not([data-testid="lp-instruction"]) {
   margin-top: 0;
 }
@@ -1424,12 +1442,29 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
 .ps-exercise [data-testid="lp-passage"] {
   border-bottom: 1px solid var(--ps-edge);
 }
-/* Chia đôi (từ lg): đường kẻ DỌC giữa đoạn và phiếu; một cột: giữ đường kẻ ngang ở dưới đoạn. */
+/* Chia đôi (từ lg): đường kẻ DỌC giữa đoạn và phiếu; một cột: giữ đường kẻ ngang ở dưới đoạn.
+   Hai cột cao BẰNG NHAU (lưới kéo giãn): đường kẻ dọc chạy suốt, phiếu giãn đầy cột và chân phiếu ("Kiểm tra bài này") nằm sát đáy. */
 @media (min-width: 1024px) {
   .ps-exercise > div.grid[data-split="true"] [data-testid="lp-passage"] {
     border-bottom: 0;
     border-right: 1px solid var(--ps-edge);
   }
+  .ps-exercise > div.grid[data-split="true"] > div:last-child {
+    display: flex;
+    flex-direction: column;
+  }
+  .ps-exercise > div.grid[data-split="true"] .practice-sheet {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .ps-exercise > div.grid[data-split="true"] .practice-sheet .ps-foot {
+    margin-top: auto;
+  }
+}
+/* Chân phiếu trong khung bài luyện: bỏ đường kẻ phía trên (chỉ còn mép dưới của thẻ), nút "Kiểm tra" và trạng thái nằm sát đáy. */
+.ps-exercise .practice-sheet .ps-foot {
+  border-top: 0;
 }
 .dark .practice-sheet,
 .dark .ps-paper-card {
