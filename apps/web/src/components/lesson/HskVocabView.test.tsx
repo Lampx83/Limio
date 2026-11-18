@@ -92,6 +92,8 @@ describe("HskVocabView — mục Từ mới của bài HSK tác giả", () => {
     act(() => root.render(<HskVocabView items={items} trackUrl="/api/lesson-media/audio/all.mp3" />));
     const a = host.querySelector(".hsk-vv-track audio") as HTMLAudioElement | null;
     expect(a?.getAttribute("src")).toBe("/api/lesson-media/audio/all.mp3");
+    // Trình phát của Limio: có nút chọn tốc độ.
+    expect(host.querySelector('.hsk-vv-track [aria-pressed]')).not.toBeNull();
     act(() => root.render(<HskVocabView items={items} />));
     expect(host.querySelector(".hsk-vv-track")).toBeNull();
     expect(host.querySelector("audio")).toBeNull();

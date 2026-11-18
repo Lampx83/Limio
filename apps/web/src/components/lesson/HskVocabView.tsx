@@ -1,5 +1,6 @@
 "use client";
 
+import AudioLessonPlayer from "@/components/AudioLessonPlayer";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Layers, LayoutGrid, Pause, Shuffle, Volume2 } from "lucide-react";
 import RubyText, { rubyPlan } from "@/components/RubyText";
@@ -30,7 +31,8 @@ export default function HskVocabView({ items: raw, lang = "vi", trackUrl }: { ti
       {trackUrl && (
         <div className="hsk-vv-track">
           <p className="hsk-vv-track-t">{t("learn.hsk.vocab.track")}</p>
-          <audio controls preload="metadata" src={trackUrl} aria-label={t("learn.hsk.vocab.track")} className="hsk-vv-track-audio" />
+          {/* Trình phát của Limio (thanh tua, tốc độ 0,75×/1×/1,25×, lặp lại), cùng kiểu với hội thoại. */}
+          <AudioLessonPlayer url={trackUrl} showTranscript={false} compact />
         </div>
       )}
       <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
@@ -221,12 +223,28 @@ function useParts(it: VocabViewItem) {
   return useMemo(() => ({ m: splitVocabMeaning(it.meaning), n: splitVocabNote(it.note) }), [it.meaning, it.note]);
 }
 
-function Example({ it, masked }: { it: VocabViewItem; masked: boolean }) {
+function Example({ it, masked, playingId, onAudio }: { it: VocabViewItem; masked: boolean; playingId?: string | null; onAudio?: (id: string, url: string) => void }) {
   if (!it.example) return null;
+  const exId = `${it.id}:ex`;
+  const playing = playingId === exId;
   return (
     <div className="hsk-vex">
       <p className="hsk-vex-han">
         <Han text={it.example} reading={it.exampleReading} masked={masked} />
+        {it.exampleAudioUrl && onAudio && (
+          <button
+            type="button"
+            aria-label={it.example}
+            aria-pressed={playing}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAudio(exId, it.exampleAudioUrl!);
+            }}
+            className={`hsk-vex-play ${playing ? "hsk-vex-play-on" : ""}`}
+          >
+            {playing ? <Pause size={14} aria-hidden /> : <Volume2 size={14} aria-hidden />}
+          </button>
+        )}
       </p>
       {it.exampleMeaning && <p className="hsk-vex-vi">{it.exampleMeaning}</p>}
     </div>
@@ -333,7 +351,7 @@ function Flash({ items, showReading, lang, playingId, onAudio }: { items: VocabV
                 {n.note}
               </span>
             )}
-            <Example it={it} masked={!showReading} />
+            <Example it={it} masked={!showReading} playingId={playingId} onAudio={onAudio} />
           </span>
         </div>
         {it.audioUrl && (

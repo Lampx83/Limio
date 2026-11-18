@@ -130,7 +130,8 @@ describe("đọc hai lần: nam trước, nữ sau (khoá tiếng Trung)", () =>
   const pcm = (n: number, v: number) => ({ sampleRate: 48000, samples: new Int16Array(n).fill(v) });
   it("pickMaleFemale chọn cặp nam–nữ đầu tiên và bỏ zf_xiaoni", async () => {
     const { pickMaleFemale } = await import("../vocab-audio");
-    expect(pickMaleFemale(["zf_xiaoni", "zf_xiaobei", "zm_yunxi", "zm_yunjian"])).toEqual({ male: "zm_yunxi", female: "zf_xiaobei" });
+    expect(pickMaleFemale(["zf_xiaoni", "zf_xiaobei", "zf_xiaoxiao", "zm_yunjian", "zm_yunxi"])).toEqual({ male: "zm_yunxi", female: "zf_xiaoxiao" });
+    expect(pickMaleFemale(["zf_xiaoni", "zf_xiaobei", "zm_yunjian"])).toEqual({ male: "zm_yunjian", female: "zf_xiaobei" });
     expect(pickMaleFemale(["zf_xiaoni", "zm_yunxi"])).toBeNull();
     expect(pickMaleFemale(["zf_xiaobei"])).toBeNull();
   });
@@ -205,5 +206,72 @@ describe("audio tổng hợp cả bảng từ", () => {
     expect(await attachVocabTrack({ items: [{ term: "租" }], audioUrl: "/x.mp3" }, ctx)).toBe(false);
     expect(await attachVocabTrack({ items: [{ term: "租" }], audioUrl: "/x.mp3" }, { ...ctx, force: true })).toBe(true);
     expect(await attachVocabTrack({ items: [{ term: "word" }] }, { ...ctx, language: "en" })).toBe(false);
+  });
+});
+
+describe("audio câu ví dụ (một giọng nữ chuẩn)", () => {
+  const pcm = { sampleRate: 48000, samples: new Int16Array(4800).fill(900) };
+  it("pickExampleVoice ưu tiên zf_xiaoxiao, bỏ zf_xiaoni", async () => {
+    const { pickExampleVoice } = await import("../vocab-audio");
+    expect(pickExampleVoice(["zf_xiaoni", "zf_xiaobei", "zf_xiaoxiao", "zm_yunxi"])).toBe("zf_xiaoxiao");
+    expect(pickExampleVoice(["zf_xiaoni", "zf_xiaobei"])).toBe("zf_xiaobei");
+  });
+  it("attachVocabExamples đọc cả câu một lần, một giọng, gắn exampleAudioUrl; bỏ mục không có câu chữ Hán; chỉ khoá zh", async () => {
+    const { attachVocabExamples } = await import("../vocab-audio");
+    const calls: string[] = [];
+    const synth: VocabSynth = {
+      voiceFor: () => "zf_xiaobei",
+      voicesOf: () => ["zf_xiaobei", "zf_xiaoxiao", "zm_yunxi"],
+      synthesize: async (t, v) => (calls.push(`mp3:${v}:${t}`), Buffer.from(t)),
+      synthesizePcm: async (t, v) => (calls.push(`pcm:${v}:${t}`), pcm),
+    };
+    const stored: Buffer[] = [];
+    const ctx = { synth, language: "zh", store: async (b: Buffer) => (stored.push(b), `/a/${stored.length}.mp3`) };
+    const items: Array<{ term: string; example?: string; exampleAudioUrl?: string }> = [
+      { term: "租", example: "我想租一间房子，离学校近一点。" },
+      { term: "桶" },
+      { term: "word", example: "no han here" },
+    ];
+    const r = await attachVocabExamples(items, ctx, new Map());
+    expect(r).toEqual({ attached: 1, failed: 0 });
+    expect(calls).toEqual(["mp3:zf_xiaoxiao:我想租一间房子，离学校近一点。"]);
+    expect(items[0]!.exampleAudioUrl).toBe("/a/1.mp3");
+    expect(items[1]!.exampleAudioUrl).toBeUndefined();
+    expect(await attachVocabExamples(items, { ...ctx, language: "en" }, new Map())).toEqual({ attached: 0, failed: 0 });
+  });
+});
+
+describe("OpenAI TTS: một giọng, mỗi từ hai lần trong một lượt", () => {
+  const okFetch = (log: Array<{ voice: string; input: string; instructions?: string }>) =>
+    (async (_u: unknown, init: { body: string }) => {
+      log.push(JSON.parse(init.body));
+      return new Response(Buffer.from("mp3"), { status: 200 });
+    }) as unknown as typeof fetch;
+  const dummy: VocabSynth = { voiceFor: () => "x", synthesize: async () => Buffer.from("") };
+  it("attachVocabAudio / Examples / Track gọi OpenAI đúng giọng, đúng chữ lặp, kèm lời dặn đọc chậm", async () => {
+    const { attachVocabExamples, attachVocabTrack } = await import("../vocab-audio");
+    const log: Array<{ voice: string; input: string; instructions?: string }> = [];
+    const stored: Buffer[] = [];
+    const ctx = { synth: dummy, language: "zh", store: async (b: Buffer) => (stored.push(b), `/a/${stored.length}.mp3`), openai: { apiKey: "k", voice: "ash", fetchImpl: okFetch(log) } };
+    const payload: { items: Array<{ term: string; example?: string; audioUrl?: string; exampleAudioUrl?: string }>; audioUrl?: string } = {
+      items: [{ term: "钥匙", example: "我找不到钥匙了。" }, { term: "房东" }],
+    };
+    expect(await attachVocabAudio(payload.items, ctx, new Map())).toEqual({ attached: 2, failed: 0 });
+    expect(await attachVocabExamples(payload.items, ctx, new Map())).toEqual({ attached: 1, failed: 0 });
+    expect(await attachVocabTrack(payload, ctx)).toBe(true);
+    expect(log.map((l) => [l.voice, l.input])).toEqual([
+      ["ash", "钥匙。 钥匙。"],
+      ["ash", "房东。 房东。"],
+      ["ash", "我找不到钥匙了。"],
+      ["ash", "钥匙。 钥匙。\n房东。 房东。"],
+    ]);
+    expect(log[0]!.instructions).toMatch(/slowly and clearly/);
+    expect(payload.items[0]!.audioUrl).toBe("/a/1.mp3");
+    expect(payload.audioUrl).toBeDefined();
+  });
+  it("lỗi OpenAI không làm hỏng cả lô: đếm failed", async () => {
+    const bad = (async () => new Response("no", { status: 401 })) as unknown as typeof fetch;
+    const ctx = { synth: dummy, language: "zh", store: async () => "/a.mp3", openai: { apiKey: "k", voice: "ash", fetchImpl: bad } };
+    expect(await attachVocabAudio([{ term: "钥匙" }], ctx, new Map())).toEqual({ attached: 0, failed: 1 });
   });
 });

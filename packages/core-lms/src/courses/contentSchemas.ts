@@ -200,6 +200,8 @@ export const VocabItem = z.object({
   exampleMeaning: optText(1000),
   note: optText(500),
   audioUrl: AudioUrl.optional(),
+  /** Audio đọc câu ví dụ (`example`), một giọng. */
+  exampleAudioUrl: AudioUrl.optional(),
 });
 
 export const VocabListPayload = z.object({

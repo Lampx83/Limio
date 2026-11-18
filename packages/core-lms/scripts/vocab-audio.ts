@@ -12,6 +12,7 @@
 
 import { getIntegrationSecret } from "../src/integrations/integrations";
 import { encodeMp3, parseWav, type Pcm } from "../src/narration/audio";
+import { openAiSpeech, repeatTwice, SENTENCE_INSTRUCTIONS, VOCAB_INSTRUCTIONS } from "./openai-tts";
 import { storePublicBuffer } from "./practice-spec";
 
 /** NEU TTS từ chối đoạn dài (413 từ ~3000 ký tự); một từ vựng không bao giờ gần mức đó. */
@@ -41,11 +42,22 @@ const genderOf = (voice: string): "f" | "m" | null => {
   return m ? (m[1]!.toLowerCase() as "f" | "m") : null;
 };
 
-/** Cặp giọng nam–nữ đầu tiên (theo thứ tự cổng trả về, bỏ giọng bị tránh); null nếu thiếu một trong hai. */
+/** Thứ tự ưu tiên khi chọn cặp giọng (giọng phổ thông chuẩn, chất lượng cao trước; `xiaobei`/`xiaoni` mang âm vùng nên xếp cuối). */
+const PREFERRED_FEMALE = ["zf_xiaoxiao", "zf_xiaoyi"];
+const PREFERRED_MALE = ["zm_yunxi", "zm_yunjian", "zm_yunyang"];
+
+/** Giọng đọc CÂU VÍ DỤ và audio không gắn với nhân vật: giọng nữ phổ thông chuẩn nhất có mặt (người duyệt chọn `zf_xiaoxiao`). */
+export function pickExampleVoice(voices: string[]): string | null {
+  const ok = voices.filter((v) => !AVOIDED_VOICES.includes(v));
+  return PREFERRED_FEMALE.find((v) => ok.includes(v)) ?? ok.find((v) => genderOf(v) === "f") ?? ok[0] ?? null;
+}
+
+/** Cặp giọng nam–nữ theo thứ tự ưu tiên rồi đến thứ tự cổng trả về (bỏ giọng bị tránh); null nếu thiếu một trong hai. */
 export function pickMaleFemale(voices: string[]): { male: string; female: string } | null {
   const ok = voices.filter((v) => !AVOIDED_VOICES.includes(v));
-  const male = ok.find((v) => genderOf(v) === "m");
-  const female = ok.find((v) => genderOf(v) === "f");
+  const pick = (g: "f" | "m", preferred: string[]) => preferred.find((v) => ok.includes(v)) ?? ok.find((v) => genderOf(v) === g);
+  const male = pick("m", PREFERRED_MALE);
+  const female = pick("f", PREFERRED_FEMALE);
   return male && female ? { male, female } : null;
 }
 
@@ -131,6 +143,10 @@ export interface VocabAudioContext {
   warn?: (msg: string) => void;
   /** Đọc lại cả mục đã có audio (thay audio cũ). */
   force?: boolean;
+  /** Dùng OpenAI TTS thay NEU: `voice` đọc cả từ (hai lần/ từ), câu ví dụ và audio tổng hợp. */
+  openai?: { apiKey: string; voice: string; fetchImpl?: typeof fetch };
+  /** Giọng đọc câu ví dụ (mặc định: nữ phổ thông chuẩn nhất có mặt). */
+  exampleVoice?: string;
   /** PCM "nam + nữ" của từng từ (khoá = chữ đọc), dùng lại để ghép audio tổng hợp mà không gọi cổng lần nữa. */
   pairPcm?: Map<string, Pcm>;
 }
@@ -145,6 +161,27 @@ export async function attachVocabAudio(
   cache: Map<string, string>,
 ): Promise<VocabAudioResult> {
   const result: VocabAudioResult = { attached: 0, failed: 0 };
+  if (ctx.openai) {
+    // OpenAI TTS: MỘT giọng, mỗi từ đọc hai lần trong MỘT lượt tạo âm (không cắt ghép), dặn đọc chậm, rõ, trọn âm cuối.
+    const o = ctx.openai;
+    for (const { item, text } of itemsNeedingAudio(items, ctx.language, ctx.force)) {
+      const key = `oa|${o.voice}|${text}`;
+      let url = cache.get(key);
+      if (!url) {
+        try {
+          url = await ctx.store(await openAiSpeech({ apiKey: o.apiKey, voice: o.voice, input: repeatTwice(text), instructions: VOCAB_INSTRUCTIONS, fetchImpl: o.fetchImpl }));
+          cache.set(key, url);
+        } catch (e) {
+          result.failed += 1;
+          ctx.warn?.(`Không đọc được "${text}": ${(e as Error).message}`);
+          continue;
+        }
+      }
+      item.audioUrl = url;
+      result.attached += 1;
+    }
+    return result;
+  }
   const voice = ctx.synth.voiceFor(ctx.language);
   if (!voice) return result;
   // Khoá tiếng Trung: mỗi từ đọc HAI lần trong một tệp, giọng nam trước, giọng nữ sau (như băng của giáo trình). Thiếu một trong hai giọng thì đọc một giọng như cũ.
@@ -175,6 +212,70 @@ export async function attachVocabAudio(
   return result;
 }
 
+/** Mục có câu ví dụ (chữ Hán) mà chưa có `exampleAudioUrl` (hoặc `force`). */
+export function itemsNeedingExampleAudio(items: VocabItemLike[], force = false): Array<{ item: VocabItemLike; text: string }> {
+  const out: Array<{ item: VocabItemLike; text: string }> = [];
+  for (const item of items) {
+    if (!force && typeof item.exampleAudioUrl === "string" && item.exampleAudioUrl) continue;
+    const ex = item.example;
+    if (typeof ex !== "string" || !/[㐀-鿿]/.test(ex) || ex.length > MAX_TERM_CHARS * 2) continue;
+    out.push({ item, text: ex.replace(/\s+/g, " ").trim() });
+  }
+  return out;
+}
+
+/**
+ * Gắn `exampleAudioUrl` cho từng mục có câu ví dụ: MỘT giọng ({@link pickExampleVoice}, mặc định nữ chuẩn), một lần đọc, có khoảng nghỉ ở dấu phẩy/chấm.
+ * Chỉ khoá tiếng Trung. Cùng một câu (cùng giọng) chỉ đọc và lưu một lần nhờ `cache`.
+ */
+export async function attachVocabExamples(
+  items: VocabItemLike[],
+  ctx: VocabAudioContext,
+  cache: Map<string, string>,
+): Promise<VocabAudioResult> {
+  const result: VocabAudioResult = { attached: 0, failed: 0 };
+  if (ctx.language !== "zh") return result;
+  if (ctx.openai) {
+    const o = ctx.openai;
+    for (const { item, text } of itemsNeedingExampleAudio(items, ctx.force)) {
+      const key = `oex|${o.voice}|${text}`;
+      let url = cache.get(key);
+      if (!url) {
+        try {
+          url = await ctx.store(await openAiSpeech({ apiKey: o.apiKey, voice: o.voice, input: text, instructions: SENTENCE_INSTRUCTIONS, fetchImpl: o.fetchImpl }));
+          cache.set(key, url);
+        } catch (e) {
+          result.failed += 1;
+          ctx.warn?.(`Không đọc được câu ví dụ "${text.slice(0, 16)}…": ${(e as Error).message}`);
+          continue;
+        }
+      }
+      item.exampleAudioUrl = url;
+      result.attached += 1;
+    }
+    return result;
+  }
+  const voice = ctx.exampleVoice ?? (ctx.synth.voicesOf ? pickExampleVoice(ctx.synth.voicesOf(ctx.language)) : ctx.synth.voiceFor(ctx.language));
+  if (!voice) return result;
+  for (const { item, text } of itemsNeedingExampleAudio(items, ctx.force)) {
+    const key = `ex|${voice}|${text}`;
+    let url = cache.get(key);
+    if (!url) {
+      try {
+        url = await ctx.store(await ctx.synth.synthesize(text, voice)); // một lần, tự nhiên (không cắt ghép vế)
+        cache.set(key, url);
+      } catch (e) {
+        result.failed += 1;
+        ctx.warn?.(`Không đọc được câu ví dụ "${text.slice(0, 16)}…": ${(e as Error).message}`);
+        continue;
+      }
+    }
+    item.exampleAudioUrl = url;
+    result.attached += 1;
+  }
+  return result;
+}
+
 /**
  * Audio TỔNG HỢP của cả bảng từ mới (khối `vocab_list`): mọi từ theo đúng thứ tự thẻ, mỗi từ đọc nam rồi nữ (như audio từng từ), cách nhau {@link TRACK_GAP_SEC}.
  * Gắn vào `payload.audioUrl`. Chỉ làm khi khoá tiếng Trung có cặp giọng nam–nữ; từ chưa có PCM trong `ctx.pairPcm` được đọc lại. Trả true nếu có audio mới.
@@ -183,7 +284,26 @@ export async function attachVocabTrack(
   payload: { items?: VocabItemLike[]; audioUrl?: unknown },
   ctx: VocabAudioContext,
 ): Promise<boolean> {
-  if (ctx.language !== "zh" || !ctx.synth.voicesOf || !ctx.synth.synthesizePcm) return false;
+  if (ctx.language !== "zh") return false;
+  if (ctx.openai) {
+    if (!ctx.force && typeof payload.audioUrl === "string" && payload.audioUrl) return false;
+    const o = ctx.openai;
+    const words = (payload.items ?? []).flatMap((it) => {
+      if (typeof it.term !== "string") return [];
+      const t = speakableTerm(it.term, ctx.language);
+      return t && t.length <= MAX_TERM_CHARS ? [repeatTwice(t)] : [];
+    });
+    if (words.length === 0) return false;
+    try {
+      // Cả bảng từ trong một yêu cầu (mỗi từ một dòng): máy tự nghỉ giữa các dòng, không cắt ghép tệp.
+      payload.audioUrl = await ctx.store(await openAiSpeech({ apiKey: o.apiKey, voice: o.voice, input: words.join("\n"), instructions: VOCAB_INSTRUCTIONS, fetchImpl: o.fetchImpl }));
+      return true;
+    } catch (e) {
+      ctx.warn?.(`Không đọc được audio tổng hợp: ${(e as Error).message}`);
+      return false;
+    }
+  }
+  if (!ctx.synth.voicesOf || !ctx.synth.synthesizePcm) return false;
   const pair = pickMaleFemale(ctx.synth.voicesOf(ctx.language));
   if (!pair) return false;
   if (!ctx.force && typeof payload.audioUrl === "string" && payload.audioUrl) return false;

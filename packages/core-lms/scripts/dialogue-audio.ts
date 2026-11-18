@@ -9,7 +9,7 @@
 
 import { createHash } from "node:crypto";
 import { getIntegrationSecret } from "../src/integrations/integrations";
-import { encodeMp3, parseWav } from "../src/narration/audio";
+import { encodeMp3, parseWav, type Pcm } from "../src/narration/audio";
 import { lessonAudioStore } from "./vocab-audio";
 
 /** NEU TTS từ chối đoạn dài (413 từ ~3000 ký tự). */
@@ -18,6 +18,8 @@ const MAX_TURN_CHARS = 2_500;
 /** Một đoạn chữ → MP3 bằng một giọng. Ném lỗi khi cổng trả lỗi. */
 export interface TurnSynth {
   synthesize(text: string, voice: string): Promise<Buffer>;
+  /** PCM thô của một vế (để ghép các vế có chèn khoảng nghỉ). Có thì lượt có dấu câu giữa chừng được đọc từng vế. */
+  synthesizePcm?(text: string, voice: string): Promise<Pcm>;
 }
 
 export interface DialogueAudioContext {
@@ -30,6 +32,8 @@ export interface DialogueAudioContext {
   genders?: Record<string, Gender>;
   /** Đọc lại cả lượt đã có audio (thay `audioUrl` cũ). */
   force?: boolean;
+  /** Giọng CỐ ĐỊNH của từng người nói (tên → tên giọng), dùng cho mọi hội thoại của khoá để nhân vật không đổi giọng giữa các hội thoại. Người nói không có trong bảng vẫn chia theo `genders`. */
+  voiceMap?: Record<string, string>;
 }
 
 interface TurnLike {
@@ -67,11 +71,20 @@ export function voiceGender(voice: string): Gender | null {
  * Giọng cho từng người nói, theo thứ tự xuất hiện. Có `genders` thì người nói nam dùng giọng nam, nữ dùng giọng nữ (mỗi người nói
  * một giọng khác nhau trong cùng giới, xoay vòng khi hết); thiếu thông tin thì xoay vòng trong mọi giọng.
  */
-export function assignVoices(speakers: string[], voices: string[], genders: Record<string, Gender> = {}): Map<string, string> {
+export function assignVoices(
+  speakers: string[],
+  voices: string[],
+  genders: Record<string, Gender> = {},
+  fixed: Record<string, string> = {},
+): Map<string, string> {
   const out = new Map<string, string>();
   const used = { f: 0, m: 0, any: 0 };
   for (const sp of speakers) {
     if (out.has(sp)) continue;
+    if (fixed[sp]) {
+      out.set(sp, fixed[sp]!);
+      continue;
+    }
     const g = genders[sp];
     const pool = g ? voices.filter((v) => voiceGender(v) === g) : [];
     if (pool.length > 0) out.set(sp, pool[used[g!]++ % pool.length]!);
@@ -92,7 +105,7 @@ export async function attachDialogueAudio(
   cache: Map<string, string>,
 ): Promise<DialogueAudioResult> {
   const result: DialogueAudioResult = { attached: 0, failed: 0 };
-  const voiceOf = assignVoices(turns.map((t) => t.speaker), ctx.voices, ctx.genders);
+  const voiceOf = assignVoices(turns.map((t) => t.speaker), ctx.voices, ctx.genders, ctx.voiceMap);
   for (const t of turns) {
     if (!ctx.force && typeof t.audioUrl === "string" && t.audioUrl) continue;
     const text = speakableTurn(t.text);
@@ -102,6 +115,7 @@ export async function attachDialogueAudio(
     let url = cache.get(key);
     if (!url) {
       try {
+        // Đọc TỰ NHIÊN cả lượt một lần (không cắt ghép vế): ghép tay làm khoảng nghỉ giữa hai câu quá dài, nghe rời rạc.
         url = await ctx.store(await ctx.synth.synthesize(text, voice));
         cache.set(key, url);
       } catch (e) {
@@ -145,19 +159,18 @@ export async function listVoices(language: string, fetchImpl: typeof fetch, secr
 /** Cổng NEU thật: POST `<base>/v1/speech` (Kong route theo đường dẫn nên `base` có thể kèm `/tts`), trả WAV → mã hoá MP3. */
 export function makeNeuSynth(baseUrl: string, apiKey: string, fetchImpl: typeof fetch = fetch): TurnSynth {
   const url = `${baseUrl.replace(/\/+$/, "")}/v1/speech`;
-  return {
-    synthesize: async (text, voice) => {
-      // Tuần tự ở caller: máy chủ NEU chỉ nhận 2 yêu cầu đồng thời.
-      const r = await fetchImpl(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": apiKey },
-        body: JSON.stringify({ text, voice, normalize: true }),
-        signal: AbortSignal.timeout(20_000),
-      });
-      if (!r.ok) throw new Error(`NEU TTS trả ${r.status}`);
-      return encodeMp3(parseWav(Buffer.from(await r.arrayBuffer())));
-    },
+  const wav = async (text: string, voice: string): Promise<Pcm> => {
+    // Tuần tự ở caller: máy chủ NEU chỉ nhận 2 yêu cầu đồng thời.
+    const r = await fetchImpl(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": apiKey },
+      body: JSON.stringify({ text, voice, normalize: true }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!r.ok) throw new Error(`NEU TTS trả ${r.status}`);
+    return parseWav(Buffer.from(await r.arrayBuffer()));
   };
+  return { synthesize: async (text, voice) => encodeMp3(await wav(text, voice)), synthesizePcm: wav };
 }
 
 /**

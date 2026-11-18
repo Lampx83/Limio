@@ -64,7 +64,7 @@ import { createPassage } from "../src/exam/passages";
 import { createExamQuestion } from "../src/exam/questions";
 import { createAudioAsset, createImageAsset } from "../src/exam/assets";
 import { attachDialogueAudio, prepareDialogueAudio, type DialogueAudioContext } from "./dialogue-audio";
-import { attachVocabAudio, attachVocabTrack, createNeuVocabSynth, lessonAudioStore, type VocabAudioContext } from "./vocab-audio";
+import { attachVocabAudio, attachVocabExamples, attachVocabTrack, createNeuVocabSynth, lessonAudioStore, type VocabAudioContext } from "./vocab-audio";
 import { validateContentPayload } from "../src/courses/contentSchemas";
 import { setVideoTranscript } from "../src/exam/passageAssets";
 import {
@@ -1898,6 +1898,7 @@ export async function populateLessonContent(
     for (const it of items) {
       if (it.type !== "vocab_list" || !Array.isArray(it.payload.items)) continue;
       const r = await attachVocabAudio(it.payload.items as Array<Record<string, unknown>>, ctx.vocabCtx, ctx.vocabCache ?? new Map());
+      await attachVocabExamples(it.payload.items as Array<Record<string, unknown>>, ctx.vocabCtx, ctx.vocabCache ?? new Map());
       await attachVocabTrack(it.payload as { items?: Array<Record<string, unknown>>; audioUrl?: unknown }, ctx.vocabCtx);
       if (ctx.vocabTotals) {
         ctx.vocabTotals.attached += r.attached;

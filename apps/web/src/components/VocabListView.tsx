@@ -22,6 +22,8 @@ export interface VocabViewItem {
   exampleMeaning?: string;
   note?: string;
   audioUrl?: string;
+  /** Audio đọc câu ví dụ. */
+  exampleAudioUrl?: string;
 }
 
 /**

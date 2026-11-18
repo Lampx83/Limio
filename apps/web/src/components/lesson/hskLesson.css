@@ -1601,3 +1601,23 @@
   display: block;
   width: 100%;
 }
+
+/* Nút nghe câu ví dụ cạnh câu. */
+.lesson-hsk .hsk-vex-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  border: 1px solid var(--hk-line);
+  border-radius: 999px;
+  background: rgb(var(--surface));
+  color: var(--hk-deep);
+  cursor: pointer;
+}
+.lesson-hsk .hsk-vex-play:hover,
+.lesson-hsk .hsk-vex-play-on {
+  background: var(--hk-soft);
+}

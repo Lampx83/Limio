@@ -175,3 +175,27 @@ describe("giọng theo giới tính", () => {
     expect(turns[0]!.audioUrl).toBe("/api/lesson-media/audio/new.mp3");
   });
 });
+
+describe("giọng cố định và ngắt nghỉ (khoá HSK)", () => {
+  it("hội thoại đọc tự nhiên cả lượt MỘT lần, không cắt ghép vế", async () => {
+    const { attachDialogueAudio } = await import("../dialogue-audio");
+    const calls: string[] = [];
+    const ctx = {
+      synth: { synthesize: async (t: string, v: string) => (calls.push(`${v}:${t}`), Buffer.from(t)) },
+      voices: ["zf_xiaoyi", "zm_yunxi"],
+      store: async () => "/a/1.mp3",
+    };
+    await attachDialogueAudio([{ speaker: "林雨", text: "二位好，请进。" }], ctx as never, new Map());
+    expect(calls).toEqual(["zf_xiaoyi:二位好，请进。"]);
+  });
+  it("assignVoices dùng giọng cố định cho nhân vật, dù thứ tự xuất hiện khác nhau giữa hai hội thoại", async () => {
+    const { assignVoices } = await import("../dialogue-audio");
+    const voices = ["zf_xiaobei", "zf_xiaoyi", "zm_yunjian", "zm_yunxi"];
+    const fixed = { 林雨: "zf_xiaobei", 赵叔叔: "zm_yunjian", 方强: "zm_yunxi" };
+    const genders = { 林雨: "f", 赵叔叔: "m", 方强: "m" } as const;
+    const a = assignVoices(["赵叔叔", "林雨", "方强"], voices, genders, fixed);
+    const b = assignVoices(["方强", "赵叔叔", "林雨"], voices, genders, fixed);
+    expect([a.get("林雨"), a.get("赵叔叔"), a.get("方强")]).toEqual(["zf_xiaobei", "zm_yunjian", "zm_yunxi"]);
+    expect([b.get("林雨"), b.get("赵叔叔"), b.get("方强")]).toEqual(["zf_xiaobei", "zm_yunjian", "zm_yunxi"]);
+  });
+});
