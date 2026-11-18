@@ -13,6 +13,18 @@ describe("roleplaySpeakable", () => {
   });
 });
 
+describe("roleVoices — bảng giọng cố định (OpenAI)", () => {
+  it("dùng đúng giọng đã định cho từng vai, không phụ thuộc giới tính", () => {
+    const v = roleVoices({ A: "方强", B: "林雨" }, [], {}, { 方强: "echo", 林雨: "nova" });
+    expect(v).toEqual({ A: "echo", B: "nova" });
+  });
+  it("vai thiếu trong bảng thì tự chọn, vai có trong bảng giữ nguyên", () => {
+    const v = roleVoices({ A: "同学", B: "林雨" }, ["zf_xiaobei", "zm_yunxi"], { 同学: "m" }, { 林雨: "nova" });
+    expect(v.B).toBe("nova");
+    expect(v.A).toBeTruthy();
+  });
+});
+
 describe("roleVoices", () => {
   it("vai nam dùng giọng nam, vai nữ dùng giọng nữ", () => {
     const v = roleVoices({ A: "刘明", B: "王一雪" }, ["zf_xiaobei", "zm_yunxi"], { 刘明: "m", 王一雪: "f" });

@@ -55,14 +55,34 @@ const HAN_CHUNK = /([\u3400-\u9fff][\u3400-\u9fff\u3000-\u303f\uff00-\uffef\u201
  */
 const NO_RUBY_LABEL = /^(?:[的地得]|[\u3400-\u9fff]\s*[A-Za-z0-9]{1,2})$/;
 
+const bareLetters = (t: string) =>
+  t
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z]/g, "");
+const TRAILING_GLOSS = /^(.*[\u3400-\u9fff])\s*[·•]\s*([^\u3400-\u9fff]+)$/s;
+
+/** Bỏ "· pinyin" cuối nhãn nếu đúng là pinyin của chính các chữ Hán đứng trước (so theo chữ cái, bỏ dấu thanh); nghĩa tiếng Việt sau dấu chấm giữa thì giữ. */
+export function withoutTrailingGloss(text: string, syllables: string[]): string {
+  const m = TRAILING_GLOSS.exec(text.trim());
+  if (!m) return text;
+  const head = m[1]!;
+  const hanCount = (head.match(/[\u3400-\u9fff]/g) ?? []).length;
+  if (hanCount !== syllables.length) return text;
+  return bareLetters(m[2]!) === bareLetters(syllables.join("")) ? head : text;
+}
+
 /**
  * Văn bản có chữ Hán kèm pinyin dưới từng chữ (kiểu giáo trình) khi có bộ tính; không thì chữ trơn. Văn bản lẫn chữ Việt (lời giải thích) chỉ đặt pinyin
  * cho từng cụm chữ Hán, phần chữ Việt vẫn xuống dòng bình thường. Chữ không tra được âm giữ nguyên, không có pinyin.
  */
-export default function PinyinLabel({ text }: { text: string }) {
+export default function PinyinLabel({ text: raw }: { text: string }) {
   const fn = useSyllables();
-  const syl = fn && !NO_RUBY_LABEL.test(text.trim()) ? fn(text) : null;
-  if (!syl) return <>{text}</>;
+  const syl = fn && !NO_RUBY_LABEL.test(raw.trim()) ? fn(raw) : null;
+  if (!syl) return <>{raw}</>;
+  // Nhãn tác giả ghi sẵn "钥匙 · yàoshi": khi đã có pinyin dưới chữ thì bỏ phần ghi thêm ở sau, kẻo pinyin hiện hai lần.
+  const text = withoutTrailingGloss(raw, syl);
   const parts = text.split(HAN_CHUNK);
   const slices = sliceByHan(
     syl,

@@ -858,9 +858,13 @@ export default async function LessonPage({
   // Bài ngoại ngữ trong khung: lý thuyết ở trên, mỗi khối Bài luyện một tab (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md AC5–AC6).
   // Chỉ khi người xem thật sự thấy khối bài luyện, và không ở màn "Từ vựng".
   const practiceIds = new Set(Object.keys(practiceBlocks));
+  // Bài HSK: các mục đứng SAU khối Bài luyện cuối (tự đánh giá, tổng kết) hiện sau thanh Luyện tập chứ không chen vào lý thuyết.
+  const lastPracticeAt = hskDecor ? shownItems.map((it) => practiceIds.has(it.id)).lastIndexOf(true) : -1;
+  const hskTailItems = lastPracticeAt >= 0 ? shownItems.slice(lastPracticeAt + 1) : [];
+  const sectionSource = lastPracticeAt >= 0 ? shownItems.slice(0, lastPracticeAt + 1) : shownItems;
   const sections =
     languageSkin && lessonFrame && practiceIds.size > 0 && lessonView === "lesson" ? splitLessonSections(
-          shownItems,
+          sectionSource,
           practiceIds,
           new Map([...practiceEmbeds].map(([id, v]) => [id, v.embed.passages.map((x) => x.title)])),
           new Set([...practiceEmbeds].filter(([, v]) => hoistReadingPassages(v.embed).hoisted.length > 0).map(([id]) => id)),
@@ -971,6 +975,9 @@ export default async function LessonPage({
             // Banner phần của sách (FUNCTION, LEARN TO) và số trang đứng trước khối: nằm ở đầu tab đầu tiên của khối.
             const introHtml = (tab.intro ?? []).map((x) => (x.payload as { html?: string } | undefined)?.html ?? "").join("");
             const introNode = introHtml ? <LessonRichText html={markLabelBold(introHtml)} className="!mb-3" /> : null;
+            // Hộp mở/đóng sau bài luyện (bản chữ Hán + pinyin + dịch của bài đọc): cuối tab, sau phiếu làm bài.
+            const afterHtml = (tab.after ?? []).map((x) => (x.payload as { html?: string } | undefined)?.html ?? "").join("");
+            const afterNode = afterHtml ? <LessonRichText html={afterHtml} hskKind={hskDecor ? "authored" : undefined} className="!mt-4" /> : null;
             if (info && groups.length >= 2) {
               return groups.map((g, k) => ({
                 id: `${tab.id}~${k}`,
@@ -1009,6 +1016,7 @@ export default async function LessonPage({
                     {/* Tab bạn ảo có câu yêu cầu của sách: câu đó nằm CHUNG thẻ đề với lời mời bạn ảo (LessonPractice `lead`), không dựng thẻ riêng. */}
                     {info && embed && tab.virtualPartner && leadNode ? null : leadNode}
                     {info && embed && ((hoist && hoist.hoisted.length > 0) || (tab.virtualPartner && leadNode)) ? renderBlock(embed, info, false, tab.virtualPartner && !!leadNode, tab.virtualPartner && leadNode && leadHtml ? { code: tab.label, title: leadTitle, html: leadHtml } : undefined) : info && embed && !tab.virtualPartner && splitEmbedByPassage(embed).length >= 2 ? renderStacked(embed, info, false) : practiceBlocks[tab.id]}
+                    {afterNode}
                   </>
                 ),
               },
@@ -1333,6 +1341,20 @@ export default async function LessonPage({
             {hskDecor && <HskSectionHead no={planHskSections(sections ? sections.theory : shownItems).count + 1} section={HSK_SECTIONS.practice} tone="pink" lang={hskLang} />}
             <PracticeTabs tabs={practiceTabItems} hsk={hskDecor} />
           </>
+        )}
+        {sections && practiceTabItems.length > 0 && hskTailItems.length > 0 && (
+          <div className="mt-6">
+            <LessonContent
+              items={hskTailItems}
+              courseId={lesson.module.course.id}
+              lessonId={lesson.id}
+              blocks={{ ...practiceBlocks, ...examRefBlocks }}
+              numberTranscripts={languageSkin}
+              hsk={hskDecor}
+              hskLang={hskLang}
+              hskStartNo={planHskSections(sections.theory).count + 1}
+            />
+          </div>
         )}
         </div>
         <div

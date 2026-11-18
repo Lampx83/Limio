@@ -1699,3 +1699,55 @@
     height: 8rem;
   }
 }
+
+/* ---------- Đầu bài vuông vức: khối đầu bài, con dấu và khung Mục tiêu / Tổng kết không bo góc ---------- */
+.lesson-hsk .hsk-hero,
+.lesson-hsk .hsk-note {
+  border: 0;
+  border-radius: 0;
+}
+/* Đổ màu cùng một tông xanh Limio, đậm dần từ trên xuống: thanh tên nhóm bài (đậm nhất) → đầu bài → khung Mục tiêu / Tổng kết (nhạt nhất). Không viền. */
+.lesson-hsk .hsk-hero {
+  background: linear-gradient(135deg, color-mix(in srgb, rgb(var(--brand)) 20%, rgb(var(--surface))) 0%, color-mix(in srgb, rgb(var(--brand)) 9%, rgb(var(--surface))) 100%);
+}
+.lesson-hsk .hsk-hero::before {
+  background: radial-gradient(circle at 100% 60%, rgb(var(--brand) / 0.1) 0 120px, transparent 121px);
+}
+.lesson-hsk .hsk-hero::after {
+  color: rgb(var(--brand) / 0.09);
+}
+.lesson-hsk .hsk-note,
+.lesson-hsk .hsk-note-sum {
+  background: color-mix(in srgb, rgb(var(--brand)) 6%, rgb(var(--surface)));
+}
+.lesson-hsk .hsk-seal {
+  border-radius: 0;
+  transform: none;
+  box-shadow: 5px 5px 0 var(--hk-deep);
+}
+
+/* ---------- Thẻ đồng bộ: mọi thẻ của bài HSK vuông góc, không đường viền, đổ nền cùng tông xanh Limio ---------- */
+.lesson-hsk {
+  --hk-card: color-mix(in srgb, rgb(var(--brand)) 6%, rgb(var(--surface)));
+}
+.lesson-hsk :is(.hsk-sn, .hsk-grammar, .hsk-wc, .hsk-pos, .hsk-tab, .hsk-tab-ic, .hsk-scn, .hsk-brief, .hsk-dlg, .hsk-dlg ul > li.hsk-turn, .hsk-pill, .hsk-ex, .hsk-gexp, .hsk-gnote, .hsk-goal, .hsk-step, .hsk-fig img, .hsk-tw, .hsk-aside, .hsk-ap, .hsk-ap-head, .hsk-card-culture, .hsk-fc-inner, .hsk-fc-face, .hsk-vex, .hsk-vi, .hsk-vv-track, .char-card) {
+  border-radius: 0;
+}
+/* Đường viền mảnh thành trong suốt (giữ nguyên kích thước; trạng thái chọn/rê chuột vẫn đổi màu viền như cũ). */
+.lesson-hsk :is(.hsk-grammar, .hsk-wc, .hsk-tab, .hsk-scn, .hsk-dlg, .hsk-tw, .hsk-aside, .hsk-ap, .hsk-vi, .hsk-vv-track, .char-card, .hsk-card-culture, .hsk-goal) {
+  border-color: transparent;
+}
+/* Vạch nhấn giữ lại: thẻ từ (trên), mục tiêu (trái). */
+.lesson-hsk .hsk-wc {
+  border-top-color: var(--hk-pink-line);
+}
+.lesson-hsk .hsk-goal {
+  border-left-color: rgb(var(--brand));
+}
+.lesson-hsk :is(.hsk-wc, .hsk-tab, .hsk-scn, .hsk-dlg, .hsk-tw, .hsk-aside, .hsk-vi, .hsk-goal, .hsk-ex, .hsk-gnote) {
+  background: var(--hk-card);
+}
+/* Thẻ nằm trong khung xanh nhạt (ngữ pháp, ghi chú) thì nền trắng để vẫn tách khỏi khung. */
+.lesson-hsk :is(.hsk-grammar, .hsk-ap) :is(.hsk-ex, .hsk-gnote, .hsk-gexp, .hsk-step, .hsk-aside, .hsk-tw) {
+  background: rgb(var(--surface));
+}

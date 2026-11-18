@@ -39,10 +39,18 @@ interface RoleplayConfig {
 }
 
 /** Giọng cho vai A và B: người đóng vai nam/nữ (tra `genders` theo tên vai) dùng giọng đúng giới, hai vai khác giọng. */
-export function roleVoices(roles: { A?: string; B?: string } | undefined, voices: string[], genders: Record<string, Gender>): Record<"A" | "B", string> {
+export function roleVoices(
+  roles: { A?: string; B?: string } | undefined,
+  voices: string[],
+  genders: Record<string, Gender>,
+  voiceMap?: Record<string, string>,
+): Record<"A" | "B", string> {
   const names = [roles?.A || "A", roles?.B || "B"];
+  // `voiceMap` = {tên vai: tên giọng} cố định (dùng với OpenAI TTS: cùng nhân vật cùng giọng ở mọi hội thoại). Vai không có trong bảng thì tự chọn như cũ.
+  const fixed = names.map((n) => voiceMap?.[n]);
+  if (fixed.every(Boolean)) return { A: fixed[0]!, B: fixed[1]! };
   const m = assignVoices(names, voices, genders);
-  return { A: m.get(names[0]!)!, B: m.get(names[1]!)! };
+  return { A: fixed[0] ?? m.get(names[0]!)!, B: fixed[1] ?? m.get(names[1]!)! };
 }
 
 export interface RoleplayFill {
@@ -59,11 +67,11 @@ export interface RoleplayFill {
  */
 export async function fillRoleplayAudio(
   config: unknown,
-  opts: { voices: string[]; genders: Record<string, Gender>; force?: boolean; synthesize: (text: string, voice: string) => Promise<string>; warn?: (m: string) => void },
+  opts: { voices: string[]; genders: Record<string, Gender>; voiceMap?: Record<string, string>; force?: boolean; synthesize: (text: string, voice: string) => Promise<string>; warn?: (m: string) => void },
 ): Promise<RoleplayFill> {
   const rp = (config as { roleplay?: RoleplayConfig } | null)?.roleplay;
   if (!rp || !Array.isArray(rp.turns)) return { config, attached: 0, failed: 0 };
-  const voiceOf = roleVoices(rp.roles, opts.voices, opts.genders);
+  const voiceOf = roleVoices(rp.roles, opts.voices, opts.genders, opts.voiceMap);
   const cache = new Map<string, string>();
   let attached = 0;
   let failed = 0;

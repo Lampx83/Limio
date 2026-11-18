@@ -48,7 +48,7 @@ export function classifyHskItem(item: ItemLike, index: number): HskKind {
 }
 
 /** Loại từng khối + số mục (1, 2, …) cho khối đầu tiên của mỗi loại hội thoại / từ mới / ngữ pháp. */
-export function planHskSections(items: ItemLike[]): {
+export function planHskSections(items: ItemLike[], startNo = 0): {
   kinds: HskKind[];
   headAt: Map<number, { no: number; section: HskSection }>;
   count: number;
@@ -57,7 +57,7 @@ export function planHskSections(items: ItemLike[]): {
 } {
   if (isAuthoredLesson(items)) {
     const kinds: HskKind[] = items.map((it) => (it.type === "dialogue" ? "dialogue" : it.type !== "richtext" ? "other" : authoredKind(htmlOf(it))));
-    const { segs, count } = planAuthored(items, kinds);
+    const { segs, count } = planAuthored(items, kinds, startNo);
     return { kinds, headAt: new Map(), count, segs };
   }
   const kinds = items.map((it, i) => classifyHskItem(it, i));

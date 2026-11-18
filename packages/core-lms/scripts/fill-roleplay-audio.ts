@@ -3,6 +3,7 @@
  *
  *   node --env-file=../db/.env.prod-import --import tsx scripts/fill-roleplay-audio.ts --course <courseId> --owner <email> [--genders speakers.json] [--force] [--dry-run]
  *
+ * `--provider openai --voices voices.json` = đọc bằng OpenAI TTS, giọng cố định theo tên vai ({"林雨": "nova", "方强": "echo"}; khoá OpenAI lấy từ DB hoặc biến OPENAI_API_KEY).
  * Chỉ thêm `audio` cho lượt chưa có (`--force`: đọc lại cả lượt đã có); không đổi chữ, vai hay phiên âm giáo viên đã ghi. `--genders` = {"tên vai": "f"|"m"}
  * để chọn giọng nam/nữ. Cấu hình NEU lấy từ DB (cần SECRETS_MASTER_KEY); cổng chỉ với tới qua đường hầm thì đặt NEUTTS_BASE_URL_OVERRIDE. Cần UPLOADS_ROOT.
  */
@@ -12,6 +13,8 @@ import { createAudioAsset } from "../src/exam/assets";
 import { updateExamQuestion } from "../src/exam/questions";
 import { storePublicBuffer } from "./practice-spec";
 import { resolveNeu, type Gender } from "./dialogue-audio";
+import { getIntegrationSecret } from "../src/integrations/integrations";
+import { openAiSpeech, sentenceInstructionsFor } from "./openai-tts";
 import { fillRoleplayAudio } from "./roleplay-audio";
 
 function arg(name: string): string | undefined {
@@ -25,6 +28,9 @@ async function main() {
   const dryRun = process.argv.includes("--dry-run");
   const force = process.argv.includes("--force");
   const gendersFile = arg("genders");
+  const voicesFile = arg("voices");
+  const voiceMap = voicesFile ? (JSON.parse(readFileSync(voicesFile, "utf8")) as Record<string, string>) : undefined;
+  const openai = arg("provider") === "openai";
   const genders = gendersFile ? (JSON.parse(readFileSync(gendersFile, "utf8")) as Record<string, Gender>) : {};
   if (!courseId || !ownerEmail) {
     console.error("Dùng: --course <courseId> --owner <email> [--genders file.json] [--force] [--dry-run]");
@@ -48,14 +54,24 @@ async function main() {
   console.log(`Khoá "${course.title}" (${language}): ${withRp.length} câu đóng vai, ${need.length} ${force ? "sẽ đọc lại" : "còn lượt chưa có audio"}.`);
   if (dryRun || need.length === 0) return;
 
-  const { synth, voices } = await resolveNeu(language);
-  console.log(`Giọng NEU "${language}": ${voices.join(", ")}`);
+  let synth: { synthesize: (text: string, voice: string) => Promise<Buffer> };
+  let voices: string[];
+  if (openai) {
+    const apiKey = process.env.OPENAI_API_KEY || (await getIntegrationSecret("openai"));
+    synth = { synthesize: (text, voice) => openAiSpeech({ apiKey, voice, input: text, instructions: sentenceInstructionsFor(voice) }) };
+    voices = [...new Set(Object.values(voiceMap ?? {}))];
+    console.log(`Giọng OpenAI: ${voices.join(", ")}`);
+  } else {
+    ({ synth, voices } = await resolveNeu(language));
+    console.log(`Giọng NEU "${language}": ${voices.join(", ")}`);
+  }
   let attached = 0;
   let failed = 0;
   for (const q of need) {
     const r = await fillRoleplayAudio(q.config, {
       voices,
       genders,
+      voiceMap,
       force,
       warn: (m) => console.warn(`⚠ ${m}`),
       synthesize: async (text, voice) => {

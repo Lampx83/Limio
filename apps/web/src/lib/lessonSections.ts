@@ -17,6 +17,11 @@ export interface SectionTab<T extends SectionItem> {
   label: string;
   lead: T[];
   /**
+   * Hộp mở/đóng (`<details>`) đứng ngay sau khối bài luyện (vd bản chữ Hán, pinyin và dịch của bài đọc, "mở sau khi làm xong"): hiện ở CUỐI tab của bài luyện đó
+   * chứ không nằm trong phần lý thuyết. Không có thì bỏ trống.
+   */
+  after?: T[];
+  /**
    * Banner phần của sách (FUNCTION, LEARN TO) và số trang đứng ngay trước khối này: đi cùng tab đầu tiên của khối thay vì đứng trơ trọi trên
    * đầu bài. Không có thì bỏ trống.
    */
@@ -374,6 +379,16 @@ export function splitLessonSections<T extends SectionItem>(
       return;
     }
     const cuts = [...(removed.has(i) ? [removed.get(i)!] : []), ...(stmtCuts.get(i) ?? [])];
+    // Hộp mở/đóng đứng ngay sau một khối bài luyện thì đi theo tab của khối đó; phần chữ còn lại của khối vẫn là lý thuyết.
+    const prev = items[i - 1];
+    const prevTab = tabs[tabs.length - 1];
+    const own = chunks.get(i);
+    if (it.type === "richtext" && own && prev && prev.type === "exam_practice" && practiceIds.has(prev.id) && prevTab?.id === prev.id && /^<details[\s>]/i.test(own.nodes[0] ?? "") && cuts.length === 0) {
+      prevTab.after = [{ ...it, id: `${it.id}~after`, payload: { ...(it.payload as object), html: own.nodes[0]! } } as T];
+      const rest = own.nodes.slice(1).join("");
+      if (rest.trim()) theory.push({ ...it, payload: { ...(it.payload as object), html: rest } } as T);
+      return;
+    }
     // Khối chữ chỉ còn banner phần / số trang / tiêu đề "Exercise N" mà liền sau là một khối bài luyện: banner đi cùng tab đầu của khối; số trang đơn lẻ bỏ.
     // Banner đầu bài (chưa có lý thuyết nào đứng trước) ở lại để trang vẫn mở đầu bằng banner.
     const next = items[i + 1];

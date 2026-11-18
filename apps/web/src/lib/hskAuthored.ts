@@ -132,9 +132,10 @@ export interface AuthoredSeg {
  * Đánh số mục cho cả bài tác giả: mỗi `<h2 id="muc-…">` là một mục, trừ tiêu đề có cùng tên với mục liền trước (hội thoại A rồi B) chỉ thêm nhãn nhỏ.
  * Trả đoạn của từng khối chữ theo vị trí khối trong bài, và tổng số mục (để đánh số mục "Luyện tập" cuối bài).
  */
-export function planAuthored(items: ItemLike[], kinds: string[]): { segs: Map<number, AuthoredSeg[]>; count: number } {
+export function planAuthored(items: ItemLike[], kinds: string[], startNo = 0): { segs: Map<number, AuthoredSeg[]>; count: number } {
   const segs = new Map<number, AuthoredSeg[]>();
-  let no = 0;
+  // `startNo`: phần đặt SAU mục "Luyện tập" (tự đánh giá, tổng kết) đánh số tiếp từ số mục cuối cùng của trang.
+  let no = startNo;
   let lastZh = "";
   items.forEach((it, i) => {
     if (kinds[i] !== "authored") return;

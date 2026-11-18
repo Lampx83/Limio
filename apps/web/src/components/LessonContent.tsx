@@ -122,12 +122,15 @@ export default function LessonContent({
   numberTranscripts = false,
   hsk = false,
   hskLang = "vi",
+  hskStartNo = 0,
 }: {
   items: ContentItem[];
   /** Ngôn ngữ của khoá cho tiêu đề mục và nhãn của giao diện HSK ("vi" mặc định). */
   hskLang?: "vi" | "en";
   /** Giao diện bài HSK (xem lib/hskLesson.ts): mục đánh số, khối không khung, thẻ từ mới có flashcard. */
   hsk?: boolean;
+  /** Số mục đã dùng trước khối này (phần đặt sau "Luyện tập" đánh số tiếp). */
+  hskStartNo?: number;
   courseId?: string;
   lessonId?: string;
   /**
@@ -147,7 +150,7 @@ export default function LessonContent({
    */
   interactive?: boolean;
 }) {
-  const plan = hsk ? planHskSections(items) : null;
+  const plan = hsk ? planHskSections(items, hskStartNo) : null;
   return (
     // Khung bài học Language (kiểu sách): các khối liền nhau hơn (câu yêu cầu và phiếu của nó là một cụm), không cách nhau cả một khoảng trắng.
     <div className={numberTranscripts ? "space-y-4" : "space-y-6"}>
