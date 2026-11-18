@@ -7,7 +7,7 @@ import RubyText, { rubyPlan } from "@/components/RubyText";
 import HanFontLoader from "@/components/HanFontLoader";
 import type { VocabViewItem } from "@/components/VocabListView";
 import { useExclusiveAudio } from "@/components/useExclusiveAudio";
-import { cleanVocabItems, hasHanChars, shortVocabTag, splitVocabMeaning, splitVocabNote, vocabHanPieces } from "@/lib/hskVocab";
+import { cleanVocabItems, hasHanChars, markTermTokens, shortVocabTag, splitVocabMeaning, splitVocabNote, vocabHanPieces } from "@/lib/hskVocab";
 import { hskT } from "./hskT";
 import HanziStrokeDialog from "./HanziStrokeDialog";
 import type { UiLang } from "@/lib/i18n/core";
@@ -217,14 +217,29 @@ function DialogFoot({ it, lang }: { it: VocabViewItem; lang: UiLang }) {
   );
 }
 
+/** Câu không có pinyin thẳng hàng: vẫn tô màu từ mới ở những chỗ nó xuất hiện. */
+function PlainHl({ text, term }: { text: string; term: string }) {
+  const parts = markTermTokens(text, term);
+  return (
+    <>
+      {parts.map((p, i) => (
+        <span key={i} className={p.hl ? "rp-key" : undefined}>
+          {p.text}
+          {p.sep}
+        </span>
+      ))}
+    </>
+  );
+}
+
 /** Chữ Hán có pinyin dưới từng chữ (ghép được) hoặc kèm dòng pinyin nhỏ dưới; tắt pinyin = làm mờ, vẫn giữ chỗ. */
-function Han({ text, reading, masked, className }: { text: string; reading?: string; masked: boolean; className?: string }) {
+function Han({ text, reading, masked, className, hl }: { text: string; reading?: string; masked: boolean; className?: string; hl?: string }) {
   const plan = rubyPlan(text, reading);
   return (
     <>
       <HanFontLoader lang={plan.lang} />
       <span lang={plan.lang} className={`${plan.syllables ? "ruby-line " : ""}${className ?? ""}`}>
-        {plan.syllables ? <RubyText text={text} syllables={plan.syllables} masked={masked} /> : text}
+        {plan.syllables ? <RubyText text={text} words={hl ? markTermTokens(text, hl) : undefined} syllables={plan.syllables} masked={masked} /> : hl ? <PlainHl text={text} term={hl} /> : text}
       </span>
       {!plan.syllables && reading && (
         <span data-masked={masked ? "true" : undefined} className={`hsk-py block ${masked ? "select-none blur-sm" : ""}`}>
@@ -246,7 +261,7 @@ function Example({ it, masked, playingId, onAudio }: { it: VocabViewItem; masked
   return (
     <div className="hsk-vex">
       <p className="hsk-vex-han">
-        <Han text={it.example} reading={it.exampleReading} masked={masked} />
+        <Han text={it.example} reading={it.exampleReading} masked={masked} hl={it.term} />
         {it.exampleAudioUrl && onAudio && (
           <button
             type="button"

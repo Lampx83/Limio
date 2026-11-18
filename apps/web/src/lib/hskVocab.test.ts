@@ -48,3 +48,18 @@ describe("hskVocab — thẻ lỗi", () => {
     expect(cleanVocabItems(undefined)).toEqual([]);
   });
 });
+
+describe("markTermTokens", () => {
+  it("đánh dấu mọi chữ của từ mới trong câu ví dụ, dấu câu thì không", async () => {
+    const { markTermTokens } = await import("./hskVocab");
+    const r = markTermTokens("我想租一间房子，房子很小。", "房子");
+    expect(r.filter((t) => t.hl).map((t) => t.text).join("")).toBe("房子房子");
+    expect(r.find((t) => t.text === "，")!.hl).toBe(false);
+    expect(r.filter((t) => t.hl).length).toBe(4);
+  });
+  it("từ không xuất hiện hoặc rỗng: không đánh dấu", async () => {
+    const { markTermTokens } = await import("./hskVocab");
+    expect(markTermTokens("今天天气很好。", "房子").some((t) => t.hl)).toBe(false);
+    expect(markTermTokens("今天天气很好。", "").some((t) => t.hl)).toBe(false);
+  });
+});

@@ -6,6 +6,8 @@ export interface RubyWord {
   scored?: boolean;
   ok?: boolean;
   sep?: string;
+  /** Chữ thuộc từ cần nhấn (vd. từ mới trong câu ví dụ): tô màu riêng (`.rp-key`). */
+  hl?: boolean;
 }
 
 /** Ghép sẵn: các đơn vị của câu và (nếu ghép được) âm tiết cho từng chữ Hán. Dùng để biết trước nên hiện pinyin thẳng hàng hay ở dòng riêng. */
@@ -47,7 +49,7 @@ export default function RubyText({
         <span key={gi} className="whitespace-nowrap">
           {g.map((w, j) => {
             const syl = w.scored ? syllables[k++] : undefined;
-            const base = <span className={w.ok === false ? "rp-miss" : undefined}>{w.text}</span>;
+            const base = <span className={w.ok === false ? "rp-miss" : w.hl ? "rp-key" : undefined}>{w.text}</span>;
             return (
               <span key={j}>
                 {syl ? (

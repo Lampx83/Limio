@@ -75,3 +75,24 @@ export function cleanVocabItems<T extends { id?: string; term?: unknown; meaning
   });
   return out;
 }
+
+/**
+ * Cắt câu thành đơn vị hiển thị (như `hanTokens`) và đánh dấu `hl` cho các chữ nằm trong những chỗ `term` xuất hiện: để tô màu từ mới trong câu ví dụ.
+ * `term` rỗng hoặc không xuất hiện thì không đánh dấu chữ nào.
+ */
+export function markTermTokens(text: string, term: string): Array<{ text: string; scored: boolean; sep: string; hl: boolean }> {
+  const ranges: Array<[number, number]> = [];
+  const key = term.trim();
+  if (key) for (let i = text.indexOf(key); i >= 0; i = text.indexOf(key, i + key.length)) ranges.push([i, i + key.length]);
+  const out: Array<{ text: string; scored: boolean; sep: string; hl: boolean }> = [];
+  for (const m of text.matchAll(/([\u3400-\u9fff])|([^\u3400-\u9fff\s]+)|(\s+)/g)) {
+    if (m[3] !== undefined) {
+      if (out.length) out[out.length - 1]!.sep = " ";
+      continue;
+    }
+    const a = m.index ?? 0;
+    const b = a + m[0].length;
+    out.push({ text: m[0], scored: m[1] !== undefined, sep: "", hl: m[1] !== undefined && ranges.some(([x, y]) => a >= x && b <= y) });
+  }
+  return out;
+}

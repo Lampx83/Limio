@@ -1629,3 +1629,9 @@
   box-shadow: 0 0 0 3px rgb(var(--brand) / 0.28);
   transition: box-shadow 0.15s ease, background 0.15s ease;
 }
+
+/* Từ mới được tô màu riêng trong câu ví dụ đi kèm. */
+.lesson-hsk .rp-key {
+  color: rgb(var(--hk-pink-deep));
+  font-weight: 700;
+}
