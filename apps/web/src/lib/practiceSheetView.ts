@@ -166,12 +166,8 @@ export function questionsToCheck(
 export function sheetStatus(ids: string[], state: { answered: (id: string) => boolean; checked: (id: string) => boolean; correct: (id: string) => boolean; isEssay: (id: string) => boolean }): string {
   const real = ids.filter((id) => !state.isEssay(id));
   const checked = real.filter((id) => state.checked(id));
-  const left = real.filter((id) => !state.answered(id) && !state.checked(id)).length;
-  const parts: string[] = [];
-  if (checked.length > 0) parts.push(`Đúng ${checked.filter((id) => state.correct(id)).length} / ${checked.length}`);
-  if (left > 0) parts.push(`còn ${left} câu chưa làm`);
-  const text = parts.join(" · ");
-  return text === "" ? "" : text.charAt(0).toUpperCase() + text.slice(1);
+  // Chỉ báo kết quả của các câu đã chấm; không đếm "còn n câu chưa làm" (học viên tự thấy câu nào còn trống, dòng đó chỉ thêm chữ).
+  return checked.length > 0 ? `Đúng ${checked.filter((id) => state.correct(id)).length} / ${checked.length}` : "";
 }
 
 /** Đáp án đúng bằng chữ cho hàng sai; null khi dạng câu cần trình bày đầy đủ hơn (ghép, sắp xếp, kéo thả). */

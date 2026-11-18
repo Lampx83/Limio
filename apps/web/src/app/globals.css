@@ -1389,6 +1389,48 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
   font-size: inherit;
   line-height: 1.6;
 }
+/*
+ * Một bài luyện = MỘT thẻ: thẻ tên bài + đề (trên), đoạn/hình (trái), phiếu câu hỏi (phải) nằm chung một khung, ngăn bằng đường kẻ mảnh thay vì ba thẻ
+ * rời có khe hở. Các khối bên trong bỏ viền, bo góc và nền riêng. Khung KHÔNG đặt overflow:hidden để cột đoạn văn/câu hỏi còn dính theo cuộn (sticky).
+ */
+.ps-exercise {
+  margin-top: 0.75rem;
+  background: var(--ps-paper, rgb(var(--surface)));
+  border: 1px solid var(--ps-edge, rgb(var(--border)));
+  border-radius: 0.75rem;
+  --ps-paper: rgb(var(--surface));
+  --ps-edge: rgb(var(--border));
+}
+.ps-exercise > [data-testid="lp-instruction"],
+.ps-exercise [data-testid="lp-passage"],
+.ps-exercise .practice-sheet {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+/* Thẻ tên bài + đề ở đầu: bo góc trên theo khung, đường kẻ dưới ngăn với phần làm bài. */
+.ps-exercise > [data-testid="lp-instruction"] {
+  border-bottom: 1px solid var(--ps-edge);
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+.ps-exercise > div:not([data-testid="lp-instruction"]) {
+  margin-top: 0;
+}
+/* Hàng đoạn/hình + phiếu: không khe hở; đường kẻ dọc (từ lg) hoặc ngang (dưới lg) ngăn đoạn với phiếu. */
+.ps-exercise > div.grid {
+  gap: 0;
+}
+.ps-exercise [data-testid="lp-passage"] {
+  border-bottom: 1px solid var(--ps-edge);
+}
+/* Chia đôi (từ lg): đường kẻ DỌC giữa đoạn và phiếu; một cột: giữ đường kẻ ngang ở dưới đoạn. */
+@media (min-width: 1024px) {
+  .ps-exercise > div.grid[data-split="true"] [data-testid="lp-passage"] {
+    border-bottom: 0;
+    border-right: 1px solid var(--ps-edge);
+  }
+}
 .dark .practice-sheet,
 .dark .ps-paper-card {
   --ps-ok: #5fd08f;

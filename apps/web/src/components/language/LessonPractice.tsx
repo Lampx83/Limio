@@ -823,6 +823,33 @@ export default function LessonPractice({
 
   /** Câu mở có hội thoại với bạn ảo (nói tự do hoặc đóng vai): bài tập này là phần học viên phải nói. */
   const isSpeakingChat = (q: { type: string; config: Record<string, unknown> } | undefined) => !!q && q.type === "essay" && !!(parseRolePlay(q.config) || parseFreeChatView(q.config));
+  // Nút bố cục (chia đôi / một cột) của phiếu: đặt ở góc phải thẻ tên bài (không chiếm riêng một dải phía trên cột câu hỏi); bài không có thẻ tên bài thì ở đầu phiếu.
+  const sheetToggle = sheet && hasPassage && !lightIntro ? (
+    <div role="group" aria-label="Bố cục" className="hidden shrink-0 items-center gap-1 lg:flex">
+        <button
+          type="button"
+          aria-pressed={layout === "split"}
+          aria-label="Chia đôi"
+          title="Chia đôi: đoạn văn một bên, câu hỏi một bên"
+          onClick={() => changeLayout("split")}
+          className={`rounded-lg border p-1.5 ${layout === "split" ? "border-[rgb(var(--brand))] bg-[rgb(var(--brand)/0.08)] text-[rgb(var(--brand))]" : "border-token text-muted"}`}
+        >
+          <Columns2 size={16} aria-hidden />
+        </button>
+        <button
+          type="button"
+          aria-pressed={layout === "single"}
+          aria-label="Một cột"
+          title="Một cột: đoạn văn rồi tới câu hỏi"
+          onClick={() => changeLayout("single")}
+          className={`rounded-lg border p-1.5 ${layout === "single" ? "border-[rgb(var(--brand))] bg-[rgb(var(--brand)/0.08)] text-[rgb(var(--brand))]" : "border-token text-muted"}`}
+        >
+          <Rows2 size={16} aria-hidden />
+        </button>
+      </div>
+  ) : null;
+  const headHasCard = sheet && (!!lead || (!!stepPassage && !!parts));
+  const toggleInHead = headHasCard && !!sheetToggle;
   const sheetTitles = steps.map((st) => (st.passageId ? passages.find((x) => x.id === st.passageId)?.title : null));
   const sheetShorts = tabShortLabels(sheetTitles);
   const sheetTabs = steps.map((st, i) => ({
@@ -855,39 +882,7 @@ export default function LessonPractice({
       banner={skillLabel}
       hideTabs
       pinyin={courseWantsPinyin(embed.courseLanguage)}
-      header={
-        // Phiếu: một hàng mỏng (tên bài luyện + nút bố cục dạng biểu tượng); tiến độ nằm ở đếm của tab và chân phiếu.
-        <div className="flex items-center justify-end gap-3">
-          {/* Sách không đặt tên cho phần luyện của một bài: tên khối chỉ để trình đọc màn hình, không hiện thành một dòng tiêu đề thừa. */}
-          <h2 id="lp-title" className="sr-only">
-            {blockTitle || embed.title}
-          </h2>
-          {hasPassage && !lightIntro && (
-            <div role="group" aria-label="Bố cục" className="hidden shrink-0 items-center gap-1 lg:flex">
-              <button
-                type="button"
-                aria-pressed={layout === "split"}
-                aria-label="Chia đôi"
-                title="Chia đôi: đoạn văn một bên, câu hỏi một bên"
-                onClick={() => changeLayout("split")}
-                className={`rounded-lg border p-1.5 ${layout === "split" ? "border-[rgb(var(--brand))] bg-[rgb(var(--brand)/0.08)] text-[rgb(var(--brand))]" : "border-token text-muted"}`}
-              >
-                <Columns2 size={16} aria-hidden />
-              </button>
-              <button
-                type="button"
-                aria-pressed={layout === "single"}
-                aria-label="Một cột"
-                title="Một cột: đoạn văn rồi tới câu hỏi"
-                onClick={() => changeLayout("single")}
-                className={`rounded-lg border p-1.5 ${layout === "single" ? "border-[rgb(var(--brand))] bg-[rgb(var(--brand)/0.08)] text-[rgb(var(--brand))]" : "border-token text-muted"}`}
-              >
-                <Rows2 size={16} aria-hidden />
-              </button>
-            </div>
-          )}
-        </div>
-      }
+      header={toggleInHead ? undefined : sheetToggle ? <div className="flex items-center justify-end gap-3">{sheetToggle}</div> : undefined}
     />
   ) : null;
 
@@ -897,8 +892,9 @@ export default function LessonPractice({
   const headCards = (
     <>
       {lead && (
-        <div className={`mt-3 ${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} px-4 py-3`} data-testid="lp-instruction">
-          <h3 className="text-h4">{lead.title ? `${lead.code} · ${lead.title}` : lead.code}</h3>
+        <div className={`mt-3 ${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} relative px-4 py-3`} data-testid="lp-instruction">
+          {toggleInHead && <div className="absolute right-3 top-3">{sheetToggle}</div>}
+          <h3 className={`text-h4 ${toggleInHead ? "lg:pr-24" : ""}`}>{lead.title ? `${lead.code} · ${lead.title}` : lead.code}</h3>
           <LessonRichText html={lead.html} className="!m-0 !rounded-none !border-0 !bg-transparent !p-0 sm:!p-0 [&_p]:!mb-0 [&_p]:!mt-1 [&_p]:!leading-7" />
           {stepPassage && parts && instructionText && (
             <p className="mt-3 whitespace-pre-line border-t border-token pt-3 text-body leading-7 text-muted">{instructionText}</p>
@@ -906,19 +902,20 @@ export default function LessonPractice({
         </div>
       )}
       {!lead && stepPassage && parts && (
-        <div className={`mt-3 ${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} px-4 py-3`} data-testid="lp-instruction">
+        <div className={`mt-3 ${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} relative px-4 py-3`} data-testid="lp-instruction">
+          {toggleInHead && <div className="absolute right-3 top-3">{sheetToggle}</div>}
           {/* Tab đã có thẻ đề với "mã · tên" đậm (shortPartner): thẻ này chỉ còn lời mời bạn ảo, không lặp lại tên. */}
           {!(shortPartner && instructionText) && (
-            <h3 className="text-h4">{passageDisplayTitle(sheet ? headingTitleOf(stepPassage.title, stepPassage.contentJson) : stepPassage.title)}</h3>
+            <h3 className={`text-h4 ${toggleInHead ? "lg:pr-24" : ""}`}>{passageDisplayTitle(sheet ? headingTitleOf(stepPassage.title, stepPassage.contentJson) : stepPassage.title)}</h3>
           )}
-          {instructionText && <p className="mt-1 whitespace-pre-line text-body leading-7">{instructionText}</p>}
+          {instructionText && <p className={`mt-1 whitespace-pre-line text-body leading-7 ${toggleInHead ? "lg:pr-24" : ""}`}>{instructionText}</p>}
         </div>
       )}
     </>
   );
   const bodyBlock = (step &&
         (step.passageId && !lightIntro ? (
-          <div className={`${sheet ? "mt-3" : "mt-4"} grid gap-4 ${split ? "lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-2.5" : ""}`}>
+          <div data-split={split ? "true" : undefined} className={`${sheet ? "mt-3" : "mt-4"} grid gap-4 ${split ? "lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-2.5" : ""}`}>
             {hasBody && !lightIntro && stepPassage && parts && (
               <div
                 className={`${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} p-5 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll ${split ? "lg:sticky lg:top-20" : ""} [&_p]:leading-8`}
@@ -993,8 +990,22 @@ export default function LessonPractice({
       )}
 
       {/* Tên đoạn + đề bài là khối riêng rộng bằng bài, cả kiểu phiếu lẫn kiểu thẻ (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md AC2). */}
-      {headCards}
-      {bodyBlock}
+      {/* Phiếu: thẻ tên bài + đoạn/hình + phiếu câu hỏi là MỘT bài luyện nên nằm chung một thẻ, ngăn bằng đường kẻ (globals.css `.ps-exercise`), không phải ba thẻ rời. */}
+      {sheet ? (
+        <div className="ps-exercise" data-testid="ps-exercise">
+          {/* Sách không đặt tên cho phần luyện của một bài: tên khối chỉ để trình đọc màn hình, không hiện thành một dòng tiêu đề thừa. */}
+          <h2 id="lp-title" className="sr-only">
+            {blockTitle || embed.title}
+          </h2>
+          {headCards}
+          {bodyBlock}
+        </div>
+      ) : (
+        <>
+          {headCards}
+          {bodyBlock}
+        </>
+      )}
 
       {/* Một hàng chân khối: trạng thái lưu bên trái, "Kết thúc bài luyện" bên phải ở dạng nút phụ (nút hồng chính chỉ dành cho việc của câu đang làm: Kiểm tra / Nhận xét). */}
       <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">

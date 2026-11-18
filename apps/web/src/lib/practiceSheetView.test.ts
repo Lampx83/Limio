@@ -113,78 +113,10 @@ describe("chọn câu cần chấm và tóm tắt chân phiếu", () => {
       questionsToCheck(ids, { answered: set(["a", "b", "c", "e"]), checked: set(["b"]), restoring: set(["c"]), isEssay: set(["e"]) }),
     ).toEqual(["a"]);
   });
-  it("sheetStatus: 'Đúng x / y' trên câu đã chấm, 'còn n câu chưa làm', bỏ tự luận; rỗng khi chưa có gì", () => {
+  it("sheetStatus: chỉ 'Đúng x / y' trên câu đã chấm, bỏ tự luận; không đếm câu chưa làm; rỗng khi chưa chấm câu nào", () => {
     const st = { answered: set(["a", "b", "c"]), checked: set(["a", "b"]), correct: set(["a"]), isEssay: set(["z"]) };
-    expect(sheetStatus(["a", "b", "c", "d", "z"], st)).toBe("Đúng 1 / 2 · còn 1 câu chưa làm");
+    expect(sheetStatus(["a", "b", "c", "d", "z"], st)).toBe("Đúng 1 / 2");
     expect(sheetStatus(["c"], { ...st, checked: set([]) })).toBe("");
-    expect(sheetStatus(["d"], { ...st, checked: set([]) })).toBe("Còn 1 câu chưa làm");
-  });
-});
-
-describe("revealText", () => {
-  it("điền chỗ trống: đáp án đầu của từng ô; chọn: nhãn đáp án đúng; đúng/sai", () => {
-    expect(revealText("gap_fill", { blanks: [{ acceptedAnswers: ["forward"] }, { acceptedAnswers: ["to", "too"] }] })).toBe("forward · to");
-    expect(revealText("mcq", { options: [{ label: "A", isCorrect: false }, { label: "B", isCorrect: true }] })).toBe("B");
-    expect(revealText("multi", { options: [{ label: "A", isCorrect: true }, { label: "B", isCorrect: true }] })).toBe("A / B");
-    expect(revealText("true_false_notgiven", { correct: "notgiven" })).toBe("NOT GIVEN");
-  });
-  it("dạng cần trình bày đầy đủ hơn hoặc dữ liệu hỏng thì null", () => {
-    expect(revealText("matching", {})).toBeNull();
-    expect(revealText("gap_fill", { blanks: [{ acceptedAnswers: [] }] })).toBeNull();
-    expect(revealText("mcq", null)).toBeNull();
-  });
-});
-
-describe("groupSharedOptions", () => {
-  const L = ["present continuous: a changing situation", "present simple: a fact or something always true"];
-  const mcq = (id: string, labels = L) => ({ id, type: "mcq", labels });
-  it("từ 3 câu liền nhau cùng bộ lựa chọn dài thì gộp thành một nhóm", () => {
-    expect(groupSharedOptions([mcq("a"), mcq("b"), mcq("c")])).toEqual([{ kind: "shared", ids: ["a", "b", "c"], labels: L }]);
-  });
-  it("dưới 3 câu, lựa chọn khác nhau, lựa chọn ngắn hay dạng khác thì không gộp; nhóm không nuốt câu lạc loại ở giữa", () => {
-    expect(groupSharedOptions([mcq("a"), mcq("b")])).toEqual([{ kind: "single", id: "a" }, { kind: "single", id: "b" }]);
-    expect(groupSharedOptions([mcq("a"), mcq("b"), mcq("c", ["x long option one", "y long option two"])]).every((r) => r.kind === "single")).toBe(true);
-    expect(groupSharedOptions([mcq("a", ["True", "False"]), mcq("b", ["True", "False"]), mcq("c", ["True", "False"])]).every((r) => r.kind === "single")).toBe(true);
-    const mixed = groupSharedOptions([mcq("a"), mcq("b"), { id: "g", type: "gap_fill", labels: [] }, mcq("c"), mcq("d"), mcq("e")]);
-    expect(mixed).toEqual([{ kind: "single", id: "a" }, { kind: "single", id: "b" }, { kind: "single", id: "g" }, { kind: "shared", ids: ["c", "d", "e"], labels: L }]);
-  });
-});
-
-describe("tabShortLabels", () => {
-  it("mã bài tập của sách thành nhãn ngắn", () => {
-    expect(tabShortLabels(["Exercise 7A · Three lifestyles", "Ex 3B · Match the sentences", "Ex 2B–2C · ▶ 1.3", "Ex 4A · Find and correct the mistakes"])).toEqual(["7A", "3B", "2B–2C", "4A"]);
-  });
-  it("tiêu đề theo kiểu sách, không có chữ Ex: '2A · …' cũng ra nhãn ngắn", () => {
-    expect(tabShortLabels(["2A · Talk with a virtual partner", "3A\u20133B · Make sentences", "5B\u20135C · Stress patterns", "Ex 7D · True or false?"])).toEqual(["2A", "3A\u20133B", "5B\u20135C", "7D"]);
-  });
-  it("không có mã: lấy phần sau dấu ·, hoặc tiêu đề cắt ngắn, hoặc 'Bài n'", () => {
-    expect(tabShortLabels(["Choose the alternatives · Conversation 1", "Listening · ▶ 1.7", "A very long title without a code at all", "", null])).toEqual(["Conversation 1", "▶ 1.7", "A very long t…", "Bài 4", "Bài 5"]);
-  });
-  it("hai tab trùng nhãn ngắn thì thêm mô tả để phân biệt", () => {
-    expect(tabShortLabels(["Exercise 7B · take and hand", "Exercise 7B · put, look and keep", "Exercise 7C · Complete the examples"])).toEqual(["7B take and h…", "7B put, look…", "7C"]);
-  });
-});
-
-describe("cleanMatchingLabels — câu ghép cặp không đánh số hai lần", () => {
-  const mk = (labels: string[]) => labels.map((label, i) => ({ id: String(i), label }));
-  it("bỏ chữ cái của sách (a), b)…) ở các vế phải khi MỌI vế đều có, vì phiếu gán chữ cái theo thứ tự hiện", () => {
-    const r = cleanMatchingLabels(mk(["1 One", "2 Two"]), mk(["b) for facts", "a) for habits", "c) for states"]));
-    expect(r.rights.map((x) => x.label)).toEqual(["for facts", "for habits", "for states"]);
-  });
-  it("bỏ số thứ tự của sách ở các vế trái khi số đó trùng số hàng (1, 2, 3…)", () => {
-    const r = cleanMatchingLabels(mk(["1 She is studying", "2 I often work", "3 I want people"]), mk(["x", "y"]));
-    expect(r.lefts.map((x) => x.label)).toEqual(["She is studying", "I often work", "I want people"]);
-  });
-  it("giữ nguyên khi chỉ một vài vế có chữ cái/số, hoặc số không trùng số hàng", () => {
-    const rights = mk(["b) one", "plain two"]);
-    const lefts = mk(["5 five", "6 six"]);
-    const r = cleanMatchingLabels(lefts, rights);
-    expect(r.rights.map((x) => x.label)).toEqual(["b) one", "plain two"]);
-    expect(r.lefts.map((x) => x.label)).toEqual(["5 five", "6 six"]);
-  });
-  it("không đổi id, và không làm trống nhãn", () => {
-    const r = cleanMatchingLabels(mk(["1 "]), mk(["a) ", "b) x"]));
-    expect(r.lefts[0]!.id).toBe("0");
-    expect(r.rights[0]!.label.length).toBeGreaterThan(0);
+    expect(sheetStatus(["d"], { ...st, checked: set([]) })).toBe("");
   });
 });

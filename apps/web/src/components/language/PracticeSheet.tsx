@@ -534,6 +534,9 @@ export default function PracticeSheet({
   const isLast = activeIdx >= tabs.length - 1;
   const status = sheetStatus(tab.questionIds, state);
   const hasCheckable = tab.questionIds.some((id) => !isEssay(id));
+  // Gợi ý "bấm kiểm tra" chỉ hiện khi đã trả lời hết câu của bài tập này (đầu bài chưa làm gì thì không hiện dòng nào).
+  const realIds = tab.questionIds.filter((id) => !isEssay(id));
+  const allDone = realIds.length > 0 && realIds.every((id) => answeredOf(id) || id in checks);
 
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     const el = e.target as HTMLElement;
@@ -615,14 +618,16 @@ export default function PracticeSheet({
   return (
     <PinyinProvider value={hs}>
     <div ref={root} className="practice-sheet" data-testid="practice-sheet" onKeyDown={onKeyDown}>
-      <div className="ps-head">
-        {banner && (
-          <div className="ps-banner">
-            <span className="ps-banner-k">{banner}</span>
-          </div>
-        )}
-        {header}
-      </div>
+      {(banner || header) && (
+        <div className="ps-head">
+          {banner && (
+            <div className="ps-banner">
+              <span className="ps-banner-k">{banner}</span>
+            </div>
+          )}
+          {header}
+        </div>
+      )}
       {!hideTabs && (
         <SheetTabBar tabs={tabs} activeIdx={activeIdx} onTab={onTab} questions={questions} answers={answers} checks={checks} />
       )}
@@ -643,11 +648,10 @@ export default function PracticeSheet({
           )}
           {t.intro && (typeof t.intro === "string" ? <p className="ps-intro">{t.intro}</p> : <div className="ps-intro-media">{t.intro}</div>)}
           {t.questionIds.length === 0 && <p className="ps-hint ps-empty">Phần này chỉ có nội dung để nghe hoặc đọc, không có câu hỏi.</p>}
-          {(tabs.length > 1 || hideTabs) && !t.introTitle && (
-            // Tab đang chọn mở đầu bằng tên khối và số câu (thanh tab chỉ có nhãn ngắn).
+          {(tabs.length > 1 || hideTabs) && !t.introTitle && !t.hideTitle && (
+            // Tab đang chọn mở đầu bằng tên khối (thanh tab chỉ có nhãn ngắn). Không ghi số câu: đã có ở thanh tab, và sau khi chấm có "Đúng x / y".
             <header className="ps-tabtitle">
-              {!t.hideTitle && <h2 className="text-h4">{t.label}</h2>}
-              <span className="ps-tabtitle-n">{tr("practice.sheet.count", { n: t.questionIds.filter((id) => questions.get(id)?.type !== "essay").length || t.questionIds.length })}</span>
+              <h2 className="text-h4">{t.label}</h2>
             </header>
           )}
           {(() => {
@@ -698,7 +702,7 @@ export default function PracticeSheet({
       ))}
       <div className="ps-foot">
         <span className="ps-status" aria-live="polite">
-          {batch ? `Đang kiểm tra… (${batch.done}/${batch.total})` : status || (hasCheckable && checkEnabled ? "Làm xong thì bấm kiểm tra." : "")}
+          {batch ? `Đang kiểm tra… (${batch.done}/${batch.total})` : status || (hasCheckable && checkEnabled && allDone ? "Làm xong thì bấm kiểm tra." : "")}
         </span>
         {checkEnabled && hasCheckable && (
           <span className="ps-actions">

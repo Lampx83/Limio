@@ -603,13 +603,11 @@ describe("Phiếu bài tập — dòng yêu cầu và tên khối", () => {
     expect([...panel().querySelectorAll('[data-testid="ps-instr"]')].map((x) => x.textContent)).toEqual(["Nghe rồi chọn."]);
   });
 
-  it("tên đoạn đã ở thẻ đề phía trên thì đầu tab chỉ còn số câu, không lặp lại tên", async () => {
+  it("tên đoạn đã ở thẻ đề phía trên thì đầu tab không lặp lại tên và không ghi số câu", async () => {
     await render();
     expect(host.querySelector('[data-testid="lp-instruction"]')!.textContent).toContain("Ex 1A · Present forms");
-    const head = panel().querySelector(".ps-tabtitle")!;
-    expect(head.textContent).not.toContain("Ex 1A · Present forms");
-    expect(head.querySelector("h2")).toBeNull();
-    expect(head.textContent).toMatch(/\d+ câu/);
+    expect(panel().querySelector(".ps-tabtitle")).toBeNull();
+    expect(panel().textContent).not.toMatch(/\d+ câu\b/);
   });
 });
 
