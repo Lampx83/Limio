@@ -243,6 +243,8 @@
 }
 .lesson-hsk .hsk-wc-body {
   outline: none;
+  /* Chữ Hán (kèm pinyin) và nghĩa căn giữa thẻ. */
+  text-align: center;
 }
 /* Thẻ của khối vocab_list (bài tác giả): nhãn từ loại bên trái, dấu nhỏ "Chủ động/Nhận biết" bên phải; nút nghe ở góc dưới. */
 .lesson-hsk .hsk-wc-top {
@@ -267,8 +269,10 @@
 }
 .lesson-hsk .hsk-wc-audio {
   position: absolute;
-  right: 0.6rem;
+  /* Giữa đáy thẻ, cùng trục với chữ căn giữa. */
+  left: 50%;
   bottom: 0.6rem;
+  transform: translateX(-50%);
   display: grid;
   place-items: center;
   width: 1.9rem;
@@ -277,8 +281,9 @@
   border-radius: 50%;
   background: rgb(var(--surface));
 }
-.lesson-hsk .hsk-wc:has(.hsk-wc-audio) .hsk-wc-mean {
-  padding-right: 2.2rem;
+/* Chừa chỗ dưới nghĩa cho nút nghe ở giữa đáy thẻ (không đè lên chữ). */
+.lesson-hsk .hsk-wc:has(.hsk-wc-audio) {
+  padding-bottom: 3rem;
 }
 .lesson-hsk .hsk-wc[data-playing="true"] {
   border-color: var(--hk-line);
@@ -322,6 +327,14 @@
 }
 .lesson-hsk .hsk-wc-han .rb-line {
   font-size: 2.1rem;
+}
+/* Pinyin trên thẻ từ: chữ nghiêng và nhỏ hơn mặc định (0,6 lần chữ Hán), để chữ Hán là chính; không nhỏ hơn 12 px cho dễ đọc. */
+.lesson-hsk .hsk-wc ruby.ruby-han > rt,
+.lesson-hsk .hsk-wc .vocab-reading {
+  font-style: italic;
+}
+.lesson-hsk .hsk-wc ruby.ruby-han > rt {
+  font-size: max(0.4em, 0.75rem);
 }
 .lesson-hsk .hsk-wc-mean {
   margin: 0;
