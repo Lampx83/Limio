@@ -242,6 +242,10 @@
 }
 
 /* ---------- Bảng kẻ ngang kiểu sách ---------- */
+.lesson-hsk:has(.hsk-front) .hsk-ab > .hsk-tw {
+  max-width: 41rem;
+  margin-inline: auto;
+}
 .lesson-hsk:has(.hsk-front) .hsk-tw {
   margin: 1.1rem 0 1.4rem;
   border: 0;
@@ -278,21 +282,48 @@
   color: var(--bk-accent);
 }
 
-/* ---------- Bảng chương (4 cột): dòng Chủ đề (ô đầu chỉ có chữ đậm) và các dòng bài khoá bên dưới ---------- */
-.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) tbody tr:has(> td:first-child > strong:only-child) {
+/* ---------- Bảng chương (4 cột): dòng Chủ đề (ô đầu có chữ đậm) và các dòng bài khoá bên dưới ----------
+   Ô đầu gồm hai dòng: tên tiếng Trung (kèm pinyin), rồi tên tiếng Việt (thẻ in nghiêng) xuống dòng riêng. Mọi dòng cùng một lề trái;
+   phân cấp chỉ nhờ nền xám nhạt và chữ đậm của dòng Chủ đề. */
+.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) {
+  table-layout: fixed;
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) :is(th, td) {
+  padding-inline: 0.65rem;
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) th:nth-child(1) { width: 36%; }
+.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) th:nth-child(2) { width: 11%; }
+.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) th:nth-child(3) { width: 28%; }
+.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) th:nth-child(4) { width: 25%; }
+.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) tbody td {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) tbody tr:has(> td:first-child > strong) {
   background: color-mix(in srgb, var(--bk-ink) 5%, transparent);
   border-top: 1px solid var(--bk-rule);
 }
 .lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) tbody tr:first-child {
   border-top: 0;
 }
-.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) tbody tr:not(:has(> td:first-child > strong:only-child)) > td {
-  font-size: 0.95rem;
+.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) tbody tr:not(:has(> td:first-child > strong)) > td {
   color: var(--bk-ink-soft);
 }
-.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) tbody tr:not(:has(> td:first-child > strong:only-child)) > td:first-child {
-  padding-left: 1.7rem;
+.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) tbody td:first-child {
+  font-size: 0.98rem;
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) tbody tr:not(:has(> td:first-child > strong)) > td:first-child {
   font-weight: 400;
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) tbody td:first-child em {
+  display: block;
+  margin-top: 0.1rem;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 0.95rem;
+  color: var(--bk-ink-soft);
 }
 
 /* ---------- Khối gập «Chi tiết từng bài khoá»: như chú thích cuối chương ---------- */
@@ -370,6 +401,10 @@
 
 /* ---------- Điện thoại ---------- */
 @media (max-width: 760px) {
+  /* Bảng chương 4 cột: không ép vào màn hình hẹp, cuộn ngang trong khung bảng. */
+  .lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) {
+    min-width: 34rem;
+  }
   .lesson-hsk:has(.hsk-front) .hsk-hero {
     padding: 2rem 1rem 1.8rem;
   }
