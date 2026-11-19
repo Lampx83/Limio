@@ -64,7 +64,7 @@ describe("commitWordExamImport", () => {
     // Ảnh đã đăng ký vào đề với mô tả.
     const assets = await prisma.examAsset.findMany({ where: { examId } });
     expect(assets).toHaveLength(3);
-    expect(assets.every((a) => a.altText.length > 0)).toBe(true);
+    expect(assets.every((a) => (a.altText ?? "").length > 0)).toBe(true);
     // Cấu hình câu số đúng schema.
     expect(qs.find((q) => q.type === "numerical")!.config).toMatchObject({ expected: 0.2, tolerance: 0.01 });
   });
