@@ -16,7 +16,6 @@ import { auth } from "@/lib/auth";
 import CourseMetaForm from "./CourseMetaForm";
 import AccessCodesPanel from "./AccessCodesPanel";
 import ProtectedMediaPanel from "./ProtectedMediaPanel";
-import PersonalizationReadinessPanel from "./PersonalizationReadinessPanel";
 import LessonSection from "./LessonSection";
 import ModuleSection from "./ModuleSection";
 import ModuleOverviewList from "./ModuleOverviewList";
@@ -373,12 +372,6 @@ export default async function InstructorCourseEditPage({
               }}
             />
           </section>
-          )}
-
-          {canResearch && readiness?.enabled && (
-            <section>
-              <PersonalizationReadinessPanel courseId={course.id} readiness={readiness} />
-            </section>
           )}
 
           {canEdit &&
