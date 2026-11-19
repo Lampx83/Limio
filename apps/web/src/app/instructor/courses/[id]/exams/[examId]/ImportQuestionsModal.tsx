@@ -2,14 +2,14 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download, Sparkles, Upload as UploadIcon } from "lucide-react";
+import { Download, FileText, Sparkles, Upload as UploadIcon } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 
 interface Props {
   examId: string;
   open: boolean;
   /** Cố định lúc mở — nút "AI import" / nút "Excel import" ở ContentManager quyết định. */
-  mode: "file" | "ai";
+  mode: "file" | "ai" | "word";
   onClose: () => void;
 }
 
@@ -22,6 +22,8 @@ const TYPE_LABEL: Record<string, string> = {
   essay: "Essay",
   ordering: "Sắp xếp",
   matching: "Ghép cặp",
+  numerical: "Số",
+  drag_drop_fill: "Kéo thả",
 };
 
 interface ParsedRow {
@@ -40,12 +42,18 @@ interface ParsedRow {
     unresolvedSkillCodes: string[];
     /** Chỉ có ở đường AI import (ai-preview) — file-based preview không trả field này cho client. */
     config?: unknown;
+    /** Chỉ có ở đường Word import: số ảnh trong đề bài của câu. */
+    imageCount?: number;
   };
 }
 
 interface PreviewResponse {
   rows: ParsedRow[];
   summary: { ok: number; warning: number; error: number; total: number };
+  /** Chỉ có ở Word import. */
+  notes?: string[];
+  passages?: Array<{ key: string; title: string; questionCount: number; imageCount: number; error: string | null }>;
+  imageCount?: number;
 }
 
 interface ConfirmResponse {
@@ -53,6 +61,9 @@ interface ConfirmResponse {
   skippedError: number;
   skippedWarning: number;
   errors: Array<{ rowNumber: number; errors: string[] }>;
+  /** Chỉ có ở Word import. */
+  passagesCreated?: number;
+  imagesUploaded?: number;
 }
 
 /** Câu AI đọc thấy nhưng không đủ rõ để phân loại thành 1 trong 5 dạng hỗ trợ. */
@@ -90,8 +101,53 @@ function answerSummary(type: string, config: unknown): string {
       const accepted = Array.isArray(c.acceptedAnswers) ? c.acceptedAnswers : [];
       return accepted.join(" / ") || "—";
     }
+    case "gap_fill": {
+      const blanks = Array.isArray(c.blanks) ? c.blanks : [];
+      return (
+        blanks
+          .map((b: { acceptedAnswers?: string[] }) => (b.acceptedAnswers ?? []).join(" | "))
+          .join(" ; ") || "—"
+      );
+    }
+    case "numerical":
+      return typeof c.expected === "number"
+        ? `${c.expected}${typeof c.tolerance === "number" && c.tolerance > 0 ? ` ± ${c.tolerance}` : ""}`
+        : "—";
+    case "drag_drop_fill": {
+      const tokens = Array.isArray(c.tokens) ? c.tokens : [];
+      return (
+        tokens
+          .filter((t: { blankIndex: number | null }) => t.blankIndex !== null)
+          .map((t: { blankIndex: number; label: string }) => `[${t.blankIndex}] ${t.label}`)
+          .join(", ") || "—"
+      );
+    }
+    case "essay":
+      return "Giảng viên chấm";
     default:
       return "—";
+  }
+}
+
+/** Việt hoá lỗi từ /word-preview và /word-commit. */
+function humanizeWordError(code: string | undefined): string {
+  switch (code) {
+    case "invalid_docx":
+      return "Không đọc được file này. Hãy dùng file Word đuôi .docx (file .doc cũ cần mở rồi lưu lại thành .docx).";
+    case "no_questions_found":
+      return "Không tìm thấy câu hỏi nào. Mỗi câu phải bắt đầu bằng “Câu 1.”, “Câu 2.”… — xem file mẫu.";
+    case "file_too_large":
+      return "File quá lớn (tối đa 20 MB). Hãy giảm kích thước ảnh hoặc chia đề thành nhiều file.";
+    case "exam_has_attempts":
+      return "Đề đã có người làm bài — không thể import thêm câu hỏi.";
+    case "survey_import_unsupported":
+      return "Đề Khảo sát không nhập được từ Word.";
+    case "forbidden":
+      return "Bạn không có quyền dùng tính năng này.";
+    case "unauthorized":
+      return "Phiên đăng nhập đã hết — đăng nhập lại rồi thử lại.";
+    default:
+      return `Chưa nhập được (mã: ${code ?? "unknown"}). Thử lại.`;
   }
 }
 
@@ -162,12 +218,16 @@ export default function ImportQuestionsModal({ examId, open, mode, onClose }: Pr
     const form = new FormData();
     form.append("file", f);
     const res = await fetch(
-      apiUrl(`/api/exams/${examId}/questions/import/preview`),
+      apiUrl(`/api/exams/${examId}/questions/import/${mode === "word" ? "word-preview" : "preview"}`),
       { method: "POST", body: form },
     );
     setLoading(false);
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
+      if (mode === "word") {
+        setError(humanizeWordError(typeof data?.error === "string" ? data.error : undefined));
+        return;
+      }
       setError(
         typeof data?.details === "string"
           ? data.details
@@ -250,13 +310,19 @@ export default function ImportQuestionsModal({ examId, open, mode, onClose }: Pr
     form.append("file", file);
     form.append("includeWarnings", includeWarnings ? "true" : "false");
     const res = await fetch(
-      apiUrl(`/api/exams/${examId}/questions/import/confirm`),
+      apiUrl(`/api/exams/${examId}/questions/import/${mode === "word" ? "word-commit" : "confirm"}`),
       { method: "POST", body: form },
     );
     setLoading(false);
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setError(typeof data?.error === "string" ? data.error : "confirm_failed");
+      setError(
+        mode === "word"
+          ? humanizeWordError(typeof data?.error === "string" ? data.error : undefined)
+          : typeof data?.error === "string"
+            ? data.error
+            : "confirm_failed",
+      );
       return;
     }
     setDone(data as ConfirmResponse);
@@ -286,10 +352,12 @@ export default function ImportQuestionsModal({ examId, open, mode, onClose }: Pr
           <h2 className="flex items-center gap-1.5 text-base font-semibold">
             {mode === "ai" ? (
               <Sparkles className="h-4 w-4 shrink-0 text-violet-600" />
+            ) : mode === "word" ? (
+              <FileText className="h-4 w-4 shrink-0 text-blue-600" />
             ) : (
               <UploadIcon className="h-4 w-4 shrink-0 text-slate-400" />
             )}
-            {mode === "ai" ? "AI import" : "Excel import"}
+            {mode === "ai" ? "AI import" : mode === "word" ? "Word import" : "Excel import"}
           </h2>
           <button type="button" onClick={close} className="text-faint hover:text-red-600">
             ✕
@@ -314,7 +382,8 @@ export default function ImportQuestionsModal({ examId, open, mode, onClose }: Pr
                   </ul>
                 </div>
               )}
-              <PreviewTable rows={preview.rows} />
+              {mode === "word" && <WordExtras preview={preview} />}
+              <PreviewTable rows={preview.rows} word={mode === "word"} />
             </>
           ) : (
             <Upload
@@ -412,7 +481,7 @@ function Upload({
   onExtractAi,
   loading,
 }: {
-  mode: "file" | "ai";
+  mode: "file" | "ai" | "word";
   examId: string;
   fileInputRef: React.RefObject<HTMLInputElement>;
   onFile: (f: File) => void;
@@ -423,7 +492,52 @@ function Upload({
 
   return (
     <div className="space-y-3 text-sm">
-      {mode === "file" ? (
+      {mode === "word" ? (
+        <>
+          <p>
+            Soạn đề trong Word theo file mẫu rồi chọn file .docx: Limio đọc cả câu hỏi, ảnh và đoạn văn, cho xem trước rồi mới nhập.
+            Không dùng AI, nên kết quả giống nhau mỗi lần.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={apiUrl("/templates/de-thi-mau-word-import.docx")}
+              className="rounded border border-default px-3 py-1.5 hover:bg-slate-50"
+              download
+            >
+              <Download className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Tải file mẫu
+            </a>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading}
+              className="rounded bg-brand-600 px-3 py-1.5 font-medium text-white disabled:opacity-50"
+            >
+              {loading ? "Đang phân tích…" : <><UploadIcon className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Chọn file Word (.docx)</>}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) onFile(f);
+              }}
+            />
+          </div>
+          <details className="rounded border border-default bg-slate-50 p-3 text-xs" open>
+            <summary className="cursor-pointer font-medium">Cách viết trong Word</summary>
+            <ul className="mt-2 list-inside list-disc space-y-1">
+              <li>Mỗi câu bắt đầu bằng “Câu 1.”, tuỳ chọn “(2 điểm)” và nhãn dạng trong ngoặc vuông, vd “Câu 1. (2 điểm) [Một đáp án] …”</li>
+              <li>Phương án: dòng “A.”, “B.”…; đáp án: dòng “Đáp án: B”; giải thích: dòng “Giải thích: …”</li>
+              <li>10 dạng: Một đáp án, Nhiều đáp án, TRUE / FALSE / NOT GIVEN, Điền khuyết, Trả lời ngắn, Sắp xếp thứ tự, Ghép cặp, Đáp án dạng số, Kéo thả từ/câu, Tự luận</li>
+              <li>Ảnh dán ngay dưới dòng “Câu N.” thành ảnh của đề bài</li>
+              <li>Đoạn văn: dòng “[ĐOẠN VĂN] Tiêu đề”, rồi chữ và ảnh của đoạn; các câu sau đó thuộc đoạn đến dòng “[HẾT ĐOẠN VĂN]”</li>
+              <li>Bảng, tiêu đề và chữ ngoài câu hỏi được bỏ qua</li>
+            </ul>
+          </details>
+        </>
+      ) : mode === "file" ? (
         <>
           <p>
             Tải template Excel mẫu, điền câu hỏi, rồi upload lại để import vào bài
@@ -524,7 +638,38 @@ function Upload({
   );
 }
 
-function PreviewTable({ rows }: { rows: ParsedRow[] }) {
+function WordExtras({ preview }: { preview: PreviewResponse }) {
+  const passages = preview.passages ?? [];
+  const notes = preview.notes ?? [];
+  if (passages.length === 0 && notes.length === 0 && !preview.imageCount) return null;
+  return (
+    <div className="mb-3 space-y-2 text-xs">
+      <div className="rounded border border-sky-200 bg-sky-50 px-3 py-2 text-sky-900">
+        <span className="font-semibold">Trong file:</span> {passages.length} đoạn văn · {preview.imageCount ?? 0} ảnh · {preview.summary.total} câu.
+        Đoạn văn và ảnh chỉ được tạo khi bấm Import.
+        {passages.length > 0 && (
+          <ul className="mt-1 list-inside list-disc">
+            {passages.map((p) => (
+              <li key={p.key} className={p.error ? "text-red-700" : undefined}>
+                {p.title} — {p.questionCount} câu{p.imageCount > 0 ? `, ${p.imageCount} ảnh` : ""}
+                {p.error ? ` (lỗi: ${p.error})` : ""}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      {notes.length > 0 && (
+        <ul className="list-inside list-disc rounded border border-amber-300 bg-amber-50 px-3 py-2 text-amber-900">
+          {notes.map((n, i) => (
+            <li key={i}>{n}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function PreviewTable({ rows, word = false }: { rows: ParsedRow[]; word?: boolean }) {
   return (
     <div>
       <p className="mb-2 text-sm">
@@ -563,6 +708,11 @@ function PreviewTable({ rows }: { rows: ParsedRow[] }) {
                 </td>
                 <td className="px-2 py-1.5 max-w-xs truncate">
                   {r.parsed?.prompt}
+                  {r.parsed?.imageCount ? (
+                    <span className="ml-1 rounded bg-sky-100 px-1 py-0.5 text-sky-800" title="Số ảnh trong đề bài">
+                      🖼 {r.parsed.imageCount}
+                    </span>
+                  ) : null}
                 </td>
                 <td className="px-2 py-1.5 max-w-[200px]">
                   {r.parsed ? (
@@ -578,7 +728,11 @@ function PreviewTable({ rows }: { rows: ParsedRow[] }) {
                   {r.parsed?.difficulty}
                 </td>
                 <td className="px-2 py-1.5">
-                  {r.parsed?.passageId ? (
+                  {word && r.parsed?.passageTitleRaw ? (
+                    <span className="truncate text-emerald-700" title={r.parsed.passageTitleRaw}>
+                      ✓ {r.parsed.passageTitleRaw}
+                    </span>
+                  ) : r.parsed?.passageId ? (
                     <span className="truncate text-emerald-700">
                       ✓ {r.parsed.passageTitleRaw}
                     </span>
@@ -645,6 +799,11 @@ function DoneScreen({ result }: { result: ConfirmResponse }) {
       <div className="rounded border border-emerald-300 bg-emerald-50 p-4 text-center">
         <div className="text-3xl font-bold text-emerald-700">{result.imported}</div>
         <div className="text-xs text-emerald-800">câu hỏi đã import</div>
+        {(result.passagesCreated ?? 0) > 0 || (result.imagesUploaded ?? 0) > 0 ? (
+          <div className="mt-1 text-xs text-emerald-800">
+            kèm {result.passagesCreated ?? 0} đoạn văn và {result.imagesUploaded ?? 0} ảnh
+          </div>
+        ) : null}
       </div>
       {(result.skippedError > 0 || result.skippedWarning > 0) && (
         <div className="rounded border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800">

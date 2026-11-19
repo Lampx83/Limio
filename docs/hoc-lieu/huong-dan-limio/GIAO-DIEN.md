@@ -187,8 +187,9 @@ gồm nhiều ca" — đã lỗi thời, đừng lặp lại.)
 
 **Thiết kế đề thi** (`/instructor/exams`):
 - "+ Tạo bài thi mới" hoặc "+ Tạo đề không gắn khoá học". Mỗi đề có tab Tổng quan,
-  Nội dung. "+ Thêm câu hỏi" → "Lấy câu hỏi từ đâu?" → Ngân hàng câu hỏi hoặc Nhập
-  thủ công. Lấy từ ngân hàng có 3 cách: "Chọn nhanh theo tiêu chí", "Chọn thủ công",
+  Nội dung. "+ Thêm câu hỏi" → "Lấy câu hỏi từ đâu?" → "AI import", "Ngân hàng câu hỏi",
+  "Nhập thủ công", "Excel import" hoặc "Word import" (file .docx theo file mẫu: đủ 10 dạng câu,
+  ảnh và đoạn văn; có bước xem trước, nút "Tải file mẫu"). Lấy từ ngân hàng có 3 cách: "Chọn nhanh theo tiêu chí", "Chọn thủ công",
   "Theo ma trận đề thi". Đề chia "Phần" (ví dụ "Phần 2 - Tự luận").
 - **Hai mức Cơ bản / Nâng cao.** *Cơ bản* là trình hướng dẫn 3 bước: "Chọn nội dung
   cần kiểm tra" → "Cấu hình đề" (Số câu hỏi, Thời gian làm bài, "Đề này dành cho",

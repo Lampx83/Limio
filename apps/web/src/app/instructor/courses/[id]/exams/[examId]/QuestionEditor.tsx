@@ -40,6 +40,8 @@ const EXAM_PICKER_TYPES: readonly PickedType[] = [
   "drag_drop_fill",
 ];
 
+import { looksLikeHtml } from "@/lib/richText";
+
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
   ssr: false,
 });
@@ -531,13 +533,20 @@ export default function QuestionEditor({
       {v.type !== "drag_drop_fill" && (
         <div>
           <label className="block text-sm font-medium">Đề câu hỏi</label>
-          <textarea
-            required
-            rows={3}
-            value={v.prompt}
-            onChange={(e) => setV({ ...v, prompt: e.target.value })}
-            className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
-          />
+          {looksLikeHtml(v.prompt) ? (
+            // Đề có ảnh (nhập từ Word) được lưu dạng HTML: sửa bằng trình soạn có hình, không in thẻ ra ô chữ.
+            <div className="mt-1">
+              <RichTextEditor value={v.prompt} onChange={(html) => setV({ ...v, prompt: html })} minHeight={100} />
+            </div>
+          ) : (
+            <textarea
+              required
+              rows={3}
+              value={v.prompt}
+              onChange={(e) => setV({ ...v, prompt: e.target.value })}
+              className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
+            />
+          )}
         </div>
       )}
 

@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, MoreHorizontal, PenLine, Plus, Sparkles, Upload } from "lucide-react";
+import { BookOpen, FileText, MoreHorizontal, PenLine, Plus, Sparkles, Upload } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import PassageEditor from "./PassageEditor";
 import QuestionEditor from "./QuestionEditor";
 import { renderDoc, type TiptapDoc } from "@/components/exam/PassageView";
 import ImportQuestionsModal from "./ImportQuestionsModal";
+import { promptListText } from "@/lib/promptListText";
 import { UNPLAYABLE_TYPE_BADGE, UNPLAYABLE_TYPE_HINT, isPlayableExamQuestionType } from "@/lib/examQuestionSupport";
 
 interface Skill {
@@ -107,7 +108,7 @@ export default function ContentManager({ examId, courseId, editable, passages, q
   const [edit, setEdit] = useState<EditState>({ kind: "idle" });
   const [working, setWorking] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-  const [importMode, setImportMode] = useState<"file" | "ai">("file");
+  const [importMode, setImportMode] = useState<"file" | "ai" | "word">("file");
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   // "Phần" (ExamSection) — chỉ khi có ≥2 phần thì khu vực câu hỏi độc lập mới
@@ -356,7 +357,14 @@ export default function ContentManager({ examId, courseId, editable, passages, q
             {q.config.code}
           </span>
         )}
-        <span className="flex-1 whitespace-pre-wrap break-words">{q.prompt || <em className="text-faint">(chưa có đề)</em>}</span>
+        <span className="flex-1 whitespace-pre-wrap break-words">
+          {promptListText(q.prompt).text || (promptListText(q.prompt).images === 0 && <em className="text-faint">(chưa có đề)</em>)}
+          {promptListText(q.prompt).images > 0 && (
+            <span className="ml-1 rounded bg-sky-100 px-1 py-0.5 text-xs text-sky-800" title="Số ảnh trong đề bài">
+              🖼 {promptListText(q.prompt).images}
+            </span>
+          )}
+        </span>
         {!survey && <span className="text-xs text-faint">{q.points} điểm</span>}
         {!survey && q.skills.length === 0 && (
           <span
@@ -503,6 +511,17 @@ export default function ContentManager({ examId, courseId, editable, passages, q
               </button>
               <button
                 type="button"
+                onClick={() => {
+                  setAddMenuOpen(false);
+                  setImportMode("word");
+                  setImportOpen(true);
+                }}
+                className="inline-flex min-w-[160px] items-center justify-center gap-1.5 rounded border border-token bg-white px-3 py-1.5 text-sm font-medium text-muted hover:border-brand-300 hover:bg-brand-soft hover:text-brand-700"
+              >
+                <FileText className="h-4 w-4 text-blue-600" /> Word import
+              </button>
+              <button
+                type="button"
                 onClick={() => setAddMenuOpen(false)}
                 className="text-sm text-faint hover:underline"
               >
@@ -551,6 +570,17 @@ export default function ContentManager({ examId, courseId, editable, passages, q
                       className="block w-full px-3 py-1.5 text-left hover:bg-slate-50"
                     >
                       ⬆ Excel import
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMoreMenuOpen(false);
+                        setImportMode("word");
+                        setImportOpen(true);
+                      }}
+                      className="block w-full px-3 py-1.5 text-left hover:bg-slate-50"
+                    >
+                      📄 Word import
                     </button>
                     {!showPassages && (
                       <button
