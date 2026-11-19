@@ -88,6 +88,8 @@ import { adjacentSlide, emptyLayoutConfig } from "@/lib/limioLiveSlides";
 import LayoutEditor, { LayoutPicker } from "./LayoutEditor";
 import { columnHeaderColor } from "../../classroom/boardNoteStyle";
 import { ResourceTypePicker, ResourceAuthorForm } from "../ResourceEditor";
+import WordCloudView, { WordCloudViewPicker } from "@/components/WordCloudView";
+import { normalizeWordCloudView, WORD_CLOUD_SAMPLE, WORD_CLOUD_VIEW_HINT } from "@/lib/wordCloudView";
 
 type SlideType = "content" | "quiz" | "poll" | "word_cloud" | "collaborate_board" | "whiteboard";
 
@@ -1803,6 +1805,7 @@ function WordCloudEditor({
   onSave: (patch: { config: Record<string, any> }) => void;
 }) {
   const [prompt, setPrompt] = useState(config.prompt ?? "");
+  const view = normalizeWordCloudView(config.viewStyle);
 
   return (
     <div className="flex h-full flex-col">
@@ -1813,9 +1816,15 @@ function WordCloudEditor({
         placeholder="Nhập câu hỏi / prompt cho Word Cloud..."
         className={`${bareInputClass} mb-5 text-[22px] font-bold leading-snug`}
       />
-      <div className="flex flex-grow items-center justify-center rounded-2xl bg-[#F7F6F1] p-8 text-sm text-[#9AA090]">
-        Cụm từ học viên gửi sẽ hiện ở đây khi trình chiếu.
+      <div className="mb-3">
+        <div className="mb-1.5 text-xs font-semibold text-[#6B7260]">Cách hiện trên màn chiếu</div>
+        <WordCloudViewPicker value={view} onChange={(v) => onSave({ config: { ...config, prompt: prompt.trim(), viewStyle: v } })} compact />
+        <p className="mt-1.5 text-xs text-[#9AA090]">{WORD_CLOUD_VIEW_HINT[view]}</p>
       </div>
+      <div className="flex flex-grow items-center justify-center rounded-2xl bg-[#F7F6F1] p-8 text-sm text-[#9AA090]">
+        <WordCloudView view={view} frequency={WORD_CLOUD_SAMPLE} emptyText="" />
+      </div>
+      <p className="mt-2 text-xs text-[#9AA090]">Từ mẫu để xem trước — cụm từ học viên gửi sẽ hiện ở đây khi trình chiếu.</p>
     </div>
   );
 }

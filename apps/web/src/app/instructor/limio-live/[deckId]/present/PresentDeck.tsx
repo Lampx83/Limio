@@ -12,6 +12,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { slideImageSources } from "@/lib/limioLiveImage";
 import { WORD_GRADIENTS } from "@/lib/wordCloudColors";
+import WordCloudView from "@/components/WordCloudView";
 import { RESOURCE_TYPE_LABELS } from "../../ResourceContent";
 import { contentKind } from "../../slideKind";
 import { slideBgFor } from "../../slideThemes";
@@ -1158,7 +1159,7 @@ function SlideStage({
       )}
 
       {slide.type === "word_cloud" && runtime?.kind === "word_cloud" && (
-        <WordCloudSlideView prompt={config.prompt} refId={runtime.refId} />
+        <WordCloudSlideView prompt={config.prompt} refId={runtime.refId} view={config.viewStyle} />
       )}
 
       {slide.type === "collaborate_board" && runtime?.kind === "collaborate_board" && (
@@ -2000,7 +2001,7 @@ function QuestionSlideView({
   );
 }
 
-function WordCloudSlideView({ prompt, refId }: { prompt: string; refId: string }) {
+function WordCloudSlideView({ prompt, refId, view }: { prompt: string; refId: string; view?: string }) {
   const [freq, setFreq] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -2022,28 +2023,11 @@ function WordCloudSlideView({ prompt, refId }: { prompt: string; refId: string }
     };
   }, [refId]);
 
-  const max = Math.max(...Object.values(freq), 1);
-  const sorted = Object.entries(freq)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 50);
-
   return (
     <>
       <h2 className="mb-6 text-[48px] font-bold leading-tight">{prompt}</h2>
-      <div className="flex min-h-[50vh] flex-wrap content-center items-center justify-center gap-5 rounded-2xl bg-[#F7F6F1] p-10">
-        {sorted.length > 0 ? (
-          sorted.map(([word, f], idx) => (
-            <span
-              key={word}
-              className={`rounded-full px-6 py-3 font-bold text-white ${WORD_GRADIENTS[idx % WORD_GRADIENTS.length]}`}
-              style={{ fontSize: `${2.4 + (f / max) * (6 - 2.4)}rem` }}
-            >
-              {word}
-            </span>
-          ))
-        ) : (
-          <p className="text-2xl text-faint">Chưa có câu trả lời nào...</p>
-        )}
+      <div className="flex min-h-[50vh] items-center justify-center rounded-2xl bg-[#F7F6F1] p-10">
+        <WordCloudView view={view} frequency={freq} scale="stage" emptyText="Chưa có câu trả lời nào..." />
       </div>
     </>
   );

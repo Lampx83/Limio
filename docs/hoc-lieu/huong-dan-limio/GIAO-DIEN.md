@@ -839,6 +839,11 @@ Whiteboard), nút **Chọn** → "Chọn tất cả"/"Bỏ chọn", **Xoá** nhi
 viễn", "Dọn sạch thùng rác", "← Danh sách"; sau khi xoá có "Hoàn tác" khoảng 6 giây. Phiên đang mở khi xoá có
 cảnh báo học viên bị ngắt.
 
+**Cách hiện Word Cloud trên màn hình:** trong công cụ Word Cloud, trên khung kết quả có 4 nút chọn kiểu xem:
+**"Thẻ màu"** (mặc định), **"Đám mây chữ"**, **"Bong bóng"**, **"Thanh xếp hạng"** (top 8 kèm số lượt). Kiểu chọn
+được nhớ theo trình duyệt của thầy/cô. Với slide Word Cloud trong bài giảng, hộp sửa slide có dòng **"Cách hiện
+trên màn chiếu"** với 4 kiểu đó, lưu theo từng slide, và khung xem trước dùng từ mẫu.
+
 **Gameshow — nhạc trên màn chiếu.** Màn host có nút loa tròn cạnh "Kết thúc sớm" (nhãn "Tắt nhạc" / "Bật nhạc").
 Nhạc chỉ phát ở màn host, không phát trên máy học viên: sảnh chờ nhạc vui kèm tiếng bong khi có người vào; đang
 trả lời nhạc căng, 5 giây cuối nhịp dồn gấp; lộ đáp án có tiếng chuông; kết thúc có kèn mừng. Trình duyệt chặn tự

@@ -8,7 +8,10 @@ import JoinQrCard from "@/components/ui/JoinQrCard";
 import ToolHistory from "./ToolHistory";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { formatDateTime } from "@/lib/datetime";
-import { WORD_GRADIENTS } from "@/lib/wordCloudColors";
+import WordCloudView, { WordCloudViewPicker } from "@/components/WordCloudView";
+import { DEFAULT_WORD_CLOUD_VIEW, normalizeWordCloudView, type WordCloudView as WordCloudViewKind } from "@/lib/wordCloudView";
+
+const VIEW_STORAGE_KEY = "wordcloud.view";
 
 interface WordCloud {
   id: string;
@@ -44,6 +47,24 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Kiểu hiển thị nhớ theo trình duyệt của giảng viên (chỉ là sở thích xem, không gắn với từng cloud).
+  const [view, setView] = useState<WordCloudViewKind>(DEFAULT_WORD_CLOUD_VIEW);
+  useEffect(() => {
+    try {
+      setView(normalizeWordCloudView(localStorage.getItem(VIEW_STORAGE_KEY)));
+    } catch {
+      // localStorage bị chặn — dùng mặc định
+    }
+  }, []);
+  const changeView = (v: WordCloudViewKind) => {
+    setView(v);
+    try {
+      localStorage.setItem(VIEW_STORAGE_KEY, v);
+    } catch {
+      // bỏ qua
+    }
+  };
 
   // Stateless mode: student list supplied but no lesson → manual entry, no QR
   const [submissions, setSubmissions] = useState<string[]>([]);
@@ -211,11 +232,6 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
     if (text.length > 0) { setSubmissions((prev) => [...prev, text]); setSubmissionInput(""); }
   };
 
-  const getWordSize = (frequency: number, maxFrequency: number) => {
-    if (maxFrequency === 0) return 0.875;
-    return 0.875 + (frequency / maxFrequency) * (2.5 - 0.875);
-  };
-
   // Xem shareUrl trong lib/apiUrl.ts — production chạy dưới một tiền tố.
   const cloudUrl = currentCloud && !isStateless
     ? shareUrl(`/learn/word-cloud/${currentCloud.id}`)
@@ -252,32 +268,27 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
     </button>
   );
 
-  const WordCloudDisplay = ({ wordFrequency, totalSubmissions }: { wordFrequency: Record<string, number>; totalSubmissions: number }) => {
-    const maxFrequency = Math.max(...Object.values(wordFrequency), 1);
-    const sortedWords = Object.entries(wordFrequency).sort(([, a], [, b]) => b - a).slice(0, 50);
-    return (
-      <>
-        <div className="bg-[rgb(var(--surface-muted))] rounded-xl p-6 min-h-64 flex items-center justify-center">
-          <div className="flex flex-wrap gap-3 justify-center items-center">
-            {sortedWords.length > 0 ? sortedWords.map(([word, freq], idx) => (
-              <span
-                key={word}
-                className={`px-3 py-1.5 rounded-full font-semibold text-white ${WORD_GRADIENTS[idx % WORD_GRADIENTS.length]} transition-transform hover:scale-110`}
-                style={{ fontSize: `${getWordSize(freq, maxFrequency)}rem` }}
-              >
-                {word}
-              </span>
-            )) : (
-              <p className="text-muted text-sm">Chưa có gửi nào...</p>
-            )}
-          </div>
-        </div>
-        <div className="mt-4 text-center text-sm text-muted">
-          Tổng cộng: <span className="font-semibold">{totalSubmissions}</span> gửi
-        </div>
-      </>
-    );
-  };
+  const WordCloudDisplay = ({
+    wordFrequency,
+    totalSubmissions,
+    scale = "panel",
+  }: {
+    wordFrequency: Record<string, number>;
+    totalSubmissions: number;
+    scale?: "panel" | "full";
+  }) => (
+    <>
+      <div className="mb-3 flex justify-center">
+        <WordCloudViewPicker value={view} onChange={changeView} compact />
+      </div>
+      <div className="bg-[rgb(var(--surface-muted))] rounded-xl p-6 min-h-64 flex items-center justify-center">
+        <WordCloudView view={view} frequency={wordFrequency} scale={scale} />
+      </div>
+      <div className="mt-4 text-center text-sm text-muted">
+        Tổng cộng: <span className="font-semibold">{totalSubmissions}</span> gửi
+      </div>
+    </>
+  );
 
   // ── Fullscreen active view ──────────────────────────────────────────────────
   if (isFullscreen && currentCloud && (results || isStateless)) {
@@ -309,13 +320,13 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
               />
               <div>
                 <p className="text-4xl md:text-5xl font-bold text-center mb-8 leading-tight">{currentCloud.prompt}</p>
-                <WordCloudDisplay wordFrequency={wordFrequency} totalSubmissions={totalSubmissions} />
+                <WordCloudDisplay wordFrequency={wordFrequency} totalSubmissions={totalSubmissions} scale="full" />
               </div>
             </div>
           ) : (
             <div className="mt-6">
               <p className="text-4xl md:text-5xl font-bold text-center mb-8 leading-tight">{currentCloud.prompt}</p>
-              <WordCloudDisplay wordFrequency={wordFrequency} totalSubmissions={totalSubmissions} />
+              <WordCloudDisplay wordFrequency={wordFrequency} totalSubmissions={totalSubmissions} scale="full" />
               {isStateless && (
                 <div className="mt-6 space-y-4">
                   <div className="flex gap-2">
