@@ -55,6 +55,7 @@ export default function AnalyticsPanel({
   const [items, setItems] = useState<Item[] | null>(null);
   const [reliability, setReliability] = useState<Reliability | null | undefined>(undefined);
   const [distribution, setDistribution] = useState<DistBin[] | null | undefined>(undefined);
+  const [pendingGrading, setPendingGrading] = useState(0);
   const [showOnlyFlagged, setShowOnlyFlagged] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
@@ -69,13 +70,19 @@ export default function AnalyticsPanel({
       ),
     );
     if (!r.ok) { setErr(`HTTP ${r.status}`); return; }
-    const j = (await r.json()) as { items: Item[]; reliability: Reliability | null; distribution: DistBin[] | null };
+    const j = (await r.json()) as {
+      items: Item[];
+      reliability: Reliability | null;
+      distribution: DistBin[] | null;
+      pendingGrading?: number;
+    };
     setItems(j.items);
     setReliability(j.reliability ?? null);
     setDistribution(j.distribution ?? null);
+    setPendingGrading(j.pendingGrading ?? 0);
   };
 
-  useEffect(() => { void load(); }, [examId]);
+  useEffect(() => { void load(); }, [examId, sessionId]);
 
   const handleRun = async () => {
     setRunning(true);
@@ -107,9 +114,20 @@ export default function AnalyticsPanel({
           <div>
             <h2 className="flex items-center gap-1.5 text-base font-semibold"><BarChart2 className="h-5 w-5 shrink-0" /> Phân tích đề thi</h2>
             <p className="mt-0.5 text-xs text-faint">
-              {latestComputedAt
-                ? `Cập nhật lúc ${formatDateTime(latestComputedAt)}`
+              {reliability === undefined
+                ? "Đang tải..."
+                : reliability
+                ? `Tính trên ${reliability.n} bài đã chấm xong${
+                    pendingGrading > 0
+                      ? ` · còn ${pendingGrading} bài chờ chấm, số liệu sẽ đổi khi chấm xong`
+                      : ""
+                  }.`
+                : pendingGrading > 0
+                ? `Chưa đủ bài đã chấm xong (cần ≥ 5) — còn ${pendingGrading} bài chờ chấm.`
                 : "Chưa có dữ liệu (cần ≥ 5 lượt thi đã nộp)."}
+              {latestComputedAt && !sessionId
+                ? ` Chỉ số từng câu cập nhật lúc ${formatDateTime(latestComputedAt)}.`
+                : ""}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -252,6 +270,8 @@ export default function AnalyticsPanel({
                   <td colSpan={6} className="px-2 py-8 text-center text-sm text-faint">
                     {showOnlyFlagged
                       ? "Không có câu nào bị cờ."
+                      : sessionId
+                      ? "Chưa có analytics — cần ≥ 5 lượt thi đã nộp."
                       : "Chưa có analytics — cần ≥ 5 lượt thi đã nộp, sau đó bấm \"Tính lại ngay\"."}
                   </td>
                 </tr>

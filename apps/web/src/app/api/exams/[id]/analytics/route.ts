@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@feedbackme/db";
+import { Prisma, prisma } from "@feedbackme/db";
 import {
   assertCanEditExam,
   computeItemStatsForRun,
+  reliabilityFromMatrix,
   runAttemptWhere,
 } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
@@ -80,36 +81,50 @@ export async function GET(
   });
 
   // ── Exam-level reliability (Cronbach α) + score distribution ────────
-  const [reliability, distribution] = await Promise.all([
+  const [reliability, distribution, pendingGrading] = await Promise.all([
     computeReliability(exam.id, sessionId),
     computeDistribution(exam.id, sessionId),
+    countPendingGrading(exam.id, sessionId),
   ]);
 
-  return NextResponse.json({ items, reliability, distribution });
+  return NextResponse.json({ items, reliability, distribution, pendingGrading });
 }
 
 // ─── Cronbach α + mean/SD from graded attempt scores ───────────────────────
 
 interface Reliability {
-  n: number;           // number of graded attempts
-  mean: number;        // mean total score (%)
-  sd: number;          // SD of total scores
-  alpha: number;       // Cronbach α (-1 = insufficient data)
+  n: number;           // số bài đã chấm xong đưa vào tính
+  mean: number;        // điểm TB (%)
+  sd: number;          // độ lệch chuẩn điểm tổng (%)
+  alpha: number;       // Cronbach α (-1 = không tính được / âm)
   computedAt: string;
+}
+
+/**
+ * Bài còn câu chờ chấm tay bị LOẠI khỏi mọi thống kê tổng: câu đó chưa có điểm
+ * (autoScore/manualScore đều null), tính như 0 điểm sẽ kéo điểm TB xuống và
+ * làm méo α. Số bài bị loại được trả riêng để giao diện nói rõ.
+ */
+const fullyGraded: Prisma.ExamAttemptWhereInput = {
+  answers: { none: { needsGrading: true } },
+};
+
+async function countPendingGrading(
+  examId: string,
+  sessionId: string | null,
+): Promise<number> {
+  return prisma.examAttempt.count({
+    where: { ...runAttemptWhere(examId, sessionId), answers: { some: { needsGrading: true } } },
+  });
 }
 
 async function computeReliability(
   examId: string,
   sessionId: string | null,
 ): Promise<Reliability | null> {
-  const MIN_N = 5;
-
-  // Load graded attempt scores + per-question binary responses.
   const attempts = await prisma.examAttempt.findMany({
-    where: runAttemptWhere(examId, sessionId),
+    where: { AND: [runAttemptWhere(examId, sessionId), fullyGraded] },
     select: {
-      id: true,
-      scorePct: true,
       answers: {
         select: {
           questionId: true,
@@ -121,14 +136,11 @@ async function computeReliability(
     },
   });
 
-  if (attempts.length < MIN_N) return null;
-
-  // Build score matrix: attempt × question → proportion-correct (0..1)
   const questionIds = [
     ...new Set(attempts.flatMap((a) => a.answers.map((ans) => ans.questionId))),
   ];
-  if (questionIds.length < 2) return null;
 
+  // Hàng = bài làm, cột = câu hỏi, ô = tỉ lệ điểm đạt được (0..1).
   const matrix: number[][] = attempts.map((a) =>
     questionIds.map((qId) => {
       const ans = a.answers.find((x) => x.questionId === qId);
@@ -139,36 +151,8 @@ async function computeReliability(
     }),
   );
 
-  // Total scores per attempt (sum of item proportions, scaled to 0..100 %)
-  const k = questionIds.length;
-  const totals = matrix.map((row) =>
-    (row.reduce((s, x) => s + x, 0) / k) * 100,
-  );
-
-  const n = totals.length;
-  const mean = totals.reduce((s, x) => s + x, 0) / n;
-  const sd = Math.sqrt(totals.reduce((s, x) => s + (x - mean) ** 2, 0) / n);
-
-  // Cronbach α = k/(k-1) * (1 − Σσᵢ²/σ²_total)
-  const totalVariance = totals.reduce((s, x) => s + (x - mean) ** 2, 0) / n;
-  if (totalVariance === 0) return { n, mean, sd, alpha: -1, computedAt: new Date().toISOString() };
-
-  const itemVarianceSum = questionIds.reduce((sum, _, qi) => {
-    const colScores = matrix.map((row) => (row[qi] ?? 0) * 100);
-    const colMean = colScores.reduce((s, x) => s + x, 0) / n;
-    const colVar = colScores.reduce((s, x) => s + (x - colMean) ** 2, 0) / n;
-    return sum + colVar;
-  }, 0);
-
-  const alpha = (k / (k - 1)) * (1 - itemVarianceSum / totalVariance);
-
-  return {
-    n,
-    mean: Math.round(mean * 10) / 10,
-    sd: Math.round(sd * 10) / 10,
-    alpha: Math.round(Math.max(-1, Math.min(1, alpha)) * 100) / 100,
-    computedAt: new Date().toISOString(),
-  };
+  const stats = reliabilityFromMatrix(matrix);
+  return stats ? { ...stats, computedAt: new Date().toISOString() } : null;
 }
 
 // ─── Score distribution (10 % bins) ───────────────────────────────────────────
@@ -180,7 +164,7 @@ async function computeDistribution(
   sessionId: string | null,
 ): Promise<DistBin[] | null> {
   const attempts = await prisma.examAttempt.findMany({
-    where: { ...runAttemptWhere(examId, sessionId), scorePct: { not: null } },
+    where: { AND: [runAttemptWhere(examId, sessionId), fullyGraded, { scorePct: { not: null } }] },
     select: { scorePct: true },
   });
   if (attempts.length < 5) return null;

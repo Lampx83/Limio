@@ -47,6 +47,7 @@ export * from "./mock-results";
 export * from "./practice";
 export * from "./clone";
 export * from "./analytics";
+export * from "./reliability";
 export * from "./patterns";
 export * from "./exam-rooms";
 export * from "./room-authz";
