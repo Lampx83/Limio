@@ -17,8 +17,6 @@ import LessonRichText from "./lesson/LessonRichText";
 import HskVocabView from "./lesson/HskVocabView";
 import HskSectionHead from "./lesson/HskSectionHead";
 import HskVocabSwitch from "./lesson/HskVocabSwitch";
-import { foldSummary, isFoldedSection } from "@/lib/hskAuthored";
-import FoldSection from "@/components/lesson/FoldSection";
 import { planHskSections, type HskKind } from "@/lib/hskLesson";
 import { readGrammarData } from "@/lib/hskGrammar";
 import AudioLessonPlayer from "./AudioLessonPlayer";
@@ -195,8 +193,7 @@ export default function LessonContent({
                         />
                       </div>
                     );
-                    // Mục phụ (Ngữ pháp, Văn hoá, Lưu ý về từ) gập sẵn kèm dòng tóm tắt; mục chính mở sẵn.
-                    return seg.head && isFoldedSection(seg.head.section.vi) ? <FoldSection summary={foldSummary(seg.html, 120, true)}>{body}</FoldSection> : body;
+                    return body;
                   })()}
               </Fragment>
             ))

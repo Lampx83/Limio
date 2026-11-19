@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { authoredKind, foldSummary, isAuthoredLesson, isFoldedSection, parseAuthoredHeading, planAuthored, splitAuthoredHtml } from "./hskAuthored";
+import { authoredKind, isAuthoredLesson, parseAuthoredHeading, planAuthored, splitAuthoredHtml } from "./hskAuthored";
 import { hskAuthoredHtml } from "./hskAuthoredDom";
 import { planHskSections } from "./hskLesson";
 import { splitVocabMeaning, splitVocabNote } from "./hskVocab";
@@ -104,40 +104,5 @@ describe("từ vựng bài tác giả", () => {
     expect(splitVocabNote("Từ nhận biết.")).toEqual({ tag: "Từ nhận biết", active: false, note: null });
     expect(splitVocabNote("Wǒ xiǎng zū.")).toEqual({ tag: null, active: false, note: "Wǒ xiǎng zū." });
     expect(splitVocabNote(undefined)).toEqual({ tag: null, active: false, note: null });
-  });
-});
-
-describe("mục phụ gập sẵn (docs/tieu-chi/limio-language-ux-p1-ly-thuyet.md, mục E)", () => {
-  it("chỉ gập đúng ba mục phụ; mục chính và mục ôn của bài tổng hợp thì không", () => {
-    expect(isFoldedSection("Ngữ pháp")).toBe(true);
-    expect(isFoldedSection("Văn hoá")).toBe(true);
-    expect(isFoldedSection("Lưu ý về từ")).toBe(true);
-    for (const vi of ["Hội thoại", "Từ mới", "Tình huống", "Ôn ngữ pháp", "Ôn văn hoá", "Ôn từ", undefined, ""]) expect(isFoldedSection(vi as string | undefined)).toBe(false);
-  });
-
-  it("tóm tắt ngữ pháp là tiêu đề các điểm (công thức), bỏ token pinyin", () => {
-    const html = '<h3>1. {{一^yī}} + 屋子 / 脸  (danh từ mượn làm lượng từ)</h3><p>Cách dùng…</p><h3>2. 来得及 / 来不及</h3>';
-    expect(foldSummary(html)).toEqual(["1. 一 + 屋子 / 脸 (danh từ mượn làm lượng từ)", "2. 来得及 / 来不及"]);
-  });
-
-  it("tóm tắt Lưu ý về từ là các từ ở cột đầu của bảng", () => {
-    const html = "<table><tr><th>Từ</th><th>Dễ nhầm</th></tr><tr><td>整 (zhěng)</td><td>x</td></tr><tr><td>干 (gān)</td><td>y</td></tr></table>";
-    expect(foldSummary(html)).toEqual(["整、干"]);
-  });
-
-  it("tóm tắt Văn hoá là câu đầu của đoạn đầu tiên, cắt gọn khi quá dài", () => {
-    expect(foldSummary("<p>Ở nhiều thành phố lớn, nhà nằm trong khu dân cư. Câu thứ hai.</p>")).toEqual(["Ở nhiều thành phố lớn, nhà nằm trong khu dân cư."]);
-    const long = `<p>${"chữ ".repeat(60)}.</p>`;
-    const [line] = foldSummary(long, 50);
-    expect(line!.length).toBeLessThanOrEqual(50);
-    expect(line!.endsWith("…")).toBe(true);
-  });
-
-  it("giữ token pinyin khi được yêu cầu (để dựng pinyin dưới chữ ở trình duyệt)", () => {
-    expect(foldSummary('<h3>{{<span style="font-size:1.3em">一屋子</span>^yì wū zi}} 都是</h3>', 120, true)).toEqual(["{{一屋子^yì wū zi}} 都是"]);
-  });
-
-  it("không có gì để tóm tắt thì trả mảng rỗng", () => {
-    expect(foldSummary("")).toEqual([]);
   });
 });

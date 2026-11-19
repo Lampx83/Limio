@@ -141,8 +141,6 @@ export const viReader = {
   "reader.prefs.reset": "Đặt lại",
   "reader.prefs.tapHint": "Chạm vào câu để xem",
   "reader.prefs.sampleText": "Cà phê là một phần lớn của lối sống.",
-  "reader.fold.open": "Xem chi tiết",
-  "reader.fold.close": "Thu gọn",
   "reader.prefs.translation": "Bản dịch",
   "reader.prefs.sampleTranslation": "Chào bạn, bạn khoẻ không?",
   "reader.nav.prevShort": "Trước",

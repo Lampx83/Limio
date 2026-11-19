@@ -2,11 +2,8 @@
 
 Nguồn: `docs/mockup/ngoai-ngu-ux.html` + đề xuất lý thuyết (gập mục phụ, mục lục phần, chế độ từng bước). Áp dụng cho bài HSK tác giả (bản gốc Limio); các khoá khác theo sau.
 
-## E. Gập các mục phụ, mở sẵn mục chính
-- **E1.** Given bài HSK tác giả, When mục có tên Việt đúng "Ngữ pháp", "Văn hoá" hoặc "Lưu ý về từ", Then dưới tiêu đề mục (vẫn hiện, vẫn có số) chỉ có dòng tóm tắt và nút "Xem chi tiết"; nội dung nằm trong phần gập.
-- **E2.** Dòng tóm tắt: ngữ pháp = tiêu đề các điểm (công thức); Lưu ý về từ = các từ ở cột đầu bảng; Văn hoá = câu đầu của đoạn đầu tiên (cắt gọn). Không có gì để tóm tắt thì không hiện dòng, chỉ có nút.
-- **E3.** Bấm nút mở/đóng phần gập; nút đổi nhãn "Xem chi tiết" ↔ "Thu gọn" và có `aria-expanded`. Nội dung gập vẫn nằm trong trang (tìm kiếm trên trang, chạm-để-xem pinyin, âm thanh vẫn hoạt động khi mở).
-- **E4.** Hội thoại, Từ mới, Tình huống và mọi mục khác mở sẵn như cũ. Mục "Ôn ngữ pháp", "Ôn văn hoá"… của bài tổng hợp (tên khác) không đổi.
+## E. ~~Gập các mục phụ, mở sẵn mục chính~~ (ĐÃ BỎ 19/11/2026)
+Người dùng chọn bỏ hẳn phần gập: Ngữ pháp, Văn hoá và Lưu ý về từ mở sẵn như mọi mục khác, không còn dòng tóm tắt và nút "Xem chi tiết" / "Thu gọn". Mã `FoldSection`, `foldSummary`, `isFoldedSection` và khoá i18n `reader.fold.*` đã xoá.
 
 ## F. Mục lục phần trong thanh bên trái (máy tính)
 - **F1.** Từ `lg`, bài đang xem trong thanh bài mở rộng ra các mục có số (01, 02…); mục đang đọc được tô đậm khi cuộn; bấm một mục thì cuộn tới mục đó. Bài không có mục có số thì không hiện.

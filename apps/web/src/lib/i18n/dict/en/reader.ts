@@ -144,8 +144,6 @@ export const enReader: PartialDict<typeof viReader> = {
   "reader.prefs.reset": "Reset",
   "reader.prefs.tapHint": "Tap a sentence to show",
   "reader.prefs.sampleText": "Coffee is a big part of our lifestyle.",
-  "reader.fold.open": "Show details",
-  "reader.fold.close": "Collapse",
   "reader.prefs.translation": "Translation",
   "reader.prefs.sampleTranslation": "Hello, how are you?",
   "reader.nav.prevShort": "Prev",
