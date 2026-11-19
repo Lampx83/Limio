@@ -1,0 +1,42 @@
+/*
+ * Bảng màu «giấy sách» cho bài HSK: nền giấy kem, chữ mực ấm, xanh rêu thay xanh chanh, đỏ con dấu thay hồng.
+ *
+ * Bật khi trang có `.hsk-paper` (importer chèn khi thân bài có `:::mausach`: CHỈ đổi màu, giữ bố cục HSK) hoặc `.hsk-front` (`:::sach`, trang sách đầy đủ,
+ * xem hskFront.css). Không có dấu nào thì không rule nào ở đây áp, các bài khác giữ màu xanh chanh và hồng như cũ.
+ *
+ * Đổi ở hai cấp vì biến màu của giao diện HSK (`--hk-pink`, `--hk-pink-deep`) tự khai báo trên `.lesson-hsk`, che mất giá trị kế thừa từ khung:
+ *  - khung bài (`[data-lesson-frame]`, gồm thanh bài bên trái và thân bài): nền, mặt thẻ, đường kẻ, chữ và màu chính (`--brand`) → mọi thứ dùng biến hệ thống tự theo;
+ *  - thân bài (`.lesson-hsk`): hai biến hồng của giao diện HSK → đỏ con dấu.
+ * Mọi màu dẫn xuất của giao diện HSK (`--hk-soft`, `--hk-line`, `--hk-deep`…) tự tính lại từ các biến này.
+ */
+[data-lesson-frame]:has(:is(.hsk-paper, .hsk-front)) {
+  --bg: 243 237 222;
+  --surface: 251 247 238;
+  --surface-muted: 242 236 222;
+  --border: 224 214 194;
+  --text: 36 30 22;
+  --text-muted: 92 80 64;
+  --text-faint: 150 138 118;
+  --brand: 74 99 60;
+  --brand-soft: 236 240 224;
+  background: rgb(var(--bg));
+}
+.dark [data-lesson-frame]:has(:is(.hsk-paper, .hsk-front)) {
+  --bg: 24 21 16;
+  --surface: 33 29 22;
+  --surface-muted: 41 36 28;
+  --border: 62 55 42;
+  --text: 240 232 216;
+  --text-muted: 182 170 148;
+  --text-faint: 128 118 100;
+  --brand: 150 178 120;
+  --brand-soft: 38 46 30;
+}
+.lesson-hsk:has(:is(.hsk-paper, .hsk-front)) {
+  --hk-pink: 168 36 52;
+  --hk-pink-deep: 143 26 42;
+}
+.dark .lesson-hsk:has(:is(.hsk-paper, .hsk-front)) {
+  --hk-pink: 214 96 112;
+  --hk-pink-deep: 232 130 144;
+}

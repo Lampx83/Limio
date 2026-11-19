@@ -866,6 +866,23 @@ export function markdownToHtml(
       continue;
     }
 
+    // Dấu hiệu «trang sách»:  :::sach  (một dòng, không đóng). Chỉ chèn một phần tử ẩn `.hsk-front`; giao diện bài HSK (hskFront.css) thấy dấu này thì
+    // dựng cả trang theo kiểu sách: đầu bài như bìa, mục như đầu chương, chữ có chân, bảng kẻ ngang. Đặt NGAY SAU tiêu đề mục đầu tiên (không đặt trước mọi
+    // tiêu đề, vì phần đứng trước tiêu đề đầu sẽ thành một khối riêng, trống).
+    if (/^:::sach\s*$/.test(t)) {
+      out.push('<div class="hsk-front" aria-hidden="true"></div>');
+      i++;
+      continue;
+    }
+
+    // Dấu hiệu «màu giấy»:  :::mausach  (một dòng, không đóng). Như `:::sach` nhưng CHỈ đổi bảng màu của bài (nền giấy kem, mực ấm, xanh rêu, đỏ con dấu), giữ nguyên bố cục
+    // của giao diện HSK; dùng cho các bài thường muốn cùng tông sách với phần mở đầu. Cũng đặt ngay sau tiêu đề mục đầu tiên.
+    if (/^:::mausach\s*$/.test(t)) {
+      out.push('<div class="hsk-paper" aria-hidden="true"></div>');
+      i++;
+      continue;
+    }
+
     // Thẻ nhân vật:  :::nhanvat  rồi mỗi dòng `![mô tả](ảnh) | Tên | Chữ Hán | Vai trò`  rồi `:::`.
     // Thay cho bảng giới thiệu nhân vật: chân dung lớn trong thẻ riêng (lưới 3 cột, 1 cột trên điện thoại); kiểu dáng do CSS của giao diện bài (`.char-cards`).
     if (/^:::nhanvat\s*$/.test(t)) {

@@ -1,0 +1,397 @@
+/*
+ * Giao diện «trang sách» cho phần mở đầu của khoá HSK (lời nói đầu, giới thiệu giáo trình, nhân vật, bảng phân bố).
+ *
+ * Bật khi thân bài có dấu hiệu `:::sach` (importer chèn phần tử ẩn `.hsk-front`, xem import-course.ts): chỉ cần có dấu đó trên trang là cả bài
+ * đổi dáng, không buộc vào id bài hay khoá nào nên phần mở đầu của khoá khác dùng lại được. Không có dấu đó thì không rule nào ở đây áp.
+ *
+ * Ý tưởng: đầu bài là BÌA (khung kẻ đôi, con dấu đỏ, tên sách chữ có chân, đường trang trí); mỗi mục là ĐẦU CHƯƠNG (số nhỏ, chữ Hán lớn, tên Việt,
+ * đường kẻ ngắn); chữ thân bài là chữ có chân trên cột hẹp, câu mở đầu in nghiêng, đoạn kế có chữ cái lớn; bảng kẻ ngang kiểu sách (kẻ đậm
+ * đầu và cuối, kẻ mảnh dưới tiêu đề), không khung, không nền; thẻ nhân vật thành «danh sách vai» (ảnh tròn, ngăn bằng đường kẻ dọc).
+ * Vuông góc, một tông giấy kem, cùng bảng màu xanh chanh và hồng của giao diện HSK (không thêm màu mới ngoài tông giấy).
+ * Mọi màu theo biến hệ thống nên tự theo chế độ tối.
+ */
+.lesson-hsk:has(.hsk-front) {
+  --bk-paper: color-mix(in srgb, #f3ead6 44%, rgb(var(--surface)));
+  --bk-ink: rgb(var(--text));
+  --bk-ink-soft: color-mix(in srgb, rgb(var(--text)) 72%, transparent);
+  --bk-rule: color-mix(in srgb, rgb(var(--text)) 24%, transparent);
+  --bk-rule-soft: color-mix(in srgb, rgb(var(--text)) 11%, transparent);
+  --bk-accent: var(--hk-deep);
+  --bk-seal: rgb(var(--hk-pink-deep));
+  /* Chỉ dùng phông có ĐỦ bộ chữ tiếng Việt: Georgia và Times New Roman (thử trên macOS: Iowan Old Style, Palatino, Charter làm vỡ ư, ơ và các dấu chồng,
+     trình duyệt vá từng ký tự bằng phông khác). Không dùng các phông đó, kể cả khi đứng sau Georgia trong chuỗi. */
+  --bk-serif: Georgia, "Times New Roman", "Noto Serif", "DejaVu Serif", serif;
+  --bk-han-serif: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", "Noto Serif SC", "SimSun", serif;
+}
+.dark .lesson-hsk:has(.hsk-front) {
+  --bk-paper: color-mix(in srgb, #3a3120 30%, rgb(var(--surface)));
+  --bk-seal: rgb(var(--hk-pink-deep));
+}
+
+/* ---------- Bìa (đầu bài) ---------- */
+.lesson-hsk:has(.hsk-front) .hsk-hero {
+  padding: 2.75rem 1.5rem 2.4rem;
+  border: 1px solid var(--bk-rule);
+  border-radius: 0;
+  background: var(--bk-paper);
+  text-align: center;
+}
+/* Khung kẻ đôi bên trong, như bìa sách; thay hai vòng tròn màu của kiểu thường. */
+.lesson-hsk:has(.hsk-front) .hsk-hero::before {
+  inset: 0.65rem;
+  border: 1px solid var(--bk-rule);
+  background: none;
+  pointer-events: none;
+}
+/* Chữ Hán mờ lớn ở giữa làm hoạ tiết nền (chữ của `data-wm`). */
+.lesson-hsk:has(.hsk-front) .hsk-hero::after {
+  right: 50%;
+  bottom: -1.2rem;
+  transform: translateX(50%);
+  font-size: 15rem;
+  color: rgb(var(--hk-pink) / 0.05);
+}
+.lesson-hsk:has(.hsk-front) .hsk-hero-row {
+  flex-direction: column;
+  align-items: center;
+  gap: 1.15rem;
+}
+/* Dải «Mở đầu · 开篇 · Làm quen…»: bỏ thanh xanh phủ ngang của kiểu thường, thành dòng nhỏ chữ có chân căn giữa trên tên sách. */
+.lesson-hsk:has(.hsk-front) .hsk-hero:has(.hsk-unitbar) {
+  padding-top: 2.6rem;
+}
+.lesson-hsk:has(.hsk-front) .hsk-unitbar {
+  justify-content: center;
+  align-items: center;
+  gap: 0.25rem 0.9rem;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  background: none;
+  color: var(--bk-ink-soft);
+}
+.lesson-hsk:has(.hsk-front) .hsk-kicker-no,
+.lesson-hsk:has(.hsk-front) .hsk-kicker-vi {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  font: 600 0.78rem var(--bk-serif);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.lesson-hsk:has(.hsk-front) .hsk-kicker-zh {
+  font: 400 1.15rem var(--bk-han-serif);
+  color: var(--bk-seal);
+}
+.lesson-hsk:has(.hsk-front) :is(.hsk-kicker-no, .hsk-kicker-zh)::after {
+  content: "·";
+  margin-left: 0.9rem;
+  color: var(--bk-rule);
+}
+/* Con dấu: vuông đỏ chữ trắng, nghiêng nhẹ, không bóng nổi. */
+.lesson-hsk:has(.hsk-front) .hsk-seal {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 0.2rem;
+  background: var(--bk-seal);
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.5), 0 1px 0 rgb(0 0 0 / 0.08);
+  transform: rotate(-3deg);
+}
+.lesson-hsk:has(.hsk-front) .hsk-title {
+  margin-bottom: 0;
+  font-family: var(--bk-serif);
+  font-size: clamp(2.1rem, 5.5vw, 3.1rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+/* Đường trang trí dưới tên sách: hai nét mảnh, giữa là hình thoi. */
+.lesson-hsk:has(.hsk-front) .hsk-title::after {
+  content: "◆";
+  display: block;
+  width: 11rem;
+  margin: 1rem auto 0;
+  font-size: 0.55rem;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--bk-seal);
+  background:
+    linear-gradient(var(--bk-rule), var(--bk-rule)) left center / calc(50% - 0.9rem) 1px no-repeat,
+    linear-gradient(var(--bk-rule), var(--bk-rule)) right center / calc(50% - 0.9rem) 1px no-repeat;
+}
+.lesson-hsk:has(.hsk-front) .hsk-desc {
+  max-width: 36rem;
+  margin: 0.9rem auto 0;
+  font-family: var(--bk-serif);
+  font-size: 1.1rem;
+  font-style: italic;
+  line-height: 1.7;
+  color: var(--bk-ink-soft);
+}
+
+/* ---------- Trang giấy ---------- */
+.lesson-hsk:has(.hsk-front) #lesson-content {
+  padding: clamp(1.25rem, 4vw, 2.75rem) clamp(1rem, 5.5vw, 3.75rem) clamp(1.5rem, 4vw, 2.5rem);
+  border: 1px solid var(--bk-rule-soft);
+  background: var(--bk-paper);
+  /* Gáy sách: bóng rất nhẹ ở mép trái. */
+  box-shadow: inset 16px 0 20px -18px rgb(0 0 0 / 0.22);
+}
+
+/* ---------- Đầu chương (tiêu đề mục 01–04) ---------- */
+.lesson-hsk:has(.hsk-front) .hsk-sh {
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 3.4rem 0 1.5rem;
+  text-align: center;
+}
+.lesson-hsk:has(.hsk-front) .hsk-sh:first-child {
+  margin-top: 0.5rem;
+}
+.lesson-hsk:has(.hsk-front) .hsk-sn {
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  font: 600 0.8rem var(--bk-serif);
+  letter-spacing: 0.34em;
+  color: var(--bk-seal);
+  background: none;
+}
+.lesson-hsk:has(.hsk-front) .hsk-sh h2 {
+  font-family: var(--bk-serif);
+  font-size: clamp(1.55rem, 4vw, 2rem);
+  font-weight: 700;
+  letter-spacing: 0.005em;
+}
+.lesson-hsk:has(.hsk-front) .hsk-sh .zh {
+  display: block;
+  margin: 0 0 0.1rem;
+  font: 400 clamp(2.4rem, 7vw, 3.4rem) / 1.15 var(--bk-han-serif);
+  color: var(--bk-accent);
+}
+.lesson-hsk:has(.hsk-front) .hsk-sh::after {
+  content: "";
+  width: 3rem;
+  height: 2px;
+  margin-top: 0.8rem;
+  background: var(--bk-seal);
+}
+
+/* ---------- Chữ thân bài: cột hẹp, chữ có chân ---------- */
+.lesson-hsk:has(.hsk-front) .hsk-ab {
+  color: var(--bk-ink);
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab > :is(p, ul, ol, h3, h4, blockquote) {
+  max-width: 41rem;
+  margin-inline: auto;
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab :is(p, li) {
+  font-family: var(--bk-serif);
+  font-size: 1.075rem;
+  line-height: 1.85;
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab > p {
+  margin-bottom: 1.05rem;
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab strong {
+  font-weight: 700;
+  color: var(--bk-ink);
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab ul {
+  padding-left: 1.4rem;
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab li::marker {
+  color: var(--bk-seal);
+}
+/* Câu mở đầu của lời nói đầu: in nghiêng, to hơn, căn giữa; đoạn kế có chữ cái lớn đầu đoạn. */
+.lesson-hsk:has(.hsk-front) .hsk-front + p {
+  margin-bottom: 1.7rem;
+  font-size: 1.32rem;
+  font-style: italic;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--bk-ink-soft);
+}
+.lesson-hsk:has(.hsk-front) .hsk-front + p + p::first-letter {
+  float: left;
+  margin: 0.07em 0.1em 0 0;
+  font-family: var(--bk-serif);
+  font-size: 3.7em;
+  font-weight: 700;
+  line-height: 0.82;
+  color: var(--bk-seal);
+}
+/* Chữ ký cuối lời nói đầu: đoạn chỉ có một thẻ in nghiêng. */
+.lesson-hsk:has(.hsk-front) .hsk-ab > p:has(> em:only-child) {
+  text-align: right;
+  font-style: italic;
+  color: var(--bk-ink-soft);
+}
+/* Tiêu đề phụ (### …): chữ có chân, kẻ mảnh dưới. */
+.lesson-hsk:has(.hsk-front) .hsk-ab > h3 {
+  margin-top: 2.4rem;
+  margin-bottom: 0.9rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--bk-rule);
+  font-family: var(--bk-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--bk-ink);
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab > h3 .ruby-han rt {
+  font-weight: 400;
+}
+
+/* ---------- Bảng kẻ ngang kiểu sách ---------- */
+.lesson-hsk:has(.hsk-front) .hsk-tw {
+  margin: 1.1rem 0 1.4rem;
+  border: 0;
+  border-top: 2px solid var(--bk-ink);
+  border-bottom: 2px solid var(--bk-ink);
+  border-radius: 0;
+  background: transparent;
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab th {
+  padding: 0.7rem 0.9rem 0.6rem;
+  font-family: var(--bk-serif);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--bk-ink-soft);
+  background: transparent;
+  border-bottom: 1px solid var(--bk-ink);
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab td {
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--bk-rule-soft);
+  font-family: var(--bk-serif);
+  font-size: 1rem;
+  line-height: 1.65;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab tbody tr:last-child td {
+  border-bottom: 0;
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab td:first-child {
+  font-weight: 600;
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab td:first-child .hz {
+  color: var(--bk-accent);
+}
+
+/* ---------- Bảng chương (4 cột): dòng Chủ đề (ô đầu chỉ có chữ đậm) và các dòng bài khoá bên dưới ---------- */
+.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) tbody tr:has(> td:first-child > strong:only-child) {
+  background: color-mix(in srgb, var(--bk-ink) 5%, transparent);
+  border-top: 1px solid var(--bk-rule);
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) tbody tr:first-child {
+  border-top: 0;
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) tbody tr:not(:has(> td:first-child > strong:only-child)) > td {
+  font-size: 0.95rem;
+  color: var(--bk-ink-soft);
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab table:has(thead th:nth-child(4)):not(:has(thead th:nth-child(5))) tbody tr:not(:has(> td:first-child > strong:only-child)) > td:first-child {
+  padding-left: 1.7rem;
+  font-weight: 400;
+}
+
+/* ---------- Khối gập «Chi tiết từng bài khoá»: như chú thích cuối chương ---------- */
+.lesson-hsk:has(.hsk-front) .hsk-ab details {
+  margin: 0.3rem 0 1.8rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab summary {
+  padding: 0.5rem 0;
+  border-bottom: 1px dotted var(--bk-rule);
+  font-family: var(--bk-serif);
+  font-size: 1.02rem;
+  font-style: italic;
+  color: var(--bk-accent);
+  cursor: pointer;
+}
+.lesson-hsk:has(.hsk-front) .hsk-ab details[open] > summary {
+  margin-bottom: 0.4rem;
+}
+
+/* ---------- Danh sách vai (thẻ nhân vật) ---------- */
+.lesson-hsk:has(.hsk-front) .char-cards {
+  gap: 0;
+  margin: 1.6rem 0 1.8rem;
+  padding: 1.5rem 0 1.25rem;
+  border-top: 2px solid var(--bk-ink);
+  border-bottom: 2px solid var(--bk-ink);
+}
+.lesson-hsk:has(.hsk-front) .char-card {
+  padding: 0.25rem 1.25rem;
+  border: 0;
+  border-inline-start: 1px solid var(--bk-rule);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.lesson-hsk:has(.hsk-front) .char-card:first-child {
+  border-inline-start: 0;
+}
+.lesson-hsk:has(.hsk-front) #lesson-content .char-card .char-photo {
+  width: 8.25rem;
+  height: 8.25rem;
+  border: 5px solid var(--bk-paper);
+  box-shadow: 0 0 0 1px var(--bk-rule);
+  object-position: 50% 12%;
+}
+.lesson-hsk:has(.hsk-front) .char-card .char-name {
+  font-family: var(--bk-serif);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--bk-ink);
+}
+.lesson-hsk:has(.hsk-front) .char-card .char-han {
+  font-family: var(--bk-han-serif);
+  font-size: 1.55rem;
+  color: var(--bk-seal);
+}
+.lesson-hsk:has(.hsk-front) .char-card .char-role {
+  font-family: var(--bk-serif);
+  font-size: 0.97rem;
+  font-style: italic;
+  line-height: 1.6;
+  color: var(--bk-ink-soft);
+}
+
+/* ---------- Ghi chú bên lề (hộp Mẹo / Ghi nhớ) ---------- */
+.lesson-hsk:has(.hsk-front) .hsk-aside {
+  border: 0;
+  border-left: 3px solid var(--bk-seal);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--bk-paper) 70%, rgb(var(--surface)));
+}
+
+/* ---------- Điện thoại ---------- */
+@media (max-width: 760px) {
+  .lesson-hsk:has(.hsk-front) .hsk-hero {
+    padding: 2rem 1rem 1.8rem;
+  }
+  .lesson-hsk:has(.hsk-front) .hsk-hero::after {
+    font-size: 9rem;
+  }
+  .lesson-hsk:has(.hsk-front) .hsk-ab :is(p, li) {
+    font-size: 1.04rem;
+    line-height: 1.8;
+  }
+  .lesson-hsk:has(.hsk-front) .hsk-front + p {
+    font-size: 1.15rem;
+  }
+  .lesson-hsk:has(.hsk-front) .hsk-front + p + p::first-letter {
+    font-size: 3.2em;
+  }
+  .lesson-hsk:has(.hsk-front) .char-card {
+    padding: 1.1rem 0.5rem;
+    border-inline-start: 0;
+    border-top: 1px solid var(--bk-rule);
+  }
+  .lesson-hsk:has(.hsk-front) .char-card:first-child {
+    border-top: 0;
+  }
+}

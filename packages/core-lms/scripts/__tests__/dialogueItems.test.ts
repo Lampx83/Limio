@@ -248,3 +248,24 @@ describe("thẻ nhân vật (:::nhanvat)", () => {
     expect(html).toContain("Hết.");
   });
 });
+
+describe("dấu hiệu màu giấy (:::mausach)", () => {
+  it("chèn phần tử ẩn .hsk-paper (chỉ đổi màu), không chèn .hsk-front (không đổi bố cục)", () => {
+    const html = markdownToHtml("## 热身 · Khởi động\n\n:::mausach\n\nChào bạn.", { toc: false });
+    expect(html.match(/<div class="hsk-paper" aria-hidden="true"><\/div>/g)!.length).toBe(1);
+    expect(html).not.toContain("hsk-front");
+    expect(html).not.toContain(":::mausach");
+    expect(html).toContain("Chào bạn.");
+  });
+});
+
+describe("dấu hiệu trang sách (:::sach)", () => {
+  it("chèn đúng một phần tử ẩn .hsk-front tại chỗ đặt, không nuốt đoạn văn đứng sau", () => {
+    const html = markdownToHtml("## 序 · Lời nói đầu\n\n:::sach\n\nChào bạn.\n\nĐoạn hai.", { toc: false });
+    expect(html.match(/<div class="hsk-front" aria-hidden="true"><\/div>/g)!.length).toBe(1);
+    expect(html.indexOf("hsk-front")).toBeLessThan(html.indexOf("Chào bạn."));
+    expect(html).toContain("Chào bạn.");
+    expect(html).toContain("Đoạn hai.");
+    expect(html).not.toContain(":::sach");
+  });
+});

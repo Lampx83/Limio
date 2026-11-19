@@ -1,4 +1,6 @@
 import "./hskLesson.css";
+import "./hskFront.css";
+import "./hskPaper.css";
 import { lessonSubtitle, sealParts, splitHanRuns, splitLessonTitle, watermarkChar } from "@/lib/hskLesson";
 
 /**
