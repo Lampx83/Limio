@@ -2,26 +2,26 @@
 LESSON = {
     "title": "Bài 3.3 · Đánh giá nguồn và thông tin trong thời AI",
     "durationMin": 50,
-    "description": "Đọc ngang thay vì đọc dọc để thẩm định một nguồn; đọc một con số cho đúng; vì sao câu trả lời trôi chảy của AI không đồng nghĩa với đúng; và quy trình bốn bước trước khi chia sẻ.",
+    "description": "Bài này trình bày kỹ thuật đọc ngang để thẩm định một nguồn, cách đọc một con số cho đúng, lý do câu trả lời trôi chảy của AI không đồng nghĩa với đúng, và quy trình bốn bước trước khi chia sẻ một thông tin.",
     "objectives": [
         "Thẩm định được một nguồn lạ bằng kỹ thuật đọc ngang trong dưới ba phút",
-        "Nêu được bốn câu hỏi cần đặt cho một con số hoặc một biểu đồ",
-        "Chỉ ra được vì sao độ trôi chảy của câu trả lời do AI sinh không phải dấu hiệu chính xác",
-        "Chạy được quy trình bốn bước trước khi chia sẻ một thông tin",
+        "Đánh giá được một con số hoặc một biểu đồ bằng bốn câu hỏi kiểm tra",
+        "Giải thích được vì sao độ trôi chảy của câu trả lời do AI sinh ra không phải dấu hiệu của sự chính xác",
+        "Vận dụng được quy trình bốn bước trước khi chia sẻ một thông tin",
     ],
     "summary": [
-        "Người kiểm chứng chuyên nghiệp không đọc kỹ trang lạ; họ rời trang, xem nơi khác nói gì về nó, rồi mới quay lại — đó là đọc ngang.",
+        "Người kiểm chứng chuyên nghiệp không đọc kỹ một trang lạ ngay; họ rời trang, xem nơi khác nói gì về nó rồi mới quay lại, và cách làm này được gọi là đọc ngang.",
         "Bốn câu hỏi cho mọi con số: đo trên bao nhiêu người, so với nhóm nào, ai trả tiền cho nghiên cứu, và trục biểu đồ bắt đầu từ đâu.",
-        "Mô hình ngôn ngữ tối ưu cho tính hợp lý bề mặt chứ không cho tính đúng, nên nó bịa được cả tên tác giả, năm và số trang mà vẫn đọc rất xuôi.",
+        "Mô hình ngôn ngữ được tối ưu cho tính hợp lý bề mặt chứ không phải tính đúng, nên có thể bịa cả tên tác giả, năm và số trang mà vẫn đọc rất xuôi.",
         "Bốn bước trước khi chia sẻ: dừng lại, tìm nguồn gốc, xem nơi khác nói gì, và hỏi mình đang muốn nó đúng tới mức nào.",
     ],
     "splitSections": True,
     "body": r"""
-Hai bài trước xử lý lập luận. Bài này xử lý **nguồn**: làm sao biết một thông tin có đáng để đưa vào đầu, trong một môi trường mà bất kỳ ai cũng xuất bản được và bất kỳ nội dung nào cũng tạo ra được bằng máy trong vài giây.
+Hai bài trước đề cập đến lập luận và các lỗi trong suy luận. Bài này đề cập đến **nguồn**: làm thế nào để xác định một thông tin có đáng tin hay không, trong một môi trường mà bất kỳ ai cũng có thể xuất bản và nhiều loại nội dung có thể được tạo ra bằng máy trong vài giây.
 
 ## Đọc ngang thay vì đọc dọc
 
-Nhóm nghiên cứu của Sam Wineburg ở Stanford cho ba nhóm cùng thẩm định các trang web: sinh viên đại học, giáo sư sử học, và những người kiểm chứng chuyên nghiệp. Sinh viên và cả giáo sư đọc **dọc** — ở lại trên trang, xem giao diện, đọc mục giới thiệu, đánh giá giọng văn. Người kiểm chứng làm ngược lại: chỉ liếc qua vài giây rồi **rời trang**, mở tab mới, tìm xem nơi khác nói gì về tổ chức ấy, rồi mới quay lại. Nhóm thứ ba nhanh hơn hẳn và ít bị lừa hơn hẳn.
+Trong nghiên cứu của Wineburg và McGrew (2019) tại Stanford, ba nhóm gồm sinh viên đại học, giáo sư sử học và những người kiểm chứng chuyên nghiệp cùng thẩm định các trang web. Sinh viên và cả giáo sư đọc **dọc** (*vertical reading*): ở lại trên trang, xem giao diện, đọc mục giới thiệu và đánh giá giọng văn. Người kiểm chứng làm ngược lại: họ chỉ liếc qua vài giây rồi **rời trang**, mở tab mới, tìm xem nơi khác nói gì về tổ chức ấy, rồi mới quay lại; cách làm này được gọi là **đọc ngang** (*lateral reading*). Theo nghiên cứu đó, nhóm thứ ba nhanh hơn và ít bị đánh lừa hơn.
 
 | | Đọc dọc (thường làm) | Đọc ngang (nên làm) |
 |---|---|---|
@@ -29,38 +29,40 @@ Nhóm nghiên cứu của Sam Wineburg ở Stanford cho ba nhóm cùng thẩm đ
 | Dựa vào gì | Giao diện, mục Về chúng tôi, giọng văn, có trích dẫn hay không | Nguồn độc lập nói gì về tổ chức và tác giả này |
 | Vì sao hỏng hoặc chạy | Mọi thứ trên trang đều do chính họ viết ra | Đánh giá đến từ bên ngoài, khó dàn dựng hơn |
 
-Quy trình gọn được đặt tên là **SIFT**: *Stop* (dừng lại), *Investigate the source* (tìm hiểu nguồn), *Find better coverage* (tìm bản đưa tin tốt hơn), *Trace claims* (lần về tuyên bố gốc). Bốn bước ấy mất chừng hai tới ba phút.
+Một quy trình gọn dựa trên cách làm này được đặt tên là **SIFT** (Caulfield, 2019): *Stop* (dừng lại), *Investigate the source* (tìm hiểu nguồn), *Find better coverage* (tìm bản đưa tin tốt hơn), *Trace claims* (lần về khẳng định gốc). Bốn bước này mất chừng hai tới ba phút.
 
-> [!vi-du] Trên nhóm lớp có bài đăng: "Nghiên cứu mới cho thấy sinh viên dùng AI làm bài giảm 20% khả năng ghi nhớ." Đọc dọc: bài viết có trích dẫn, có tên trường đại học, trông đáng tin. Đọc ngang: mở tab mới, gõ tên "nghiên cứu" đó — hoá ra là một bản tóm tắt trên blog của một công ty bán khoá học, dẫn lại một bài báo mà bài báo ấy nói về 34 sinh viên trong một buổi thí nghiệm, không hề đo trí nhớ sau vài tuần. Tuyên bố không sai hoàn toàn, nhưng đã bị kéo giãn qua ba lần dẫn lại.
+> [!vi-du] Trên nhóm lớp có bài đăng: “Nghiên cứu mới cho thấy sinh viên dùng AI làm bài giảm 20% khả năng ghi nhớ.” Nếu đọc dọc, bài viết có trích dẫn và có tên trường đại học nên trông đáng tin. Nếu đọc ngang, người đọc mở tab mới và gõ tên “nghiên cứu” đó, rồi phát hiện đây là một bản tóm tắt trên blog của một công ty bán khoá học, dẫn lại một bài báo viết về 34 sinh viên trong một buổi thí nghiệm và không hề đo trí nhớ sau vài tuần. Tuyên bố không sai hoàn toàn nhưng đã bị kéo giãn qua ba lần dẫn lại.
 
 ## Đọc một con số cho đúng
 
-Con số làm người ta tin nhanh hơn chữ, nên nó cũng là chỗ bị lạm dụng nhiều nhất. Bốn câu hỏi đủ cho phần lớn tình huống:
+Con số thường khiến người ta tin nhanh hơn chữ, nên cũng dễ bị lạm dụng. Bốn câu hỏi dưới đây có thể áp dụng cho nhiều tình huống:
 
 1. **Đo trên bao nhiêu người, và họ là ai?** 34 sinh viên tình nguyện của một trường khác hẳn 3.400 người chọn ngẫu nhiên.
-2. **So với nhóm nào?** "Tăng 40%" luôn phải kèm "so với cái gì". Không có nhóm đối chứng thì không có kết luận về hiệu quả.
-3. **Ai trả tiền và ai công bố?** Nghiên cứu do nhà cung cấp tài trợ vẫn dùng được, nhưng đọc như một lập luận có lợi ích, không phải một kết luận trung lập.
-4. **Trục của biểu đồ bắt đầu từ đâu?** Cắt trục tung là cách rẻ nhất để biến một chênh lệch 2% thành một cột cao gấp đôi.
+2. **So với nhóm nào?** “Tăng 40%” luôn phải kèm “so với cái gì”. Không có nhóm đối chứng thì không có kết luận về hiệu quả.
+3. **Ai trả tiền và ai công bố?** Nghiên cứu do nhà cung cấp tài trợ vẫn dùng được, nhưng nên được đọc như một lập luận có lợi ích chứ không phải một kết luận trung lập.
+4. **Trục của biểu đồ bắt đầu từ đâu?** Cắt trục tung là một cách đơn giản để biến một chênh lệch 2% thành một cột cao gấp đôi (Huff, 1954).
 
-Và một quy tắc bao trùm: **tương quan không phải nhân quả**. Trước khi kết luận A gây ra B, phải loại ba khả năng: B gây ra A; một yếu tố C gây ra cả hai; và trùng hợp ngẫu nhiên. Sinh viên dùng ứng dụng học tập có điểm cao hơn — cũng có thể vì người vốn chăm mới chịu cài ứng dụng.
+Ngoài ra còn có một quy tắc bao trùm: **tương quan không phải là nhân quả**. Trước khi kết luận A gây ra B, cần loại trừ ba khả năng: B gây ra A, một yếu tố C gây ra cả hai, và sự trùng hợp ngẫu nhiên. Chẳng hạn, sinh viên dùng ứng dụng học tập có điểm cao hơn có thể là vì những người vốn chăm mới chịu cài ứng dụng.
 
-> [!canh-bao] Chú ý cách diễn đạt "gấp đôi nguy cơ" hoặc "tăng 50%". Nếu nguy cơ ban đầu là 2 phần nghìn thì gấp đôi thành 4 phần nghìn — đúng về mặt số học và gần như vô nghĩa về mặt thực tế. Luôn hỏi con số tuyệt đối.
+> [!canh-bao] Cần chú ý cách diễn đạt “gấp đôi nguy cơ” hoặc “tăng 50%”. Nếu nguy cơ ban đầu là 2 phần nghìn thì gấp đôi thành 4 phần nghìn, tức đúng về mặt số học nhưng có thể gần như không có ý nghĩa thực tế. Vì vậy cần luôn hỏi con số tuyệt đối.
 
 ## Nội dung do AI sinh: trôi chảy không bằng đúng
 
-Mô hình ngôn ngữ được tối ưu để sinh ra văn bản **nghe hợp lý**, không phải để sinh ra văn bản **đúng**. Hệ quả trực tiếp: khi mô hình không biết, nó không im lặng — nó viết tiếp bằng thứ trông giống câu trả lời nhất. Đó là lý do các trích dẫn bịa thường rất chỉnh: có tên tác giả thật, tạp chí thật, năm hợp lý, số trang cụ thể, và không tồn tại.
+Mô hình ngôn ngữ (*language model*) được tối ưu để sinh ra văn bản **nghe hợp lý** chứ không phải văn bản **đúng** (Bender và cộng sự, 2021). Hệ quả trực tiếp là khi mô hình không có thông tin phù hợp, nó không im lặng mà tiếp tục viết bằng thứ trông giống một câu trả lời nhất. Đó là lý do các trích dẫn bịa thường rất chỉnh: có tên tác giả thật, tạp chí thật, năm hợp lý và số trang cụ thể, nhưng công trình đó không tồn tại.
 
 Ba thói quen tối thiểu khi dùng AI cho việc học:
 
 - **Mọi con số, tên riêng và trích dẫn phải kiểm lại ở nguồn gốc.** Không kiểm được thì không dùng, dù nó rất hợp ý bạn.
-- **Dùng AI để hiểu, đừng dùng để thay việc nghĩ.** Nhờ nó giải thích một khái niệm rồi tự viết lại bằng lời mình là học; chép nguyên đoạn nó viết là bỏ qua đúng phần tạo ra năng lực — và phần lớn trường đại học coi đó là vi phạm liêm chính học thuật.
-- **Cảnh giác với vòng lặp đồng thuận.** Hỏi AI theo hướng bạn đã tin thì phần lớn thời gian bạn sẽ nhận lại câu trả lời ủng hộ điều đó. Hãy yêu cầu ngược: "nêu ba lý do mạnh nhất chống lại điều tôi vừa nói".
+- **Dùng AI để hiểu, không dùng để thay việc suy nghĩ.** Nhờ AI giải thích một khái niệm rồi tự viết lại bằng lời mình là học; chép nguyên đoạn AI viết là bỏ qua đúng phần tạo ra năng lực, và nhiều trường đại học coi đó là vi phạm liêm chính học thuật.
+- **Cảnh giác với vòng lặp đồng thuận.** Khi hỏi AI theo hướng bạn đã tin, nhiều khả năng bạn sẽ nhận lại câu trả lời ủng hộ điều đó. Hãy yêu cầu theo hướng ngược lại: “nêu ba lý do mạnh nhất chống lại điều tôi vừa nói”.
 
-Ảnh, giọng nói và video tổng hợp thì thêm một lớp nữa: chúng đã vượt qua ngưỡng mà mắt thường phân biệt được trong phần lớn trường hợp. Với ảnh và video, dấu hiệu đáng tin hơn không nằm ở việc soi chi tiết mà nằm ở **xuất xứ**: ai đăng đầu tiên, đăng lúc nào, có cơ quan báo chí nào độc lập đưa cùng sự kiện không.
+Ảnh, giọng nói và video tổng hợp tạo thêm một lớp khó khăn: trong nhiều trường hợp, chúng đã vượt qua ngưỡng mà mắt thường có thể phân biệt. Với ảnh và video, dấu hiệu đáng tin hơn không nằm ở việc soi chi tiết mà ở **xuất xứ**: ai đăng đầu tiên, đăng lúc nào, và có cơ quan báo chí độc lập nào đưa cùng sự kiện hay không.
 
-> [!vi-du] Hà nhờ AI tóm tắt tài liệu cho bài tiểu luận, nhận về một đoạn có câu: "Theo Nguyễn Văn A (2019), 68% sinh viên Việt Nam…". Nghe rất dùng được. Hà tra tên bài và không tìm thấy ở đâu; hỏi lại thì mô hình xin lỗi và đưa một trích dẫn khác, cũng không tồn tại. Bài học không phải là bỏ dùng AI, mà là: mọi thứ có dạng "tác giả – năm – con số" đều phải đi kiểm, và kiểm mất ba mươi giây trong khi bị phát hiện bịa nguồn thì mất cả bài.
+> [!vi-du] Hà nhờ AI tóm tắt tài liệu cho bài tiểu luận, nhận về một đoạn có câu: “Theo Nguyễn Văn A (2019), 68% sinh viên Việt Nam…”. Câu này nghe rất dùng được. Hà tra tên bài nhưng không tìm thấy ở đâu; khi hỏi lại, mô hình xin lỗi và đưa một trích dẫn khác, cũng không tồn tại. Bài học không phải là bỏ dùng AI mà là mọi thông tin có dạng “tác giả, năm, con số” đều phải được kiểm tra: việc kiểm tra mất khoảng ba mươi giây, trong khi bị phát hiện bịa nguồn có thể khiến mất cả bài.
 
 ## Bốn bước trước khi chia sẻ
+
+Quy trình dưới đây gần với SIFT ở các bước dừng lại, tìm nguồn gốc và đối chiếu nơi khác, đồng thời bổ sung một bước tự hỏi về mong muốn của chính người chia sẻ.
 
 ```html
 <div style="border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0">
@@ -70,15 +72,17 @@ Ba thói quen tối thiểu khi dùng AI cho việc học:
     <div style="background:rgba(59,130,246,.14);border-radius:.4rem;padding:.6rem .8rem"><b>3. Xem nơi khác nói gì</b> — mở tab mới, tìm tên nguồn và tuyên bố đó; có nơi độc lập nào đưa cùng nội dung không</div>
     <div style="background:rgba(139,92,246,.14);border-radius:.4rem;padding:.6rem .8rem"><b>4. Hỏi mình muốn nó đúng tới mức nào</b> — càng muốn nó đúng thì càng phải kiểm kỹ, vì đó chính là lúc thiên lệch xác nhận chạy mạnh nhất</div>
   </div>
-  <div style="font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6">Bốn bước này mất khoảng hai phút. Chia sẻ một thông tin sai rồi rút lại thì mất nhiều hơn thế rất nhiều — bản đính chính không bao giờ đi xa bằng bản gốc.</div>
+  <div style="font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6">Bốn bước này mất khoảng hai phút. Chia sẻ một thông tin sai rồi rút lại thì mất nhiều hơn thế rất nhiều, vì bản đính chính thường không lan xa bằng bản gốc.</div>
 </div>
 ```
+
+Bốn bước tự vệ ở bài 8.3 cũng mở bằng “dừng lại” và cũng có bước kiểm ở nguồn độc lập, nhưng phục vụ một tình huống khác: khi có người đang thúc bạn quyết định (mua, đăng ký, đồng ý), chứ không phải khi bạn cân nhắc chia sẻ một thông tin. Hai quy trình bốn bước ở bài này (SIFT và bốn bước trước khi chia sẻ) dùng cho thông tin bạn nhận được, còn bài 8.3 thêm bước gọi tên nguyên tắc ảnh hưởng và bước dời quyết định; khi gặp một lời chào mời gấp gáp có kèm con số cần kiểm, bạn có thể kiểm con số bằng các bước ở bài này và dùng bước dời quyết định ở bài 8.3 cho lời đề nghị (xem bài 8.3).
 
 ## Luyện tập và tài liệu tham khảo
 
 ### Cá nhân (15 phút)
 
-Chọn một trang web hoặc một kênh bạn chưa biết rõ nhưng đang lấy thông tin từ đó. Thẩm định bằng đọc ngang trong tối đa ba phút: mở tab mới, tìm tên nguồn ấy kèm từ khoá đánh giá hoặc kiểm chứng, ghi lại ba điều bạn tìm được từ **nguồn khác** — không tính thông tin do chính trang đó viết về mình.
+Chọn một trang web hoặc một kênh bạn chưa biết rõ nhưng đang lấy thông tin từ đó. Thẩm định bằng đọc ngang trong tối đa ba phút: mở tab mới, tìm tên nguồn ấy kèm từ khoá đánh giá hoặc kiểm chứng, ghi lại ba điều bạn tìm được từ **nguồn khác**, không tính thông tin do chính trang đó viết về mình.
 
 ### Nhóm 3–4 người (25 phút)
 
@@ -110,7 +114,7 @@ Chọn một chủ đề bạn quan tâm và hỏi một trợ lý AI ba câu v�
                 "key": "3.3-doc-ngang",
                 "type": "mcq",
                 "prompt": "Bạn gặp một trang web lạ đưa ra một tuyên bố về thị trường việc làm. Cách thẩm định hiệu quả nhất là gì?",
-                "explanation": "Mọi thứ trên trang đều do chính họ viết, nên đánh giá phải đến từ bên ngoài: rời trang, tìm xem nguồn độc lập nói gì về tổ chức và tuyên bố ấy, rồi mới quay lại.",
+                "explanation": "Mọi thứ trên trang đều do chính họ viết, nên đánh giá phải đến từ bên ngoài: rời trang, tìm xem nguồn độc lập nói gì về tổ chức và khẳng định ấy, rồi mới quay lại.",
                 "points": 2,
                 "options": [
                     {"label": "Mở tab mới, tìm xem nguồn độc lập nói gì về trang và về tuyên bố đó, rồi mới quay lại đọc", "isCorrect": True},

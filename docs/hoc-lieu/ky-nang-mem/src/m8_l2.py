@@ -1,116 +1,116 @@
 # -*- coding: utf-8 -*-
 LESSON = {
-    "title": "Bài 8.2 · Bốn nguyên tắc gây ảnh hưởng: đáp trả, nhất quán, số đông, thiện cảm",
+    "title": "Bài 8.2 · Bốn nguyên tắc gây ảnh hưởng: đáp trả, nhất quán, bằng chứng xã hội, thiện cảm",
     "durationMin": 50,
-    "description": "Bốn nguyên tắc đầu trong bộ nguyên tắc gây ảnh hưởng của Cialdini, mỗi nguyên tắc kèm ví dụ trong học tập, mua sắm và công việc, cách dùng có đạo đức và dấu hiệu nhận ra khi bị dùng lên mình.",
+    "description": "Bài học trình bày bốn nguyên tắc đầu trong bộ nguyên tắc gây ảnh hưởng của Cialdini, gồm đáp trả, cam kết và nhất quán, bằng chứng xã hội và thiện cảm. Mỗi nguyên tắc được minh hoạ bằng ví dụ trong học tập, mua sắm và công việc, kèm cách sử dụng trung thực và dấu hiệu nhận ra khi bị dùng lên mình.",
     "objectives": [
-        "Gọi tên được nguyên tắc đang vận hành trong một tình huống thuyết phục cụ thể",
-        "Dùng được nguyên tắc đáp trả và cam kết nhỏ theo hướng trung thực",
-        "Chọn được loại bằng chứng xã hội phù hợp với người nghe",
-        "Nhận ra được khi bốn nguyên tắc này đang được dùng lên chính mình",
+        "Xác định được nguyên tắc đang vận hành trong một tình huống thuyết phục cụ thể",
+        "Vận dụng được nguyên tắc đáp trả và cam kết nhỏ theo hướng trung thực",
+        "Lựa chọn được loại bằng chứng xã hội phù hợp với người nghe",
+        "Nhận diện được khi bốn nguyên tắc này đang được dùng lên chính mình và đánh giá được mức độ trung thực của cách dùng",
     ],
     "summary": [
-        "Đáp trả: nhận rồi thì thấy phải trả, và hiệu ứng không tỉ lệ với giá trị món quà — quà nhỏ vẫn tạo nghĩa vụ, kể cả khi không ai xin.",
-        "Cam kết và nhất quán: người ta muốn hành xử khớp với điều mình đã nói, nhất là khi lời ấy được viết ra và nói công khai.",
-        "Bằng chứng xã hội mạnh nhất khi người ta không chắc chắn và khi người làm gương giống họ.",
-        "Thiện cảm đến từ sự tương đồng, lời khen thật và việc cùng làm chung một việc — nó khiến người ta chịu nghe, không thay được bằng chứng.",
+        "Theo nguyên tắc đáp trả, người nhận được điều gì từ người khác thường cảm thấy cần đáp lại, và hiệu ứng này không tỉ lệ với giá trị của món quà: quà nhỏ vẫn có thể tạo nghĩa vụ, kể cả khi không ai yêu cầu.",
+        "Theo nguyên tắc cam kết và nhất quán, người ta có xu hướng hành xử khớp với điều mình đã nói, nhất là khi lời nói ấy được viết ra và nêu công khai.",
+        "Bằng chứng xã hội phát huy mạnh nhất khi người nghe không chắc chắn và khi người làm gương giống họ.",
+        "Thiện cảm hình thành từ sự tương đồng, lời khen chân thật và việc cùng làm chung một việc; thiện cảm khiến người ta sẵn sàng lắng nghe nhưng không thay thế được bằng chứng.",
     ],
     "splitSections": True,
     "body": r"""
 ![Chân dung nhà tâm lý học Robert Cialdini](https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Robert_Cialdini.jpg/1280px-Robert_Cialdini.jpg "Robert B. Cialdini, giáo sư tâm lý học và marketing, tác giả cuốn Influence: The Psychology of Persuasion (1984). Sáu nguyên tắc gây ảnh hưởng trong sách — và nguyên tắc thứ bảy ông bổ sung năm 2016 — là bộ khung được dùng rộng rãi nhất về thuyết phục. Ảnh: [File:Robert Cialdini.jpg](https://commons.wikimedia.org/wiki/File:Robert_Cialdini.jpg), tác giả Viktorbuehler, giấy phép CC BY-SA 3.0.")
 
-Cialdini gọi chúng là **vũ khí gây ảnh hưởng**, và cách gọi ấy có lý do: chúng hoạt động gần như tự động, kể cả khi ta biết mình đang bị tác động. Vì vậy mỗi nguyên tắc dưới đây được trình bày theo ba lớp: **nó là gì**, **dùng thế nào cho trung thực**, và **nhận ra thế nào khi nó đang được dùng lên mình**.
+Bài này trình bày bốn trong số các nguyên tắc gây ảnh hưởng (*principles of influence*) của Robert Cialdini: đáp trả (*reciprocity*), cam kết và nhất quán (*commitment and consistency*), bằng chứng xã hội (*social proof*) và thiện cảm (*liking*). Cialdini gọi các nguyên tắc này là **vũ khí gây ảnh hưởng** (*weapons of influence*) vì chúng thường hoạt động gần như tự động, kể cả khi chúng ta biết mình đang bị tác động (Cialdini, 2021). Vì vậy, mỗi nguyên tắc dưới đây được trình bày theo ba lớp: **nó là gì**, **cách dùng trung thực**, và **cách nhận ra khi nó đang được dùng lên mình**.
 
 ## Nguyên tắc 1 · Đáp trả
 
-Nhận của ai cái gì thì thấy khó chịu cho tới khi trả lại được. Đây là chuẩn mực xã hội có ở mọi nền văn hoá, và điểm đáng chú ý: **hiệu ứng không tỉ lệ với giá trị món quà**, đồng thời **vẫn chạy cả khi món quà không ai yêu cầu**.
+Khi nhận được điều gì từ người khác, nhiều người cảm thấy áy náy cho tới khi đáp lại được. Đây là một chuẩn mực xã hội được ghi nhận ở nhiều nền văn hoá. Điểm đáng chú ý là **hiệu ứng này không tỉ lệ với giá trị món quà** và **vẫn xuất hiện cả khi món quà không ai yêu cầu**. Bảng dưới đây minh hoạ nguyên tắc này trong các bối cảnh khác nhau.
 
 | Bối cảnh | Ví dụ |
 |---|---|
-| Học tập | Bạn cùng lớp gửi cho bạn bản tóm tắt bài giảng hôm bạn nghỉ; tuần sau bạn ấy nhờ đổi ca trực, bạn gần như không nghĩ mà nhận |
-| Mua sắm | Quầy siêu thị mời nếm thử một miếng xúc xích; tỉ lệ người mua sau khi nếm cao hơn hẳn — chi phí một miếng nhỏ, hiệu quả lớn |
-| Trực tuyến | Ứng dụng cho dùng miễn phí 7 ngày với đầy đủ tính năng, rồi mới hỏi bạn có nâng cấp không |
-| Nơi làm thêm | Quản lý đổi ca giúp bạn hôm bạn có việc gia đình; lần sau anh ấy nhờ làm thêm cuối tuần, bạn thấy khó từ chối |
-| Nhà hàng | Kẹo bạc hà kèm hoá đơn làm tiền tip tăng lên — thêm một cái kẹo thứ hai kèm câu "dành riêng cho anh chị" thì tăng mạnh hơn nữa |
+| Học tập | Một bạn cùng lớp gửi bản tóm tắt bài giảng hôm bạn nghỉ, và tuần sau khi bạn ấy nhờ đổi ca trực thì bạn gần như nhận lời ngay. |
+| Mua sắm | Quầy siêu thị mời nếm thử một miếng xúc xích, và tỉ lệ người mua sau khi nếm có thể cao hơn so với khi không nếm, dù chi phí của một miếng nhỏ rất thấp. |
+| Trực tuyến | Một ứng dụng cho dùng miễn phí 7 ngày với đầy đủ tính năng, rồi mới hỏi bạn có muốn nâng cấp hay không. |
+| Nơi làm thêm | Quản lý đổi ca giúp bạn hôm bạn có việc gia đình, và lần sau khi anh ấy nhờ bạn làm thêm cuối tuần thì bạn thấy khó từ chối. |
+| Nhà hàng | Một viên kẹo bạc hà kèm hoá đơn có thể làm tiền tip tăng lên, và nếu thêm viên kẹo thứ hai kèm câu “dành riêng cho anh chị” thì mức tăng có thể lớn hơn nữa. |
 
-**Dùng cho trung thực:** cho trước thứ có giá trị thật và **không kèm điều kiện ngầm**. Giúp bạn cùng nhóm phần việc họ đang tắc, chia sẻ tài liệu mình có, giới thiệu người quen — rồi khi bạn cần, hãy nhờ thẳng chứ đừng nhắc lại món nợ.
+**Cách dùng trung thực:** người dùng nên cho trước thứ có giá trị thật và **không kèm điều kiện ngầm**, chẳng hạn giúp bạn cùng nhóm ở phần việc họ đang vướng, chia sẻ tài liệu mình có hoặc giới thiệu người quen. Khi cần nhờ lại, bạn nên đề nghị trực tiếp chứ không nhắc lại món nợ.
 
-**Nhận ra khi bị dùng:** món quà xuất hiện **ngay trước** một lời đề nghị; bạn không xin mà vẫn được cho; và bạn thấy áy náy khi nghĩ tới việc từ chối. Cách xử lý không phải là từ chối mọi thiện chí — mà là tách hai câu hỏi: *món quà này dễ chịu thật*, còn *đề nghị đi kèm có đáng nhận không*.
+**Nhận ra khi bị dùng:** các dấu hiệu gồm món quà xuất hiện **ngay trước** một lời đề nghị, bạn không xin mà vẫn được cho, và bạn thấy áy náy khi nghĩ tới việc từ chối. Cách xử lý không phải là từ chối mọi thiện chí mà là tách thành hai câu hỏi: món quà này có thật sự dễ chịu hay không, và đề nghị đi kèm có đáng nhận hay không.
 
-> [!vi-du] Một trung tâm tiếng Anh phát vé học thử miễn phí hai buổi cho sinh viên trước cổng trường. Học thử xong, tư vấn viên ngồi xuống nói chuyện ba mươi phút và đưa hợp đồng. Hai buổi ấy có giá trị thật — nhưng cảm giác "người ta đã cho mình học miễn phí" là thứ đang làm việc trong đầu bạn lúc ký, chứ không phải chất lượng khoá học. Cách phòng vệ rẻ nhất: **không ký ở đó**. Về nhà, so ba trung tâm rồi mới quyết.
+> [!vi-du] Giả sử một trung tâm tiếng Anh phát vé học thử miễn phí hai buổi cho sinh viên trước cổng trường. Học thử xong, tư vấn viên ngồi xuống nói chuyện ba mươi phút và đưa hợp đồng. Hai buổi học thử ấy có giá trị thật, nhưng cảm giác “người ta đã cho mình học miễn phí” có thể chi phối quyết định ký hợp đồng nhiều hơn chất lượng khoá học. Một cách phòng vệ đơn giản là **không ký ngay tại chỗ**; bạn nên về nhà, so sánh ba trung tâm rồi mới quyết định.
 
 ## Nguyên tắc 2 · Cam kết và nhất quán
 
-Người ta muốn hành xử khớp với điều mình đã nói và đã làm — và áp lực ấy mạnh hơn khi cam kết được **nói ra thành lời, viết xuống, và công khai trước người khác**. Vì vậy một cam kết nhỏ ban đầu thường dẫn tới cam kết lớn hơn sau đó.
+Con người có xu hướng hành xử khớp với điều mình đã nói và đã làm, và áp lực này mạnh hơn khi cam kết được **nói ra thành lời, viết xuống và công khai trước người khác**. Vì vậy, một cam kết nhỏ ban đầu thường dẫn tới cam kết lớn hơn sau đó; hiện tượng này được Freedman và Fraser mô tả là kỹ thuật “chân vào cửa” (*foot-in-the-door*) trong một nghiên cứu kinh điển (Freedman & Fraser, 1966).
 
 | Bối cảnh | Ví dụ |
 |---|---|
-| Học nhóm | Ai đã nhận "mình phụ trách phần dữ liệu" trong nhóm chat thì khả năng nộp đúng hạn cao hơn hẳn người chỉ gật đầu trong buổi họp |
-| Sức khoẻ | Hẹn đi tập cùng bạn và nhắn vào nhóm giờ tập cụ thể — khó bỏ hơn nhiều so với tự nhủ trong đầu |
-| Bán hàng | Nhân viên hỏi "anh có quan tâm tới việc tiết kiệm tiền điện không?" — trả lời có rồi thì khó từ chối nghe tiếp về sản phẩm |
-| Trực tuyến | Điền xong bốn bước của một biểu mẫu dài, tới bước năm hiện phí phát sinh; nhiều người vẫn bấm tiếp vì đã đi tới đó |
-| Lớp học | Sinh viên viết ra mục tiêu điểm số đầu kỳ và dán ở bàn học giữ được kỷ luật ôn tập tốt hơn nhóm chỉ nghĩ trong đầu |
+| Học nhóm | Người đã nhận “mình phụ trách phần dữ liệu” trong nhóm chat nhiều khả năng nộp đúng hạn hơn người chỉ gật đầu trong buổi họp. |
+| Sức khoẻ | Việc hẹn đi tập cùng bạn và nhắn vào nhóm giờ tập cụ thể thường khó bỏ hơn so với việc chỉ tự nhủ trong đầu. |
+| Bán hàng | Nhân viên hỏi “anh có quan tâm tới việc tiết kiệm tiền điện không?”, và khi bạn đã trả lời có thì sẽ khó từ chối nghe tiếp về sản phẩm. |
+| Trực tuyến | Sau khi điền xong bốn bước của một biểu mẫu dài, tới bước năm mới hiện phí phát sinh, và nhiều người vẫn bấm tiếp vì đã đi tới đó. |
+| Lớp học | Sinh viên viết ra mục tiêu điểm số đầu kỳ và dán ở bàn học có thể giữ được kỷ luật ôn tập tốt hơn so với việc chỉ nghĩ trong đầu. |
 
-**Dùng cho trung thực:** xin cam kết nhỏ, **cụ thể và tự nguyện** — "cậu thử một tuần rồi nói mình nghe" — và giúp người kia viết nó ra. Đừng biến cam kết nhỏ thành cái bẫy để kéo tới thứ họ chưa bao giờ đồng ý.
+**Cách dùng trung thực:** người dùng xin một cam kết nhỏ, **cụ thể và tự nguyện**, chẳng hạn “cậu thử một tuần rồi nói mình nghe”, và giúp người kia viết cam kết ấy ra. Không nên biến cam kết nhỏ thành cái bẫy để kéo người kia tới thứ họ chưa từng đồng ý.
 
-**Nhận ra khi bị dùng:** chuỗi câu hỏi dễ đồng ý ở đầu; cảm giác "trót rồi thì theo cho xong"; hoặc điều kiện chỉ hiện ra sau khi bạn đã đi được nửa quy trình. Câu hỏi phá bẫy: **"Nếu hôm nay mới biết những gì mình biết bây giờ, mình có chọn như vậy không?"** Nếu không, đổi ý là quyết định đúng — nhất quán với giá trị của mình quan trọng hơn nhất quán với một lời lỡ nói.
+**Nhận ra khi bị dùng:** các dấu hiệu gồm chuỗi câu hỏi dễ đồng ý ở đầu, cảm giác “trót rồi thì theo cho xong”, hoặc điều kiện chỉ hiện ra sau khi bạn đã đi được nửa quy trình. Một câu hỏi giúp thoát khỏi tình huống này là: **“Nếu hôm nay mới biết những gì mình biết bây giờ, mình có chọn như vậy không?”** Nếu câu trả lời là không, việc đổi ý là quyết định hợp lý, vì nhất quán với giá trị của mình quan trọng hơn nhất quán với một lời đã lỡ nói.
 
-> [!canh-bao] Bẫy chi phí chìm là họ hàng gần của nguyên tắc này: đã đầu tư ba tháng vào một dự án hỏng nên tiếc, không dừng. Tiền và thời gian đã tiêu thì không lấy lại được dù bạn có đi tiếp hay không — quyết định đúng chỉ nên dựa vào chi phí và lợi ích **từ hôm nay trở đi**.
+> [!canh-bao] Bẫy chi phí chìm (*sunk cost fallacy*) có liên quan chặt chẽ tới nguyên tắc này: người ta đã đầu tư ba tháng vào một dự án hỏng nên tiếc và không dừng lại. Tiền và thời gian đã tiêu thì không lấy lại được dù bạn có đi tiếp hay không, vì vậy quyết định hợp lý chỉ nên dựa vào chi phí và lợi ích **từ hôm nay trở đi**.
 
 ## Nguyên tắc 3 · Bằng chứng xã hội
 
-Khi không chắc phải làm gì, người ta nhìn xem người khác đang làm gì. Nguyên tắc này mạnh nhất ở hai điều kiện: **tình huống không chắc chắn** và **người làm gương giống mình**.
+Khi không chắc phải làm gì, người ta thường nhìn xem người khác đang làm gì. Nguyên tắc này phát huy mạnh nhất ở hai điều kiện: **tình huống không chắc chắn** và **người làm gương giống mình**.
 
 | Bối cảnh | Ví dụ |
 |---|---|
-| Sàn thương mại điện tử | "1.200 người đã mua trong tháng này" · "4,8 sao / 2.300 đánh giá" |
-| Quán ăn | Quán đông thì người ta xếp hàng, quán vắng bên cạnh thì không ai vào — dù chưa ai nếm món của cả hai |
-| Khách sạn | Bảng nhắc dùng lại khăn tắm hiệu quả hơn hẳn khi ghi "phần lớn khách ở **chính phòng này** đã dùng lại khăn" thay vì kêu gọi bảo vệ môi trường chung chung |
-| Học tập | Sinh viên năm nhất chọn môn tự chọn theo lựa chọn của anh chị khoá trên nhiều hơn theo mô tả môn học |
-| Mạng xã hội | Bài có sẵn nhiều lượt thích được đọc kỹ hơn và được tin hơn, dù nội dung không đổi |
+| Sàn thương mại điện tử | “1.200 người đã mua trong tháng này” · “4,8 sao / 2.300 đánh giá” |
+| Quán ăn | Quán đông thì người ta xếp hàng còn quán vắng bên cạnh thì không ai vào, dù chưa ai nếm món của cả hai quán. |
+| Khách sạn | Bảng nhắc dùng lại khăn tắm hiệu quả hơn khi ghi “phần lớn khách ở **chính phòng này** đã dùng lại khăn” so với khi chỉ kêu gọi bảo vệ môi trường chung chung (Goldstein và cộng sự, 2008). |
+| Học tập | Sinh viên năm nhất có thể chọn môn tự chọn theo lựa chọn của anh chị khoá trên nhiều hơn là theo mô tả môn học. |
+| Mạng xã hội | Bài đã có sẵn nhiều lượt thích có thể được đọc kỹ hơn và được tin hơn, dù nội dung không đổi. |
 
-**Dùng cho trung thực:** đưa bằng chứng **thật** và **gần với người nghe**. Muốn rủ lớp tham gia dự án, nói "ba bạn trong lớp mình đã tham gia đợt trước, đây là việc các bạn ấy đã làm" mạnh hơn "hàng nghìn sinh viên toàn quốc đã tham gia".
+**Cách dùng trung thực:** người dùng đưa ra bằng chứng **thật** và **gần với người nghe**. Chẳng hạn, khi rủ lớp tham gia dự án, câu “ba bạn trong lớp mình đã tham gia đợt trước, đây là việc các bạn ấy đã làm” nhiều khả năng thuyết phục hơn câu “hàng nghìn sinh viên toàn quốc đã tham gia”.
 
-**Nhận ra khi bị dùng:** con số không kiểm được, đánh giá chung chung không nêu chi tiết, "mọi người đều đang dùng" mà không nói mọi người là ai. Và nhớ điều đã học ở module 3: **số đông đo mức lan truyền, không đo mức đúng**.
+**Nhận ra khi bị dùng:** các dấu hiệu gồm con số không kiểm chứng được, đánh giá chung chung không nêu chi tiết, hoặc câu “mọi người đều đang dùng” mà không nói rõ mọi người là ai. Bạn cũng cần nhớ điều đã học ở module 3: **số đông đo mức lan truyền chứ không đo mức đúng**.
 
-> [!vi-du] Trên một sàn thương mại, cùng một mẫu tai nghe có hai người bán: A ghi "đã bán 5.000" với 4,9 sao; B ghi "đã bán 120" với 4,6 sao và 40 đánh giá có ảnh thật, mô tả cụ thể ưu nhược. Bằng chứng xã hội của A mạnh hơn về con số, nhưng của B **kiểm được**. Người mua tỉnh táo đọc mấy đánh giá 3 sao của B — chỗ thường nói thật nhất — thay vì đếm số của A.
+> [!vi-du] Giả sử trên một sàn thương mại, cùng một mẫu tai nghe có hai người bán: người bán A ghi “đã bán 5.000” với 4,9 sao; người bán B ghi “đã bán 120” với 4,6 sao và 40 đánh giá có ảnh thật, mô tả cụ thể ưu điểm và nhược điểm. Bằng chứng xã hội của A mạnh hơn về con số, nhưng bằng chứng của B **có thể kiểm chứng**. Người mua tỉnh táo nên đọc các đánh giá 3 sao của B, vì những đánh giá này thường nêu rõ hạn chế của sản phẩm, thay vì chỉ so sánh con số của A.
 
 ## Nguyên tắc 4 · Thiện cảm
 
-Ta dễ đồng ý với người mình có cảm tình. Thiện cảm được xây từ ba nguồn chính: **sự tương đồng** (cùng quê, cùng trường, cùng sở thích), **lời khen chân thật**, và **việc cùng làm chung hướng tới một mục tiêu**.
+Chúng ta dễ đồng ý với người mình có cảm tình. Thiện cảm được hình thành từ ba nguồn chính: **sự tương đồng** (cùng quê, cùng trường, cùng sở thích), **lời khen chân thật** và **việc cùng làm chung hướng tới một mục tiêu**.
 
 | Bối cảnh | Ví dụ |
 |---|---|
-| Phỏng vấn | Ứng viên và người phỏng vấn phát hiện cùng học một trường — không khí đổi hẳn từ phút đó |
-| Bán hàng | Nhân viên nhớ tên bạn và nhớ lần trước bạn mua gì; bạn quay lại chỗ ấy dù giá không rẻ hơn |
-| Làm nhóm | Hai người từng cùng thức đêm cứu một bài nộp về sau làm việc với nhau dễ hơn hẳn |
-| Quảng cáo | Nhãn hàng thuê người nổi tiếng mà nhóm khách hàng mục tiêu yêu thích — bán bằng thiện cảm, không bằng thông số |
-| Lớp học | Giảng viên nhớ tên sinh viên và hỏi thăm phần đồ án; sinh viên đi học đều hơn |
+| Phỏng vấn | Ứng viên và người phỏng vấn phát hiện mình cùng học một trường, và không khí buổi phỏng vấn có thể thay đổi rõ rệt từ phút đó. |
+| Bán hàng | Nhân viên nhớ tên bạn và nhớ lần trước bạn mua gì, và vì vậy bạn có thể quay lại chỗ ấy dù giá không rẻ hơn. |
+| Làm nhóm | Hai người từng cùng thức đêm để hoàn thành một bài nộp về sau thường làm việc với nhau dễ dàng hơn. |
+| Quảng cáo | Nhãn hàng thuê người nổi tiếng mà nhóm khách hàng mục tiêu yêu thích, tức là bán bằng thiện cảm chứ không bằng thông số. |
+| Lớp học | Giảng viên nhớ tên sinh viên và hỏi thăm phần đồ án, và sinh viên có thể đi học đều đặn hơn. |
 
-**Dùng cho trung thực:** tìm điểm chung có thật, khen điều bạn thật sự thấy đáng khen và nói rõ vì sao, và **cùng làm một việc gì đó** trước khi cần nhờ vả. Thiện cảm dựng bằng sự giả tạo thì đổ ngay ở lần thứ hai.
+**Cách dùng trung thực:** người dùng tìm điểm chung có thật, khen điều mình thật sự thấy đáng khen và nói rõ lý do, đồng thời **cùng làm một việc gì đó** trước khi cần nhờ vả. Thiện cảm được dựng bằng sự giả tạo thường khó duy trì sau lần tiếp xúc thứ hai.
 
-**Nhận ra khi bị dùng:** người lạ khen bạn quá nhanh và quá nhiều; tìm điểm chung một cách sốt sắng; thân thiện tăng vọt ngay trước lúc có đề nghị. Câu hỏi phòng vệ mà Cialdini gợi ý rất gọn: **"Mình có thấy quý người này nhanh hơn bình thường không?"** Nếu có, hãy tách cảm tình khỏi món hàng và hỏi đúng câu bạn sẽ hỏi một người bán khó ưa.
+**Nhận ra khi bị dùng:** các dấu hiệu gồm người lạ khen bạn quá nhanh và quá nhiều, tìm điểm chung một cách quá sốt sắng, hoặc mức thân thiện tăng vọt ngay trước lúc có đề nghị. Cialdini gợi ý một câu hỏi phòng vệ ngắn gọn: **“Mình có thấy quý người này nhanh hơn bình thường không?”** (Cialdini, 2021) Nếu có, bạn nên tách cảm tình khỏi món hàng và hỏi đúng những câu hỏi mà bạn sẽ hỏi một người bán hàng mình không có cảm tình.
 
-> [!ghi-nho] Bốn nguyên tắc này không xấu cũng không tốt — chúng là cách con người ra quyết định nhanh trong một thế giới quá nhiều lựa chọn. Điều quyết định đạo đức là **thông tin đi kèm có thật hay không**: một lời khen thật, một bằng chứng xã hội thật và một món quà không kèm ràng buộc đều là chuyện tử tế.
+> [!ghi-nho] Bốn nguyên tắc này không tốt cũng không xấu về bản chất; chúng phản ánh cách con người ra quyết định nhanh trong một môi trường có quá nhiều lựa chọn. Yếu tố quyết định về mặt đạo đức là **thông tin đi kèm có thật hay không**: một lời khen thật, một bằng chứng xã hội thật và một món quà không kèm ràng buộc đều là cách ứng xử chính đáng.
 
 ## Luyện tập và tài liệu tham khảo
 
 ### Cá nhân (20 phút)
 
-Trong 24 giờ qua, tìm **bốn tình huống** bạn đã gặp, mỗi tình huống ứng với một nguyên tắc trong bài (kể cả trên mạng xã hội và ứng dụng mua sắm). Với mỗi tình huống ghi ba dòng: nguyên tắc nào, dấu hiệu nhận ra, và bạn có bị ảnh hưởng không — trung thực, kể cả khi câu trả lời là có.
+Hãy tìm **bốn tình huống** bạn đã gặp trong 24 giờ qua, mỗi tình huống ứng với một nguyên tắc trong bài, kể cả trên mạng xã hội và ứng dụng mua sắm. Với mỗi tình huống, hãy ghi ba dòng nêu nguyên tắc nào đang vận hành, dấu hiệu nhận ra, và bạn có bị ảnh hưởng hay không; hãy trả lời trung thực, kể cả khi câu trả lời là có.
 
 ### Nhóm 3–4 người (25 phút)
 
-Mỗi nhóm nhận một mục tiêu thuyết phục có thật trong trường (rủ tham gia câu lạc bộ, xin khoa mở thêm buổi phụ đạo, kêu gọi phân loại rác ở căng tin). Thiết kế hai phiên bản: **bản trung thực** dùng ít nhất hai nguyên tắc, và **bản thao túng** dùng đúng những nguyên tắc ấy nhưng vi phạm ba câu hỏi đạo đức ở bài 8.1. Trình bày cả hai, rồi chỉ ra chính xác **câu nào** làm bản thứ hai vượt ranh giới.
+Mỗi nhóm nhận một mục tiêu thuyết phục có thật trong trường, chẳng hạn rủ tham gia câu lạc bộ, xin khoa mở thêm buổi phụ đạo hoặc kêu gọi phân loại rác ở căng tin. Nhóm thiết kế hai phiên bản: **bản trung thực** dùng ít nhất hai nguyên tắc, và **bản thao túng** dùng đúng những nguyên tắc ấy nhưng vi phạm ba câu hỏi kiểm tra ở bài 8.1. Nhóm trình bày cả hai phiên bản, rồi chỉ ra chính xác **câu nào** khiến bản thứ hai vượt qua ranh giới.
 
 ### Bài tập về nhà (45–60 phút)
 
-Chụp hoặc lưu lại năm ví dụ thuyết phục bạn gặp trong tuần (quảng cáo, trang bán hàng, tin nhắn khuyến mãi, bài đăng của người ảnh hưởng). Viết một trang: mỗi ví dụ dùng nguyên tắc nào, bằng chứng đi kèm có kiểm được không, và bạn chấm nó ở mức trung thực hay thao túng — kèm lý do.
+Hãy chụp hoặc lưu lại năm ví dụ thuyết phục bạn gặp trong tuần, chẳng hạn quảng cáo, trang bán hàng, tin nhắn khuyến mãi hoặc bài đăng của người có ảnh hưởng. Sau đó viết một trang nêu rõ mỗi ví dụ dùng nguyên tắc nào, bằng chứng đi kèm có kiểm chứng được hay không, và bạn đánh giá ví dụ đó ở mức trung thực hay thao túng, kèm lý do.
 
 ### Xem thêm
 
-- 🎬 [Robert Cialdini — Science of Persuasion](https://www.youtube.com/watch?v=kv0sOX6Alrk) — 11 phút.
-- 🎬 [7 Principles of Psychological Persuasion](https://www.youtube.com/watch?v=P3rbadeF9AI) — Sprouts, 6 phút. Bản hoạt hình tóm tắt cả bảy nguyên tắc.
+- 🎬 [Robert Cialdini — Science of Persuasion](https://www.youtube.com/watch?v=kv0sOX6Alrk) — 11 phút. Bài nói do chính tác giả trình bày.
+- 🎬 [7 Principles of Psychological Persuasion](https://www.youtube.com/watch?v=P3rbadeF9AI) — Sprouts, 6 phút. Video hoạt hình tóm tắt cả bảy nguyên tắc.
 
 ### Nguồn tham khảo
 
@@ -130,7 +130,7 @@ Chụp hoặc lưu lại năm ví dụ thuyết phục bạn gặp trong tuần 
                 "explanation": "Chuẩn mực đáp trả hoạt động gần như tự động và không tỉ lệ với giá trị món quà; nó còn chạy cả khi món quà không ai yêu cầu.",
                 "points": 2,
                 "options": [
-                    {"label": "Vì cảm giác mắc nợ hoạt động gần như tự động, không tỉ lệ với giá trị món quà, và vẫn xuất hiện dù ta không hề xin", "isCorrect": True},
+                    {"label": "Vì cảm giác mắc nợ hoạt động gần như tự động, không tỉ lệ với giá trị món quà, và vẫn xuất hiện dù chúng ta không hề xin", "isCorrect": True},
                     {"label": "Vì người nhận sợ bị đánh giá là keo kiệt nếu không mua", "isCorrect": False},
                     {"label": "Vì quà nhỏ thường đi kèm sản phẩm chất lượng cao", "isCorrect": False, "misconception": "knm.reciprocity-small-gift"},
                     {"label": "Vì quà nhỏ không ảnh hưởng gì tới quyết định, chỉ tạo thiện cảm", "isCorrect": False, "misconception": "knm.reciprocity-small-gift"},
@@ -153,7 +153,7 @@ Chụp hoặc lưu lại năm ví dụ thuyết phục bạn gặp trong tuần 
                 "key": "8.2-cam-ket-nho",
                 "type": "mcq",
                 "prompt": "Vì sao cam kết nhỏ lại hiệu quả trong việc xây dựng cam kết lớn?",
-                "explanation": "Người ta có xu hướng hành xử nhất quán với điều mình đã nói, đặc biệt khi cam kết được nói ra, viết xuống và công khai — nên bước nhỏ mở đường cho bước lớn.",
+                "explanation": "Người ta có xu hướng hành xử nhất quán với điều mình đã nói, đặc biệt khi cam kết được nói ra, viết xuống và công khai; vì vậy bước nhỏ mở đường cho bước lớn.",
                 "points": 2,
                 "options": [
                     {"label": "Vì người ta muốn hành xử nhất quán với điều mình đã nói, nhất là khi cam kết được viết ra và nói công khai", "isCorrect": True},

@@ -2,40 +2,42 @@
 LESSON = {
     "title": "Bài 2.2 · Bẻ lại lối nghĩ méo",
     "durationMin": 50,
-    "description": "Bảy lối nghĩ méo hay gặp và cách nhận ra chúng trong lời tự nói; quy trình ABCDE để tranh luận với chính mình; chữ chưa của tư duy phát triển và chỗ khái niệm này hay bị dùng sai.",
+    "description": "Bài này trình bày bảy lối nghĩ méo thường gặp và cách nhận ra chúng trong lời tự nói, quy trình ABCDE để tranh luận với chính mình, chữ “chưa” của tư duy phát triển và những chỗ khái niệm này thường bị dùng sai.",
     "objectives": [
-        "Gọi tên được lối nghĩ méo trong một lời tự nói cụ thể",
-        "Chạy được quy trình ABCDE trên một tình huống thật của mình",
-        "Dùng được ba câu hỏi bẻ khoá để tìm cách đọc khác cho cùng một sự việc",
-        "Phân biệt được tư duy phát triển thật với cách hiểu sai chỉ cần cố gắng là đủ",
+        "Nhận diện và gọi tên được lối nghĩ méo trong một lời tự nói cụ thể",
+        "Vận dụng được quy trình ABCDE trên một tình huống thật của mình",
+        "Sử dụng được ba câu hỏi bẻ khoá để tìm một cách diễn giải khác cho cùng một sự việc",
+        "Phân biệt được tư duy phát triển đúng nghĩa với cách hiểu sai rằng chỉ cần cố gắng là đủ",
     ],
     "summary": [
-        "Lối nghĩ méo không phải dấu hiệu yếu đuối — chúng là đường tắt của bộ não, ai cũng có; việc cần làm là nhận ra chúng đủ nhanh để không hành động theo.",
-        "ABCDE thêm hai bước vào mô hình ABC: tranh luận với lời tự nói bằng bằng chứng, rồi ghi lại hiệu ứng sau khi tranh luận.",
-        "Ba câu hỏi bẻ khoá: bằng chứng nào chống lại nó, còn cách đọc nào khác, và nếu bạn thân gặp chuyện này mình sẽ nói gì.",
-        "Tư duy phát triển không phải là khen cố gắng suông; nó là niềm tin rằng năng lực thay đổi được, kèm việc đổi chiến lược khi cách cũ không chạy.",
+        "Lối nghĩ méo không phải là dấu hiệu yếu đuối: chúng là những đường tắt của bộ não và ai cũng có; việc cần làm là nhận ra chúng đủ nhanh để không hành động theo.",
+        "Quy trình ABCDE thêm hai bước vào mô hình ABC: tranh luận với lời tự nói dựa trên bằng chứng, rồi ghi lại hiệu ứng sau khi tranh luận.",
+        "Ba câu hỏi bẻ khoá gồm: bằng chứng nào chống lại nó, còn cách đọc nào khác, và nếu bạn thân gặp chuyện này mình sẽ nói gì.",
+        "Tư duy phát triển không phải là khen cố gắng suông; nó là niềm tin rằng năng lực thay đổi được, kèm việc đổi chiến lược khi cách cũ không hiệu quả.",
     ],
     "splitSections": True,
     "body": r"""
-Bài trước dừng ở chỗ nhận ra khâu diễn giải. Bài này làm phần khó hơn: **cãi lại nó**, một cách có phương pháp chứ không phải bằng cách tự nhủ đừng nghĩ nữa.
+Bài 2.1 đã trình bày cách nhận diện khâu diễn giải. Bài này đề cập bước tiếp theo, khó hơn: **tranh luận với lời tự nói đó** một cách có phương pháp, chứ không phải bằng cách tự nhủ đừng nghĩ nữa.
 
 ## Bảy lối nghĩ méo hay gặp
 
-Các lối nghĩ dưới đây được mô tả trong trị liệu nhận thức — hành vi. Chúng phổ biến tới mức gần như ai cũng dùng vài cái mỗi tuần; điều khác nhau chỉ là có nhận ra kịp hay không.
+Các lối nghĩ méo (*cognitive distortions*) dưới đây được mô tả trong trị liệu nhận thức hành vi (*cognitive behavioral therapy*, CBT; Burns, 1980; Beck, 1979). Chúng phổ biến đến mức nhiều người dùng một vài lối trong mỗi tuần; điều khác nhau chỉ là có nhận ra kịp hay không.
 
 | Lối nghĩ méo | Nghe như thế nào | Chỗ nó sai |
 |---|---|---|
-| Được ăn cả ngã về không | "Không đạt 8 phẩy thì coi như hỏng kỳ này" | Bỏ mất toàn bộ vùng ở giữa, nơi phần lớn đời sống diễn ra |
-| Thổi phồng | "Trượt môn này là mất bằng, mất việc, hỏng cả tương lai" | Nối các bước bằng giả định chưa kiểm bước nào |
-| Đọc ý người khác | "Nhắn không rep tức là nó nghĩ mình phiền" | Coi một suy đoán là dữ kiện, không kiểm được |
-| Khái quát vội | "Hai lần bị từ chối rồi, chỗ nào cũng sẽ từ chối thôi" | Cỡ mẫu hai, kết luận cho toàn bộ thị trường |
-| Lọc tiêu cực | Nhớ đúng một câu chê giữa mười lời khen | Chọn dữ liệu theo tâm trạng rồi kết luận như thể đủ |
-| Suy diễn từ cảm xúc | "Mình thấy lo, chắc chắn sẽ có chuyện" | Cảm xúc là dữ liệu về trạng thái của ta, không phải về thế giới |
-| Câu phải và nên | "Đáng lẽ mình phải giỏi hơn ở tuổi này" | So với một chuẩn không ai định nghĩa, không đo được |
+| Được ăn cả ngã về không | “Không đạt 8 phẩy thì coi như hỏng kỳ này” | Lối nghĩ này bỏ qua toàn bộ vùng ở giữa, nơi phần lớn đời sống diễn ra. |
+| Thổi phồng | “Trượt môn này là mất bằng, mất việc, hỏng cả tương lai” | Các bước được nối với nhau bằng những giả định chưa được kiểm tra. |
+| Đọc ý người khác | “Nhắn không rep tức là nó nghĩ mình phiền” | Một suy đoán bị coi là dữ kiện dù chưa kiểm tra được. |
+| Khái quát vội | “Hai lần bị từ chối rồi, chỗ nào cũng sẽ từ chối thôi” | Kết luận cho toàn bộ thị trường được rút ra từ cỡ mẫu chỉ có hai. |
+| Lọc tiêu cực | Nhớ đúng một câu chê giữa mười lời khen | Dữ liệu được chọn theo tâm trạng, rồi kết luận được rút ra như thể dữ liệu đã đầy đủ. |
+| Suy diễn từ cảm xúc | “Mình thấy lo, chắc chắn sẽ có chuyện” | Cảm xúc là dữ liệu về trạng thái của bản thân, không phải về thế giới bên ngoài. |
+| Câu phải và nên | “Đáng lẽ mình phải giỏi hơn ở tuổi này” | Bản thân được so với một chuẩn không ai định nghĩa và không đo được. |
 
-> [!vi-du] Nhi nhắn cho nhóm đồ án lúc 9 giờ tối, tới 11 giờ chưa ai trả lời. Chuỗi diễn ra trong đầu: "chắc mọi người khó chịu vì mình hỏi nhiều" (đọc ý người khác) → "mình toàn làm phiền người khác" (khái quát vội) → "kiểu này nhóm sẽ đẩy mình ra rìa, điểm nhóm sẽ tệ" (thổi phồng). Ba bước ấy mất chưa tới hai phút và không có bước nào được kiểm. Sáng hôm sau: cả nhóm đi làm thêm ca tối, không ai kịp mở điện thoại.
+> [!vi-du] Nhi nhắn cho nhóm đồ án lúc 9 giờ tối, tới 11 giờ chưa ai trả lời. Chuỗi diễn ra trong đầu: “chắc mọi người khó chịu vì mình hỏi nhiều” (đọc ý người khác) → “mình toàn làm phiền người khác” (khái quát vội) → “kiểu này nhóm sẽ đẩy mình ra rìa, điểm nhóm sẽ tệ” (thổi phồng). Ba bước ấy diễn ra trong chưa tới hai phút và không bước nào được kiểm tra. Sáng hôm sau, Nhi mới biết cả nhóm đều đi làm thêm ca tối và không ai kịp mở điện thoại.
 
 ## Quy trình ABCDE
+
+Quy trình **ABCDE** mở rộng mô hình ABC của bài 2.1 bằng hai bước: **D** (*disputation*) là tranh luận với lời tự nói, và **E** (*effect*) là ghi lại hiệu ứng sau khi tranh luận. Ví dụ dưới đây áp dụng quy trình vào tình huống của Nhi.
 
 ```html
 <div style="border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0">
@@ -46,43 +48,45 @@ Các lối nghĩ dưới đây được mô tả trong trị liệu nhận thứ
     <div style="background:rgba(13,148,136,.16);border:2px solid rgba(13,148,136,.6);border-radius:.4rem;padding:.55rem .75rem"><b>D — Tranh luận</b> · Bằng chứng nào cho thấy họ khó chịu? Không có. Bằng chứng ngược lại? Hôm qua Trang còn nhờ mình rà lại slide. Cách đọc khác? Cả ba bạn đều làm ca tối. Nếu bạn thân kể chuyện này, mình sẽ nói gì?</div>
     <div style="background:rgba(59,130,246,.14);border-radius:.4rem;padding:.55rem .75rem"><b>E — Hiệu ứng</b> · Bớt lo, ngủ được; sáng mai nhắn một câu hỏi cụ thể kèm hạn chót thay vì rút lui</div>
   </div>
-  <div style="font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6">Bước D là chỗ toàn bộ giá trị nằm ở đó, và cũng là bước hay bị bỏ. Tranh luận không phải là tự nhủ đừng nghĩ nữa — nó là đòi hỏi bằng chứng, y như cách bạn sẽ làm với lập luận của người khác.</div>
+  <div style="font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6">Bước D là chỗ tập trung phần lớn giá trị của quy trình, và cũng là bước hay bị bỏ qua. Tranh luận không phải là tự nhủ đừng nghĩ nữa mà là đòi hỏi bằng chứng, giống như cách bạn đánh giá lập luận của người khác.</div>
 </div>
 ```
 
-Có một điều kiện để bước D chạy được: **phải viết ra**. Tranh luận trong đầu gần như luôn thua, vì lời tự nói tiêu cực nhắc lại được vô hạn còn phản biện thì trôi mất. Ba dòng trên giấy hoặc trong ghi chú điện thoại đủ để đổi kết quả.
+Bước D chỉ phát huy tác dụng khi **được viết ra**. Tranh luận trong đầu nhiều khả năng không hiệu quả, vì lời tự nói tiêu cực có thể lặp lại không giới hạn còn phản biện thì dễ trôi mất. Ba dòng trên giấy hoặc trong ghi chú điện thoại thường đủ để thay đổi kết quả.
 
 ## Ba câu hỏi bẻ khoá
 
-Khi bí, ba câu này gần như luôn mở được một cách đọc khác:
+Khi khó tìm ra cách diễn giải khác, ba câu hỏi sau thường giúp mở ra một hướng đọc mới:
 
-1. **Bằng chứng nào chống lại điều mình vừa nghĩ?** Không hỏi bằng chứng ủng hộ — cái đó đầu bạn đã tự tìm rồi.
-2. **Còn cách đọc nào khác cho đúng những dữ kiện này?** Ép mình nêu ít nhất hai cách, kể cả cách nghe có vẻ khó tin.
-3. **Nếu bạn thân kể đúng câu chuyện này, mình sẽ nói gì với họ?** Câu trả lời gần như luôn vừa tử tế hơn vừa chính xác hơn câu bạn đang nói với chính mình — và đó là dấu hiệu bạn đang dùng hai tiêu chuẩn khác nhau cho cùng một sự việc.
+1. **Bằng chứng nào chống lại điều mình vừa nghĩ?** Không hỏi bằng chứng ủng hộ, vì phần đó đầu óc bạn thường đã tự tìm.
+2. **Còn cách đọc nào khác cho đúng những dữ kiện này?** Hãy nêu ít nhất hai cách, kể cả cách nghe có vẻ khó tin.
+3. **Nếu bạn thân kể đúng câu chuyện này, mình sẽ nói gì với họ?** Câu trả lời thường vừa tử tế hơn vừa chính xác hơn câu bạn đang nói với chính mình, và đó là dấu hiệu bạn đang dùng hai tiêu chuẩn khác nhau cho cùng một sự việc.
 
-> [!meo] Câu hỏi thứ ba là câu rẻ nhất và hiệu quả nhất. Nó không đòi bạn phải lạc quan; nó chỉ đòi bạn áp dụng cùng một tiêu chuẩn công bằng cho mình như cho người khác.
+> [!meo] Câu hỏi thứ ba là câu dễ áp dụng nhất và thường hiệu quả. Nó không đòi hỏi bạn phải lạc quan mà chỉ đòi hỏi bạn áp dụng cho mình cùng một tiêu chuẩn công bằng như với người khác.
 
 ## Chữ "chưa" và chỗ tư duy phát triển bị dùng sai
 
 ![Carol Dweck trong một bộ phim tài liệu về đổi mới sáng tạo](https://upload.wikimedia.org/wikipedia/commons/9/9f/Carol_Dweck_for_Innovation_documentary.jpg "Carol Dweck, nhà tâm lý học Đại học Stanford, tác giả khái niệm tư duy phát triển (growth mindset). Ảnh: [File:Carol Dweck for Innovation documentary.jpg](https://commons.wikimedia.org/wiki/File:Carol_Dweck_for_Innovation_documentary.jpg), tác giả Satheesh Gopalan, giấy phép CC BY-SA 3.0.")
 
-Dweck phân biệt hai niềm tin về năng lực: **cố định** (thông minh là lượng trời cho) và **phát triển** (năng lực thay đổi được qua luyện tập và chiến lược đúng). Khác biệt lộ ra rõ nhất ở chỗ gặp việc khó: người tin cố định coi việc phải cố gắng là bằng chứng mình kém, nên tránh; người tin phát triển coi cố gắng là cách năng lực tăng lên, nên ở lại lâu hơn.
+Theo Carol Dweck (2006), có hai niềm tin về năng lực: **tư duy cố định** (*fixed mindset*), tức niềm tin rằng thông minh là lượng có sẵn từ đầu, và **tư duy phát triển** (*growth mindset*), tức niềm tin rằng năng lực thay đổi được qua luyện tập và chiến lược đúng. Khác biệt lộ ra rõ nhất khi gặp việc khó: người tin vào tư duy cố định coi việc phải cố gắng là bằng chứng mình kém nên có xu hướng tránh; người tin vào tư duy phát triển coi cố gắng là cách năng lực tăng lên nên có xu hướng ở lại lâu hơn.
 
-Một chi tiết nhỏ mà hiệu quả: thêm chữ **chưa** vào cuối câu. "Mình không làm được bài này" → "mình chưa làm được bài này". Câu thứ hai đặt hiện tại lên một trục thời gian thay vì một bản án.
+Tư duy phát triển gần với niềm tin vào năng lực bản thân (*self-efficacy*, xem bài 4.1): cả hai đều là niềm tin về khả năng thay đổi năng lực của chính mình, nhưng khác nhau ở đối tượng. Tư duy phát triển là quan niệm về bản chất của năng lực (có tăng lên được qua luyện tập hay không), còn niềm tin vào năng lực bản thân là mức tin rằng mình hoàn thành được một nhiệm vụ cụ thể, nên một người có thể tin năng lực thay đổi được mà vẫn chưa tin mình làm nổi bài kiểm tra sắp tới.
 
-> [!canh-bao] Ba cách hiểu sai phổ biến. **Một**, coi tư duy phát triển là khen cố gắng — cố gắng sai cách mãi thì vẫn không tiến bộ, phần quan trọng là *đổi chiến lược*. **Hai**, dùng nó để đổ trách nhiệm hoàn toàn cho người học, bỏ qua điều kiện học tập, sức khoẻ, tài chính. **Ba**, coi nó là thứ ai cũng có sẵn hoặc không: chính Dweck nhấn mạnh phần lớn người ta là hỗn hợp, và ở môn này thì cố định trong khi môn kia lại phát triển.
+Một điều chỉnh nhỏ nhưng hữu ích là thêm chữ **chưa** vào cuối câu, chẳng hạn chuyển “Mình không làm được bài này” thành “mình chưa làm được bài này”. Câu thứ hai đặt hiện tại lên một trục thời gian thay vì xem nó như một bản án.
 
-> [!vi-du] Long trượt vòng kiểm tra kỹ thuật khi ứng tuyển thực tập. Bản cố định: "mình không có tư chất lập trình" → thôi, chuyển sang tìm việc khác. Bản phát triển nhưng *sai*: "cứ chăm hơn nữa" → cày thêm 40 bài cùng dạng đã làm được, trượt tiếp. Bản phát triển đúng: xin lại đề, phát hiện mình hỏng ở phần độ phức tạp thuật toán, đổi cách học sang giải thích lại bài cho người khác nghe và làm đúng loại bài đó, không cày loại đã thạo. Điểm mấu chốt không nằm ở nỗ lực mà ở việc **đổi chiến lược sau khi biết mình hổng chỗ nào**.
+> [!canh-bao] Có ba cách hiểu sai phổ biến. **Thứ nhất**, coi tư duy phát triển là khen cố gắng: cố gắng sai cách mãi thì vẫn không tiến bộ, phần quan trọng là *đổi chiến lược*. **Thứ hai**, dùng nó để đổ toàn bộ trách nhiệm cho người học, bỏ qua điều kiện học tập, sức khoẻ và tài chính. **Thứ ba**, coi nó là thứ mỗi người hoặc có sẵn hoặc không: theo Dweck (2006), phần lớn mọi người là hỗn hợp, nghĩa là có thể theo tư duy cố định ở môn này nhưng theo tư duy phát triển ở môn khác. Ngoài ra, một phân tích tổng hợp (Sisk và cộng sự, 2018) cho thấy ảnh hưởng của tư duy phát triển lên kết quả học tập nhỏ hơn nhiều so với cách khái niệm này thường được quảng bá.
+
+> [!vi-du] Long trượt vòng kiểm tra kỹ thuật khi ứng tuyển thực tập. Với tư duy cố định, Long nghĩ “mình không có tư chất lập trình” rồi chuyển sang tìm việc khác. Với tư duy phát triển nhưng bị hiểu sai, Long nghĩ “cứ chăm hơn nữa” và làm thêm 40 bài cùng dạng đã làm được, nên tiếp tục trượt. Với tư duy phát triển đúng nghĩa, Long xin lại đề, phát hiện mình hỏng ở phần độ phức tạp thuật toán, rồi đổi cách học: giải thích lại bài cho người khác nghe và làm đúng loại bài còn yếu thay vì làm lại loại đã thạo. Điểm mấu chốt không nằm ở nỗ lực mà ở việc **đổi chiến lược sau khi biết mình hổng chỗ nào**.
 
 ## Luyện tập và tài liệu tham khảo
 
 ### Cá nhân (20 phút)
 
-Lấy lại mục ABC bạn viết ở bài 2.1, thêm hai bước D và E. Bước D bắt buộc phải có: một bằng chứng cụ thể chống lại lời tự nói, một cách đọc khác cho cùng dữ kiện, và câu bạn sẽ nói nếu bạn thân gặp chuyện đó. Bước E ghi lại sau khi viết xong bạn thấy khác đi thế nào — kể cả khi câu trả lời là không khác gì, đó cũng là dữ liệu.
+Lấy lại mục ABC bạn viết ở bài 2.1, thêm hai bước D và E. Bước D bắt buộc phải có: một bằng chứng cụ thể chống lại lời tự nói, một cách đọc khác cho cùng dữ kiện, và câu bạn sẽ nói nếu bạn thân gặp chuyện đó. Bước E ghi lại sau khi viết xong bạn thấy khác đi thế nào; kể cả khi câu trả lời là không khác gì thì đó cũng là dữ liệu.
 
 ### Nhóm 3–4 người (25 phút)
 
-Mỗi nhóm nhận ba lối nghĩ méo trong bảng. Với mỗi lối, dựng một tình huống có thật trong đời sinh viên và viết hai phiên bản lời tự nói: phiên bản méo và phiên bản đã tranh luận. Yêu cầu: phiên bản sau **không được là câu an ủi** — nhóm khác sẽ chấm, câu nào nghe như "rồi sẽ ổn thôi" bị loại.
+Mỗi nhóm nhận ba lối nghĩ méo trong bảng. Với mỗi lối, dựng một tình huống có thật trong đời sinh viên và viết hai phiên bản lời tự nói: phiên bản méo và phiên bản đã tranh luận. Yêu cầu: phiên bản sau **không được là câu an ủi**; nhóm khác sẽ chấm, và câu nào nghe như “rồi sẽ ổn thôi” sẽ bị loại.
 
 ### Bài tập về nhà (45–60 phút)
 
@@ -108,7 +112,7 @@ Ghi nhật ký ABCDE trong bảy ngày, mỗi ngày một mục, mỗi mục kh�
                 "key": "2.2-goi-ten-loi-nghi",
                 "type": "matching",
                 "prompt": "Nối mỗi lời tự nói với lối nghĩ méo tương ứng.",
-                "explanation": "Gọi đúng tên lối nghĩ méo là bước đầu để tranh luận với nó — mỗi lối sai ở một chỗ khác nhau nên cách bẻ cũng khác nhau.",
+                "explanation": "Gọi đúng tên lối nghĩ méo là bước đầu để tranh luận với nó. Mỗi lối sai ở một chỗ khác nhau nên cách bẻ cũng khác nhau.",
                 "points": 3,
                 "pairs": [
                     {"left": "Nhắn mà nó không trả lời, chắc nó thấy mình phiền", "right": "Đọc ý người khác"},
@@ -121,26 +125,26 @@ Ghi nhật ký ABCDE trong bảy ngày, mỗi ngày một mục, mỗi mục kh�
                 "key": "2.2-buoc-D",
                 "type": "mcq",
                 "prompt": "Trong quy trình ABCDE, bước D (tranh luận) được làm đúng khi nào?",
-                "explanation": "Tranh luận là đòi hỏi bằng chứng và tìm cách đọc khác cho cùng dữ kiện, giống hệt cách ta soi lập luận của người khác — không phải tự nhủ đừng nghĩ nữa, cũng không phải an ủi.",
+                "explanation": "Tranh luận là đòi hỏi bằng chứng và tìm cách đọc khác cho cùng dữ kiện, giống hệt cách chúng ta soi lập luận của người khác, chứ không phải tự nhủ đừng nghĩ nữa hay an ủi.",
                 "points": 2,
                 "options": [
-                    {"label": "Khi ta viết ra bằng chứng chống lại lời tự nói và ít nhất một cách đọc khác cho cùng những dữ kiện đó", "isCorrect": True},
-                    {"label": "Khi ta tự nhủ thôi đừng nghĩ tiêu cực nữa và chuyển sang việc khác", "isCorrect": False, "misconception": "knm.toxic-positivity"},
-                    {"label": "Khi ta nhắc lại nhiều lần một câu khẳng định tích cực cho tới lúc tin", "isCorrect": False, "misconception": "knm.positive-thinking-magic"},
-                    {"label": "Khi ta chấp nhận rằng lời tự nói đó đúng và cố sống chung với nó", "isCorrect": False, "misconception": "knm.self-label"},
+                    {"label": "Khi chúng ta viết ra bằng chứng chống lại lời tự nói và ít nhất một cách đọc khác cho cùng những dữ kiện đó", "isCorrect": True},
+                    {"label": "Khi chúng ta tự nhủ thôi đừng nghĩ tiêu cực nữa và chuyển sang việc khác", "isCorrect": False, "misconception": "knm.toxic-positivity"},
+                    {"label": "Khi chúng ta nhắc lại nhiều lần một câu khẳng định tích cực cho tới lúc tin", "isCorrect": False, "misconception": "knm.positive-thinking-magic"},
+                    {"label": "Khi chúng ta chấp nhận rằng lời tự nói đó đúng và cố sống chung với nó", "isCorrect": False, "misconception": "knm.self-label"},
                 ],
             },
             {
                 "key": "2.2-cau-hoi-ban-than",
                 "type": "mcq",
                 "prompt": "Câu hỏi nếu bạn thân gặp đúng chuyện này mình sẽ nói gì với họ có tác dụng gì?",
-                "explanation": "Nó phơi ra việc ta đang dùng hai tiêu chuẩn khác nhau cho cùng một sự việc, và câu nói dành cho bạn thân thường vừa tử tế vừa chính xác hơn.",
+                "explanation": "Nó phơi ra việc chúng ta đang dùng hai tiêu chuẩn khác nhau cho cùng một sự việc, và câu nói dành cho bạn thân thường vừa tử tế vừa chính xác hơn.",
                 "points": 2,
                 "options": [
-                    {"label": "Nó cho thấy ta đang áp hai tiêu chuẩn khác nhau cho cùng một sự việc, và bản dành cho bạn thân thường chính xác hơn", "isCorrect": True},
-                    {"label": "Nó giúp ta thấy mình vẫn còn may mắn hơn nhiều người khác", "isCorrect": False, "misconception": "knm.toxic-positivity"},
-                    {"label": "Nó chuyển sự chú ý sang người khác để ta quên chuyện của mình", "isCorrect": False, "misconception": "knm.toxic-positivity"},
-                    {"label": "Nó giúp ta biết mình nên nghe theo lời khuyên của bạn bè thay vì tự quyết", "isCorrect": False, "misconception": "knm.external-center"},
+                    {"label": "Nó cho thấy chúng ta đang áp hai tiêu chuẩn khác nhau cho cùng một sự việc, và bản dành cho bạn thân thường chính xác hơn", "isCorrect": True},
+                    {"label": "Nó giúp chúng ta thấy mình vẫn còn may mắn hơn nhiều người khác", "isCorrect": False, "misconception": "knm.toxic-positivity"},
+                    {"label": "Nó chuyển sự chú ý sang người khác để chúng ta quên chuyện của mình", "isCorrect": False, "misconception": "knm.toxic-positivity"},
+                    {"label": "Nó giúp chúng ta biết mình nên nghe theo lời khuyên của bạn bè thay vì tự quyết", "isCorrect": False, "misconception": "knm.external-center"},
                 ],
             },
             {

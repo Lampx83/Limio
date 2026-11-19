@@ -2,88 +2,90 @@
 LESSON = {
     "title": "Bài 9.3 · Xung đột, thành viên khó và rút kinh nghiệm",
     "durationMin": 50,
-    "description": "Năm kiểu phản ứng trước xung đột và lúc nào dùng kiểu nào; cách xử lý ba tình huống khó nhất trong nhóm sinh viên; và cách rút kinh nghiệm sau dự án để lần sau khác đi.",
+    "description": "Bài học trình bày năm kiểu phản ứng trước xung đột và điều kiện sử dụng của từng kiểu, hướng dẫn cách xử lý ba tình huống khó trong nhóm sinh viên, và mô tả cách rút kinh nghiệm sau dự án để lần sau làm khác đi.",
     "objectives": [
-        "Gọi tên được kiểu phản ứng của mình trước xung đột và chọn được kiểu phù hợp với tình huống",
-        "Nói chuyện được với thành viên trễ hạn bằng sự việc thay vì quy kết tính cách",
-        "Xử lý được tình huống hai người bất đồng kéo dài và tình huống có người im lặng",
-        "Chủ trì được một buổi rút kinh nghiệm cuối dự án cho ra việc làm được",
+        "Phân loại kiểu phản ứng của bản thân trước xung đột và lựa chọn kiểu phù hợp với tình huống",
+        "Vận dụng cách nói dựa trên sự việc và ảnh hưởng, thay vì quy kết tính cách, khi trao đổi với thành viên trễ hạn",
+        "Phân tích và xử lý tình huống hai người bất đồng kéo dài cũng như tình huống có thành viên im lặng",
+        "Chủ trì một buổi rút kinh nghiệm cuối dự án để tạo ra những việc làm được cho lần sau",
     ],
     "summary": [
-        "Năm kiểu phản ứng: đương đầu, né tránh, nhượng bộ, thoả hiệp, hợp tác — không kiểu nào luôn đúng, nhưng né tránh là kiểu bị lạm dụng nhiều nhất.",
-        "Trước người trễ hạn: hỏi nguyên nhân trước khi kết luận, nói bằng sự việc và ảnh hưởng, thống nhất mốc mới có kiểm chứng.",
-        "Trước người im lặng: hỏi thẳng và hỏi riêng; im lặng không phải đồng thuận.",
-        "Rút kinh nghiệm chỉ có giá trị khi ra được việc làm được cho lần sau, gắn tên người và mốc thời gian.",
+        "Có năm kiểu phản ứng trước xung đột: đương đầu, né tránh, nhượng bộ, thoả hiệp và hợp tác. Không kiểu nào luôn đúng, nhưng né tránh dễ bị lạm dụng vì nó dễ chịu trong ngắn hạn.",
+        "Trước thành viên trễ hạn, cần hỏi nguyên nhân trước khi kết luận, nói bằng sự việc và ảnh hưởng, và thống nhất mốc mới có thể kiểm chứng.",
+        "Trước thành viên im lặng, cần mời trực tiếp hoặc hỏi riêng vì im lặng không đồng nghĩa với đồng thuận; trước hai người bất đồng kéo dài, cần đưa tranh luận về tiêu chí và ghi lại quyết định.",
+        "Rút kinh nghiệm chỉ có giá trị khi tạo ra những việc làm được cho lần sau, mỗi việc gắn với tên người và mốc thời gian.",
     ],
     "splitSections": True,
     "body": r"""
-Nhóm nào cũng có lúc trục trặc. Bài này về ba việc khó nhất — xung đột, thành viên không giữ cam kết, và buổi rút kinh nghiệm mà phần lớn nhóm bỏ qua.
+Hầu như nhóm nào cũng có lúc trục trặc. Bài này bàn về ba vấn đề khó: xung đột, thành viên không giữ cam kết, và buổi rút kinh nghiệm mà nhiều nhóm bỏ qua. Các nội dung này tiếp nối bài 9.2, nơi giai đoạn sóng gió được mô tả là khó tránh khỏi trong quá trình phát triển của nhóm.
 
 ## Năm kiểu phản ứng trước xung đột
 
+Thomas và Kilmann (1974) phân biệt năm kiểu phản ứng (*conflict-handling mode*) trước xung đột: đương đầu hay cạnh tranh (*competing*), né tránh (*avoiding*), nhượng bộ (*accommodating*), thoả hiệp (*compromising*) và hợp tác (*collaborating*). Mỗi kiểu có vùng sử dụng phù hợp riêng, như bảng dưới đây.
+
 | Kiểu | Biểu hiện | Dùng được khi | Hỏng khi |
 |---|---|---|---|
-| Đương đầu (cạnh tranh) | Bảo vệ quan điểm tới cùng, muốn phần thắng thuộc về mình | Việc gấp, có nguyên tắc không đổi được, an toàn bị đe doạ | Dùng cho mọi chuyện — nhóm ngừng nói thật với bạn |
-| Né tránh | Im lặng, lảng sang chuyện khác, mong nó tự qua | Chuyện nhỏ, hoặc cần thời gian hạ nhiệt trước khi bàn | Vấn đề ảnh hưởng tới kết quả chung — nó quay lại lúc gần hạn |
-| Nhượng bộ | Chiều theo ý người kia để giữ hoà khí | Việc không quan trọng với bạn nhưng quan trọng với họ | Nhượng bộ liên tục — bạn kiệt sức và nhóm mất một tiếng nói |
-| Thoả hiệp | Mỗi bên nhường một nửa | Thời gian gấp, hai phương án đều tạm được | Vấn đề cần giải pháp đúng, không cần giải pháp giữa |
-| Hợp tác | Cùng tìm phương án đáp ứng được cả hai mối quan tâm | Việc quan trọng, còn thời gian, quan hệ cần giữ lâu dài | Dùng cho chuyện vặt — tốn thời gian không đáng |
+| Đương đầu (cạnh tranh) | Người dùng kiểu này bảo vệ quan điểm đến cùng và muốn phần thắng thuộc về mình. | Việc gấp, có nguyên tắc không thể thay đổi, hoặc an toàn bị đe doạ. | Kiểu này bị dùng cho mọi chuyện và nhóm sẽ ngừng nói thật với bạn. |
+| Né tránh | Người dùng kiểu này im lặng, lảng sang chuyện khác và mong vấn đề tự qua. | Chuyện nhỏ, hoặc cần thời gian hạ nhiệt trước khi bàn. | Vấn đề ảnh hưởng tới kết quả chung, khi đó nó sẽ quay lại vào lúc gần hạn. |
+| Nhượng bộ | Người dùng kiểu này chiều theo ý người kia để giữ hoà khí. | Việc không quan trọng với bạn nhưng quan trọng với họ. | Bạn nhượng bộ liên tục, khiến bạn kiệt sức và nhóm mất đi một tiếng nói. |
+| Thoả hiệp | Mỗi bên nhường một nửa. | Thời gian gấp và hai phương án đều tạm chấp nhận được. | Vấn đề cần một giải pháp đúng chứ không phải một giải pháp ở giữa. |
+| Hợp tác | Các bên cùng tìm phương án đáp ứng được mối quan tâm của cả hai. | Việc quan trọng, còn thời gian và quan hệ cần giữ lâu dài. | Kiểu này được dùng cho chuyện vặt, gây tốn thời gian không đáng. |
 
-Hai kiểu đáng nói riêng. **Đương đầu** không xấu: khi bạn đang giữ một nguyên tắc — như tình huống nhóm định nộp bài của khoá trước ở module 1 — thì đó là phản ứng đúng. **Né tránh** là kiểu bị lạm dụng nhiều nhất trong nhóm sinh viên, vì nó dễ chịu ngay lập tức và trả giá về sau.
+Hai kiểu cần được phân tích kỹ hơn. **Đương đầu** không phải lúc nào cũng xấu: khi bạn đang giữ một nguyên tắc, như trong tình huống nhóm định nộp lại bài của khoá trước ở module 1, thì đó là phản ứng phù hợp. **Né tránh** là kiểu dễ bị lạm dụng trong nhóm sinh viên, vì nó dễ chịu ngay lập tức nhưng phải trả giá về sau.
 
-> [!vi-du] Hai thành viên bất đồng về cách chia việc. X nói thẳng quan điểm và kèm lý do; Y im lặng suốt buổi họp rồi nhắn riêng cho từng người sau đó. X đang **đương đầu ở mức công việc** — hoàn toàn dùng được, miễn là nói về cách làm chứ không về con người. Y đang **né tránh**, và cách nhắn riêng từng người còn tạo thêm một vấn đề mới: nhóm bắt đầu có hai kênh thông tin, một kênh chính thức và một kênh sau lưng.
+> [!vi-du] Hai thành viên bất đồng về cách chia việc. Bạn X nói thẳng quan điểm và kèm lý do, còn bạn Y im lặng suốt buổi họp rồi sau đó nhắn riêng cho từng người. X đang **đương đầu ở mức công việc**, kiểu phản ứng hoàn toàn dùng được miễn là X nói về cách làm chứ không nói về con người. Y đang **né tránh**, và việc nhắn riêng cho từng người còn tạo thêm một vấn đề mới: nhóm bắt đầu có hai kênh thông tin, một kênh chính thức và một kênh sau lưng.
 
 ## Thành viên không giữ cam kết
 
-Đây là tình huống phổ biến nhất và cũng là chỗ nhiều người xử lý sai nhất — bằng cách kết luận về tính cách rồi hành xử theo kết luận đó.
+Đây là một tình huống rất thường gặp, và nhiều người xử lý sai khi kết luận về tính cách của thành viên rồi hành xử theo kết luận đó.
 
-Quy trình bốn bước, theo thứ tự:
+Quy trình xử lý gồm bốn bước, thực hiện theo thứ tự sau:
 
 1. **Hỏi trước khi kết luận, và hỏi riêng.** Cùng một hành vi trễ hạn có nhiều nguyên nhân: phần việc quá lớn, yêu cầu chưa rõ, đang vướng chuyện gia đình hoặc sức khoẻ, hoặc đúng là thiếu trách nhiệm. Bốn nguyên nhân, bốn cách gỡ khác nhau.
-2. **Nói bằng sự việc và ảnh hưởng, không bằng nhãn.** So sánh: *"Cậu vô trách nhiệm quá"* với *"Phần dữ liệu trễ ba ngày nên phần phân tích của mình chưa bắt đầu được, và cả nhóm đang lùi so với kế hoạch."* Câu thứ hai khó cãi vì nó là sự thật, và nó không buộc người kia phải bảo vệ danh dự.
-3. **Thống nhất mốc mới, nhỏ và kiểm chứng được.** Đừng nhận lời hứa "mai xong"; hãy chốt "tối nay gửi phần khung, mai gửi phần số liệu" — mốc nhỏ cho phép phát hiện sớm nếu lại trượt.
-4. **Nếu lặp lại: đưa ra nhóm, rồi mới tới giảng viên.** Nói ở nhóm bằng dữ kiện đã ghi lại, kèm đề xuất chia lại việc. Chỉ báo giảng viên khi đã thử các bước trên và có ghi chép — giống hệt thang xử lý xung đột ở bài 1.3.
+2. **Nói bằng sự việc và ảnh hưởng, không bằng nhãn.** Hãy so sánh hai cách nói: *“Cậu vô trách nhiệm quá”* và *“Phần dữ liệu trễ ba ngày nên phần phân tích của mình chưa bắt đầu được, và cả nhóm đang lùi so với kế hoạch.”* Câu thứ hai khó bị bác bỏ vì nó mô tả sự việc có thể kiểm chứng, và nó không buộc người kia phải bảo vệ danh dự.
+3. **Thống nhất mốc mới, nhỏ và kiểm chứng được.** Không nên chấp nhận lời hứa “mai xong”; nên chốt “tối nay gửi phần khung, mai gửi phần số liệu”, vì mốc nhỏ cho phép phát hiện sớm nếu tiến độ lại trượt.
+4. **Nếu lặp lại: đưa ra nhóm, rồi mới tới giảng viên.** Nhóm trao đổi bằng dữ kiện đã ghi lại, kèm đề xuất chia lại việc. Chỉ nên báo giảng viên khi đã thử các bước trên và có ghi chép, tương tự thang ứng xử đã học ở bài 1.3.
 
-> [!canh-bao] Cách xử lý sai phổ biến nhất: **làm hộ luôn cho nhanh**. Nó cứu được hạn nộp lần này và tạo ra ba vấn đề: người kia không học được gì, bạn kiệt sức, và nhóm hình thành thói quen ỷ lại. Nếu buộc phải gánh để kịp hạn, hãy nói rõ đó là ngoại lệ một lần và ghi lại phần việc thực tế của từng người.
+> [!canh-bao] Một cách xử lý sai thường gặp là **làm hộ luôn cho nhanh**. Cách này cứu được hạn nộp lần này nhưng tạo ra ba vấn đề: người kia không học được gì, bạn kiệt sức, và nhóm hình thành thói quen ỷ lại. Nếu buộc phải gánh việc để kịp hạn, hãy nói rõ đó là ngoại lệ một lần và ghi lại phần việc thực tế của từng người.
 
-> [!vi-du] Hùng liên tục đến họp muộn 20–30 phút và nộp việc trễ. Bạn biết Hùng đang làm thêm ca tối. Bước 1 — hỏi riêng: hoá ra ca làm kết thúc lúc 22h, nên khung giờ họp 20h là bất khả thi với bạn ấy. Bước 2 — nói ảnh hưởng: nhóm phải nhắc lại nội dung, mất 15 phút mỗi buổi. Bước 3 — mốc mới: đổi giờ họp sang 21h30 hoặc Hùng nhận phần việc không phụ thuộc thời gian họp, và gửi cập nhật bằng văn bản trước 21h. Vấn đề này **không giải được bằng thái độ** — nhưng giải được bằng một câu hỏi và một lần đổi lịch.
+> [!vi-du] Hùng liên tục đến họp muộn 20–30 phút và nộp việc trễ. Bạn biết Hùng đang làm thêm ca tối. Ở bước 1, khi hỏi riêng, bạn biết ca làm kết thúc lúc 22h, nên khung giờ họp 20h là bất khả thi với bạn ấy. Ở bước 2, bạn nói về ảnh hưởng: nhóm phải nhắc lại nội dung, mất 15 phút mỗi buổi. Ở bước 3, nhóm thống nhất mốc mới: đổi giờ họp sang 21h30, hoặc Hùng nhận phần việc không phụ thuộc thời gian họp và gửi cập nhật bằng văn bản trước 21h. Vấn đề này **không giải được bằng thái độ**, nhưng giải được bằng một câu hỏi và một lần đổi lịch.
 
 ## Người im lặng và hai người bất đồng kéo dài
 
-**Khi một thành viên im lặng dù bạn biết họ có ý kiến hay:** đừng đọc im lặng là đồng thuận. Ba cách, tăng dần: mời trực tiếp trong buổi họp — *"Lan, phần này liên quan tới mảng cậu làm, cậu thấy chỗ nào dễ vướng nhất?"*; hỏi riêng sau buổi họp; hoặc đổi cách họp — cho mỗi người viết ý ra giấy hai phút trước khi thảo luận, cách này gỡ được thế bất lợi của người nói chậm.
+**Khi một thành viên im lặng dù bạn biết họ có ý kiến hay**, không nên coi im lặng là đồng thuận. Có ba cách xử lý, theo mức độ tăng dần: mời trực tiếp trong buổi họp, chẳng hạn *“Lan, phần này liên quan tới mảng cậu làm, cậu thấy chỗ nào dễ vướng nhất?”*; hỏi riêng sau buổi họp; hoặc đổi cách họp bằng việc cho mỗi người viết ý ra giấy hai phút trước khi thảo luận, cách này gỡ được thế bất lợi của người nói chậm.
 
-**Khi hai người bất đồng kéo dài và làm cả nhóm căng:** đưa tranh luận về tiêu chí. Bốn bước: gặp riêng từng người để nghe đủ; đưa ra nhóm dưới dạng **hai phương án, không phải hai con người**; thống nhất tiêu chí chọn trước khi so; và nếu vẫn hoà thì chọn theo tiêu chí đã định rồi ghi lại lý do. Điều quan trọng: **quyết định phải được ghi lại** — bất đồng chưa được chốt bằng văn bản sẽ quay lại ở tuần sau.
+**Khi hai người bất đồng kéo dài và làm cả nhóm căng thẳng**, cách xử lý là đưa tranh luận về tiêu chí, gồm bốn bước: gặp riêng từng người để nghe đủ ý kiến; đưa vấn đề ra nhóm dưới dạng **hai phương án, không phải hai con người**; thống nhất tiêu chí chọn trước khi so sánh; và nếu kết quả vẫn hoà thì chọn theo tiêu chí đã định rồi ghi lại lý do. Điều quan trọng là **quyết định phải được ghi lại**, vì bất đồng chưa được chốt bằng văn bản có nhiều khả năng quay lại vào tuần sau.
 
-> [!meo] Khi bạn là người bị phản đối: đừng trả lời ngay. Hỏi lại một câu để hiểu đúng — *"Ý cậu là cách này tốn thời gian hơn, hay là nó không đạt tiêu chí của thầy?"* — rồi mới phản hồi. Phần lớn phản đối ban đầu được phát biểu chưa chính xác, kể cả bởi người phản đối.
+> [!meo] Khi bạn là người bị phản đối, đừng trả lời ngay. Hãy hỏi lại một câu để hiểu đúng, chẳng hạn *“Ý cậu là cách này tốn thời gian hơn, hay là nó không đạt tiêu chí của giảng viên?”*, rồi mới đáp lại. Nhiều phản đối ban đầu được phát biểu chưa chính xác, kể cả bởi chính người phản đối.
 
 ## Rút kinh nghiệm sau dự án
 
-Giai đoạn kết thúc là giai đoạn bị bỏ qua nhiều nhất: nộp bài xong là nhóm tan. Nhưng đây là lúc rẻ nhất để học, vì mọi thứ còn nhớ rõ.
+Giai đoạn kết thúc trong mô hình Tuckman ở bài 9.2 thường bị bỏ qua: nộp bài xong là nhóm tan. Tuy nhiên, đây là lúc ít tốn kém nhất để học, vì mọi việc còn được nhớ rõ. Việc nhìn lại này được gọi là rút kinh nghiệm sau dự án (*retrospective*).
 
-Một buổi rút kinh nghiệm 30 phút, bốn câu hỏi:
+Một buổi rút kinh nghiệm kéo dài 30 phút có thể được dẫn dắt bằng bốn câu hỏi sau:
 
 1. **Kết quả so với mục tiêu ban đầu:** đạt phần nào, hụt phần nào, đo bằng gì?
-2. **Cái gì đã chạy tốt** và nên giữ cho lần sau — hỏi câu này trước, vì nhóm nào cũng có thứ làm được.
-3. **Cái gì vướng**, và vướng vì quy trình hay vì con người? Phần lớn là quy trình, và đó là tin tốt vì quy trình sửa được.
-4. **Lần sau làm khác đi điều gì** — tối đa ba việc, mỗi việc **gắn tên người và mốc**.
+2. **Cái gì đã chạy tốt** và nên giữ cho lần sau? Nên hỏi câu này trước câu về những điểm vướng, vì nhóm nào cũng có điều làm được.
+3. **Cái gì vướng**, và vướng vì quy trình hay vì con người? Nhiều vướng mắc bắt nguồn từ quy trình, và đó là điều thuận lợi vì quy trình sửa được.
+4. **Lần sau làm khác đi điều gì?** Chọn tối đa ba việc, mỗi việc **gắn tên người và mốc thời gian**.
 
-> [!ghi-nho] Buổi rút kinh nghiệm không có mục 4 chỉ là một buổi than thở có tổ chức. Ngược lại, mục 4 mà không có tên người và mốc thời gian thì cũng chỉ là một danh sách mong muốn.
+> [!ghi-nho] Một buổi rút kinh nghiệm thiếu mục 4 chỉ là một buổi than thở có tổ chức. Ngược lại, mục 4 mà không có tên người và mốc thời gian thì cũng chỉ là một danh sách mong muốn.
 
-> [!vi-du] Một nhóm vừa nộp báo cáo cuối kỳ. Nhìn lại: báo cáo hoàn thành đúng hạn nhưng ba ngày cuối cả nhóm thức trắng, hai phần trùng nội dung, và một thành viên gần như không tham gia. Rút kinh nghiệm đúng cách không dừng ở "lần sau bắt đầu sớm hơn" — nó ra ba việc cụ thể: **(1)** buổi họp thứ hai của dự án dành riêng cho việc chốt dàn ý chung và ranh giới giữa các phần, Minh chuẩn bị mẫu; **(2)** mỗi tuần một lần cập nhật ngắn bằng văn bản trong nhóm chat vào tối chủ nhật, Lan nhắc; **(3)** ai chưa gửi cập nhật hai tuần liên tiếp thì nhóm hỏi riêng ngay tuần đó, không đợi tới hạn nộp. Ba việc này có tên và có mốc, nên lần sau kiểm được là nhóm có làm hay không.
+> [!vi-du] Một nhóm vừa nộp báo cáo cuối kỳ. Khi nhìn lại, nhóm nhận thấy báo cáo hoàn thành đúng hạn nhưng ba ngày cuối cả nhóm phải thức trắng, hai phần bị trùng nội dung và một thành viên gần như không tham gia. Rút kinh nghiệm đúng cách không dừng ở kết luận “lần sau bắt đầu sớm hơn” mà đưa ra ba việc cụ thể: **(1)** buổi họp thứ hai của dự án dành riêng cho việc chốt dàn ý chung và ranh giới giữa các phần, Minh chuẩn bị mẫu; **(2)** mỗi tuần một lần, vào tối chủ nhật, các thành viên gửi cập nhật ngắn bằng văn bản trong nhóm nhắn tin, Lan nhắc; **(3)** ai chưa gửi cập nhật hai tuần liên tiếp thì nhóm hỏi riêng ngay tuần đó, không đợi tới hạn nộp. Ba việc này có tên và có mốc, nên lần sau có thể kiểm tra được nhóm có thực hiện hay không.
 
 ## Luyện tập và tài liệu tham khảo
 
 ### Cá nhân (15 phút)
 
-Nhớ lại ba lần bất đồng gần nhất trong nhóm. Với mỗi lần, gọi tên kiểu phản ứng của bạn trong năm kiểu, và tự đánh giá kiểu đó có phù hợp với tình huống không. Nếu bạn dùng **né tránh** từ hai lần trở lên, viết ra câu bạn đáng lẽ nên nói — viết nguyên văn, bắt đầu bằng sự việc và ảnh hưởng.
+Hãy nhớ lại ba lần bất đồng gần nhất trong nhóm. Với mỗi lần, hãy gọi tên kiểu phản ứng của bạn trong năm kiểu và tự đánh giá kiểu đó có phù hợp với tình huống hay không. Nếu bạn dùng **né tránh** từ hai lần trở lên, hãy viết nguyên văn câu bạn đáng lẽ nên nói, bắt đầu bằng sự việc và ảnh hưởng.
 
 ### Nhóm 3–4 người (25 phút)
 
-Đóng vai ba lượt, đổi vai mỗi lượt: (1) nói chuyện với thành viên trễ hạn liên tục — người đóng vai phải đi đủ bốn bước và **không được dùng nhãn**; (2) mời người im lặng phát biểu; (3) làm trung gian cho hai người bất đồng bằng cách đưa về tiêu chí. Người quan sát ghi: có câu nào quy kết tính cách không, và mốc mới có kiểm chứng được không.
+Nhóm đóng vai ba lượt và đổi vai mỗi lượt: (1) nói chuyện với thành viên liên tục trễ hạn, trong đó người đóng vai phải đi đủ bốn bước và **không được dùng nhãn**; (2) mời người im lặng phát biểu; (3) làm trung gian cho hai người bất đồng bằng cách đưa vấn đề về tiêu chí. Người quan sát ghi lại hai điều: có câu nào quy kết tính cách hay không, và mốc mới có kiểm chứng được hay không.
 
 ### Bài tập về nhà (45–60 phút)
 
-Tổ chức thật một buổi rút kinh nghiệm 30 phút cho nhóm bạn đang tham gia, theo bốn câu hỏi trong bài. Nộp biên bản một trang: kết quả so với mục tiêu; hai việc chạy tốt; hai việc vướng kèm phân loại quy trình hay con người; và **ba việc cho lần sau, mỗi việc có tên người và mốc thời gian**.
+Hãy tổ chức thật một buổi rút kinh nghiệm 30 phút cho nhóm bạn đang tham gia, theo bốn câu hỏi trong bài. Sau đó nộp biên bản một trang gồm: kết quả so với mục tiêu; hai việc chạy tốt; hai việc vướng kèm phân loại quy trình hay con người; và **ba việc cho lần sau, mỗi việc có tên người và mốc thời gian**.
 
 ### Xem thêm
 
@@ -105,8 +107,8 @@ Tổ chức thật một buổi rút kinh nghiệm 30 phút cho nhóm bạn đan
             {
                 "key": "9.3-ne-tranh",
                 "type": "mcq",
-                "prompt": "Khi mâu thuẫn nhóm xảy ra, kiểu phản ứng né tránh có biểu hiện thế nào?",
-                "explanation": "Né tránh là im lặng, lảng sang chuyện khác, mong vấn đề tự qua — dễ chịu trong ngắn hạn nhưng trả giá khi gần hạn nộp.",
+                "prompt": "Khi xung đột nhóm xảy ra, kiểu phản ứng né tránh có biểu hiện thế nào?",
+                "explanation": "Né tránh là im lặng, lảng sang chuyện khác, mong vấn đề tự qua; cách này dễ chịu trong ngắn hạn nhưng phải trả giá khi gần hạn nộp.",
                 "points": 2,
                 "options": [
                     {"label": "Im lặng, lảng sang chuyện khác, mong vấn đề tự qua đi", "isCorrect": True},
@@ -119,7 +121,7 @@ Tổ chức thật một buổi rút kinh nghiệm 30 phút cho nhóm bạn đan
                 "key": "9.3-thanh-vien-tre-han",
                 "type": "mcq",
                 "prompt": "Hùng liên tục đến họp muộn và nộp việc trễ. Bạn biết Hùng đang làm thêm ca tối. Cách xử lý phù hợp nhất là gì?",
-                "explanation": "Hỏi riêng để biết nguyên nhân thật, nói bằng sự việc và ảnh hưởng, rồi thống nhất mốc mới kiểm chứng được — nhiều tình huống loại này giải được bằng một lần đổi lịch chứ không phải bằng thái độ.",
+                "explanation": "Hỏi riêng để biết nguyên nhân thật, nói bằng sự việc và ảnh hưởng, rồi thống nhất mốc mới kiểm chứng được; nhiều tình huống loại này giải được bằng một lần đổi lịch chứ không phải bằng thái độ.",
                 "points": 3,
                 "options": [
                     {"label": "Hỏi riêng để biết nguyên nhân, nói rõ việc trễ ảnh hưởng thế nào tới nhóm, rồi thống nhất cách làm mới phù hợp với lịch của Hùng", "isCorrect": True},
@@ -132,7 +134,7 @@ Tổ chức thật một buổi rút kinh nghiệm 30 phút cho nhóm bạn đan
                 "key": "9.3-noi-bang-su-viec",
                 "type": "mcq",
                 "prompt": "Câu nào nói về việc trễ hạn theo hướng dựa trên sự việc thay vì quy kết tính cách?",
-                "explanation": "Nói bằng sự việc và ảnh hưởng thì khó cãi và không buộc người kia phải bảo vệ danh dự — đó là điều kiện để câu chuyện đi tiếp về giải pháp.",
+                "explanation": "Nói bằng sự việc và ảnh hưởng thì khó cãi và không buộc người kia phải bảo vệ danh dự; đó là điều kiện để câu chuyện đi tiếp về giải pháp.",
                 "points": 2,
                 "options": [
                     {"label": "Phần dữ liệu trễ ba ngày nên phần phân tích chưa bắt đầu được, cả nhóm đang lùi so với kế hoạch", "isCorrect": True},
@@ -171,7 +173,7 @@ Tổ chức thật một buổi rút kinh nghiệm 30 phút cho nhóm bạn đan
                 "key": "9.3-rut-kinh-nghiem",
                 "type": "mcq",
                 "prompt": "Nhóm vừa nộp báo cáo: đúng hạn nhưng ba ngày cuối phải thức trắng, hai phần trùng nội dung, một thành viên gần như không tham gia. Buổi rút kinh nghiệm nên kết thúc bằng gì?",
-                "explanation": "Rút kinh nghiệm chỉ có giá trị khi ra được tối đa ba việc cụ thể cho lần sau, mỗi việc gắn tên người và mốc thời gian — nếu không nó chỉ là một buổi than thở có tổ chức.",
+                "explanation": "Rút kinh nghiệm chỉ có giá trị khi ra được tối đa ba việc cụ thể cho lần sau, mỗi việc gắn tên người và mốc thời gian; nếu không, đó chỉ là một buổi than thở có tổ chức.",
                 "points": 3,
                 "options": [
                     {"label": "Tối đa ba việc làm khác đi cho lần sau, mỗi việc gắn tên người phụ trách và mốc thời gian", "isCorrect": True},
@@ -184,7 +186,7 @@ Tổ chức thật một buổi rút kinh nghiệm 30 phút cho nhóm bạn đan
                 "key": "9.3-noi-kieu-xung-dot",
                 "type": "matching",
                 "prompt": "Nối mỗi kiểu phản ứng trước xung đột với tình huống dùng được của nó.",
-                "explanation": "Không kiểu nào luôn đúng: mỗi kiểu có vùng dùng được riêng, và vấn đề chỉ xuất hiện khi ta dùng một kiểu cho mọi tình huống.",
+                "explanation": "Không kiểu nào luôn đúng: mỗi kiểu có vùng dùng được riêng, và vấn đề chỉ xuất hiện khi chúng ta dùng một kiểu cho mọi tình huống.",
                 "points": 3,
                 "pairs": [
                     {"left": "Đương đầu", "right": "Việc gấp hoặc có nguyên tắc không thể nhượng bộ"},

@@ -2,75 +2,75 @@
 LESSON = {
     "title": "Bài 2.3 · Giữ tư duy tích cực bền và biết khi nào cần trợ giúp",
     "durationMin": 45,
-    "description": "Bốn thói quen có bằng chứng thay cho lời khuyên suông; tự trắc ẩn thay cho tự đay nghiến; cách nhận phản hồi tiêu cực và sống với so sánh xã hội; ranh giới giữa tâm trạng thường ngày và dấu hiệu cần chuyên gia.",
+    "description": "Bài này trình bày bốn thói quen có bằng chứng thay cho lời khuyên chung chung, khái niệm tự trắc ẩn đối lập với tự đay nghiến, cách tiếp nhận phản hồi tiêu cực và ứng phó với so sánh xã hội, cùng ranh giới giữa tâm trạng thường ngày và những dấu hiệu cần đến chuyên gia.",
     "objectives": [
-        "Chọn và duy trì được ít nhất một thói quen có bằng chứng trong bốn thói quen được nêu",
+        "Lựa chọn và thiết kế được cách duy trì ít nhất một thói quen có bằng chứng trong bốn thói quen được nêu",
         "Phân biệt được tự trắc ẩn với nuông chiều bản thân và với tự đay nghiến",
-        "Xử lý được một lời chê và một tình huống so sánh xã hội theo hướng giữ được thông tin dùng được",
-        "Nhận ra được các dấu hiệu cần tìm hỗ trợ chuyên môn thay vì tự luyện tư duy",
+        "Vận dụng được cách xử lý một lời chê và một tình huống so sánh xã hội theo hướng giữ lại thông tin dùng được",
+        "Nhận diện được các dấu hiệu cần tìm hỗ trợ chuyên môn thay vì tự luyện tư duy",
     ],
     "summary": [
         "Bốn thói quen có bằng chứng đáng làm: ghi ba điều cụ thể mình biết ơn, viết ra cảm xúc, ngủ và vận động đủ, và làm trước rồi tâm trạng theo sau.",
-        "Tự trắc ẩn gồm ba phần: tử tế với mình, hiểu rằng ai cũng vấp, và nhìn cảm xúc đúng cỡ thật của nó — nó khác nuông chiều vì vẫn gọi đúng tên phần mình làm chưa được.",
+        "Tự trắc ẩn gồm ba phần: tử tế với mình, hiểu rằng ai cũng vấp, và nhìn cảm xúc đúng cỡ thật của nó; tự trắc ẩn khác nuông chiều vì vẫn gọi đúng tên phần mình làm chưa được.",
         "Trước một lời chê, tách thái độ người nói khỏi nội dung được nói; trước một người giỏi hơn, đổi câu hỏi từ vì sao không phải mình sang họ làm gì mà mình chưa làm.",
-        "Khi các dấu hiệu kéo dài quá hai tuần và ảnh hưởng tới việc học việc làm, đó là lúc tìm chuyên gia — không phải lúc luyện thêm tư duy tích cực.",
+        "Khi các dấu hiệu kéo dài quá hai tuần và ảnh hưởng tới việc học hoặc việc làm, đó là lúc cần tìm chuyên gia chứ không phải lúc luyện thêm tư duy tích cực.",
     ],
     "splitSections": True,
     "body": r"""
-Hai bài trước cho công cụ xử lý từng tình huống. Bài này nói về **duy trì**: thứ gì có bằng chứng là giữ được trạng thái tinh thần dài hạn, và quan trọng không kém — chỗ nào tư duy tích cực hết tác dụng và cần thứ khác.
+Hai bài trước đã trình bày các công cụ xử lý từng tình huống cụ thể. Bài này đề cập vấn đề **duy trì**: những thói quen nào có bằng chứng ủng hộ việc giữ được trạng thái tinh thần lâu dài, và giới hạn nào khiến tư duy tích cực không còn đủ và cần đến sự hỗ trợ khác.
 
 ## Bốn thói quen có bằng chứng
 
-Thị trường sách phát triển bản thân đầy lời khuyên; phần dưới đây chỉ giữ những thứ đã được kiểm bằng nghiên cứu có nhóm đối chứng, và nêu luôn giới hạn của chúng.
+Sách phát triển bản thân có rất nhiều lời khuyên; phần dưới đây chỉ giữ lại những thói quen có bằng chứng nghiên cứu (xem mục Nguồn tham khảo) và nêu rõ giới hạn của từng thói quen.
 
 | Thói quen | Làm cụ thể thế nào | Bằng chứng và giới hạn |
 |---|---|---|
-| Ghi điều biết ơn | Mỗi tối viết ba điều cụ thể xảy ra trong ngày và vì sao chúng đáng kể | Hiệu ứng nhỏ tới trung bình với tâm trạng; mất tác dụng nếu viết chung chung hoặc viết mỗi ngày cho có |
-| Viết ra cảm xúc | Viết liền 15–20 phút về chuyện đang làm mình bận tâm, không sửa câu chữ, không cho ai đọc | Nghiên cứu của Pennebaker cho thấy cải thiện sức khoẻ tinh thần và cả thể chất; vài ngày đầu có thể thấy tệ hơn trước khi khá lên |
-| Ngủ và vận động | Ngủ đủ giấc theo nhịp cố định; vận động vừa sức vài buổi mỗi tuần | Nền tảng của mọi thứ còn lại; thiếu ngủ làm lối nghĩ méo xuất hiện dày hơn hẳn |
-| Làm trước, tâm trạng theo sau | Chọn một việc nhỏ đã lên lịch và làm dù chưa thấy muốn | Nguyên tắc kích hoạt hành vi trong trị liệu; chờ có hứng rồi mới làm là vòng lặp tự thít chặt |
+| Ghi điều biết ơn | Mỗi tối viết ba điều cụ thể xảy ra trong ngày và vì sao chúng đáng kể | Hiệu ứng từ nhỏ đến trung bình đối với tâm trạng (Emmons & McCullough, 2003); tác dụng giảm nếu viết chung chung hoặc viết hằng ngày chỉ cho có. |
+| Viết ra cảm xúc | Viết liền 15–20 phút về chuyện đang làm mình bận tâm, không sửa câu chữ, không cho ai đọc | Các nghiên cứu của Pennebaker và Smyth (2016) cho thấy cách viết này có thể cải thiện sức khoẻ tinh thần và cả thể chất; vài ngày đầu người viết có thể thấy tệ hơn trước khi khá lên. |
+| Ngủ và vận động | Ngủ đủ giấc theo nhịp cố định; vận động vừa sức vài buổi mỗi tuần | Đây là nền tảng của các thói quen còn lại; thiếu ngủ có thể làm lối nghĩ méo xuất hiện nhiều hơn. |
+| Làm trước, tâm trạng theo sau | Chọn một việc nhỏ đã lên lịch và làm dù chưa thấy muốn | Đây là nguyên tắc kích hoạt hành vi (*behavioral activation*) trong trị liệu (Cuijpers và cộng sự, 2007); chờ có hứng rồi mới làm dễ tạo thành vòng lặp tự củng cố. |
 
-Thói quen thứ tư là thói quen chống lại trực giác nhất và cũng đáng nhớ nhất: **hành động không đợi tâm trạng**. Khi mệt, việc chờ tới lúc thấy muốn học mới học sẽ khiến việc dồn lại, việc dồn lại làm tâm trạng tệ hơn, tâm trạng tệ hơn lại càng không muốn học. Cắt vòng lặp ở chỗ rẻ nhất: mở tài liệu ra làm mười phút, không hứa hẹn gì hơn.
+Thói quen thứ tư là thói quen đi ngược trực giác nhất: **hành động không đợi tâm trạng**. Khi mệt, việc chờ đến lúc thấy muốn học mới học khiến công việc dồn lại, công việc dồn lại làm tâm trạng tệ hơn, và tâm trạng tệ hơn lại càng làm giảm mong muốn học. Vòng lặp này có thể bị cắt ở khâu dễ nhất, đó là mở tài liệu ra làm mười phút mà không cam kết gì thêm.
 
-> [!vi-du] Trang định tập lại thể dục nhưng ba tuần liền không bắt đầu vì "đợi lúc nào đỡ bận". Bạn đổi cam kết thành: mặc đồ tập và đi bộ 10 phút, đúng 7 giờ tối, kể cả hôm mệt. Bốn ngày đầu chỉ đi bộ. Từ ngày thứ năm, có ba hôm bạn tự chạy thêm. Điểm quan trọng: cam kết ban đầu nhỏ tới mức không cần động lực nào để thực hiện — đó chính là lý do nó chạy.
+> [!vi-du] Trang định tập lại thể dục nhưng ba tuần liền không bắt đầu vì “đợi lúc nào đỡ bận”. Trang đổi cam kết thành: mặc đồ tập và đi bộ 10 phút, đúng 7 giờ tối, kể cả hôm mệt. Bốn ngày đầu Trang chỉ đi bộ. Từ ngày thứ năm, có ba hôm Trang tự chạy thêm. Điểm quan trọng là cam kết ban đầu nhỏ tới mức không cần động lực nào để thực hiện, và đó là lý do cam kết này khả thi.
 
 ## Tự trắc ẩn, không phải tự đay nghiến
 
-Nhiều người tin rằng tự đay nghiến là động cơ: không khắt khe với mình thì sẽ lười. Nghiên cứu của Kristin Neff cho kết quả ngược lại — người tự trắc ẩn **nhận sai dễ hơn** và **quay lại làm tiếp nhanh hơn**, vì họ không phải tiêu sức bảo vệ hình ảnh bản thân.
+Nhiều người tin rằng tự đay nghiến là một động cơ: không khắt khe với mình thì sẽ lười. Theo Neff (2011), **tự trắc ẩn** (*self-compassion*) cho kết quả ngược lại: người tự trắc ẩn có xu hướng **nhận sai dễ hơn** và **quay lại làm tiếp nhanh hơn**, vì họ không phải tiêu tốn sức lực để bảo vệ hình ảnh bản thân.
 
-Tự trắc ẩn có ba thành phần, và thiếu phần nào cũng hỏng:
+Tự trắc ẩn gồm ba thành phần, và thiếu thành phần nào cũng làm khái niệm này không đầy đủ:
 
 - **Tử tế với mình** thay vì phán xét: nói với mình bằng giọng mình dùng với bạn thân.
-- **Nhìn ra cái chung của con người**: ai cũng vấp; cảm giác chỉ mình mình tệ là một cảm giác sai và phổ biến.
+- **Nhìn ra cái chung của con người**: ai cũng có lúc vấp; cảm giác chỉ có mình mình tệ là một cảm giác phổ biến nhưng không chính xác.
 - **Nhìn cảm xúc đúng cỡ**: không đè nén, cũng không phóng đại thành thảm hoạ.
 
 | | Tự đay nghiến | Nuông chiều | Tự trắc ẩn |
 |---|---|---|---|
-| Sau khi nộp bài trễ | "Mình vô dụng, không làm nổi việc gì ra hồn" | "Thầy khó tính ấy mà, ai chả trễ" | "Mình trễ vì nhận quá nhiều việc tháng này. Việc đó thật, và mình cần xin lỗi rồi sắp lại lịch" |
+| Sau khi nộp bài trễ | “Mình vô dụng, không làm nổi việc gì ra hồn” | “Thầy khó tính ấy mà, ai chả trễ” | “Mình trễ vì nhận quá nhiều việc tháng này. Việc đó thật, và mình cần xin lỗi rồi sắp lại lịch” |
 | Có gọi đúng tên phần lỗi của mình không | Có, nhưng gán vào bản chất | Không | Có, gán vào hành vi |
 | Kết quả thường thấy | Né việc, trì hoãn tiếp | Lặp lại y nguyên | Sửa được và làm tiếp |
 
 ## Phản hồi tiêu cực và so sánh xã hội
 
-Hai tình huống này bào mòn tinh thần nhiều hơn cả thất bại, vì chúng xảy ra hằng ngày.
+Hai tình huống này, phản hồi tiêu cực và so sánh xã hội (*social comparison*), có thể ảnh hưởng đến tinh thần nhiều hơn cả thất bại, vì chúng xảy ra hằng ngày.
 
-**Khi bị chê.** Tách hai câu hỏi: *người ta nói với thái độ thế nào* và *trong đó phần nào đúng*. Phần đúng vẫn dùng được kể cả khi giọng khó nghe; và ngược lại, một lời chê lịch sự chưa chắc đã đúng. Nếu có một người bạn liên tục chê dự án bạn đang làm, câu hỏi cần hỏi không phải "nên nghe hay nên nghỉ chơi" mà là: *lời chê ấy có kèm lý do cụ thể và kiểm được không*. Có thì lấy phần dữ liệu; không thì cảm ơn rồi thôi — và giảm tần suất kể cho người đó nghe về những việc đang dang dở, vì việc đang nhen nhóm rất dễ bị dập tắt bởi những nhận xét không có nội dung.
+**Khi bị chê.** Cần tách hai câu hỏi: *người nói có thái độ thế nào* và *trong lời chê đó phần nào đúng*. Phần đúng vẫn dùng được kể cả khi giọng điệu khó nghe; ngược lại, một lời chê lịch sự chưa chắc đã đúng. Nếu có một người bạn liên tục chê dự án bạn đang làm, câu hỏi cần đặt ra không phải là “nên nghe hay nên nghỉ chơi” mà là: *lời chê ấy có kèm lý do cụ thể và kiểm tra được không*. Nếu có, bạn lấy phần dữ liệu dùng được; nếu không, bạn cảm ơn rồi thôi, và có thể giảm tần suất kể cho người đó nghe về những việc đang dang dở, vì một việc mới nhen nhóm dễ bị ảnh hưởng bởi những nhận xét không có nội dung.
 
-**Khi thấy người khác được khen.** Phản ứng ganh tị là bình thường và không đáng xấu hổ. Cái đáng đổi là câu hỏi tiếp theo: từ "vì sao không phải mình" sang "họ đã làm gì mà mình chưa làm". Câu thứ hai cho ra thông tin; câu thứ nhất chỉ cho ra tâm trạng. Và nếu câu trả lời là họ có điều kiện tốt hơn thật, thì đó cũng là dữ liệu — về việc bạn cần loại hỗ trợ nào, chứ không phải bằng chứng rằng bạn kém.
+**Khi thấy người khác được khen.** Phản ứng ganh tị là phản ứng bình thường và không đáng xấu hổ. Điều cần thay đổi là câu hỏi tiếp theo, từ “vì sao không phải mình” sang “họ đã làm gì mà mình chưa làm”. Câu hỏi thứ hai cho ra thông tin, còn câu hỏi thứ nhất chủ yếu cho ra một trạng thái tâm trạng. Nếu câu trả lời là họ thực sự có điều kiện tốt hơn thì đó cũng là dữ liệu, cho biết bạn cần loại hỗ trợ nào, chứ không phải bằng chứng rằng bạn kém.
 
-> [!vi-du] Nam mở LinkedIn thấy ba người cùng khoá đăng ảnh nhận offer. Câu hỏi cũ: "sao mình chậm thế này". Câu hỏi mới: "ba bạn đó làm gì khác mình" — hoá ra cả ba đều nộp từ tháng 9 trong khi Nam định tháng 12 mới bắt đầu, và hai người có dự án cá nhân đưa lên hồ sơ. Kết quả của câu hỏi mới là hai việc cụ thể cho tuần này, thay vì một buổi tối mất ngủ.
+> [!vi-du] Nam mở LinkedIn thấy ba người cùng khoá đăng ảnh nhận offer. Câu hỏi cũ là “sao mình chậm thế này”. Câu hỏi mới là “ba bạn đó làm gì khác mình”, và câu trả lời cho thấy cả ba đều nộp hồ sơ từ tháng 9 trong khi Nam định tháng 12 mới bắt đầu, và hai người có dự án cá nhân đưa lên hồ sơ. Kết quả của câu hỏi mới là hai việc cụ thể cho tuần này, thay vì một buổi tối mất ngủ.
 
 ## Khi tư duy tích cực không đủ
 
-Đây là phần quan trọng nhất của bài, và là phần các khoá kỹ năng mềm hay bỏ qua.
+Đây là phần quan trọng nhất của bài, và cũng là phần thường ít được đề cập trong các tài liệu kỹ năng mềm.
 
-Buồn, lo, mất động lực từng đợt là chuyện bình thường của đời sống. Nhưng có một ranh giới, và nó khá rõ: khi các dấu hiệu **kéo dài liên tục trên hai tuần** và **ảnh hưởng tới việc học, việc làm hoặc quan hệ**, đó không còn là chuyện luyện tư duy nữa.
+Buồn, lo lắng hay mất động lực từng đợt là những trải nghiệm bình thường của đời sống. Tuy nhiên, có một ranh giới tương đối rõ: khi các dấu hiệu **kéo dài liên tục trên hai tuần** và **ảnh hưởng tới việc học, việc làm hoặc quan hệ**, vấn đề không còn chỉ là chuyện luyện tập tư duy.
 
-Các dấu hiệu cần chú ý: mất ngủ hoặc ngủ quá nhiều kéo dài; mất hứng thú với những việc trước đây thích; mệt mỏi không giải thích được; ăn uống thay đổi rõ rệt; khó tập trung tới mức không học nổi; cảm giác vô giá trị hoặc tội lỗi dai dẳng; và — cần đi khám ngay, không chờ — **ý nghĩ làm hại bản thân**.
+Các dấu hiệu cần chú ý gồm: mất ngủ hoặc ngủ quá nhiều kéo dài; mất hứng thú với những việc trước đây thích; mệt mỏi không giải thích được; ăn uống thay đổi rõ rệt; khó tập trung tới mức không học nổi; cảm giác vô giá trị hoặc tội lỗi dai dẳng; và **ý nghĩ làm hại bản thân**, trường hợp này cần đi khám ngay, không chờ.
 
-> [!canh-bao] Nói với một người đang có những dấu hiệu trên rằng hãy suy nghĩ tích cực lên là lời khuyên có hại: nó chuyển trách nhiệm về phía họ và làm chậm việc tìm trợ giúp. Trầm cảm và rối loạn lo âu là vấn đề sức khoẻ, được điều trị bằng phương pháp có bằng chứng, chứ không phải khuyết điểm về ý chí.
+> [!canh-bao] Nói với một người đang có những dấu hiệu trên rằng hãy suy nghĩ tích cực lên là lời khuyên có thể gây hại: nó chuyển trách nhiệm về phía họ và làm chậm việc tìm trợ giúp. Trầm cảm và rối loạn lo âu là vấn đề sức khoẻ có thể được điều trị bằng các phương pháp có bằng chứng, chứ không phải khuyết điểm về ý chí.
 
-Chỗ tìm hỗ trợ: phòng tham vấn tâm lý của trường (nhiều trường đại học có, thường miễn phí cho sinh viên), bác sĩ chuyên khoa tâm thần hoặc nhà tâm lý lâm sàng ở bệnh viện, và trong tình huống khẩn cấp thì cơ sở y tế gần nhất. Đi khám tâm lý cũng bình thường như đi khám khi gãy tay — điều duy nhất khác là định kiến xã hội, và định kiến ấy không phải lý do để chịu đựng.
+Các nơi có thể tìm hỗ trợ gồm phòng tham vấn tâm lý của trường (nhiều trường đại học có và thường miễn phí cho sinh viên), bác sĩ chuyên khoa tâm thần hoặc nhà tâm lý lâm sàng ở bệnh viện, và trong tình huống khẩn cấp thì cơ sở y tế gần nhất. Đi khám tâm lý cũng bình thường như đi khám khi gãy tay; điểm khác biệt chủ yếu là định kiến xã hội, và định kiến ấy không phải lý do để chịu đựng.
 
 ## Luyện tập và tài liệu tham khảo
 
@@ -80,11 +80,11 @@ Chọn **một** thói quen trong bốn thói quen ở bảng đầu bài và th
 
 ### Nhóm 3–4 người (25 phút)
 
-Đóng vai theo cặp, hai lượt. Lượt một: một người kể về việc mình đang làm dở, người kia chê chung chung không kèm lý do; người kể tập tách thái độ khỏi nội dung và hỏi một câu làm rõ. Lượt hai: đổi vai, lần này lời chê có kèm lý do cụ thể — người kể tập nhận phần dùng được mà không phòng thủ. Cả nhóm cùng rút ra: câu hỏi nào giúp biến một lời chê mơ hồ thành thông tin dùng được.
+Đóng vai theo cặp, hai lượt. Lượt một: một người kể về việc mình đang làm dở, người kia chê chung chung không kèm lý do; người kể tập tách thái độ khỏi nội dung và hỏi một câu làm rõ. Lượt hai: đổi vai, lần này lời chê có kèm lý do cụ thể; người kể tập nhận phần dùng được mà không phòng thủ. Cả nhóm cùng rút ra: câu hỏi nào giúp biến một lời chê mơ hồ thành thông tin dùng được.
 
 ### Bài tập về nhà (45 phút)
 
-Viết liền 15–20 phút về một chuyện đang làm bạn bận tâm, theo cách của Pennebaker: viết một mạch, không sửa câu chữ, không cần ai đọc — bạn có thể xoá sau khi viết xong. Sau đó viết riêng nửa trang nộp lại (phần này mới là phần nộp): bạn nhận ra điều gì mà trước khi viết chưa nhận ra; và một việc cụ thể bạn sẽ làm trong tuần tới. Nếu trong lúc viết bạn nhận ra mình đang có các dấu hiệu ở mục cuối bài, hãy dùng nửa trang ấy để ghi tên một chỗ bạn có thể tìm tới.
+Viết liền 15–20 phút về một chuyện đang làm bạn bận tâm, theo cách của Pennebaker: viết một mạch, không sửa câu chữ, không cần ai đọc; bạn có thể xoá sau khi viết xong. Sau đó viết riêng nửa trang để nộp (chỉ phần này được nộp): bạn nhận ra điều gì mà trước khi viết chưa nhận ra; và một việc cụ thể bạn sẽ làm trong tuần tới. Nếu trong lúc viết bạn nhận ra mình đang có các dấu hiệu ở mục cuối bài, hãy dùng nửa trang ấy để ghi tên một chỗ bạn có thể tìm tới.
 
 ### Xem thêm
 
@@ -120,7 +120,7 @@ Viết liền 15–20 phút về một chuyện đang làm bạn bận tâm, the
                 "key": "2.3-tu-trac-an",
                 "type": "mcq",
                 "prompt": "Bạn nộp bài trễ hạn. Câu tự nói nào thể hiện tự trắc ẩn đúng nghĩa?",
-                "explanation": "Tự trắc ẩn vẫn gọi đúng tên phần mình làm chưa được nhưng gán vào hành vi thay vì bản chất — khác cả với tự đay nghiến lẫn với bào chữa.",
+                "explanation": "Tự trắc ẩn vẫn gọi đúng tên phần mình làm chưa được nhưng gán vào hành vi thay vì bản chất. Vì vậy nó khác cả tự đay nghiến lẫn bào chữa.",
                 "points": 2,
                 "options": [
                     {"label": "Mình trễ vì tháng này nhận quá nhiều việc. Việc đó có thật, mình cần xin lỗi và sắp lại lịch", "isCorrect": True},
@@ -146,7 +146,7 @@ Viết liền 15–20 phút về một chuyện đang làm bạn bận tâm, the
                 "key": "2.3-dong-nghiep-duoc-khen",
                 "type": "mcq",
                 "prompt": "Bạn thấy một người cùng lớp được khen thưởng vì thành tích nổi bật. Phản ứng phù hợp nhất là gì?",
-                "explanation": "Ganh tị là phản ứng bình thường; điều đáng đổi là câu hỏi tiếp theo — từ vì sao không phải mình sang họ làm gì mà mình chưa làm, vì chỉ câu sau mới cho ra thông tin.",
+                "explanation": "Ganh tị là phản ứng bình thường; điều đáng đổi là câu hỏi tiếp theo, từ vì sao không phải mình sang họ làm gì mà mình chưa làm, vì chỉ câu sau mới cho ra thông tin.",
                 "points": 2,
                 "options": [
                     {"label": "Ghi nhận cảm giác của mình, rồi hỏi bạn ấy đã làm gì khác mình và rút ra một việc cụ thể để thử", "isCorrect": True},

@@ -1,84 +1,88 @@
 # -*- coding: utf-8 -*-
 LESSON = {
-    "title": "Bài 4.1 · Mục tiêu SMART và bốn thế hệ quản trị thời gian",
+    "title": "Bài 4.1 · Mục tiêu SMART và bốn thế hệ quản lý thời gian",
     "durationMin": 45,
-    "description": "Vì sao bận rộn không đồng nghĩa với hiệu quả; bốn thế hệ quản trị thời gian và chỗ đứng của thế hệ thứ tư; viết mục tiêu SMART dùng được; mô hình 5A và ba cấp kế hoạch.",
+    "description": "Bài học giải thích vì sao bận rộn không đồng nghĩa với hiệu quả, trình bày bốn thế hệ quản lý thời gian và vị trí của thế hệ thứ tư, hướng dẫn viết mục tiêu SMART dùng được, và giới thiệu mô hình 5A cùng ba cấp kế hoạch.",
     "objectives": [
-        "Phân biệt được quản lý thời gian với quản lý lựa chọn và giải thích vì sao bận không bằng hiệu quả",
-        "Nêu được đặc trưng của bốn thế hệ quản trị thời gian và điểm mới của thế hệ thứ tư",
-        "Viết lại được một mục tiêu chung chung thành mục tiêu SMART",
+        "Phân biệt được quản lý thời gian với quản lý lựa chọn và giải thích được vì sao bận rộn không đồng nghĩa với hiệu quả",
+        "Trình bày được đặc trưng của bốn thế hệ quản lý thời gian và điểm mới của thế hệ thứ tư",
+        "Vận dụng tiêu chí SMART để viết lại một mục tiêu chung chung thành mục tiêu có thể đo lường",
         "Lập được kế hoạch ba cấp học kỳ – tuần – ngày theo mô hình 5A",
     ],
     "summary": [
-        "Không ai quản lý được thời gian: 24 giờ là cố định. Thứ quản lý được là lựa chọn, nên thước đo cuối ngày phải là mục tiêu nào đã nhích, không phải bao nhiêu việc đã làm.",
-        "Bốn thế hệ: ghi nhớ → lịch và sổ hẹn → ưu tiên theo mục tiêu → quản trị bản thân theo điều quan trọng và theo quan hệ; thế hệ bốn hỏi làm việc gì trước khi hỏi làm nhanh thế nào.",
-        "Mục tiêu SMART phải trả lời được ba câu: đo bằng gì, xong trước ngày nào, hôm nay làm gì để tiến tới.",
-        "Kế hoạch có ba cấp — học kỳ, tuần, ngày — và cấp tuần là cấp quan trọng nhất với sinh viên vì nó đủ dài để xoay và đủ ngắn để nhớ.",
+        "Con người không quản lý được thời gian vì mỗi ngày chỉ có 24 giờ cố định; điều quản lý được là các lựa chọn. Vì vậy, thước đo cuối ngày nên là mục tiêu nào đã tiến lên, chứ không phải số việc đã làm.",
+        "Bốn thế hệ quản lý thời gian lần lượt dựa trên ghi nhớ, lịch và sổ hẹn, ưu tiên theo mục tiêu, và quản lý bản thân theo điều quan trọng cùng các quan hệ. Thế hệ thứ tư đặt câu hỏi nên làm việc gì trước khi đặt câu hỏi làm nhanh thế nào.",
+        "Một mục tiêu SMART trả lời được ba câu hỏi: đo bằng gì, hoàn thành trước ngày nào, và hôm nay cần làm gì để tiến tới mục tiêu.",
+        "Kế hoạch có ba cấp là học kỳ, tuần và ngày, và ba cấp này phải nối được với nhau: mỗi việc trong lịch ngày phải truy ngược được tới một mục tiêu của học kỳ.",
     ],
     "splitSections": True,
     "body": r"""
-Câu "em không có thời gian" hầu như luôn sai theo nghĩa đen: ai cũng có đúng 168 giờ một tuần. Câu đúng hơn là "em đã tiêu 168 giờ đó vào việc khác". Module này bắt đầu từ chỗ ấy — **thời gian không quản lý được, chỉ có lựa chọn là quản lý được**.
+Câu “em không có thời gian” hầu như luôn sai theo nghĩa đen, vì ai cũng có đúng 168 giờ một tuần. Cách diễn đạt chính xác hơn là “em đã dùng 168 giờ đó vào việc khác”. Module này xuất phát từ nhận định ấy: **thời gian không thể quản lý, chỉ có các lựa chọn là quản lý được**.
 
 ## Bận rộn không phải hiệu quả
 
-Hai thước đo hay bị nhầm:
+Hai thước đo sau đây thường bị nhầm lẫn với nhau:
 
 | | Thước đo bận rộn | Thước đo hiệu quả |
 |---|---|---|
-| Câu hỏi cuối ngày | Hôm nay tôi làm bao nhiêu việc? | Hôm nay mục tiêu nào của tôi nhích lên? |
-| Cảm giác đi kèm | Mệt và thấy mình có ích | Đôi khi thấy ít việc mà lại đúng việc |
-| Rủi ro | Kín lịch bằng việc quan trọng của người khác | Phải từ chối, và phải chịu được sự khó chịu đó |
+| Câu hỏi cuối ngày | Hôm nay tôi làm bao nhiêu việc? | Hôm nay mục tiêu nào của tôi tiến lên? |
+| Cảm giác đi kèm | Người thực hiện thường mệt nhưng thấy mình có ích. | Người thực hiện có thể thấy làm ít việc hơn nhưng đúng việc hơn. |
+| Rủi ro | Lịch bị lấp đầy bởi những việc quan trọng với người khác. | Người thực hiện phải từ chối và chịu được sự khó chịu đi kèm. |
 
-> [!vi-du] Tuần vừa rồi Linh trả lời 140 tin nhắn nhóm, sửa slide hộ hai bạn, đi ba buổi họp câu lạc bộ và không mở nổi đồ án cá nhân. Lịch kín từ sáng tới tối, không có giờ nào bỏ phí. Nhưng nếu hỏi mục tiêu học kỳ nào đã tiến, câu trả lời là không có. Đó là một tuần **bận** chứ không phải một tuần **hiệu quả** — và khác biệt ấy chỉ hiện ra khi ta hỏi đúng câu hỏi.
+> [!vi-du] Tuần vừa rồi Linh trả lời 140 tin nhắn nhóm, sửa slide hộ hai bạn, đi ba buổi họp câu lạc bộ và không mở nổi đồ án cá nhân. Lịch kín từ sáng tới tối, không có giờ nào bỏ phí. Tuy nhiên, nếu hỏi mục tiêu học kỳ nào đã tiến triển thì câu trả lời là không có mục tiêu nào. Đó là một tuần **bận rộn** chứ không phải một tuần **hiệu quả**, và khác biệt ấy chỉ hiện ra khi người học đặt đúng câu hỏi.
 
 ### Niềm tin vào năng lực bản thân
 
-Có một biến số ít được nhắc trong các khoá quản lý thời gian nhưng lại dự báo khá tốt việc ai giữ được kế hoạch: **self-efficacy** — niềm tin của một người rằng mình có thể lập kế hoạch và thực hiện được những việc cần thiết để đạt kết quả mong muốn. Khái niệm này do Bandura đưa ra, và nó được hình thành từ trải nghiệm thành công trước đó, từ việc quan sát người khác làm được, và từ phản hồi mình nhận được.
+Có một biến số ít được nhắc tới trong các khoá quản lý thời gian nhưng có liên quan khá chặt tới việc ai giữ được kế hoạch: niềm tin vào năng lực bản thân (*self-efficacy*), tức niềm tin của một người rằng mình có thể lập kế hoạch và thực hiện những việc cần thiết để đạt kết quả mong muốn. Khái niệm này do Bandura đề xuất (Bandura, 1997). Theo ông, niềm tin ấy được hình thành từ trải nghiệm thành công trước đó, từ việc quan sát người khác làm được và từ phản hồi mà bản thân nhận được.
 
-Liên hệ với module này rất trực tiếp: người có niềm tin ấy cao hơn thì **đặt mục tiêu thực tế hơn, chia nhiệm vụ lớn thành phần nhỏ hơn, phân bổ thời gian sát hơn** và **bền hơn khi gặp trục trặc** — thay vì bỏ luôn kế hoạch sau lần đầu trượt lịch. Tổng hợp nghiên cứu về tự điều chỉnh học tập của Sitzmann và Ely (2011) chỉ ra mối liên hệ này.
+Mối liên hệ với module này khá trực tiếp. Người có niềm tin cao hơn thường **đặt mục tiêu thực tế hơn, chia nhiệm vụ lớn thành các phần nhỏ hơn, phân bổ thời gian sát hơn** và **bền bỉ hơn khi gặp trục trặc**, thay vì bỏ luôn kế hoạch sau lần đầu trượt lịch. Tổng hợp nghiên cứu về tự điều chỉnh học tập cho thấy mối liên hệ này (Sitzmann & Ely, 2011).
 
-Điều đáng nói: niềm tin ấy **tăng được**, và cách tăng rẻ nhất là ghi lại bằng chứng. Mỗi lần bạn giữ được một khung giờ đã hẹn với chính mình, hãy đánh dấu. Chuỗi dấu ấy chính là dữ liệu chống lại câu "mình vốn không có kỷ luật" — và nó thuyết phục hơn mọi lời tự động viên.
+Điều đáng lưu ý là niềm tin ấy **có thể được củng cố**, và một cách ít tốn kém là ghi lại bằng chứng. Mỗi lần giữ được một khung giờ đã hẹn với chính mình, bạn đánh dấu vào lịch. Chuỗi dấu ấy là dữ liệu phản bác nhận định “mình vốn không có kỷ luật”, và dữ liệu như vậy thường thuyết phục hơn những lời tự động viên.
 
-## Bốn thế hệ quản trị thời gian
+Niềm tin này có quan hệ gần với tư duy phát triển (*growth mindset*, xem bài 2.2): cả hai đều là niềm tin về khả năng thay đổi năng lực của chính mình, nhưng khác nhau ở đối tượng, vì tư duy phát triển là quan niệm về bản chất của năng lực nói chung (năng lực có thay đổi được qua luyện tập hay không), còn niềm tin vào năng lực bản thân là mức tin của một người rằng mình hoàn thành được một nhiệm vụ cụ thể. Vì vậy, một người có thể tin rằng năng lực nói chung là thay đổi được mà vẫn chưa tin rằng mình làm xong được bài tập lớn của tuần này.
+
+## Bốn thế hệ quản lý thời gian
 
 | Thế hệ | Công cụ đặc trưng | Câu hỏi trung tâm | Điểm yếu |
 |---|---|---|---|
-| Thứ nhất | Giấy nhớ, danh sách việc cần làm | Tôi cần nhớ những gì? | Không có thứ tự ưu tiên; việc nào cũng ngang nhau |
-| Thứ hai | Lịch, sổ hẹn, kế hoạch theo mốc | Khi nào tôi làm việc đó? | Kín lịch nhưng vẫn có thể toàn việc không quan trọng |
-| Thứ ba | Ưu tiên theo mục tiêu, xếp hạng A–B–C, mục tiêu ngày | Việc nào quan trọng nhất hôm nay? | Ép chặt quá thành cứng nhắc; dễ hy sinh quan hệ con người cho lịch trình |
-| Thứ tư | Ma trận việc quan trọng – khẩn cấp, vai trò và quan hệ | Điều gì thật sự quan trọng, và tôi là ai trong các vai trò của mình? | Đòi hỏi phải biết mình coi trọng gì — nên nó nối thẳng về module 1 |
+| Thứ nhất | Giấy nhớ, danh sách việc cần làm | Tôi cần nhớ những gì? | Không có thứ tự ưu tiên nên việc nào cũng ngang nhau. |
+| Thứ hai | Lịch, sổ hẹn, kế hoạch theo mốc | Khi nào tôi làm việc đó? | Lịch có thể kín nhưng toàn việc không quan trọng. |
+| Thứ ba | Ưu tiên theo mục tiêu, xếp hạng A–B–C, mục tiêu ngày | Việc nào quan trọng nhất hôm nay? | Nếu áp dụng quá chặt thì trở nên cứng nhắc và dễ hy sinh quan hệ con người cho lịch trình. |
+| Thứ tư | Ma trận Eisenhower (quan trọng – khẩn cấp), vai trò và quan hệ | Điều gì thật sự quan trọng, và tôi là ai trong các vai trò của mình? | Người dùng phải biết mình coi trọng điều gì, nên thế hệ này gắn trực tiếp với module 1. |
 
-Thế hệ thứ tư, theo Covey, được coi là bước tiến vì nó **đổi câu hỏi**: từ "làm sao làm được nhiều việc hơn trong một ngày" sang "việc nào đáng làm". Nó cũng đưa **con người và quan hệ** trở lại — một cuộc gọi hỏi thăm người thân không tối ưu theo bất kỳ hệ thống nào của ba thế hệ trước, nhưng nó thuộc về những vai trò mà bạn đã chọn cho mình.
+Thế hệ thứ tư được coi là một bước tiến (Covey và cộng sự, 1994) vì nó **đổi câu hỏi trung tâm**: từ “làm sao làm được nhiều việc hơn trong một ngày” sang “việc nào đáng làm”. Thế hệ này cũng đưa **con người và quan hệ** trở lại vị trí trung tâm. Chẳng hạn, một cuộc gọi hỏi thăm người thân không phải là việc mà ba thế hệ trước sẽ ưu tiên, nhưng cuộc gọi ấy thuộc về những vai trò mà bạn đã chọn cho mình.
 
 ## Mục tiêu SMART
 
+SMART là từ viết tắt của năm tiêu chí (Doran, 1981): cụ thể (*Specific*), đo được (*Measurable*), khả thi (*Achievable*), liên quan (*Relevant*) và có thời hạn (*Time-bound*). Bảng sau giải thích từng tiêu chí và câu hỏi dùng để kiểm tra.
+
 | Chữ | Nghĩa | Câu hỏi kiểm tra |
 |---|---|---|
-| S — cụ thể | Nói rõ làm gì, ở đâu, với ai | Người khác đọc có hiểu giống mình không? |
-| M — đo được | Có con số hoặc bằng chứng xác nhận | Lấy gì để biết đã đạt? |
-| A — khả thi | Vừa sức trong điều kiện hiện có | Với quỹ thời gian thật của mình, có làm nổi không? |
-| R — liên quan | Gắn với mục tiêu lớn hơn và với giá trị của mình | Đạt cái này thì cái gì lớn hơn tiến lên? |
-| T — có hạn | Có mốc thời gian | Xong trước ngày nào? |
+| S — cụ thể | Mục tiêu nói rõ làm gì, ở đâu và với ai. | Người khác đọc có hiểu giống mình không? |
+| M — đo được | Mục tiêu có con số hoặc bằng chứng để xác nhận. | Lấy gì để biết đã đạt? |
+| A — khả thi | Mục tiêu vừa sức trong điều kiện hiện có. | Với quỹ thời gian thật của mình, có làm nổi không? |
+| R — liên quan | Mục tiêu gắn với mục tiêu lớn hơn và với giá trị của mình. | Đạt mục tiêu này thì điều gì lớn hơn được tiến lên? |
+| T — có hạn | Mục tiêu có mốc thời gian. | Xong trước ngày nào? |
 
-> [!vi-du] "Tôi sẽ học giỏi hơn" hỏng ở M và T trước tiên: không đo được và không có hạn, nên không suy ra được việc phải làm hôm nay. Bản SMART: "Trong học kỳ này, tôi đạt tối thiểu 7,5 môn Xác suất thống kê, bằng cách làm đủ 10 bài tập lớn trước hạn và mỗi tuần giải 5 bài đề cũ vào tối thứ ba." Đọc câu này là biết ngay tối thứ ba tuần sau phải làm gì.
+> [!vi-du] Mục tiêu “Tôi sẽ học giỏi hơn” không đạt trước hết ở tiêu chí M và T: mục tiêu không đo được và không có hạn, nên không suy ra được việc phải làm hôm nay. Bản viết lại theo SMART là: “Trong học kỳ này, tôi đạt tối thiểu 7,5 điểm môn Xác suất thống kê, bằng cách làm đủ 10 bài tập lớn trước hạn và mỗi tuần giải 5 bài đề cũ vào tối thứ ba.” Đọc câu này là biết ngay tối thứ ba tuần sau phải làm gì.
 
-> [!canh-bao] Đặt tám mục tiêu cho một học kỳ rồi đuối ở tuần thứ tư là chuyện thường gặp — và nguyên nhân không phải thiếu quyết tâm mà là số học: quỹ thời gian cố định, tám mục tiêu chia nhau quỹ đó. Cách xử lý khi đã lỡ: giữ tối đa ba mục tiêu, ghi rõ những mục tiêu còn lại đang được **hoãn có ý thức** — chứ không phải thất bại — và đặt lại lịch cho chúng ở học kỳ sau.
+> [!canh-bao] Đặt tám mục tiêu cho một học kỳ rồi cạn sức ở tuần thứ tư là chuyện thường gặp. Nguyên nhân thường không phải thiếu quyết tâm mà là một phép tính đơn giản: quỹ thời gian cố định, trong khi tám mục tiêu phải chia nhau quỹ đó. Cách xử lý khi đã lỡ đặt quá nhiều là giữ tối đa ba mục tiêu, ghi rõ rằng các mục tiêu còn lại đang được **hoãn có ý thức** chứ không phải thất bại, và đặt lại lịch cho chúng ở học kỳ sau.
 
 ## Mô hình 5A và ba cấp kế hoạch
 
-Năm bước, mỗi bước một chữ A, đủ để đi từ mong muốn tới lịch cụ thể:
+Mô hình 5A gồm năm bước, mỗi bước bắt đầu bằng một chữ A, đủ để đi từ mong muốn tới một lịch cụ thể:
 
-1. **Aim — xác định mục tiêu.** Viết theo SMART, tối đa ba mục tiêu cho một học kỳ.
-2. **Analyse — phân tích quỹ thời gian thật.** Ghi lại một tuần thật của mình theo giờ. Gần như ai làm bước này cũng phát hiện ra vài giờ mình không biết đã đi đâu.
-3. **Arrange — sắp xếp thành kế hoạch nhiều cấp.** Kế hoạch **học kỳ** (mốc lớn), kế hoạch **tuần** (việc cụ thể theo ngày), kế hoạch **ngày** (thứ tự và khung giờ). Ba cấp phải nối được với nhau: một việc trong lịch ngày phải truy ngược được tới một mục tiêu học kỳ.
-4. **Act — thực hiện.** Bảo vệ khung giờ đã đặt như bảo vệ một cuộc hẹn với người khác.
-5. **Assess — rà soát.** Mỗi tuần 15 phút: việc gì xong, việc gì trượt, vì sao trượt, tuần sau đổi gì.
+1. **Aim — xác định mục tiêu.** Bạn viết mục tiêu theo tiêu chí SMART và giữ tối đa ba mục tiêu cho một học kỳ.
+2. **Analyse — phân tích quỹ thời gian thật.** Bạn ghi lại một tuần thật của mình theo giờ. Nhiều người làm bước này đều phát hiện ra vài giờ mà mình không biết đã đi đâu.
+3. **Arrange — sắp xếp thành kế hoạch nhiều cấp.** Bạn xây dựng kế hoạch **học kỳ** gồm các mốc lớn, kế hoạch **tuần** gồm việc cụ thể theo ngày và kế hoạch **ngày** gồm thứ tự và khung giờ. Ba cấp phải nối được với nhau, nghĩa là mỗi việc trong lịch ngày phải truy ngược được tới một mục tiêu của học kỳ.
+4. **Act — thực hiện.** Bạn bảo vệ khung giờ đã đặt như bảo vệ một cuộc hẹn với người khác.
+5. **Assess — rà soát.** Mỗi tuần bạn dành 15 phút để xem việc nào đã xong, việc nào bị trượt, vì sao trượt và tuần sau cần đổi điều gì.
 
 ```html
 <div style="border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0">
   <div style="font-size:1rem;color:rgba(127,127,127,0.95);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:.7rem">Ba cấp kế hoạch phải nối được với nhau</div>
   <div style="display:grid;gap:.45rem;font-size:1.05rem">
-    <div style="background:rgba(59,130,246,.14);border-radius:.4rem;padding:.6rem .8rem"><b>Học kỳ</b> — đạt tối thiểu 7,5 môn Xác suất thống kê</div>
+    <div style="background:rgba(59,130,246,.14);border-radius:.4rem;padding:.6rem .8rem"><b>Học kỳ</b> — đạt tối thiểu 7,5 điểm môn Xác suất thống kê</div>
     <div style="background:rgba(13,148,136,.14);border-radius:.4rem;padding:.6rem .8rem;margin-left:1.2rem"><b>Tuần</b> — giải 5 bài đề cũ chương 3, nộp bài tập lớn số 4 trước thứ sáu</div>
     <div style="background:rgba(139,92,246,.14);border-radius:.4rem;padding:.6rem .8rem;margin-left:2.4rem"><b>Ngày</b> — thứ ba 19h–20h30: giải 5 bài đề cũ, điện thoại để chế độ không làm phiền</div>
   </div>
@@ -86,7 +90,7 @@ Năm bước, mỗi bước một chữ A, đủ để đi từ mong muốn tớ
 </div>
 ```
 
-> [!meo] Bước Analyse là bước hay bị bỏ nhất và cũng rẻ nhất: ghi lại đúng một tuần theo giờ, không cần chính xác tới phút. Không có bức tranh thật về quỹ thời gian thì mọi kế hoạch sau đó chỉ là mong muốn.
+> [!meo] Bước Analyse thường bị bỏ qua nhất nhưng lại tốn ít công nhất: bạn chỉ cần ghi lại đúng một tuần theo giờ, không cần chính xác tới phút. Nếu thiếu một bức tranh thật về quỹ thời gian thì các kế hoạch lập sau đó chỉ là mong muốn.
 
 ## Luyện tập và tài liệu tham khảo
 
@@ -104,11 +108,11 @@ Làm bước Analyse: ghi lại một tuần thật của bạn theo khối 30 p
 
 ### Xem thêm
 
-- 🎬 [How to Gain Control of Your Free Time](https://www.youtube.com/watch?v=n3kNlFMXslo) — Laura Vanderkam, TED, 11 phút. Lập luận rằng thời gian là vấn đề ưu tiên chứ không phải vấn đề số lượng, dựa trên dữ liệu nhật ký thời gian.
+- 🎬 [How to Gain Control of Your Free Time](https://www.youtube.com/watch?v=n3kNlFMXslo) — Laura Vanderkam, TED, 11 phút. Bài nói lập luận rằng thời gian là vấn đề của ưu tiên chứ không phải vấn đề của số lượng, dựa trên dữ liệu nhật ký thời gian.
 
 ### Nguồn tham khảo
 
-- Covey, S. R., Merrill, A. R., & Merrill, R. R. (1994). *First Things First.* New York: Simon & Schuster — nguồn của bốn thế hệ quản trị thời gian.
+- Covey, S. R., Merrill, A. R., & Merrill, R. R. (1994). *First Things First.* New York: Simon & Schuster — nguồn của bốn thế hệ quản lý thời gian.
 - Doran, G. T. (1981). There's a S.M.A.R.T. way to write management's goals and objectives. *Management Review*, 70(11), 35–36.
 - Locke, E. A., & Latham, G. P. (2002). Building a practically useful theory of goal setting and task motivation. *American Psychologist*, 57(9), 705–717.
 - Bandura, A. (1997). *Self-Efficacy: The Exercise of Control.* New York: W. H. Freeman.
@@ -136,11 +140,11 @@ Làm bước Analyse: ghi lại một tuần thật của bạn theo khối 30 p
             {
                 "key": "4.1-the-he-4",
                 "type": "mcq",
-                "prompt": "Thế hệ quản trị thời gian thứ tư theo Covey nhấn mạnh điều gì?",
+                "prompt": "Thế hệ quản lý thời gian thứ tư theo Covey nhấn mạnh điều gì?",
                 "explanation": "Thế hệ bốn đổi câu hỏi từ làm sao làm nhiều hơn sang việc nào đáng làm, tổ chức theo điều quan trọng và theo các vai trò, quan hệ của mỗi người.",
                 "points": 2,
                 "options": [
-                    {"label": "Quản trị bản thân theo điều thật sự quan trọng và theo các vai trò, quan hệ — thay vì chỉ tối ưu tốc độ làm việc", "isCorrect": True},
+                    {"label": "Quản lý bản thân theo điều thật sự quan trọng và theo các vai trò, quan hệ — thay vì chỉ tối ưu tốc độ làm việc", "isCorrect": True},
                     {"label": "Ghi chép đầy đủ mọi việc cần nhớ trong ngày", "isCorrect": False},
                     {"label": "Xếp kín lịch để không lãng phí khoảng trống nào", "isCorrect": False, "misconception": "knm.busy-equals-productive"},
                     {"label": "Xếp hạng mọi việc theo A, B, C rồi làm lần lượt từ A", "isCorrect": False},
@@ -149,7 +153,7 @@ Làm bước Analyse: ghi lại một tuần thật của bạn theo khối 30 p
             {
                 "key": "4.1-the-he-1-2",
                 "type": "matching",
-                "prompt": "Nối mỗi thế hệ quản trị thời gian với biểu hiện đặc trưng của nó.",
+                "prompt": "Nối mỗi thế hệ quản lý thời gian với biểu hiện đặc trưng của nó.",
                 "explanation": "Thế hệ một dừng ở ghi nhớ, thế hệ hai thêm lịch và mốc hẹn, thế hệ ba thêm ưu tiên theo mục tiêu, thế hệ bốn tổ chức theo điều quan trọng và các vai trò.",
                 "points": 3,
                 "pairs": [

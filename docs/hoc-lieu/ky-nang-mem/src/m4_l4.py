@@ -2,36 +2,36 @@
 LESSON = {
     "title": "Bài 4.4 · Ước lượng thời gian và lập lịch",
     "durationMin": 50,
-    "description": "Vì sao ai cũng ước lượng thiếu thời gian và hai cách ước lượng sát hơn; sáu bước dựng một lịch chạy được; bốn mẹo tinh chỉnh theo dòng công việc và dòng năng lượng của chính mình.",
+    "description": "Bài học giải thích vì sao ai cũng có xu hướng ước lượng thiếu thời gian, giới thiệu hai cách ước lượng sát hơn, hướng dẫn sáu bước dựng một lịch chạy được và bốn mẹo tinh chỉnh lịch theo dòng công việc và dòng năng lượng của chính mình.",
     "objectives": [
-        "Giải thích được nguỵ biện lập kế hoạch và nhận ra nó trong ước lượng của chính mình",
-        "Ước lượng thời gian cho một nhiệm vụ lớn bằng kỹ thuật chia nhỏ từ dưới lên",
-        "Dựng được một lịch tuần theo sáu bước, có chừa khoảng đệm",
-        "Điều chỉnh lịch theo dòng công việc và dòng năng lượng của bản thân",
+        "Giải thích được sai lệch lập kế hoạch và nhận ra biểu hiện của nó trong ước lượng của chính mình",
+        "Ước lượng được thời gian cho một nhiệm vụ lớn bằng kỹ thuật chia nhỏ từ dưới lên",
+        "Xây dựng được một lịch tuần theo sáu bước, có chừa khoảng đệm",
+        "Điều chỉnh được lịch theo dòng công việc và dòng năng lượng của bản thân",
     ],
     "summary": [
-        "Nguỵ biện lập kế hoạch: người ta ước lượng thiếu thời gian một cách có hệ thống, kể cả khi đã biết lần trước mất bao lâu.",
-        "Hai cách ước lượng sát hơn: lấy dữ liệu lần trước làm mốc, và chia nhiệm vụ lớn thành từng phần rồi cộng ước lượng của từng phần.",
-        "Sáu bước lập lịch: chọn công cụ và chu kỳ, liệt kê theo ưu tiên, ước lượng thời gian, xếp việc ưu tiên cao trước, xếp việc còn lại, chừa chỗ cho phát sinh.",
-        "Lịch là văn bản sống: sửa được, nhưng phải sửa có chủ đích theo ưu tiên chứ không sửa vì bị phân tâm.",
+        "Theo hiện tượng gọi là sai lệch lập kế hoạch, con người ước lượng thiếu thời gian một cách có hệ thống, kể cả khi đã biết lần trước việc đó mất bao lâu.",
+        "Có hai cách ước lượng sát hơn: lấy dữ liệu của lần làm trước làm mốc, hoặc chia nhiệm vụ lớn thành từng phần rồi cộng ước lượng của từng phần.",
+        "Lịch được dựng qua sáu bước: chọn công cụ và chu kỳ, liệt kê việc theo ưu tiên, ước lượng thời gian, xếp việc ưu tiên cao trước, xếp việc còn lại, và chừa chỗ cho việc phát sinh.",
+        "Lịch là một văn bản sống: bạn có thể sửa lịch, nhưng phải sửa có chủ đích theo ưu tiên chứ không sửa vì bị phân tâm.",
     ],
     "splitSections": True,
     "body": r"""
-Bài 4.3 cho bạn khối tập trung. Bài này trả lời câu hỏi đứng ngay trước đó: **mỗi việc mất bao lâu, và xếp chúng vào đâu trong tuần.** Sai ở khâu này thì mọi kỹ thuật tập trung phía sau đều vô dụng — bạn giữ được khung giờ, nhưng khung giờ ấy quá ngắn cho việc đã hẹn.
+Bài 4.3 đã giúp bạn có các khối thời gian tập trung. Bài này trả lời câu hỏi cần được giải quyết trước khi xếp các khối ấy: **mỗi việc mất bao lâu và nên xếp vào đâu trong tuần.** Nếu sai ở khâu này thì mọi kỹ thuật tập trung phía sau đều kém tác dụng, vì bạn giữ được khung giờ nhưng khung giờ ấy lại quá ngắn cho việc đã hẹn.
 
 ## Vì sao ai cũng ước lượng thiếu
 
-Kahneman và Tversky đặt tên cho hiện tượng này từ năm 1979: **nguỵ biện lập kế hoạch** — con người thường xuyên ước lượng thiếu thời gian cần cho một nhiệm vụ. Điểm gây khó chịu nhất của nó: **biết lần trước mất bao lâu vẫn không chữa được**. Ta vẫn tin lần này sẽ khác, vì lần này ta sẽ tập trung hơn, có kinh nghiệm hơn, gặp ít trục trặc hơn.
+Hiện tượng này được Kahneman và Tversky đặt tên là **sai lệch lập kế hoạch** (*planning fallacy*; Kahneman & Tversky, 1979), tức xu hướng thường xuyên ước lượng thiếu thời gian cần cho một nhiệm vụ. Điều đáng lưu ý nhất là **biết lần trước mất bao lâu vẫn chưa đủ để khắc phục xu hướng này** (Buehler và cộng sự, 1994). Chúng ta vẫn tin lần này sẽ khác, vì lần này chúng ta sẽ tập trung hơn, có kinh nghiệm hơn và gặp ít trục trặc hơn.
 
-> [!vi-du] Lần trước, Quyên mất trọn ba ngày để tìm và đọc tài liệu cho một bài tổng quan. Lần này bạn nghĩ: mình đã biết cách tìm rồi, hai ngày là đủ — và xếp lịch hai ngày. Thực tế lại mất gần ba ngày, và phần trễ ấy đổ dây chuyền sang mọi việc khác trong tuần. Chỗ hỏng không nằm ở kỹ năng tìm tài liệu; nó nằm ở chỗ Quyên **đã có dữ liệu thật là ba ngày** nhưng lại dùng cảm giác lạc quan thay cho dữ liệu ấy.
+> [!vi-du] Lần trước, Quyên mất trọn ba ngày để tìm và đọc tài liệu cho một bài tổng quan. Lần này, Quyên nghĩ rằng mình đã biết cách tìm nên hai ngày là đủ, và xếp lịch hai ngày. Thực tế vẫn mất gần ba ngày, và phần trễ ấy đổ dây chuyền sang các việc khác trong tuần. Chỗ hỏng không nằm ở kỹ năng tìm tài liệu mà nằm ở việc Quyên **đã có dữ liệu thật là ba ngày** nhưng lại dùng cảm giác lạc quan thay cho dữ liệu ấy.
 
-Hệ quả của việc ước lượng thiếu không dừng ở một việc: bạn lấy trộm thời gian của các việc khác trong ngày, trễ hạn, và phá vỡ cam kết với người khác.
+Hệ quả của việc ước lượng thiếu không dừng lại ở một việc: bạn lấy bớt thời gian của các việc khác trong ngày, trễ hạn và phá vỡ cam kết với người khác.
 
 ## Hai cách ước lượng sát hơn
 
-**Cách 1 — Lấy dữ liệu lần trước làm mốc.** Việc này hoặc việc tương tự, lần gần nhất mất bao lâu? Lấy đúng con số đó. Chỉ rút ngắn khi bạn chỉ ra được **cụ thể** cách làm nào đã đổi — và ngay cả khi ấy, rút vừa phải. Chưa từng làm việc này bao giờ thì hỏi người đã làm.
+**Cách 1: lấy dữ liệu lần trước làm mốc.** Bạn tự hỏi việc này, hoặc một việc tương tự, lần gần nhất đã mất bao lâu, rồi dùng đúng con số đó. Bạn chỉ rút ngắn con số ấy khi chỉ ra được **cụ thể** cách làm nào đã thay đổi, và ngay cả khi đó cũng chỉ nên rút ngắn vừa phải. Nếu chưa từng làm việc này, bạn nên hỏi người đã làm.
 
-**Cách 2 — Chia nhỏ từ dưới lên.** Dùng cho nhiệm vụ lớn: (1) liệt kê từng phần việc, (2) ước lượng từng phần, (3) cộng lại.
+**Cách 2: chia nhỏ từ dưới lên** (ước lượng từ dưới lên, *bottom-up estimation*; LEAP Online, 2025). Cách này dùng cho nhiệm vụ lớn và gồm ba bước: (1) liệt kê từng phần việc, (2) ước lượng từng phần, (3) cộng các ước lượng lại.
 
 | Phần việc của một đồ án tốt nghiệp | Ước lượng |
 |---|---|
@@ -42,15 +42,15 @@ Hệ quả của việc ước lượng thiếu không dừng ở một việc: 
 | Viết và sửa | 20 giờ |
 | **Tổng** | **90 giờ** |
 
-Con số 90 giờ nói lên một điều mà "làm đồ án" không nói: nếu còn 9 tuần thì cần **trung bình 10 giờ mỗi tuần**, đều đặn — và nếu tuần này bạn dành được 2 giờ thì bạn đã nợ 8 giờ, chứ không phải "vẫn còn thời gian".
+Con số 90 giờ cho thấy một điều mà cụm “làm đồ án” không cho thấy: nếu còn 9 tuần thì bạn cần **trung bình 10 giờ mỗi tuần** và phải làm đều đặn. Nếu tuần này chỉ dành được 2 giờ thì bạn đã nợ 8 giờ chứ không phải “vẫn còn thời gian”.
 
-Dù dùng cách nào, hỏi thêm bốn câu trước khi chốt: **Có gì có thể trục trặc không? Phần nào mình chưa chắc chắn? Tuần đó mình còn việc gì khác? Việc này có phụ thuộc vào ai không** — nếu có, họ đang bận gì? Câu cuối là câu hay bị bỏ nhất và cũng là nguyên nhân trễ hạn phổ biến nhất trong bài tập nhóm.
+Dù dùng cách nào, bạn cũng nên tự hỏi thêm bốn câu trước khi chốt ước lượng: **Có gì có thể trục trặc không? Phần nào mình chưa chắc chắn? Tuần đó mình còn việc gì khác? Việc này có phụ thuộc vào ai không?** Nếu có, người đó đang bận việc gì? Câu cuối thường bị bỏ qua nhất và là một nguyên nhân phổ biến gây trễ hạn trong bài tập nhóm.
 
-> [!meo] Với phần việc bạn thấy mơ hồ hoặc phụ thuộc người khác, cộng thêm một khoản dự phòng thay vì hy vọng. Ước lượng đúng mà trễ vì một khâu ngoài tầm tay vẫn là một lịch vỡ.
+> [!meo] Với phần việc mơ hồ hoặc phụ thuộc người khác, bạn nên cộng thêm một khoản dự phòng thay vì chỉ hy vọng mọi thứ suôn sẻ. Một ước lượng đúng nhưng bị trễ vì một khâu ngoài tầm kiểm soát vẫn có thể làm vỡ cả lịch.
 
 ## Sáu bước dựng một lịch chạy được
 
-Ba nguyên tắc nền trước đã: **nhất quán** (một công cụ duy nhất, cập nhật ngay khi có thay đổi), **tập trung** (xếp việc ưu tiên cao trước, đừng cố nhét mọi thứ), **thực tế** (bốn giờ làm việc sâu liên tục là không tưởng — hãy xếp cả giờ nghỉ vào lịch).
+Trước hết cần nắm ba nguyên tắc nền (LEAP Online, 2025). Nguyên tắc **nhất quán** đòi hỏi dùng một công cụ duy nhất và cập nhật ngay khi có thay đổi. Nguyên tắc **tập trung** đòi hỏi xếp việc ưu tiên cao trước và không cố nhét mọi thứ vào lịch. Nguyên tắc **thực tế** lưu ý rằng làm việc sâu liên tục bốn giờ là điều rất khó thực hiện, nên bạn cần xếp cả giờ nghỉ vào lịch.
 
 ```html
 <div style="border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0">
@@ -59,23 +59,25 @@ Ba nguyên tắc nền trước đã: **nhất quán** (một công cụ duy nh�
     <div style="background:rgba(13,148,136,.14);border-radius:.4rem;padding:.55rem .8rem"><b>2 · Liệt kê rồi xếp theo ưu tiên</b> — viết hết ra trước, sau đó mới xếp bằng ma trận ở bài 4.2</div>
     <div style="background:rgba(139,92,246,.14);border-radius:.4rem;padding:.55rem .8rem"><b>3 · Ước lượng thời gian từng việc</b> — dùng dữ liệu lần trước hoặc chia nhỏ từ dưới lên</div>
     <div style="background:rgba(217,150,40,.16);border:2px solid rgba(217,150,40,.55);border-radius:.4rem;padding:.55rem .8rem"><b>4 · Đặt việc ưu tiên cao vào lịch trước</b> — và đặt vào <b>đầu ngày</b>, trước khi các yêu cầu khác ập tới</div>
-    <div style="background:rgba(59,130,246,.14);border-radius:.4rem;padding:.55rem .8rem"><b>5 · Xếp việc ưu tiên thấp vào phần còn lại</b> — không đủ chỗ thì hỏi: việc này có cần làm tuần này không, hoãn được không, có cần làm không</div>
+    <div style="background:rgba(59,130,246,.14);border-radius:.4rem;padding:.55rem .8rem"><b>5 · Xếp việc ưu tiên thấp vào phần còn lại</b> — không đủ chỗ thì hỏi: việc này có cần làm tuần này không, hoãn được không, hay có thể bỏ hẳn không</div>
     <div style="background:rgba(13,148,136,.14);border-radius:.4rem;padding:.55rem .8rem"><b>6 · Chừa chỗ cho phát sinh</b> — đệm 15 phút giữa các khối, và một giờ trống mỗi ngày cho việc không lường trước</div>
   </div>
   <div style="font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6">Bước 6 là bước hay bị cắt nhất và cũng là bước quyết định lịch có sống nổi qua thứ tư hay không.</div>
 </div>
 ```
 
-> [!canh-bao] **Đừng giữ hai cuốn lịch** — một cho việc học, một cho việc riêng. Hai lịch thì không nơi nào cho thấy bức tranh đầy đủ, và bạn sẽ nhận một buổi họp lúc 17h30 rồi mới nhớ ra 18h phải đón em. Mọi cam kết vào chung một chỗ.
+> [!canh-bao] **Bạn không nên giữ hai cuốn lịch**, một cho việc học và một cho việc riêng. Khi có hai lịch, không nơi nào cho thấy bức tranh đầy đủ, nên bạn có thể nhận một buổi họp lúc 17h30 rồi mới nhớ ra 18h phải đón em. Hãy đưa mọi cam kết vào chung một chỗ.
 
 ## Bốn mẹo tinh chỉnh
 
-- **Tô màu theo loại việc.** Học trên lớp một màu, tự học một màu, làm thêm một màu. Nhìn một cái là biết tuần này lệch về đâu — thứ mà một danh sách chữ không cho thấy.
-- **Đặt chủ đề cho từng ngày.** Thứ hai cho đọc tài liệu, thứ tư cho viết, thứ sáu cho việc nhóm. Gom việc cùng loại vào một ngày giảm số lần chuyển ngữ cảnh — đúng vấn đề đã nói ở bài 4.3.
-- **Xếp theo dòng công việc và dòng năng lượng.** *Dòng công việc*: đừng cắt một việc đang trôi làm hai buổi cách nhau ba ngày, vì lần sau bạn mất thời gian nhớ lại mình đang ở đâu. *Dòng năng lượng*: đặt việc nặng vào lúc bạn tỉnh nhất, và đặt việc nhẹ như đọc tài liệu vào khoảng uể oải sau bữa trưa hoặc sau một buổi học dài.
-- **Dựng thói quen cho việc lặp lại.** Cùng một khung giờ mỗi tuần cho cùng một loại việc. Thói quen chạy mà không tốn công quyết định — đó là lý do nó rẻ hơn mọi hệ thống phức tạp.
+Bốn mẹo dưới đây giúp tinh chỉnh một lịch đã dựng xong (LEAP Online, 2025).
 
-Cuối cùng: **lịch là văn bản sống**. Nó phản ánh những gì bạn biết tại thời điểm lập, và thông tin mới thì luôn xuất hiện. Sửa lịch là chuyện bình thường — miễn là sửa vì **ưu tiên đã đổi**, không phải vì bạn vừa bị một thứ hấp dẫn hơn kéo đi. Một thói quen nhỏ giữ được ranh giới ấy: **mở lịch ra xem trước khi nhận bất kỳ cam kết mới nào.**
+- **Tô màu theo loại việc.** Bạn dùng một màu cho học trên lớp, một màu cho tự học và một màu cho làm thêm. Chỉ cần nhìn qua là biết tuần này đang lệch về loại việc nào, điều mà một danh sách chữ không cho thấy.
+- **Đặt chủ đề cho từng ngày.** Chẳng hạn, thứ hai dành cho đọc tài liệu, thứ tư dành cho viết và thứ sáu dành cho việc nhóm. Việc gom các việc cùng loại vào một ngày làm giảm số lần chuyển ngữ cảnh, đúng với vấn đề đã nêu ở bài 4.3.
+- **Xếp theo dòng công việc và dòng năng lượng.** *Dòng công việc* nghĩa là bạn không nên cắt một việc đang trôi chảy thành hai buổi cách nhau ba ngày, vì lần sau bạn mất thời gian nhớ lại mình đang ở đâu. *Dòng năng lượng* nghĩa là bạn đặt việc nặng vào lúc tỉnh táo nhất và đặt việc nhẹ như đọc tài liệu vào khoảng uể oải sau bữa trưa hoặc sau một buổi học dài.
+- **Dựng thói quen cho việc lặp lại.** Bạn dùng cùng một khung giờ mỗi tuần cho cùng một loại việc. Thói quen vận hành mà không tốn công ra quyết định, và đó là lý do nó ít tốn kém hơn các hệ thống phức tạp.
+
+Cuối cùng, cần nhớ rằng **lịch là một văn bản sống**: nó phản ánh những gì bạn biết tại thời điểm lập, và thông tin mới luôn xuất hiện sau đó. Việc sửa lịch là bình thường, miễn là bạn sửa vì **ưu tiên đã thay đổi** chứ không phải vì vừa bị một thứ hấp dẫn hơn kéo đi. Một thói quen nhỏ giúp giữ ranh giới ấy là **mở lịch ra xem trước khi nhận bất kỳ cam kết mới nào.**
 
 ## Luyện tập và tài liệu tham khảo
 
@@ -112,10 +114,10 @@ Dựng lịch tuần tới theo đủ sáu bước, trên **một** công cụ d
                 "key": "4.4-planning-fallacy",
                 "type": "mcq",
                 "prompt": "Lần trước việc tìm tài liệu mất của bạn ba ngày. Lần này bạn xếp lịch hai ngày vì nghĩ mình đã có kinh nghiệm. Đây là biểu hiện của điều gì?",
-                "explanation": "Nguỵ biện lập kế hoạch: người ta ước lượng thiếu thời gian một cách có hệ thống, kể cả khi đã có dữ liệu thật từ lần trước.",
+                "explanation": "Sai lệch lập kế hoạch: người ta ước lượng thiếu thời gian một cách có hệ thống, kể cả khi đã có dữ liệu thật từ lần trước.",
                 "points": 2,
                 "options": [
-                    {"label": "Nguỵ biện lập kế hoạch — ước lượng thiếu dù đã có dữ liệu thật từ lần trước", "isCorrect": True},
+                    {"label": "Sai lệch lập kế hoạch — ước lượng thiếu dù đã có dữ liệu thật từ lần trước", "isCorrect": True},
                     {"label": "Tư duy phát triển — tin rằng năng lực của mình đã tăng lên", "isCorrect": False, "misconception": "knm.planning-fallacy"},
                     {"label": "Đặt mục tiêu thách thức để tạo áp lực tích cực", "isCorrect": False, "misconception": "knm.planning-fallacy"},
                     {"label": "Ưu tiên theo ma trận Eisenhower", "isCorrect": False},

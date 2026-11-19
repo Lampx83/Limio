@@ -2,67 +2,69 @@
 LESSON = {
     "title": "Bài 3.2 · Thiên lệch nhận thức và nguỵ biện",
     "durationMin": 50,
-    "description": "Vì sao người thông minh vẫn sai một cách có hệ thống; bốn thiên lệch hay gặp nhất, sáu nguỵ biện phổ biến trên mạng, và ba kỹ thuật chống lại thiên lệch của chính mình.",
+    "description": "Bài này giải thích vì sao người thông minh vẫn có thể sai một cách có hệ thống, trình bày bốn thiên lệch hay gặp nhất, sáu nguỵ biện phổ biến trên mạng và ba kỹ thuật giảm ảnh hưởng của thiên lệch đối với chính mình.",
     "objectives": [
         "Giải thích được vì sao thiên lệch nhận thức không phải dấu hiệu thiếu thông minh",
-        "Nhận ra được bốn thiên lệch phổ biến trong quyết định của chính mình",
-        "Gọi tên được sáu nguỵ biện thường gặp trong tranh luận trên mạng",
+        "Nhận diện được bốn thiên lệch phổ biến trong quyết định của chính mình",
+        "Nhận diện và gọi tên được sáu nguỵ biện thường gặp trong tranh luận trên mạng",
         "Áp dụng được ít nhất một kỹ thuật giảm thiên lệch trước một quyết định quan trọng",
     ],
     "summary": [
-        "Thiên lệch là đường tắt của bộ não, có ở mọi người và không mất đi khi ta biết tên nó; cách chống hiệu quả là đổi quy trình, không phải cố gắng khách quan hơn.",
+        "Thiên lệch là đường tắt của bộ não, có ở mọi người và không mất đi khi chúng ta biết tên nó; cách giảm tác động hiệu quả là đổi quy trình chứ không phải cố gắng khách quan hơn.",
         "Bốn thiên lệch đáng nhớ nhất: xác nhận, neo, sẵn có và tự phục vụ.",
-        "Nguỵ biện là lỗi ở mảnh suy luận: người rơm, công kích cá nhân, lưỡng nan giả, viện dẫn số đông, sau đó nên do đó, và trượt dốc.",
+        "Nguỵ biện là lỗi ở mảnh suy luận, gồm sáu dạng thường gặp: người rơm, công kích cá nhân, lưỡng nan giả, viện dẫn số đông, sau đó nên do đó, và trượt dốc.",
         "Ba kỹ thuật dùng được ngay: viết trước điều gì sẽ khiến mình đổi ý, mời một người phản biện thật, và làm phép thử đảo chiều.",
     ],
     "splitSections": True,
     "body": r"""
-Bài trước đưa ra bộ khung để tách một lập luận. Bài này nói về hai loại hỏng hóc hay gặp nhất: hỏng ở **người đọc** (thiên lệch nhận thức) và hỏng ở **lập luận** (nguỵ biện).
+Bài 3.1 đã đưa ra bộ khung để tách một lập luận thành ba mảnh. Bài này đề cập hai loại lỗi thường gặp nhất: lỗi ở **người đọc**, tức thiên lệch nhận thức (*cognitive bias*), và lỗi ở **lập luận**, tức nguỵ biện (*fallacy*).
 
 ## Thiên lệch không phải là ngu dốt
 
 ![Sơ đồ tổng hợp các thiên lệch nhận thức, xếp thành vòng tròn theo bốn nhóm vấn đề mà bộ não phải xử lý](https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Cognitive_bias_codex_en.svg/1280px-Cognitive_bias_codex_en.svg.png "Bản đồ các thiên lệch nhận thức đã được đặt tên, nhóm theo bốn bài toán mà bộ não phải giải: quá nhiều thông tin, thiếu ý nghĩa, cần phản ứng nhanh, và không nhớ hết được. Không ai học thuộc bản đồ này; nó ở đây để thấy quy mô của vấn đề. Hình: [File:Cognitive bias codex en.svg](https://commons.wikimedia.org/wiki/File:Cognitive_bias_codex_en.svg), thiết kế John Manoogian III, giấy phép CC BY-SA 4.0.")
 
-Thiên lệch không phải lỗi của người kém thông minh. Chúng là **đường tắt** mà bộ não dùng để xử lý quá nhiều thông tin trong quá ít thời gian — phần lớn thời gian chúng hữu ích, và chỉ sai một cách có hệ thống trong những tình huống nhất định. Hai hệ quả thực tế:
+Thiên lệch không phải là lỗi của người kém thông minh. Theo Tversky và Kahneman (1974), chúng là **đường tắt** (*heuristics*) mà bộ não dùng để xử lý quá nhiều thông tin trong quá ít thời gian; phần lớn thời gian chúng hữu ích, và chỉ dẫn tới sai lệch có hệ thống trong những tình huống nhất định. Có hai hệ quả thực tế:
 
-- **Biết tên thiên lệch không làm bạn hết thiên lệch.** Người học về thiên lệch xác nhận vẫn mắc thiên lệch xác nhận, và còn dễ dùng nó để giải thích sai lầm của người khác.
-- **Cách chống hiệu quả là đổi quy trình, không phải cố khách quan hơn.** Viết ra tiêu chí trước khi xem phương án, hỏi ý kiến người ngoài, đặt hạn phải nêu bằng chứng ngược — những thứ này chạy được kể cả khi bạn đang mệt.
+- **Biết tên thiên lệch không làm bạn hết thiên lệch.** Người đã học về thiên lệch xác nhận vẫn có thể mắc thiên lệch này, và còn có thể dùng khái niệm ấy để giải thích sai lầm của người khác.
+- **Cách giảm tác động hiệu quả là đổi quy trình, không phải cố khách quan hơn.** Viết ra tiêu chí trước khi xem phương án, hỏi ý kiến người ngoài hay đặt hạn phải nêu bằng chứng ngược là những thao tác có thể thực hiện kể cả khi bạn đang mệt.
 
 ## Bốn thiên lệch hay gặp nhất
+
+Bảng dưới đây mô tả bốn thiên lệch hay gặp trong quyết định của sinh viên: xác nhận (*confirmation bias*), neo (*anchoring*), sẵn có (*availability*) và tự phục vụ (*self-serving bias*). Thiên lệch xác nhận được tổng quan trong Nickerson (1998); thiên lệch neo và thiên lệch sẵn có được mô tả trong Tversky và Kahneman (1974).
 
 | Thiên lệch | Nó làm gì | Ví dụ trong đời sinh viên |
 |---|---|---|
 | Xác nhận | Tìm và nhớ thứ khớp với điều đã tin, đòi tiêu chuẩn cao hơn với thứ trái chiều | Đã tin ngành mình chọn là sai lầm nên chỉ đọc những bài than về ngành đó |
 | Neo | Con số hoặc thông tin đầu tiên kéo mọi ước lượng sau về phía nó | Nghe mức lương 30 triệu trước, mọi lời mời 12 triệu sau đó đều thấy thấp bất kể thị trường |
 | Sẵn có | Đánh giá mức phổ biến bằng mức dễ nhớ lại | Đọc vài bài về lừa đảo tuyển dụng rồi tin rằng hầu hết tin tuyển dụng là lừa đảo |
-| Tự phục vụ | Thành công là do mình, thất bại là do hoàn cảnh | Điểm cao vì mình giỏi, điểm thấp vì đề lệch — và bạn cùng nhóm thì ngược lại |
+| Tự phục vụ | Thành công là do mình, thất bại là do hoàn cảnh | Điểm cao vì mình giỏi, điểm thấp vì đề lệch; còn với bạn cùng nhóm thì ngược lại |
 
-> [!vi-du] Vy phân vân giữa hai lời mời thực tập. Bạn đầu tiên nghe một anh khoá trên nói công ty A "môi trường độc hại". Từ đó, mọi thứ Vy đọc về A đều được lọc qua câu ấy: một bình luận tiêu cực trên diễn đàn thành bằng chứng, ba bình luận tích cực thành "chắc là người của công ty tự viết". Đây là thiên lệch xác nhận đang chạy, và nó chạy êm tới mức Vy tin mình đang tìm hiểu kỹ. Cách chữa không phải là cố công bằng hơn, mà là đổi quy trình: viết ra ba tiêu chí quan trọng nhất **trước**, rồi tìm bằng chứng cho từng tiêu chí ở cả hai công ty, mỗi bên một lượng nguồn ngang nhau.
+> [!vi-du] Vy phân vân giữa hai lời mời thực tập. Ban đầu, Vy nghe một anh khoá trên nói công ty A có “môi trường độc hại”. Từ đó, mọi thông tin Vy đọc về A đều được lọc qua nhận xét ấy: một bình luận tiêu cực trên diễn đàn được coi là bằng chứng, còn ba bình luận tích cực bị cho là “chắc là người của công ty tự viết”. Đây là thiên lệch xác nhận đang vận hành, và nó vận hành êm đến mức Vy tin rằng mình đang tìm hiểu kỹ. Cách xử lý không phải là cố công bằng hơn mà là đổi quy trình: viết ra ba tiêu chí quan trọng nhất **trước**, rồi tìm bằng chứng cho từng tiêu chí ở cả hai công ty, mỗi bên một lượng nguồn ngang nhau.
 
 ## Sáu nguỵ biện hay gặp trên mạng
 
-Nguỵ biện là lỗi ở mảnh suy luận: bằng chứng có thể đúng, khẳng định có thể hợp lý, nhưng đường nối giữa chúng hỏng.
+**Nguỵ biện** (*fallacy*) là lỗi ở mảnh suy luận: bằng chứng có thể đúng và khẳng định có thể hợp lý, nhưng đường nối giữa chúng bị hỏng (Walton, 2008).
 
 | Nguỵ biện | Nghe như thế nào | Chỗ hỏng |
 |---|---|---|
-| Người rơm | "Vậy ý bạn là cứ mặc kệ hết à?" khi người kia chỉ nói nên cân nhắc thêm | Bẻ lại một phiên bản méo, thắng nó không nói gì về bản gốc |
-| Công kích cá nhân | "Bạn còn đang đi học thì biết gì về thị trường" | Người nói là ai không quyết định điều được nói đúng hay sai |
-| Lưỡng nan giả | "Hoặc chọn lương cao, hoặc chọn học được nghề" | Bỏ qua phương án trung gian và phương án thứ ba |
-| Viện dẫn số đông | "Cả trăm nghìn người theo dõi anh ấy, sai sao được" | Số lượt đo mức lan truyền, không đo mức đúng |
-| Sau đó nên do đó | "Từ hồi dùng app này điểm mình tăng hẳn" | Trùng thời điểm không phải nhân quả; kỳ đó có thể đề dễ hơn |
-| Trượt dốc | "Cho nghỉ một buổi thì rồi sẽ nghỉ cả kỳ" | Nối chuỗi hậu quả mà không kiểm bước trung gian nào |
+| Người rơm | “Vậy ý bạn là cứ mặc kệ hết à?” khi người kia chỉ nói nên cân nhắc thêm | Người nói bẻ lại một phiên bản bị bóp méo, và việc thắng phiên bản đó không nói gì về quan điểm gốc. |
+| Công kích cá nhân | “Bạn còn đang đi học thì biết gì về thị trường” | Người nói là ai không quyết định điều được nói đúng hay sai. |
+| Lưỡng nan giả | “Hoặc chọn lương cao, hoặc chọn học được nghề” | Lập luận bỏ qua các phương án trung gian và phương án thứ ba. |
+| Viện dẫn số đông | “Cả trăm nghìn người theo dõi anh ấy, sai sao được” | Số lượt theo dõi đo mức lan truyền chứ không đo mức đúng. |
+| Sau đó nên do đó | “Từ hồi dùng app này điểm mình tăng hẳn” | Trùng thời điểm không phải là nhân quả; chẳng hạn kỳ đó có thể có đề dễ hơn. |
+| Trượt dốc | “Cho nghỉ một buổi thì rồi sẽ nghỉ cả kỳ” | Lập luận nối một chuỗi hậu quả mà không kiểm tra bước trung gian nào. |
 
-> [!canh-bao] Biết tên nguỵ biện dễ sinh ra một thói xấu: dán nhãn thay cho suy nghĩ. Hô "nguỵ biện người rơm" rồi dừng lại cũng là một cách né tranh luận. Sau khi gọi tên, việc còn lại vẫn phải làm — nêu lại đúng ý đối phương và trả lời chính nó.
+> [!canh-bao] Việc biết tên các nguỵ biện dễ dẫn tới một thói quen không tốt: dán nhãn thay cho suy nghĩ. Chỉ nói “nguỵ biện người rơm” rồi dừng lại cũng là một cách né tranh luận. Sau khi gọi tên, vẫn cần nêu lại đúng ý của đối phương và trả lời chính ý đó.
 
 ## Ba kỹ thuật chống lại thiên lệch của chính mình
 
 Ba kỹ thuật dưới đây được chọn vì chúng là **thao tác**, không phải lời khuyên về thái độ.
 
-1. **Viết trước điều gì sẽ khiến mình đổi ý.** Trước khi tra cứu, ghi ra một dòng: nếu thấy X thì tôi bỏ kết luận này. Sau đó đi tìm đúng X. Kỹ thuật này cắt thẳng vào thiên lệch xác nhận.
-2. **Mời một người phản biện thật.** Không phải hỏi "cậu thấy sao", mà giao nhiệm vụ rõ: "cậu tìm giúp mình ba lý do mạnh nhất để KHÔNG làm việc này". Người được giao vai sẽ nói thẳng hơn hẳn khi được hỏi chung chung.
-3. **Phép thử đảo chiều.** Đổi vai trong tình huống rồi hỏi mình có kết luận y như vậy không. "Nếu bạn cùng nhóm nộp muộn, mình gọi là thiếu trách nhiệm; nếu mình nộp muộn, mình gọi là do tuần này quá tải" — thấy hai chuẩn khác nhau là thấy thiên lệch tự phục vụ.
+1. **Viết trước điều gì sẽ khiến mình đổi ý.** Trước khi tra cứu, ghi ra một dòng: nếu thấy X thì tôi bỏ kết luận này. Sau đó đi tìm đúng X. Kỹ thuật này nhắm trực tiếp vào thiên lệch xác nhận.
+2. **Mời một người phản biện thật.** Thay vì hỏi “cậu thấy sao”, hãy giao nhiệm vụ rõ ràng: “cậu tìm giúp mình ba lý do mạnh nhất để KHÔNG làm việc này”. Người được giao vai nhiều khả năng sẽ nói thẳng hơn so với khi được hỏi chung chung.
+3. **Phép thử đảo chiều.** Đổi vai trong tình huống rồi hỏi mình có kết luận y như vậy không. “Nếu bạn cùng nhóm nộp muộn, mình gọi là thiếu trách nhiệm; nếu mình nộp muộn, mình gọi là do tuần này quá tải”; nếu thấy hai chuẩn khác nhau, đó là dấu hiệu của thiên lệch tự phục vụ.
 
-> [!vi-du] Trước khi quyết bỏ 8 triệu học một khoá kỹ năng, Khôi làm ba việc: viết trước "nếu không tìm được ai học xong mà đổi được việc thì mình không đăng ký"; nhắn cho một người bạn hay nói thẳng và giao đúng vai tìm ba lý do đừng học; và tự hỏi nếu người rủ mình không phải bạn thân mà là một quảng cáo thì mình có tin ngần ấy không. Kết quả không phải là bỏ khoá học — Khôi vẫn đăng ký, nhưng chọn gói rẻ hơn sau khi phát hiện phần đắt tiền là những buổi mà bạn đã có nguồn miễn phí tương đương.
+> [!vi-du] Trước khi quyết bỏ 8 triệu học một khoá kỹ năng, Khôi làm ba việc: viết trước “nếu không tìm được ai học xong mà đổi được việc thì mình không đăng ký”; nhắn cho một người bạn hay nói thẳng và giao đúng vai tìm ba lý do đừng học; và tự hỏi nếu người rủ mình không phải bạn thân mà là một quảng cáo thì mình có tin ngần ấy không. Kết quả không phải là bỏ khoá học: Khôi vẫn đăng ký nhưng chọn gói rẻ hơn, sau khi phát hiện phần đắt tiền gồm những buổi mà Khôi đã có nguồn miễn phí tương đương.
 
 ## Luyện tập và tài liệu tham khảo
 
@@ -76,7 +78,7 @@ Mỗi nhóm chọn một chủ đề đang gây tranh cãi trong sinh viên (h�
 
 ### Bài tập về nhà (45–60 phút)
 
-Tìm một bài đăng hoặc video có ít nhất hai nguỵ biện trong bảng. Viết một trang: chép lại nguyên văn đoạn chứa nguỵ biện; gọi tên và giải thích chỗ hỏng của đường suy luận; viết lại đoạn đó thành một lập luận **trung thực** cho cùng quan điểm — tức là vẫn bảo vệ quan điểm ấy nhưng không dùng nguỵ biện. Bước cuối là bước khó nhất và cũng là bước dạy nhiều nhất.
+Tìm một bài đăng hoặc video có ít nhất hai nguỵ biện trong bảng. Viết một trang: chép lại nguyên văn đoạn chứa nguỵ biện; gọi tên và giải thích chỗ hỏng của đường suy luận; viết lại đoạn đó thành một lập luận **trung thực** cho cùng quan điểm, nghĩa là vẫn bảo vệ quan điểm ấy nhưng không dùng nguỵ biện. Bước cuối là bước khó nhất và nhiều khả năng cũng là bước mang lại nhiều bài học nhất.
 
 ### Xem thêm
 
@@ -99,10 +101,10 @@ Tìm một bài đăng hoặc video có ít nhất hai nguỵ biện trong bản
                 "key": "3.2-thien-lech-la-gi",
                 "type": "mcq",
                 "prompt": "Phát biểu nào đúng về thiên lệch nhận thức?",
-                "explanation": "Thiên lệch là đường tắt xử lý thông tin, có ở mọi người kể cả người thông minh, và không mất đi khi ta biết tên nó — nên cách chống hiệu quả là đổi quy trình ra quyết định.",
+                "explanation": "Thiên lệch là đường tắt xử lý thông tin, có ở mọi người kể cả người thông minh, và không mất đi khi chúng ta biết tên nó, nên cách chống hiệu quả là đổi quy trình ra quyết định.",
                 "points": 2,
                 "options": [
-                    {"label": "Chúng là đường tắt của bộ não, có ở mọi người, và biết tên chúng không làm ta hết mắc", "isCorrect": True},
+                    {"label": "Chúng là đường tắt của bộ não, có ở mọi người, và biết tên chúng không làm chúng ta hết mắc", "isCorrect": True},
                     {"label": "Chúng chỉ xuất hiện ở người thiếu kiến thức hoặc lười suy nghĩ", "isCorrect": False, "misconception": "knm.critical-is-negative"},
                     {"label": "Học thuộc danh sách thiên lệch là cách hiệu quả nhất để tránh chúng", "isCorrect": False, "misconception": "knm.knowing-equals-doing"},
                     {"label": "Chỉ cần cố gắng khách quan hơn là loại bỏ được chúng", "isCorrect": False, "misconception": "knm.knowing-equals-doing"},
@@ -125,7 +127,7 @@ Tìm một bài đăng hoặc video có ít nhất hai nguỵ biện trong bản
                 "key": "3.2-nguy-bien-nguoi-rom",
                 "type": "mcq",
                 "prompt": "A nói: mình nghĩ nên cân nhắc thêm trước khi bỏ 8 triệu học khoá đó. B đáp: vậy ý bạn là cứ mãi không đầu tư gì cho bản thân à? B đang mắc nguỵ biện nào?",
-                "explanation": "B đổi ý của A thành một phiên bản cực đoan dễ đánh đổ rồi công kích phiên bản ấy — đó là nguỵ biện người rơm.",
+                "explanation": "B đổi ý của A thành một phiên bản cực đoan dễ đánh đổ rồi công kích phiên bản ấy. Đó là nguỵ biện người rơm.",
                 "points": 2,
                 "options": [
                     {"label": "Người rơm — bẻ lại một phiên bản méo của điều A nói", "isCorrect": True},

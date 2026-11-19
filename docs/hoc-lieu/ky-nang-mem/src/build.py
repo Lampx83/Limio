@@ -37,101 +37,155 @@ MODULES = {
     1: {
         "title": "Module 1 · Giá trị sống",
         "description": (
-            "Nền móng của cả khoá: bạn coi trọng điều gì, dựa vào đâu để thấy vững, và giữ được "
-            "điều đó tới đâu khi phải trả giá. Ba bài đi từ phân biệt giá trị với mục tiêu, qua "
-            "trọng tâm cuộc sống và vòng tròn ảnh hưởng, tới bản tuyên ngôn sứ mệnh cá nhân dùng "
-            "được để từ chối."
+            "Module này đặt nền móng cho cả khoá bằng câu hỏi người học coi trọng điều gì và dựa vào đâu "
+            "để ra quyết định khi hai điều tốt không thể cùng được giữ. Giá trị sống được phân biệt với "
+            "mục tiêu, sở thích và nguyên tắc, đồng thời được xem xét ở hai dạng là giá trị tuyên bố và "
+            "giá trị hiện ra trong hành vi thực tế. Bài 1.1 hướng dẫn nhận diện giá trị thật qua dấu vết "
+            "hành vi và rút một danh sách dài xuống tối đa năm mục có thứ tự ưu tiên; bài 1.2 xét trọng "
+            "tâm cuộc sống, hai vòng tròn quan tâm và ảnh hưởng cùng ba loại vấn đề theo mức kiểm soát; "
+            "bài 1.3 chuyển các kết quả đó thành bản tuyên ngôn sứ mệnh cá nhân và xem xét cách dùng bản "
+            "tuyên ngôn khi giá trị bị thử thách bởi yêu cầu của tổ chức. Thứ tự giá trị lập ở đây được "
+            "dùng lại ở module 4, nơi nó trở thành căn cứ để xếp ưu tiên thời gian."
         ),
         "lessons": [m1_l1.LESSON, m1_l2.LESSON, m1_l3.LESSON],
     },
     2: {
         "title": "Module 2 · Tư duy tích cực",
         "description": (
-            "Không phải học cách luôn vui, mà học cách giải thích sự việc sao cho mình còn nhìn thấy "
-            "phương án và còn thử tiếp. Ba bài đi từ phân biệt tư duy tích cực với tích cực độc hại, "
-            "qua kỹ thuật bẻ lại lối nghĩ méo, tới việc duy trì dài hạn — và ranh giới nơi tư duy "
-            "tích cực không còn đủ, cần tới hỗ trợ chuyên môn."
+            "Module này xem tư duy tích cực là một kỹ thuật giải thích sự việc sao cho người học còn nhìn "
+            "thấy phương án và còn tiếp tục thử, chứ không phải một trạng thái tâm trạng phải duy trì "
+            "suốt ngày. Cơ sở của module là chuỗi sự việc, diễn giải, cảm xúc và hành vi, cùng ba trục "
+            "giải thích của Seligman gồm độ bền, phạm vi và quy trách nhiệm. Bài 2.1 phân biệt tư duy "
+            "tích cực với tích cực độc hại (toxic positivity) và lạc quan mù quáng; bài 2.2 trình bày bảy "
+            "lối nghĩ méo (cognitive distortion), quy trình ABCDE để tranh luận với lời tự nói và khái "
+            "niệm tư duy phát triển (growth mindset), vốn gần với niềm tin vào năng lực bản thân (self-efficacy) "
+            "ở bài 4.1; bài 2.3 bàn về việc duy trì lâu dài qua bốn thói "
+            "quen có bằng chứng và tự trắc ẩn (self-compassion). Bài cuối cũng xác định ranh giới mà tại "
+            "đó tư duy tích cực không còn đủ và cần đến hỗ trợ chuyên môn."
         ),
         "lessons": [m2_l1.LESSON, m2_l2.LESSON, m2_l3.LESSON],
     },
     3: {
         "title": "Module 3 · Tư duy phản biện",
         "description": (
-            "Kiểm chất lượng một lập luận — kể cả lập luận của chính mình. Ba bài: tách khẳng định "
-            "khỏi bằng chứng và suy luận; nhận ra thiên lệch của người đọc và nguỵ biện của người "
-            "nói; đánh giá nguồn trong môi trường mà ai cũng xuất bản được và máy sinh được nội dung "
-            "trong vài giây."
+            "Module này đề cập năng lực kiểm tra chất lượng của một lập luận, kể cả lập luận của chính "
+            "người học, trong bối cảnh ai cũng có thể xuất bản thông tin và mô hình AI có thể sinh nội "
+            "dung trôi chảy trong vài giây. Tư duy phản biện (critical thinking) được hiểu là một quy "
+            "trình dẫn tới kết luận đáng tin hơn, khác với sự bắt bẻ và với thái độ hoài nghi mọi thứ. "
+            "Bài 3.1 tách lập luận thành ba mảnh gồm khẳng định, bằng chứng và suy luận, rồi giới thiệu "
+            "thang suy luận (ladder of inference) của Argyris; bài 3.2 xét thiên lệch nhận thức, tức sai "
+            "lệch có hệ thống ở người đọc, và nguỵ biện, tức lỗi ở mảnh suy luận của người nói; bài 3.3 "
+            "chuyển sang đánh giá nguồn bằng kỹ thuật đọc ngang (lateral reading), cách đọc một con số và "
+            "độ tin cậy của nội dung do AI sinh ra. Các công cụ này được dẫn lại ở nhiều module sau, đặc "
+            "biệt ở module 8 khi phân tích bằng chứng xã hội."
         ),
         "lessons": [m3_l1.LESSON, m3_l2.LESSON, m3_l3.LESSON],
     },
     4: {
         "title": "Module 4 · Quản lý thời gian",
         "description": (
-            "Thời gian không quản lý được — 24 giờ là cố định; thứ quản lý được là lựa chọn. Ba bài "
-            "đi từ mục tiêu SMART và bốn thế hệ quản trị thời gian, qua ma trận Eisenhower cùng bảy "
-            "kẻ cắp thời gian, tới kỹ thuật giữ khối tập trung: khung giờ vàng, chống đa nhiệm, gỡ "
-            "trì hoãn và nói không mà không hỏng quan hệ."
+            "Module này xuất phát từ nhận định rằng thời gian cố định ở 24 giờ mỗi ngày, nên đối tượng "
+            "quản lý thực chất là các lựa chọn, và thước đo cuối ngày là mục tiêu nào đã tiến lên chứ "
+            "không phải số việc đã làm. Bốn bài đi theo trình tự từ xác định việc cần làm đến thực hiện "
+            "việc đó. Bài 4.1 trình bày bốn thế hệ quản lý thời gian, trong đó thế hệ thứ tư gắn với giá "
+            "trị ở module 1, cùng mục tiêu SMART, mô hình 5A, kế hoạch ba cấp học kỳ, tuần và ngày, đồng thời "
+            "giới thiệu niềm tin vào năng lực bản thân (self-efficacy) và liên hệ nó với tư duy phát triển ở "
+            "bài 2.2; bài "
+            "4.2 phân biệt khẩn cấp với quan trọng bằng ma trận Eisenhower và mô tả bảy kẻ cắp thời gian; "
+            "bài 4.3 phân tích chi phí của đa nhiệm, khung giờ vàng, trì hoãn nhìn từ góc độ cảm xúc và "
+            "công thức từ chối một đề nghị; bài 4.4 giải thích sai lệch lập kế hoạch (planning fallacy) "
+            "và hướng dẫn ước lượng thời gian, dựng lịch theo sáu bước. Kỷ luật thời gian cá nhân cũng là "
+            "điều kiện để giữ cam kết với nhóm, như bài 9.1 sẽ dẫn lại."
         ),
         "lessons": [m4_l1.LESSON, m4_l2.LESSON, m4_l3.LESSON, m4_l4.LESSON],
     },
     5: {
         "title": "Module 5 · Giao tiếp hiệu quả",
         "description": (
-            "Thông điệp chỉ tồn tại ở dạng người kia hiểu. Ba bài: mô hình truyền thông hai chiều "
-            "cùng bốn loại nhiễu và cách xác nhận ý hiểu; phi ngôn ngữ, khoảng cách giao tiếp và "
-            "quy tắc 7–38–55 hay bị dùng sai; cuối cùng là chọn kênh và viết cho người đọc, kèm "
-            "công thức cho bốn tình huống khó nhất."
+            "Module này mở đầu nhóm kỹ năng quan hệ bằng giao tiếp, được xem là quá trình hai chiều trong "
+            "đó thông điệp chỉ có nghĩa ở dạng người nhận giải mã được. Bài 5.1 trình bày sáu thành phần "
+            "của quá trình giao tiếp, sự khác nhau giữa giao tiếp một chiều và hai chiều, bốn loại nhiễu "
+            "và ba kỹ thuật xác nhận ý hiểu; bài 5.2 xét các kênh phi ngôn ngữ, phạm vi áp dụng đúng của "
+            "quy tắc 7–38–55 và bốn vùng khoảng cách giao tiếp theo Hall; bài 5.3 bàn về việc chọn kênh "
+            "theo nội dung, cách viết email, công thức cho bốn tình huống khó là giao việc, nhận việc, "
+            "báo tin xấu và trả lời khiếu nại, cùng ranh giới giữa ứng xử quyết đoán, thụ động và hung "
+            "hăng. Khi phân tích cách quy tắc 7–38–55 bị dùng sai, bài 5.2 vận dụng lại cách đọc một con "
+            "số đã học ở module 3."
         ),
         "lessons": [m5_l1.LESSON, m5_l2.LESSON, m5_l3.LESSON],
     },
     6: {
         "title": "Module 6 · Kỹ năng lắng nghe",
         "description": (
-            "Nghe là chuyện của tai, lắng nghe là chuyện của sự chú ý có chủ đích. Ba bài: năm mức "
-            "độ lắng nghe và bốn mức phản hồi; bốn nhóm rào cản cùng năm thói quen làm hỏng việc "
-            "nghe; và bốn tình huống khó nhất — nghe cấp trên khi chưa hiểu, nghe người đang phàn "
-            "nàn, nghe người đang buồn, nghe người mình không đồng ý."
+            "Module này tiếp nối giao tiếp ở module 5 bằng việc xét vai trò của người nghe, với luận điểm "
+            "rằng nghe là hiện tượng sinh lý còn lắng nghe là hoạt động có chủ đích của sự chú ý. Bài 6.1 "
+            "phân biệt nghe với lắng nghe, trình bày năm mức độ lắng nghe từ phớt lờ đến lắng nghe thấu "
+            "cảm (empathic listening), bốn mức phản hồi, câu hỏi mở và khoảng dừng; bài 6.2 phân tích bốn "
+            "nhóm rào cản, năm thói quen làm hỏng việc nghe, ngôn ngữ cơ thể của người nghe và lý do lời "
+            "khuyên đưa ra quá sớm thường kém hiệu quả; bài 6.3 xét bốn tình huống khó là khi chưa hiểu ý "
+            "cấp trên, khi khách hàng phàn nàn, khi người đối diện đang buồn và khi hai bên bất đồng quan "
+            "điểm. Bài cuối dùng lại khái niệm tích cực độc hại của module 2 và nguyên tắc diễn đạt lại ý "
+            "đối phương trước khi phản bác đã trình bày ở module 3."
         ),
         "lessons": [m6_l1.LESSON, m6_l2.LESSON, m6_l3.LESSON],
     },
     7: {
         "title": "Module 7 · Thuyết trình hiệu quả",
         "description": (
-            "Bài thuyết trình hỏng phần lớn từ lúc soạn, không phải lúc nói. Ba bài đi theo đúng "
-            "trình tự làm việc: chọn một thông điệp và dựng cấu trúc cho đúng khán giả; thiết kế "
-            "slide làm chỗ dựa thị giác thay vì tài liệu để đọc; rồi tập, đứng nói và xử lý bốn sự "
-            "cố thường gặp."
+            "Module này trình bày thuyết trình như một quy trình gồm ba giai đoạn là soạn nội dung, thiết "
+            "kế hỗ trợ trực quan và thực hiện trước khán giả. Bài 7.1 phân biệt thông tin với thông điệp "
+            "(key message), đưa ra ba câu hỏi cần trả lời về khán giả, cấu trúc ba phần của một bài trình "
+            "bày, cách mở đầu trong 30 giây đầu và cách kết bài; bài 7.2 bàn về thiết kế slide, gồm quy "
+            "tắc về lượng chữ, cỡ chữ và kiểu chữ, cách dùng hình ảnh và biểu đồ, và cách trình bày đề "
+            "tài kỹ thuật cho khán giả ngoài ngành; bài 7.3 đề cập việc tập nói to có bấm giờ, giọng, mắt "
+            "và tư thế khi đứng nói, bốn sự cố thường gặp và cách làm việc với sự hồi hộp. Bài 7.2 dùng "
+            "lại cách nhận ra biểu đồ gây hiểu lầm ở bài 3.3, và cách luyện nói to ở bài 7.3 được dùng "
+            "lại khi chuẩn bị phỏng vấn ở module 10."
         ),
         "lessons": [m7_l1.LESSON, m7_l2.LESSON, m7_l3.LESSON],
     },
     8: {
         "title": "Module 8 · Nghệ thuật thuyết phục",
         "description": (
-            "Bảy nguyên tắc gây ảnh hưởng của Robert Cialdini, dạy theo hai chiều: dùng để thuyết "
-            "phục trung thực, và nhận ra khi chúng đang được dùng lên mình. Ba bài: ranh giới giữa "
-            "thuyết phục và thao túng cùng quy trình chuẩn bị; bốn nguyên tắc đáp trả, nhất quán, "
-            "số đông, thiện cảm; và ba nguyên tắc uy quyền, khan hiếm, đồng nhất kèm quy trình tự vệ "
-            "trước quảng cáo gấp gáp và lừa đảo trực tuyến."
+            "Module này dựa trên bảy nguyên tắc gây ảnh hưởng của Cialdini và được dạy theo hai chiều: "
+            "vận dụng để thuyết phục một cách trung thực, và nhận ra khi các nguyên tắc ấy đang được dùng "
+            "lên chính mình. Bài 8.1 đưa ra ba câu hỏi để phân biệt thuyết phục với thao túng, mô tả hai "
+            "đường mà người nghe xử lý thông điệp, quy trình năm bước chuẩn bị và cách chuyển tính năng "
+            "thành lợi ích; bài 8.2 trình bày bốn nguyên tắc đầu là đáp trả, cam kết và nhất quán, bằng "
+            "chứng xã hội và thiện cảm; bài 8.3 trình bày ba nguyên tắc còn lại là uy quyền, khan hiếm và "
+            "đồng nhất, các mẫu thiết kế đánh lừa trên ứng dụng và quy trình bốn bước tự vệ trước một lời "
+            "chào mời gấp gáp. Module vận dụng lại tư duy phản biện của module 3, chẳng hạn ở nhận định "
+            "rằng số đông đo mức lan truyền chứ không đo mức đúng."
         ),
         "lessons": [m8_l1.LESSON, m8_l2.LESSON, m8_l3.LESSON],
     },
     9: {
         "title": "Module 9 · Kỹ năng cá nhân trong làm việc nhóm",
         "description": (
-            "Phần của bạn trong nhóm — thứ bạn kiểm soát được kể cả khi không phải nhóm trưởng. Ba "
-            "bài: ba mô thức phụ thuộc – độc lập – tương thuộc cùng những hành vi nhỏ làm nên nhóm "
-            "chạy được; năm giai đoạn phát triển nhóm và các vai trò; và ba tình huống khó nhất — "
-            "xung đột, thành viên không giữ cam kết, buổi rút kinh nghiệm cuối dự án."
+            "Module này xét phần việc của cá nhân trong nhóm, tức những hành vi nằm trong vòng tròn ảnh "
+            "hưởng của người học (bài 1.2) kể cả khi không giữ vai trò trưởng nhóm. Bài 9.1 trình bày ba "
+            "mô thức phụ thuộc, độc lập và tương thuộc, các đặc trưng phân biệt nhóm với một tập hợp "
+            "người và những hành vi nhỏ giúp nhóm vận hành được; bài 9.2 giới thiệu mô hình năm giai đoạn "
+            "phát triển nhóm của Tuckman, lý do giai đoạn sóng gió khó tránh khỏi và các vai trò trong "
+            "nhóm; bài 9.3 phân tích năm kiểu phản ứng trước xung đột, cách xử lý tình huống thành viên "
+            "trễ hạn, thành viên im lặng và hai người bất đồng kéo dài, cùng cách tổ chức buổi rút kinh "
+            "nghiệm cuối dự án. Phần tự quản lý ở bài 9.1 dựa trên nội dung của module 1 và module 4, còn "
+            "các bài sau tiếp nối nhau theo diễn tiến của một nhóm."
         ),
         "lessons": [m9_l1.LESSON, m9_l2.LESSON, m9_l3.LESSON],
     },
     10: {
         "title": "Module 10 · Viết CV và phỏng vấn xin việc",
         "description": (
-            "Module khép khoá, đưa mọi thứ đã học vào một tình huống có thật: xin việc. Ba bài — CV "
-            "một trang viết cho người đọc lướt trong ba mươi giây; thư ứng tuyển, tìm hiểu công ty "
-            "và chuẩn bị câu chuyện theo cấu trúc STAR; và buổi phỏng vấn cùng những gì xảy ra sau "
-            "đó, kể cả khi bị từ chối."
+            "Module này khép khoá bằng một tình huống nghề nghiệp cụ thể là xin việc, nơi nhiều kỹ năng "
+            "đã học được vận dụng cùng lúc. Bài 10.1 trình bày cách nhà tuyển dụng đọc CV, cấu trúc một "
+            "trang, cách viết thành tựu có kết quả đo được và việc điều chỉnh CV cho từng vị trí; bài "
+            "10.2 phân biệt CV với thư ứng tuyển (cover letter), hướng dẫn tìm hiểu công ty và vị trí, "
+            "chuẩn bị ba tới năm câu chuyện theo cấu trúc STAR và phần hậu cần dễ bị bỏ quên; bài 10.3 đi "
+            "theo trình tự một buổi phỏng vấn, từ câu giới thiệu bản thân, các nhóm câu hỏi thường gặp và "
+            "câu hỏi hỏi lại nhà tuyển dụng, đến việc cần làm sau buổi phỏng vấn, kể cả khi bị từ chối. "
+            "Việc chuẩn bị và trình bày trong module này dùng lại kiến thức về phi ngôn ngữ ở bài 5.2 và "
+            "cách luyện nói ở bài 7.3."
         ),
         "lessons": [m10_l1.LESSON, m10_l2.LESSON, m10_l3.LESSON],
     },

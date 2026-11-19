@@ -2,51 +2,52 @@
 LESSON = {
     "title": "Bài 1.2 · Trọng tâm cuộc sống và vòng tròn ảnh hưởng",
     "durationMin": 45,
-    "description": "Bạn đang xoay quanh cái gì: công việc, tiền, một người, hay nguyên tắc — và hệ quả của mỗi lựa chọn. Hai vòng tròn của Covey, ba loại vấn đề và cách chuyển từ phản ứng sang chủ động bằng ngôn ngữ.",
+    "description": "Bài này trình bày khái niệm trọng tâm cuộc sống (công việc, tiền bạc, một người hay nguyên tắc) cùng hệ quả của mỗi lựa chọn, mô hình hai vòng tròn của Covey, ba loại vấn đề, và cách chuyển từ phản ứng sang chủ động thông qua ngôn ngữ.",
     "objectives": [
-        "Nhận ra được trọng tâm cuộc sống mình đang dựa vào và nêu được điểm yếu của trọng tâm ấy",
+        "Nhận diện được trọng tâm cuộc sống mình đang dựa vào và nêu được điểm yếu của trọng tâm ấy",
         "Giải thích được vì sao trọng tâm nguyên tắc bền hơn các trọng tâm còn lại",
-        "Phân loại được một vấn đề vào ba nhóm: kiểm soát trực tiếp, gián tiếp, không kiểm soát",
-        "Chuyển được một câu nói phản ứng thành câu nói chủ động tương ứng",
+        "Phân biệt được vòng tròn quan tâm với vòng tròn ảnh hưởng trong một tình huống cụ thể",
+        "Phân loại được một vấn đề vào ba nhóm: kiểm soát trực tiếp, kiểm soát gián tiếp, không kiểm soát",
+        "Chuyển đổi được một câu nói phản ứng thành câu nói chủ động tương ứng",
     ],
     "summary": [
-        "Trọng tâm cuộc sống là thứ bạn dựa vào để thấy an toàn và để ra quyết định; mọi trọng tâm nằm ngoài tầm kiểm soát đều có thể mất, và mất tới đâu thì bạn chông chênh tới đó.",
-        "Vòng tròn quan tâm chứa mọi thứ bạn để tâm; vòng tròn ảnh hưởng chỉ chứa phần bạn tác động được. Dồn sức vào phần ngoài làm phần trong co lại.",
-        "Chủ động không phải là hăng hái mà là khoảng dừng giữa việc xảy ra và cách bạn đáp lại — khoảng dừng ấy tập được.",
+        "Trọng tâm cuộc sống là thứ bạn dựa vào để thấy an toàn và để ra quyết định; mọi trọng tâm nằm ngoài tầm kiểm soát đều có thể mất, và mất tới đâu thì bạn mất ổn định tới đó.",
+        "Vòng tròn quan tâm chứa mọi thứ bạn để tâm; vòng tròn ảnh hưởng chỉ chứa phần bạn tác động được. Việc dồn sức vào phần ngoài làm phần trong thu hẹp lại.",
+        "Chủ động không phải là sự hăng hái mà là khoảng dừng giữa việc xảy ra và cách bạn đáp lại; khoảng dừng này có thể được luyện tập.",
         "Ba loại vấn đề cần ba cách xử lý khác nhau: đổi thói quen, đổi cách gây ảnh hưởng, hoặc đổi thái độ với thứ không đổi được.",
     ],
     "splitSections": True,
     "body": r"""
 ## Bạn đang xoay quanh cái gì
 
-Ai cũng có một thứ ở trung tâm — điểm tựa vô hình quyết định lúc phân vân thì mình nghiêng về đâu. Phần lớn người chưa bao giờ gọi tên nó, nhưng nó vẫn hoạt động: nó chọn hộ bạn khi hai việc tốt va nhau, và nó quyết định mức độ bạn chao đảo khi có biến cố.
+Mỗi người đều có một **trọng tâm cuộc sống**, tức điểm tựa vô hình quyết định việc mình nghiêng về phía nào khi phân vân. Nhiều người chưa bao giờ gọi tên nó, nhưng nó vẫn vận hành: nó chi phối lựa chọn khi hai việc tốt xung đột nhau và quyết định mức độ chao đảo của mỗi người khi có biến cố.
 
-Covey liệt kê nhiều trọng tâm thường gặp; bảng dưới rút gọn về những trọng tâm hay gặp nhất ở người trẻ Việt Nam, kèm dấu hiệu nhận ra và chỗ nó gãy.
+Covey (1989) liệt kê nhiều trọng tâm thường gặp. Bảng dưới đây rút gọn về những trọng tâm có thể gặp ở người trẻ Việt Nam, kèm dấu hiệu nhận biết và điểm yếu của từng trọng tâm.
 
 | Trọng tâm | Dấu hiệu nhận ra | Chỗ nó gãy |
 |---|---|---|
-| Công việc | Tự giới thiệu bằng chức danh; nghỉ phép thấy bứt rứt; hỏng việc là hỏng cả người | Mất việc, đổi ngành, hoặc chỉ cần một dự án thất bại là mất luôn giá trị bản thân |
-| Tiền bạc | Mọi quyết định quy về được bao nhiêu; khó từ chối việc trả cao dù trái nguyên tắc | Thu nhập là số so sánh được, luôn có người hơn; và khủng hoảng kinh tế thì không hỏi ý bạn |
-| Một người cụ thể | Tâm trạng lên xuống theo người ấy; ngại nói thật vì sợ mất lòng | Người ta có đời sống riêng, có thể đổi ý, có thể rời đi |
-| Bạn bè hoặc đối thủ | Chọn theo đám đông, hoặc chọn ngược lại chỉ để hơn một người | Cả hai đều để người khác cầm lái; hướng đi phụ thuộc vào người bạn so mình với |
-| Sở hữu, hình ảnh | Đo mình bằng thứ đang có và bằng cách người khác nhìn | Đồ vật cũ đi, hình ảnh phải nuôi liên tục; mệt và không bao giờ đủ |
-| Hưởng thụ | Ưu tiên việc dễ chịu ngay; hoãn thứ khó | Ngưỡng khoái cảm tăng dần; năng lực và quan hệ thì bào mòn dần |
-| Bản thân | Mọi việc quy về được mất của mình; khó thấy nhu cầu người khác | Tầm nhìn co lại quanh cái trước mắt; quan hệ mòn vì thiếu có đi có lại |
-| Nguyên tắc | Hỏi "điều đúng ở đây là gì" trước khi hỏi "tôi được gì" | Không ai lấy đi được; cái giá phải trả là đôi khi thiệt trước mắt |
+| Công việc | Người đó tự giới thiệu bằng chức danh, nghỉ phép thì thấy bất an và coi hỏng việc là hỏng cả con người mình. | Mất việc, đổi ngành hoặc chỉ một dự án thất bại cũng có thể khiến người đó mất cảm giác về giá trị bản thân. |
+| Tiền bạc | Mọi quyết định đều quy về câu hỏi được bao nhiêu, và người đó khó từ chối việc trả cao dù trái nguyên tắc. | Thu nhập là con số có thể so sánh nên luôn có người hơn, và khủng hoảng kinh tế nằm ngoài tầm kiểm soát của cá nhân. |
+| Một người cụ thể | Tâm trạng lên xuống theo người ấy và người đó ngại nói thật vì sợ mất lòng. | Mỗi người đều có đời sống riêng, có thể đổi ý hoặc rời đi. |
+| Bạn bè hoặc đối thủ | Người đó chọn theo đám đông, hoặc chọn ngược lại chỉ để hơn một người cụ thể. | Cả hai cách đều để người khác quyết định hướng đi, vì hướng đi phụ thuộc vào đối tượng mà bạn đem ra so sánh. |
+| Sở hữu, hình ảnh | Người đó đo giá trị bản thân bằng thứ đang có và bằng cách người khác nhìn mình. | Đồ vật cũ đi và hình ảnh phải được duy trì liên tục, nên trọng tâm này gây mệt mỏi và khó có điểm dừng. |
+| Hưởng thụ | Người đó ưu tiên việc dễ chịu ngay lập tức và trì hoãn việc khó. | Ngưỡng khoái cảm tăng dần trong khi năng lực và các mối quan hệ bị bào mòn dần. |
+| Bản thân | Mọi việc đều quy về được mất của riêng mình và người đó khó thấy nhu cầu của người khác. | Tầm nhìn co lại quanh cái trước mắt, và quan hệ mòn dần vì thiếu sự có đi có lại. |
+| Nguyên tắc | Người đó hỏi “điều đúng ở đây là gì” trước khi hỏi “tôi được gì”. | Trọng tâm này không bị người khác lấy đi, nhưng cái giá phải trả là đôi khi chịu thiệt trước mắt. |
 
 ![Stephen R. Covey đang diễn thuyết, cầm micro trên sân khấu](https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Stephen_Covey_2010.jpg/1280px-Stephen_Covey_2010.jpg "Stephen R. Covey (1932–2012), tác giả cuốn 7 thói quen của người thành đạt — nguồn của hai công cụ dùng trong bài này: trọng tâm cuộc sống và vòng tròn ảnh hưởng. Ảnh: [File:Stephen Covey 2010.jpg](https://commons.wikimedia.org/wiki/File:Stephen_Covey_2010.jpg), tác giả Abras2010, giấy phép CC BY 3.0.")
 
-> [!canh-bao] Một biến thể rất phổ biến của trọng tâm bạn bè hoặc đối thủ: lấy dòng thời gian trên mạng xã hội làm thước đo. Bạn cùng lớp khoe đỗ thực tập, người quen khoe đi trao đổi, một người bằng tuổi khoe thu nhập tháng đầu. Vấn đề không nằm ở việc so sánh — con người vẫn luôn so sánh — mà ở chỗ bạn đang so với một bản dựng đã cắt hết phần trượt, phần vay tiền, phần bỏ cuộc. Trọng tâm đặt vào đó thì hướng đi của bạn do thuật toán quyết định, chứ không do bạn.
+> [!canh-bao] Một biến thể phổ biến của trọng tâm bạn bè hoặc đối thủ là lấy dòng thời gian trên mạng xã hội làm thước đo. Bạn cùng lớp đăng tin đỗ thực tập, người quen đăng tin đi trao đổi, một người bằng tuổi đăng thu nhập tháng đầu tiên. Vấn đề không nằm ở việc so sánh, vì con người vốn thường so sánh, mà ở chỗ bạn đang so mình với một bản dựng đã lược bỏ các lần thất bại, vay mượn hay bỏ cuộc. Khi trọng tâm đặt vào đó, hướng đi của bạn có thể do thuật toán của nền tảng quyết định thay vì do chính bạn.
 
-> [!ghi-nho] Trọng tâm nguyên tắc được coi là lựa chọn bền nhất vì nguyên tắc không đổi theo hoàn cảnh, không phụ thuộc vào tâm trạng của ai, và không thể bị lấy mất. Mọi trọng tâm khác đều là thứ có thể mất — nên chúng chỉ chống đỡ được cho tới ngày mất.
+> [!ghi-nho] Theo Covey (1989), trọng tâm nguyên tắc là lựa chọn bền nhất vì nguyên tắc không đổi theo hoàn cảnh, không phụ thuộc vào tâm trạng của ai và không thể bị lấy mất. Mọi trọng tâm khác đều là thứ có thể mất, nên chúng chỉ làm điểm tựa được cho tới khi mất đi.
 
-Cần nói rõ một chuyện hay bị hiểu lệch: lấy nguyên tắc làm trọng tâm **không có nghĩa là coi nhẹ công việc, tiền bạc hay người thân**. Nó chỉ đổi thứ tự câu hỏi. Người lấy công việc làm trọng tâm hỏi "việc này ảnh hưởng sự nghiệp tôi thế nào" rồi mới hỏi tới đúng sai. Người lấy nguyên tắc làm trọng tâm hỏi ngược lại — và vì thế, khi hai câu trả lời mâu thuẫn, họ biết mình sẽ nghiêng về đâu trước khi cơn giằng xé bắt đầu.
+Cần làm rõ một điểm hay bị hiểu lệch: lấy nguyên tắc làm trọng tâm **không có nghĩa là coi nhẹ công việc, tiền bạc hay người thân**. Trọng tâm này chỉ đổi thứ tự của các câu hỏi. Người lấy công việc làm trọng tâm hỏi “việc này ảnh hưởng sự nghiệp tôi thế nào” rồi mới hỏi tới đúng sai. Người lấy nguyên tắc làm trọng tâm hỏi theo thứ tự ngược lại; vì vậy, khi hai câu trả lời mâu thuẫn, họ biết trước mình sẽ nghiêng về phía nào, ngay cả trước khi sự giằng xé bắt đầu.
 
-Cũng cần phân biệt **trọng tâm bản thân** với **lòng tự trọng**. Người tự trọng biết giới hạn của mình, biết từ chối, không cần người khác xác nhận liên tục. Người lấy bản thân làm trọng tâm đo mọi việc bằng được mất của riêng mình trong ngắn hạn — đó không phải độc lập, đó là một trọng tâm hẹp và dễ vỡ, vì đời sống thì luôn cần đi lại hai chiều.
+Cũng cần phân biệt **trọng tâm bản thân** với **lòng tự trọng**. Người tự trọng biết giới hạn của mình, biết từ chối và không cần người khác xác nhận liên tục. Người lấy bản thân làm trọng tâm đo mọi việc bằng được mất của riêng mình trong ngắn hạn. Điều này không phải là sự độc lập mà là một trọng tâm hẹp và dễ vỡ, vì đời sống xã hội luôn cần sự tương tác hai chiều.
 
 ## Hai vòng tròn
 
-Hình dưới đây là công cụ đơn giản nhất trong cả module này, và cũng là công cụ được dùng lại nhiều nhất ở các module sau.
+Mô hình hai vòng tròn của Covey (1989) gồm **vòng tròn quan tâm** (*circle of concern*) và **vòng tròn ảnh hưởng** (*circle of influence*). Đây là công cụ đơn giản nhất trong module này và cũng là công cụ được dùng lại nhiều nhất ở các module sau.
 
 ```html
 <div style="border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1.1rem;margin:1.2rem 0">
@@ -58,13 +59,13 @@ Hình dưới đây là công cụ đơn giản nhất trong cả module này, v
       <div style="font-size:1.05rem;line-height:1.7">giờ tôi ngủ · phần việc tôi nhận · cách tôi hỏi lại khi chưa rõ · chất lượng bản nháp tôi gửi · việc tôi có nhắn tin xin lỗi hay không · những gì tôi luyện trước buổi phỏng vấn</div>
     </div>
   </div>
-  <div style="font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.7rem;line-height:1.6">Năng lượng đổ vào vành ngoài không làm vành ngoài đổi, chỉ làm vòng trong co lại. Năng lượng đổ vào vòng trong làm chính vòng trong nở ra — người liên tục làm tốt phần mình được giao dần được giao phần lớn hơn.</div>
+  <div style="font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.7rem;line-height:1.6">Năng lượng đổ vào vành ngoài không làm vành ngoài đổi, chỉ làm vòng trong co lại. Năng lượng đổ vào vòng trong làm chính vòng trong nở ra: người liên tục làm tốt phần việc được giao thường dần được giao phần lớn hơn.</div>
 </div>
 ```
 
-Cơ chế của nó rất thẳng thắn. Thời gian và sức chú ý là hữu hạn: mỗi buổi tối dành cho việc bình luận về sự bất công của một quy chế là một buổi tối không dành cho việc chuẩn bị hồ sơ hay hỏi thẳng người có thẩm quyền. Càng ở lâu trong vòng ngoài, hai thứ càng lớn lên: cảm giác bất lực và thói quen quy trách nhiệm cho hoàn cảnh. Cả hai đều làm năng lực tác động thật sự teo đi.
+Cơ chế của mô hình khá đơn giản. Thời gian và sức chú ý là hữu hạn: mỗi buổi tối dành cho việc bình luận về sự bất công của một quy chế là một buổi tối không dành cho việc chuẩn bị hồ sơ hay hỏi thẳng người có thẩm quyền. Càng ở lâu trong vòng ngoài, hai yếu tố càng tăng lên: cảm giác bất lực và thói quen quy trách nhiệm cho hoàn cảnh. Cả hai đều có thể làm năng lực tác động thực sự suy giảm.
 
-> [!vi-du] Cùng một chuyện bực mình, ba bối cảnh khác nhau, phần nằm trong vòng ảnh hưởng cũng khác.
+> [!vi-du] Cùng là một chuyện gây bực mình, nhưng ở ba bối cảnh khác nhau thì phần nằm trong vòng ảnh hưởng cũng khác nhau.
 >
 > | Bối cảnh | Điều đang bực (vòng quan tâm) | Việc làm được ngay (vòng ảnh hưởng) |
 > |---|---|---|
@@ -72,15 +73,15 @@ Cơ chế của nó rất thẳng thắn. Thời gian và sức chú ý là hữ
 > | Câu lạc bộ có thành viên không làm việc | Bạn ấy vốn thiếu trách nhiệm | Hẹn nói riêng 10 phút, nêu đúng phần việc và hạn cụ thể; ghi lại phân công vào nhóm chat |
 > | Chỗ làm thêm đổi ca liên tục | Quản lý xếp ca tuỳ hứng | Gửi trước lịch bận cố định trong tuần; hỏi rõ quy tắc đổi ca và xác nhận bằng tin nhắn |
 
-Cần tránh hiểu sai thành thái độ vô cảm. Quan tâm tới những chuyện lớn mình không đổi được — bất bình đẳng, môi trường, chính sách — là điều nên có. Vấn đề chỉ nảy sinh khi **toàn bộ** năng lượng dừng ở mức bức xúc và không có mẩu nào chuyển thành hành động nằm trong tầm với: một lá thư gửi đúng nơi, một buổi tình nguyện, một lá phiếu, một thay đổi trong cách mình tiêu dùng.
+Mô hình này không nên bị hiểu thành thái độ vô cảm. Việc quan tâm tới những vấn đề lớn mà cá nhân không thể thay đổi, chẳng hạn bất bình đẳng, môi trường hay chính sách, là điều nên có. Vấn đề chỉ nảy sinh khi **toàn bộ** năng lượng dừng ở mức bức xúc và không có phần nào chuyển thành hành động nằm trong tầm với, như một lá thư gửi đúng nơi, một buổi tình nguyện, một lá phiếu hay một thay đổi trong cách tiêu dùng.
 
-> [!vi-du] Tối chủ nhật, Duy dành hai tiếng đọc một drama trên mạng về ngành mình sắp ra trường: lương thấp, thị trường bão hoà, ai cũng bảo học ngành này là sai lầm. Hai tiếng ấy nằm trọn ở vòng quan tâm và để lại đúng một thứ: cảm giác bế tắc. Cùng khoảng thời gian đó, phần nằm trong vòng ảnh hưởng có thể là: nhắn cho một anh khoá trên đang làm nghề để hỏi ba câu cụ thể, hoặc làm xong phần portfolio còn dang dở. Điều đáng chú ý: chuyện thị trường vẫn y nguyên trong cả hai kịch bản — chỉ có vị trí của Duy trong thị trường ấy là khác.
+> [!vi-du] Tối chủ nhật, Duy dành hai tiếng đọc một chuỗi bình luận trên mạng về ngành mình sắp ra trường: lương thấp, thị trường bão hoà, nhiều người cho rằng học ngành này là sai lầm. Hai tiếng ấy nằm trọn ở vòng quan tâm và để lại chủ yếu cảm giác bế tắc. Trong cùng khoảng thời gian đó, Duy có thể làm những việc nằm trong vòng ảnh hưởng, chẳng hạn nhắn cho một anh khoá trên đang làm nghề để hỏi ba câu cụ thể, hoặc hoàn thiện phần portfolio còn dang dở. Cần lưu ý rằng tình hình thị trường không đổi trong cả hai kịch bản; điều thay đổi là vị trí của Duy trong thị trường ấy.
 
-> [!vi-du] Nhóm của Linh gặp đủ thứ bất lợi: đề bài khó, phòng máy thiếu thiết bị, các thành viên chưa ăn khớp. Trong khi cả nhóm than về đề và về phòng máy — hai thứ nằm ở vành ngoài — Linh ôn lại phần mình còn yếu, nhắn tin phân công lại cho rõ, chuẩn bị tài liệu cho buổi họp sau. Ba việc ấy đều nằm trong vòng ảnh hưởng. Kết quả thường thấy: sau vài tuần, nhóm bắt đầu hỏi ý Linh trước khi quyết — vòng ảnh hưởng của bạn ấy vừa nở ra.
+> [!vi-du] Nhóm của Linh gặp nhiều bất lợi cùng lúc: đề bài khó, phòng máy thiếu thiết bị, các thành viên chưa phối hợp ăn khớp. Trong khi cả nhóm than phiền về đề bài và phòng máy, tức hai yếu tố nằm ở vành ngoài, Linh ôn lại phần mình còn yếu, nhắn tin phân công lại cho rõ và chuẩn bị tài liệu cho buổi họp sau. Ba việc ấy đều nằm trong vòng ảnh hưởng. Một kết quả có thể xảy ra là sau vài tuần, nhóm bắt đầu hỏi ý kiến Linh trước khi quyết định, nghĩa là vòng ảnh hưởng của bạn ấy đã mở rộng.
 
 ## Chủ động là khoảng dừng, không phải độ hăng hái
 
-Từ "chủ động" trong ngôn ngữ hằng ngày hay bị hiểu thành xông xáo, nhận nhiều việc, trả lời nhanh. Nghĩa gốc ở đây khác và hẹp hơn: giữa **kích thích** (việc xảy ra với bạn) và **phản ứng** (điều bạn làm), con người có một khoảng trống, và trong khoảng trống ấy bạn có quyền chọn. Người bị động để hoàn cảnh bấm nút; người chủ động dùng khoảng dừng đó.
+Trong ngôn ngữ hằng ngày, từ “chủ động” thường được hiểu là xông xáo, nhận nhiều việc, trả lời nhanh. Nghĩa được dùng trong bài này khác và hẹp hơn (Covey, 1989): giữa **kích thích** (*stimulus*, việc xảy ra với bạn) và **phản ứng** (*response*, điều bạn làm) có một khoảng trống, và trong khoảng trống ấy con người có quyền chọn. Người bị động để hoàn cảnh quyết định phản ứng của mình; người chủ động (*proactive*) sử dụng khoảng dừng đó.
 
 ![Viktor Frankl phát biểu tại Đại học San Diego năm 1972](https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Viktor_Frankl_USD_Alcal%C3%A1_1972.jpg/1280px-Viktor_Frankl_USD_Alcal%C3%A1_1972.jpg "Viktor Frankl (1905–1997), bác sĩ tâm thần người Áo, sống sót qua trại tập trung và viết Đi tìm lẽ sống. Ý niệm khoảng trống giữa kích thích và phản ứng — nơi con người còn quyền chọn — gắn với ông. Ảnh chụp tại Đại học San Diego, 1972: [File:Viktor Frankl USD Alcalá 1972.jpg](https://commons.wikimedia.org/wiki/File:Viktor_Frankl_USD_Alcal%C3%A1_1972.jpg), thuộc phạm vi công cộng.")
 
@@ -93,27 +94,27 @@ Từ "chủ động" trong ngôn ngữ hằng ngày hay bị hiểu thành xông
     <div style="align-self:center;font-weight:700;color:rgba(127,127,127,.95)">→</div>
     <div style="flex:1 1 8rem;background:rgba(59,130,246,.14);border-radius:.4rem;padding:.7rem .8rem"><b>Phản ứng</b><br><span style="font-size:1rem;opacity:.85">Nhắn lại gay gắt · im lặng giận · hoặc hỏi: chỗ nào chưa đạt, mình sửa phần nào trước</span></div>
   </div>
-  <div style="font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6">Người bị động đi thẳng từ ô một sang ô ba. Luyện tính chủ động là luyện việc nong rộng ô giữa — và cách rẻ nhất để nong nó là đặt một quy tắc cứng: tin nhắn khiến mình nóng mặt thì trả lời sau ba mươi phút, không trả lời ngay.</div>
+  <div style="font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6">Người bị động đi thẳng từ ô một sang ô ba. Luyện tính chủ động là luyện việc mở rộng ô giữa, và một cách đơn giản để làm điều đó là đặt một quy tắc cố định: tin nhắn khiến mình nóng mặt thì trả lời sau ba mươi phút, không trả lời ngay.</div>
 </div>
 ```
 
-Vì khoảng dừng là thứ bên trong, cách quan sát dễ nhất là qua **ngôn ngữ**. Câu chữ tiết lộ khá chính xác một người đang đứng ở đâu.
+Vì khoảng dừng diễn ra bên trong mỗi người, cách quan sát dễ nhất là qua **ngôn ngữ**. Câu chữ cho biết khá rõ một người đang ở trạng thái phản ứng hay chủ động.
 
 | Ngôn ngữ phản ứng | Ngôn ngữ chủ động | Khác biệt thật sự |
 |---|---|---|
-| "Chẳng làm gì được đâu" | "Thử xem còn cách nào khác" | Đóng hay mở khả năng tìm phương án |
-| "Tính tôi nó thế" | "Tôi có thể tập cách khác" | Coi hành vi là cố định hay là thứ tập được |
-| "Sếp làm tôi phát điên" | "Tôi đang để chuyện này chi phối mình" | Trao quyền cho người khác hay giữ lại quyền chọn cảm xúc |
-| "Tôi buộc phải làm" | "Tôi chọn làm, vì tôi muốn giữ …" | Che giấu hay nhìn thẳng vào cái giá của lựa chọn |
-| "Giá mà nhóm có người giỏi hơn" | "Tôi sẽ làm rõ phần việc của từng người" | Chờ hoàn cảnh đổi hay tác động vào phần mình nắm |
+| “Chẳng làm gì được đâu” | “Thử xem còn cách nào khác” | Đóng hay mở khả năng tìm phương án |
+| “Tính tôi nó thế” | “Tôi có thể tập cách khác” | Coi hành vi là cố định hay là thứ tập được |
+| “Sếp làm tôi phát điên” | “Tôi đang để chuyện này chi phối mình” | Trao quyền cho người khác hay giữ lại quyền chọn cảm xúc |
+| “Tôi buộc phải làm” | “Tôi chọn làm, vì tôi muốn giữ …” | Che giấu hay nhìn thẳng vào cái giá của lựa chọn |
+| “Giá mà nhóm có người giỏi hơn” | “Tôi sẽ làm rõ phần việc của từng người” | Chờ hoàn cảnh đổi hay tác động vào phần mình nắm |
 
-Bảng này không phải trò chơi chữ. Nói "tôi buộc phải nhận việc này" khiến bạn thấy mình là nạn nhân và bỏ luôn việc xem xét các phương án; nói "tôi chọn nhận việc này để giữ quan hệ với nhóm và vì tôi cần kinh nghiệm" buộc bạn nhìn thấy mình đang đổi cái gì lấy cái gì — và có thể quyết định khác đi vào lần sau.
+Sự khác biệt trong bảng không phải là trò chơi chữ. Nói “tôi buộc phải nhận việc này” dễ khiến người nói thấy mình là nạn nhân và bỏ qua việc xem xét các phương án; ngược lại, nói “tôi chọn nhận việc này để giữ quan hệ với nhóm và vì tôi cần kinh nghiệm” buộc người nói nhìn thấy mình đang đánh đổi điều gì lấy điều gì, và nhờ đó có thể quyết định khác đi vào lần sau.
 
 > [!canh-bao] Ngôn ngữ chủ động không phải là tự đổ lỗi cho mình trong mọi tình huống. Có những việc thật sự do người khác gây ra, và gọi tên đúng trách nhiệm của họ là điều lành mạnh. Chủ động chỉ nói về phần còn lại: sau khi việc đã xảy ra, bạn định làm gì với phần mình đang nắm.
 
 ## Ba loại vấn đề, ba cách xử lý
 
-Không phải vấn đề nào cũng xử lý theo một kiểu. Phân loại trước khi hành động tránh được hai lỗi phổ biến: cố sức đổi thứ không đổi được, và bỏ mặc thứ lẽ ra đổi được.
+Không phải vấn đề nào cũng được xử lý theo cùng một cách. Việc phân loại trước khi hành động giúp tránh hai lỗi phổ biến: cố sức đổi thứ không thể đổi, và bỏ mặc thứ lẽ ra có thể đổi.
 
 | Loại vấn đề | Nhận ra bằng | Cách xử lý | Ví dụ |
 |---|---|---|---|
@@ -121,11 +122,11 @@ Không phải vấn đề nào cũng xử lý theo một kiểu. Phân loại tr
 | Kiểm soát gián tiếp | Phụ thuộc hành vi người khác | Đổi cách gây ảnh hưởng: hỏi, thương lượng, làm gương, đưa bằng chứng | Bạn cùng nhóm không nộp phần việc; giảng viên chưa rõ tiêu chí chấm |
 | Không kiểm soát | Đã xảy ra, hoặc ngoài tầm với | Đổi thái độ và chuẩn bị: chấp nhận, rút bài học, dựng phương án dự phòng | Điểm đã công bố; chính sách tuyển dụng của công ty; thời tiết ngày thi |
 
-> [!vi-du] Huy làm thêm ở quán cà phê, bị trừ lương vì đi trễ ba lần trong tháng. Ba mảnh của chuyện này rơi vào ba loại khác nhau: **đi trễ** là kiểm soát trực tiếp — đặt báo thức sớm hơn hai mươi phút và đổi tuyến xe; **quy định trừ lương không được nói rõ từ đầu** là kiểm soát gián tiếp — hỏi quản lý cho xem bảng quy định và xác nhận lại bằng tin nhắn; **mức lương theo giờ của quán** là không kiểm soát — hoặc chấp nhận, hoặc chuẩn bị tìm chỗ khác, chứ bực bội hằng ngày thì không đổi được đồng nào.
+> [!vi-du] Huy làm thêm ở quán cà phê, bị trừ lương vì đi trễ ba lần trong tháng. Ba phần của chuyện này rơi vào ba loại khác nhau: **đi trễ** là kiểm soát trực tiếp, nên Huy có thể đặt báo thức sớm hơn hai mươi phút và đổi tuyến xe; **quy định trừ lương không được nói rõ từ đầu** là kiểm soát gián tiếp, nên Huy có thể hỏi quản lý cho xem bảng quy định và xác nhận lại bằng tin nhắn; **mức lương theo giờ của quán** là không kiểm soát, nên Huy chỉ có thể chấp nhận hoặc chuẩn bị tìm nơi khác, vì sự bực bội hằng ngày không làm thay đổi mức lương.
 
-Sai lầm hay gặp nhất là xử lý vấn đề loại hai bằng công cụ của loại ba: thấy bạn cùng nhóm không làm việc thì kết luận "cậu ấy vốn thế" rồi im lặng chịu đựng, trong khi phần lớn tình huống loại này chỉ cần một cuộc nói chuyện thẳng, sớm và cụ thể. Sai lầm ngược lại cũng tốn kém: dồn nhiều tuần bực bội vào một quyết định đã ban hành thay vì dùng chừng ấy thời gian dựng phương án B.
+Một sai lầm thường gặp là xử lý vấn đề loại hai bằng công cụ của loại ba: thấy bạn cùng nhóm không làm việc thì kết luận “cậu ấy vốn thế” rồi im lặng chịu đựng, trong khi nhiều tình huống thuộc loại này có thể được cải thiện bằng một cuộc nói chuyện thẳng, sớm và cụ thể. Sai lầm ngược lại cũng tốn kém: dồn nhiều tuần bực bội vào một quyết định đã ban hành thay vì dùng chừng ấy thời gian để dựng phương án dự phòng.
 
-> [!meo] Khi bị mắc kẹt, vẽ ba cột lên giấy và ném từng mảnh của vấn đề vào đúng cột. Riêng cột ba, viết thêm một dòng: "phần tôi vẫn còn quyết được ở đây là gì" — hầu như không có tình huống nào cột ấy trống hoàn toàn.
+> [!meo] Khi bị mắc kẹt, bạn có thể vẽ ba cột lên giấy và xếp từng phần của vấn đề vào đúng cột. Ở cột ba, nên viết thêm một dòng: “phần tôi vẫn còn quyết định được ở đây là gì”; hiếm khi có tình huống mà cột này hoàn toàn trống.
 
 ## Luyện tập và tài liệu tham khảo
 
@@ -135,21 +136,21 @@ Chọn một chuyện đang khiến bạn khó chịu trong hai tuần gần đ�
 
 ### Nhóm 3–4 người (25 phút)
 
-Mỗi người kể một tình huống trong 90 giây, cố ý dùng ngôn ngữ phản ứng như thói quen thường ngày. Nhóm ghi lại các câu phản ứng nghe được, rồi cùng viết lại thành ngôn ngữ chủ động — yêu cầu: bản viết lại phải giữ nguyên sự thật, không được biến việc người khác gây ra thành lỗi của người kể. Cuối buổi, mỗi nhóm chọn một cặp câu trước–sau rõ nhất và giải thích bản viết lại mở ra hành động nào mà bản gốc đóng lại.
+Mỗi người kể một tình huống trong 90 giây, cố ý dùng ngôn ngữ phản ứng như thói quen thường ngày. Nhóm ghi lại các câu phản ứng nghe được, rồi cùng viết lại thành ngôn ngữ chủ động, với yêu cầu: bản viết lại phải giữ nguyên sự thật, không được biến việc người khác gây ra thành lỗi của người kể. Cuối buổi, mỗi nhóm chọn một cặp câu trước và sau khi viết lại rõ nhất và giải thích bản viết lại mở ra hành động nào mà bản gốc đóng lại.
 
 ### Bài tập về nhà (45–60 phút)
 
-Theo dõi bảy ngày. Mỗi tối ghi một dòng: hôm nay tôi đã tiêu nhiều năng lượng nhất vào vòng nào, vì việc gì. Cuối tuần viết nửa trang: (a) tỉ lệ ước lượng giữa hai vòng; (b) một việc thuộc loại "kiểm soát gián tiếp" bạn đã né tránh và câu mở đầu cụ thể bạn sẽ dùng để nói chuyện với người liên quan; (c) một việc thuộc loại "không kiểm soát" bạn quyết định thôi mang theo, kèm phương án dự phòng nếu điều xấu ấy xảy ra thật.
+Theo dõi bảy ngày. Mỗi tối ghi một dòng: hôm nay tôi đã tiêu nhiều năng lượng nhất vào vòng nào, vì việc gì. Cuối tuần viết nửa trang: (a) tỉ lệ ước lượng giữa hai vòng; (b) một việc thuộc loại “kiểm soát gián tiếp” bạn đã né tránh và câu mở đầu cụ thể bạn sẽ dùng để nói chuyện với người liên quan; (c) một việc thuộc loại “không kiểm soát” bạn quyết định thôi mang theo, kèm phương án dự phòng nếu điều xấu ấy xảy ra thật.
 
 ### Xem thêm
 
 - 🎬 [Circle of Influence — The 7 Habits of Highly Effective People](https://www.youtube.com/watch?v=tTjgvIh2Gxg) — FranklinCovey, 3 phút. Bản giải thích ngắn của chính tổ chức giữ bản quyền nội dung 7 thói quen.
-- 🎬 [Habit 1: Be Proactive — Circle of Influence](https://www.youtube.com/watch?v=5SMxQ18ojs4) — FranklinCovey, 3 phút. Minh hoạ việc vòng ảnh hưởng nở ra hay co lại tuỳ chỗ ta đổ năng lượng.
+- 🎬 [Habit 1: Be Proactive — Circle of Influence](https://www.youtube.com/watch?v=5SMxQ18ojs4) — FranklinCovey, 3 phút. Minh hoạ việc vòng ảnh hưởng nở ra hay co lại tuỳ chỗ chúng ta đổ năng lượng.
 - 🎬 [How to Disagree Productively and Find Common Ground](https://www.youtube.com/watch?v=phgjouv0BUA) — Julia Dhar, TED, 14 phút. Cách nói khác đi khi bất đồng — công cụ thực hành cho phần ngôn ngữ chủ động.
 
 ### Nguồn tham khảo
 
-- Covey, S. R. (1989). *The 7 Habits of Highly Effective People*, chương "Be Proactive" và "Principle-Centered Living." New York: Free Press.
+- Covey, S. R. (1989). *The 7 Habits of Highly Effective People*, chương “Be Proactive” và “Principle-Centered Living.” New York: Free Press.
 - Frankl, V. E. (1946/2006). *Man's Search for Meaning.* Boston: Beacon Press — nguồn của ý niệm khoảng trống giữa kích thích và phản ứng.
 - Rotter, J. B. (1966). Generalized expectancies for internal versus external control of reinforcement. *Psychological Monographs*, 80(1), 1–28.
 - Bandura, A. (1997). *Self-Efficacy: The Exercise of Control.* New York: W. H. Freeman.
@@ -175,7 +176,7 @@ Theo dõi bảy ngày. Mỗi tối ghi một dòng: hôm nay tôi đã tiêu nhi
                 "key": "1.2-linh-nhom-du-an",
                 "type": "mcq",
                 "prompt": "Nhóm của Linh gặp khó: đề khó, phòng máy thiếu thiết bị, thành viên chưa phối hợp. Trong khi các bạn than về đề và phòng máy, Linh ôn lại phần mình còn yếu, nhắn tin phân công lại cho rõ và chuẩn bị tài liệu cho buổi họp sau. Linh đang tập trung nỗ lực vào phạm vi nào?",
-                "explanation": "Ba việc Linh làm đều nằm trong phần bạn ấy tác động được — năng lực bản thân, cách phân công, khâu chuẩn bị — tức là vòng tròn ảnh hưởng.",
+                "explanation": "Ba việc Linh làm đều nằm trong phần bạn ấy tác động được (năng lực bản thân, cách phân công, khâu chuẩn bị), tức là vòng tròn ảnh hưởng.",
                 "points": 2,
                 "options": [
                     {"label": "Vòng tròn ảnh hưởng — phần Linh tác động được bằng hành vi của chính mình", "isCorrect": True},

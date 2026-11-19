@@ -1,86 +1,87 @@
 # -*- coding: utf-8 -*-
 LESSON = {
-    "title": "Bài 7.3 · Trình bày và xử lý tình huống",
+    "title": "Bài 7.3 · Thuyết trình và xử lý tình huống",
     "durationMin": 50,
-    "description": "Vì sao phải tập nói to trước; giọng, mắt và cơ thể khi đứng nói; xử lý bốn sự cố thường gặp; và cách làm việc với sự hồi hộp thay vì cố dẹp nó.",
+    "description": "Bài học giải thích vì sao cần tập nói to trước khi thuyết trình, cách điều chỉnh giọng, mắt và cơ thể khi đứng nói, cách xử lý bốn sự cố thường gặp và cách làm việc với sự hồi hộp thay vì cố loại bỏ nó.",
     "objectives": [
-        "Thiết kế được một buổi tập có bấm giờ và biết cần sửa gì sau khi tập",
-        "Điều chỉnh được giao tiếp bằng mắt, giọng và tư thế khi đứng trước người nghe",
-        "Xử lý được bốn sự cố: hỏng thiết bị, câu hỏi khó, quá giờ, khán giả mất tập trung",
-        "Áp dụng được ít nhất một cách làm việc với sự hồi hộp có cơ sở",
+        "Thiết kế được một buổi tập có bấm giờ và xác định được những điểm cần sửa sau khi tập",
+        "Điều chỉnh được giao tiếp bằng mắt, giọng nói và tư thế khi đứng trước khán giả",
+        "Lựa chọn được cách xử lý cho bốn sự cố gồm hỏng thiết bị, câu hỏi khó, quá giờ và khán giả mất tập trung",
+        "Áp dụng được ít nhất một cách làm việc với sự hồi hộp trước khi nói",
     ],
     "summary": [
-        "Chỉ khi nói thành tiếng có bấm giờ mới lộ ra ba lỗi: ý nhảy, hụt hơi và quá thời lượng; đọc thầm không phát hiện được cái nào.",
-        "Giao tiếp bằng mắt là kênh phản hồi: nó cho bạn biết người nghe còn theo kịp hay đã trôi đi, để điều chỉnh ngay.",
-        "Hỏng thiết bị thì bài nói vẫn phải chạy được — chuẩn bị trước phương án không slide là chuyện của lúc soạn, không phải lúc sự cố.",
-        "Bị hỏi khó mà không biết thì nói thẳng là chưa nắm phần đó kèm cam kết phản hồi; quá giờ thì bỏ phần giữa chứ đừng bóp phần kết.",
+        "Nói to trọn bài có bấm giờ giúp phát hiện ba vấn đề là ý bị nhảy, câu dài gây hụt hơi và bài quá thời lượng, những vấn đề mà việc đọc thầm khó bộc lộ.",
+        "Giao tiếp bằng mắt là kênh phản hồi giúp người trình bày biết khán giả còn theo kịp hay không để điều chỉnh ngay trong lúc nói.",
+        "Khi thiết bị hỏng, bài nói vẫn cần tiếp tục được; vì vậy phương án nói không slide phải được chuẩn bị từ giai đoạn soạn bài chứ không phải đợi tới lúc xảy ra sự cố.",
+        "Khi gặp câu hỏi khó mà chưa biết câu trả lời, người trình bày nói rõ phần mình chưa nắm và cam kết trả lời sau; khi quá giờ, người trình bày bỏ bớt phần giữa chứ không rút ngắn phần kết.",
+        "Sự hồi hộp là phản ứng bình thường; có thể làm việc với nó bằng cách đánh giá lại cảm giác, điều chỉnh nhịp thở và thuộc chắc phần mở đầu thay vì cố xoá bỏ nó.",
     ],
     "splitSections": True,
     "body": r"""
-Bài nói tồn tại hai lần: lần bạn soạn và lần bạn đứng nói. Bài này về lần thứ hai — nơi mọi thứ chuẩn bị kỹ vẫn có thể trượt vì một cái máy chiếu.
+Một bài nói được hình thành qua hai giai đoạn: giai đoạn soạn và giai đoạn đứng nói trước khán giả. Bài này tập trung vào giai đoạn thứ hai, nơi một bài nói được chuẩn bị kỹ vẫn có thể gặp sự cố, chẳng hạn do hỏng máy chiếu.
 
 ## Tập trước: vì sao không bỏ được
 
-"Nắm nội dung rồi, khỏi tập" là câu nói trước gần như mọi bài thuyết trình hỏng. Tập nói to có bấm giờ phát hiện ba thứ mà đọc thầm **không bao giờ** lộ ra:
+Nhiều người nghĩ rằng “nắm nội dung rồi thì khỏi cần tập”. Tuy nhiên, việc tập nói to có bấm giờ giúp phát hiện ba vấn đề mà đọc thầm **khó** bộc lộ.
 
-- **Chỗ ý nhảy.** Trong đầu, hai ý nối liền mạch; nói ra thành tiếng mới thấy thiếu một câu chuyển.
-- **Chỗ hụt hơi và líu lưỡi.** Câu dài viết đọc thì ổn, nói thì đứt quãng — sửa bằng cách chẻ câu.
-- **Thời lượng thật.** Người mới hầu như luôn ước lượng thiếu; bài mười lăm phút trong đầu thường thành hai mươi hai phút khi nói.
+- **Chỗ ý nhảy.** Trong đầu, hai ý có vẻ nối liền mạch, nhưng khi nói thành tiếng mới thấy còn thiếu một câu chuyển ý.
+- **Chỗ hụt hơi và líu lưỡi.** Câu dài khi đọc thầm thì ổn nhưng khi nói lại bị đứt quãng, và có thể khắc phục bằng cách tách thành các câu ngắn hơn.
+- **Thời lượng thật.** Người mới bắt đầu thường ước lượng thời lượng thiếu; chẳng hạn, một bài được ước lượng mười lăm phút trong đầu có thể kéo dài hai mươi hai phút khi nói thành tiếng.
 
-Cách tập tối thiểu: **một lần nói to trọn bài có bấm giờ**, không dừng lại sửa giữa chừng; ghi lại chỗ vướng rồi mới sửa. Thêm được thì tập lần hai trước một người nghe thật và hỏi họ đúng một câu: "cậu nhớ được điều gì?" — nếu câu trả lời không phải thông điệp của bạn, vấn đề nằm ở bài chứ không ở người nghe.
+Cách tập tối thiểu là **nói to trọn bài một lần có bấm giờ**, không dừng lại sửa giữa chừng, rồi ghi lại các chỗ vướng và chỉnh sửa sau. Nếu có điều kiện, bạn nên tập lần hai trước một người nghe thật và hỏi họ đúng một câu: “Cậu nhớ được điều gì?”. Nếu câu trả lời không phải là thông điệp của bạn, vấn đề nhiều khả năng nằm ở bài nói chứ không ở người nghe.
 
 ## Giọng, mắt và cơ thể
 
-**Mắt.** Giao tiếp bằng mắt không phải phép lịch sự — nó là **kênh phản hồi**: bạn đọc được người nghe còn theo kịp hay đã trôi, để chậm lại, nhắc lại hoặc bỏ bớt. Cách làm được ngay: chia phòng thành ba vùng, mỗi ý dừng mắt ở một vùng vài giây, đừng lia mắt liên tục và đừng dán mắt vào màn hình.
+**Mắt.** Giao tiếp bằng mắt (*eye contact*) không chỉ là phép lịch sự mà còn là **kênh phản hồi** (xem bài 5.1): qua đó bạn nhận biết khán giả còn theo kịp hay đã mất tập trung, để chậm lại, nhắc lại hoặc bỏ bớt nội dung. Cách thực hiện đơn giản là chia phòng thành ba vùng, mỗi ý dừng mắt ở một vùng trong vài giây, tránh lia mắt liên tục và tránh dán mắt vào màn hình.
 
-**Giọng.** Bốn thứ điều chỉnh được: âm lượng (đủ tới hàng cuối), tốc độ (chậm lại ở câu quan trọng), cao độ (đừng để câu nào cũng lên giọng ở cuối), và **khoảng lặng**. Khoảng lặng hai giây trước một con số quan trọng có tác dụng hơn bất kỳ hiệu ứng slide nào.
+**Giọng.** Có bốn yếu tố có thể điều chỉnh: âm lượng (đủ để người ở hàng cuối nghe được), tốc độ (chậm lại ở câu quan trọng), cao độ (tránh lên giọng ở cuối mọi câu) và **khoảng lặng**. Một khoảng lặng hai giây trước một con số quan trọng thường có tác dụng nhấn mạnh tốt hơn hiệu ứng slide.
 
-**Cơ thể.** Đứng vững hai chân, tay để tự nhiên hoặc dùng để nhấn ý — không ôm khư khư tờ giấy, không cầm bút bấm lách cách. Di chuyển thì di chuyển có chủ đích, ở chỗ chuyển ý, rồi dừng lại.
+**Cơ thể.** Người trình bày nên đứng vững bằng hai chân, để tay tự nhiên hoặc dùng tay để nhấn ý, không ôm chặt tờ giấy và không bấm bút liên tục. Nếu di chuyển thì nên di chuyển có chủ đích ở chỗ chuyển ý, rồi dừng lại.
 
-> [!meo] Nếu tay không biết để đâu: cầm một vật nhỏ (bút chỉ, remote) là được, nhưng đừng bấm liên tục. Đó là tiếng ồn duy nhất mà khán giả nhớ rõ hơn nội dung của bạn.
+> [!meo] Nếu không biết để tay ở đâu, bạn có thể cầm một vật nhỏ như bút chỉ hoặc thiết bị chuyển slide, nhưng không nên bấm liên tục. Tiếng bấm lặp lại có thể trở thành điều khán giả nhớ rõ hơn cả nội dung bài nói.
 
 ## Bốn sự cố thường gặp
 
 | Sự cố | Việc nên làm | Việc nên tránh |
 |---|---|---|
-| Máy chiếu hoặc file hỏng | Giữ bình tĩnh, báo ngắn gọn, **tiếp tục nói theo dàn ý đã thuộc**; nhờ người hỗ trợ kỹ thuật xử lý song song | Đứng im chờ, xin lỗi lê thê, hoặc huỷ buổi nói |
-| Câu hỏi khó không có sẵn câu trả lời | Ghi nhận câu hỏi, nói thẳng phần mình chưa nắm, cam kết tìm hiểu và phản hồi kèm mốc; trả lời phần mình có cơ sở | Chế câu trả lời, hoặc lảng sang chuyện khác |
-| Nhận ra đang quá giờ | **Bỏ bớt phần giữa**, giữ nguyên phần kết; nói rõ "phần chi tiết em để trong tài liệu gửi kèm" | Nói nhanh gấp đôi để chạy hết slide |
-| Khán giả mất tập trung | Đổi nhịp: đặt một câu hỏi, chuyển sang ví dụ cụ thể, hoặc dừng vài giây | Tăng âm lượng và nói tiếp như cũ |
+| Máy chiếu hoặc file hỏng | Giữ bình tĩnh, báo ngắn gọn, **tiếp tục nói theo dàn ý đã thuộc** và nhờ người hỗ trợ kỹ thuật xử lý song song. | Đứng im chờ, xin lỗi dài dòng hoặc huỷ buổi nói. |
+| Câu hỏi khó không có sẵn câu trả lời | Ghi nhận câu hỏi, nói thẳng phần mình chưa nắm, cam kết tìm hiểu và trả lời kèm mốc thời gian, đồng thời trả lời phần mình có cơ sở. | Bịa câu trả lời hoặc lảng sang chuyện khác. |
+| Nhận ra đang quá giờ | **Bỏ bớt phần giữa**, giữ nguyên phần kết, và nói rõ “phần chi tiết em để trong tài liệu gửi kèm”. | Nói nhanh gấp đôi để chạy hết slide. |
+| Khán giả mất tập trung | Đổi nhịp bằng cách đặt một câu hỏi, chuyển sang ví dụ cụ thể hoặc dừng vài giây. | Tăng âm lượng và nói tiếp như cũ. |
 
-Sự cố thiết bị là loại **chuẩn bị được từ trước**: mang bản sao file ở hai nơi, nhớ được ba ý chính không cần nhìn slide, và luôn có phương án nói không slide trong 5 phút. Đây là việc của lúc soạn bài, không phải của lúc đứng trên bục.
+Sự cố thiết bị là loại sự cố **có thể chuẩn bị từ trước**: bạn mang bản sao tệp ở hai nơi, nhớ được ba ý chính mà không cần nhìn slide, và luôn có phương án nói không slide trong 5 phút. Những việc này thuộc về giai đoạn soạn bài chứ không phải giai đoạn đứng trên bục.
 
-> [!vi-du] Một khán giả hỏi "cỡ mẫu 412 của bạn có đại diện cho toàn trường không?" và bạn chưa tính phần đó. Bản chế: nói bừa một tỉ lệ — người hỏi thường là người biết, và uy tín mất trong ba giây. Bản dùng được: "Em chưa kiểm phần đại diện theo khoa, đây là hạn chế của khảo sát. Em sẽ đối chiếu cơ cấu mẫu với số liệu phòng đào tạo và gửi lại trong tuần này." Câu này vừa trung thực, vừa cho thấy bạn hiểu tiêu chuẩn đánh giá — thường được đánh giá cao hơn một câu trả lời trơn tru.
+> [!vi-du] Giả sử một khán giả hỏi “cỡ mẫu 412 của bạn có đại diện cho toàn trường không?” và bạn chưa tính phần đó. Cách ứng xử không phù hợp là nói bừa một tỉ lệ, vì người đặt câu hỏi thường là người hiểu vấn đề và uy tín của bạn có thể mất rất nhanh. Cách ứng xử phù hợp hơn là trả lời: “Em chưa kiểm phần đại diện theo khoa, đây là hạn chế của khảo sát. Em sẽ đối chiếu cơ cấu mẫu với số liệu phòng đào tạo và gửi lại trong tuần này.” Câu trả lời này vừa trung thực, vừa cho thấy bạn hiểu tiêu chuẩn đánh giá, và nhiều khả năng được đánh giá cao hơn một câu trả lời trơn tru nhưng thiếu căn cứ.
 
 ## Làm việc với sự hồi hộp
 
-Hồi hộp trước khi nói là phản ứng sinh lý bình thường, và nó **không biến mất bằng cách tự nhủ bình tĩnh**. Ba cách có cơ sở hơn:
+Hồi hộp trước khi nói (*public speaking anxiety*, tức lo âu khi nói trước đám đông) là phản ứng sinh lý bình thường (Bodie, 2010), và nó nhiều khả năng **không biến mất chỉ bằng cách tự nhủ phải bình tĩnh**. Có ba cách tiếp cận có thể áp dụng, trong đó cách thứ nhất dựa trên nghiên cứu thực nghiệm về việc đánh giá lại lo âu thành hào hứng (Brooks, 2014).
 
-- **Đổi nhãn cho cảm giác.** Cảm giác tim đập nhanh, tay run là trạng thái kích hoạt; nó gần giống hào hứng hơn là sợ hãi. Tự nói "mình đang hào hứng" tỏ ra hiệu quả hơn "mình phải bình tĩnh", vì nó không đòi cơ thể làm điều ngược lại với những gì đang xảy ra.
-- **Thở ra dài hơn hít vào** trong một phút trước khi lên. Nhịp thở là thứ can thiệp được ngay, khác với nhịp tim.
-- **Thuộc chắc ba mươi giây đầu.** Phần lớn hồi hộp tập trung ở lúc mở miệng câu đầu tiên. Khi câu đầu chạy trơn, phần còn lại tự xuống nhịp.
+- **Đổi nhãn cho cảm giác** (*reappraisal*). Tim đập nhanh và tay run là biểu hiện của trạng thái cơ thể được kích hoạt, và trạng thái này tương tự nhau cả khi hào hứng lẫn khi lo sợ. Nghiên cứu này cho thấy việc tự nói “mình đang hào hứng” nhiều khả năng hiệu quả hơn việc tự nhủ “mình phải bình tĩnh”, vì cách này không đòi hỏi cơ thể làm điều ngược với những gì đang diễn ra.
+- **Thở ra dài hơn hít vào** trong khoảng một phút trước khi lên thuyết trình. Nhịp thở là yếu tố có thể can thiệp trực tiếp, khác với nhịp tim.
+- **Thuộc chắc ba mươi giây đầu.** Sự hồi hộp thường tập trung ở lúc bắt đầu câu đầu tiên. Khi phần mở đầu trôi chảy, phần còn lại thường dễ kiểm soát hơn.
 
-> [!canh-bao] Đừng chữa hồi hộp bằng cách viết toàn bộ bài ra rồi đọc. Nó giảm lo trong hai phút đầu và làm hỏng cả bài: giọng thành đều đều, mắt không rời giấy, và mọi kênh phản hồi bị đóng lại.
+> [!canh-bao] Không nên xử lý sự hồi hộp bằng cách viết toàn bộ bài ra rồi đọc. Cách này có thể giảm lo lắng trong vài phút đầu nhưng làm giảm chất lượng bài nói: giọng trở nên đều đều, mắt không rời tờ giấy và các kênh phản hồi từ khán giả bị bỏ qua.
 
 ## Luyện tập và tài liệu tham khảo
 
 ### Cá nhân (20 phút)
 
-Tập nói to trọn bài một lần, bấm giờ, quay lại bằng điện thoại. Xem lại và ghi ba cột: chỗ ý nhảy, chỗ câu quá dài phải chẻ, và thời lượng thật so với thời lượng cho phép. Sửa bài theo đúng ba cột đó — không sửa những thứ khác ở lượt này.
+Hãy tập nói to trọn bài một lần, bấm giờ và quay lại bằng điện thoại. Sau đó xem lại và ghi ba cột: chỗ ý nhảy, chỗ câu quá dài phải tách, và thời lượng thật so với thời lượng cho phép. Bạn chỉ sửa bài theo ba cột đó và không sửa những nội dung khác ở lượt này.
 
 ### Nhóm 3–4 người (25 phút)
 
-Mỗi người trình bày 3 phút. Nhóm đóng vai khán giả và làm ba việc: một người bấm giờ, một người đặt **một câu hỏi khó** ở cuối, một người quan sát mắt và giọng. Sau mỗi lượt, người trình bày nghe phản hồi theo đúng ba mục đó, mỗi mục một câu. Riêng câu hỏi khó: người trình bày phải trả lời theo mẫu ghi nhận – nói phần chưa nắm – cam kết phản hồi.
+Mỗi người thuyết trình 3 phút, còn nhóm đóng vai khán giả và chia thành ba nhiệm vụ: một người bấm giờ, một người đặt **một câu hỏi khó** ở cuối, một người quan sát mắt và giọng. Sau mỗi lượt, người trình bày nghe phản hồi theo đúng ba nhiệm vụ đó, mỗi nhiệm vụ một câu. Riêng với câu hỏi khó, người trình bày phải trả lời theo mẫu gồm ba bước là ghi nhận câu hỏi, nói rõ phần chưa nắm và cam kết trả lời.
 
 ### Bài tập về nhà (45–60 phút)
 
-Chuẩn bị **phương án không slide** cho bài trình bày gần nhất của bạn: viết ra ba ý chính bạn nói được mà không cần nhìn màn hình, và một bản rút gọn 5 phút. Sau đó tập một lần với điều kiện tự đặt: giữa chừng, tắt màn hình và nói tiếp. Nộp nửa trang: bạn vấp ở chỗ nào khi mất slide, và bạn sẽ ghi nhớ khác đi thế nào.
+Hãy chuẩn bị **phương án không slide** cho bài thuyết trình gần nhất của bạn bằng cách viết ra ba ý chính mà bạn nói được khi không nhìn màn hình, cùng một bản rút gọn 5 phút. Sau đó tập một lần với điều kiện tự đặt: giữa chừng, tắt màn hình và nói tiếp. Bạn nộp nửa trang nêu rõ mình vấp ở chỗ nào khi mất slide và sẽ ghi nhớ nội dung theo cách nào khác.
 
 ### Xem thêm
 
-- 🎬 [How to Speak So That People Want to Listen](https://www.youtube.com/watch?v=eIho2S0ZahI) — Julian Treasure, TED, 9 phút. Bốn thứ điều chỉnh được ở giọng nói.
-- 🎬 [The Secret Structure of Great Talks](https://www.youtube.com/watch?v=1nYFpuc2Umk) — Nancy Duarte, TEDxEast, 18 phút.
-- 🎬 [How to Avoid Death by PowerPoint](https://www.youtube.com/watch?v=Iwpi1Lm6dFo) — David JP Phillips, TEDxStockholmSalon, 20 phút.
+- 🎬 [How to Speak So That People Want to Listen](https://www.youtube.com/watch?v=eIho2S0ZahI) — Julian Treasure, TED, 9 phút. Bài nói giới thiệu bốn yếu tố có thể điều chỉnh ở giọng nói.
+- 🎬 [The Secret Structure of Great Talks](https://www.youtube.com/watch?v=1nYFpuc2Umk) — Nancy Duarte, TEDxEast, 18 phút. Bài nói phân tích cấu trúc chung của các bài nói có sức thuyết phục.
+- 🎬 [How to Avoid Death by PowerPoint](https://www.youtube.com/watch?v=Iwpi1Lm6dFo) — David JP Phillips, TEDxStockholmSalon, 20 phút. Bài nói giải thích vì sao slide nhồi chữ làm giảm khả năng tiếp nhận của khán giả.
 
 ### Nguồn tham khảo
 
@@ -97,7 +98,7 @@ Chuẩn bị **phương án không slide** cho bài trình bày gần nhất c�
                 "key": "7.3-luyen-tap-truoc",
                 "type": "mcq",
                 "prompt": "Vì sao cần luyện tập nói to trước một bài thuyết trình quan trọng?",
-                "explanation": "Chỉ khi nói thành tiếng có bấm giờ mới lộ ra chỗ ý nhảy, câu quá dài gây hụt hơi và thời lượng thật — ba lỗi không phát hiện được khi chỉ đọc thầm.",
+                "explanation": "Chỉ khi nói thành tiếng có bấm giờ mới lộ ra chỗ ý nhảy, câu quá dài gây hụt hơi và thời lượng thật; đây là ba lỗi khó phát hiện khi chỉ đọc thầm.",
                 "points": 2,
                 "options": [
                     {"label": "Vì nói to có bấm giờ mới lộ ra chỗ ý nhảy, câu quá dài và thời lượng thật của bài", "isCorrect": True},
@@ -128,7 +129,7 @@ Chuẩn bị **phương án không slide** cho bài trình bày gần nhất c�
                 "options": [
                     {"label": "Báo ngắn gọn rồi tiếp tục nói theo dàn ý đã thuộc, để người hỗ trợ xử lý kỹ thuật song song", "isCorrect": True},
                     {"label": "Dừng lại chờ tới khi máy chiếu hoạt động trở lại", "isCorrect": False},
-                    {"label": "Xin lỗi nhiều lần và đề nghị dời buổi trình bày", "isCorrect": False},
+                    {"label": "Xin lỗi nhiều lần và đề nghị dời buổi thuyết trình", "isCorrect": False},
                     {"label": "Đọc to nội dung slide từ máy tính cá nhân của mình", "isCorrect": False, "misconception": "knm.slide-is-document"},
                 ],
             },
@@ -136,10 +137,10 @@ Chuẩn bị **phương án không slide** cho bài trình bày gần nhất c�
                 "key": "7.3-cau-hoi-xoay",
                 "type": "mcq",
                 "prompt": "Một khán giả đặt câu hỏi xoáy mà bạn không có sẵn câu trả lời. Cách ứng xử phù hợp là gì?",
-                "explanation": "Ghi nhận câu hỏi, nói thẳng phần mình chưa nắm, trả lời phần có cơ sở và cam kết phản hồi kèm mốc — chế câu trả lời là cách nhanh nhất để mất uy tín.",
+                "explanation": "Cần ghi nhận câu hỏi, nói thẳng phần mình chưa nắm, trả lời phần có cơ sở và cam kết trả lời kèm mốc thời gian; bịa câu trả lời là cách dễ làm mất uy tín nhất.",
                 "points": 3,
                 "options": [
-                    {"label": "Ghi nhận câu hỏi, nói rõ phần mình chưa nắm, trả lời phần có cơ sở và hẹn phản hồi kèm mốc thời gian", "isCorrect": True},
+                    {"label": "Ghi nhận câu hỏi, nói rõ phần mình chưa nắm, trả lời phần có cơ sở và hẹn trả lời kèm mốc thời gian", "isCorrect": True},
                     {"label": "Đưa ra một câu trả lời nghe hợp lý để giữ uy tín trước khán giả", "isCorrect": False, "misconception": "knm.qa-must-know-all"},
                     {"label": "Nói rằng câu hỏi nằm ngoài phạm vi đề tài rồi chuyển sang người khác", "isCorrect": False, "misconception": "knm.qa-must-know-all"},
                     {"label": "Xin lỗi và nhận là mình chuẩn bị chưa tốt, không trả lời gì thêm", "isCorrect": False, "misconception": "knm.self-label"},
@@ -148,14 +149,14 @@ Chuẩn bị **phương án không slide** cho bài trình bày gần nhất c�
             {
                 "key": "7.3-qua-gio",
                 "type": "mcq",
-                "prompt": "Giữa chừng bạn nhận ra bài trình bày đang quá thời lượng cho phép. Bạn nên làm gì?",
+                "prompt": "Giữa chừng bạn nhận ra bài thuyết trình đang quá thời lượng cho phép. Bạn nên làm gì?",
                 "explanation": "Bỏ bớt phần giữa và giữ nguyên phần kết. Khán giả không biết bạn đã bỏ slide nào, nhưng họ nhận ra ngay một bài kết thúc vội và không đọng lại gì.",
                 "points": 2,
                 "options": [
                     {"label": "Bỏ bớt các phần ở giữa, giữ nguyên phần kết, và nói rõ phần chi tiết nằm trong tài liệu gửi kèm", "isCorrect": True},
-                    {"label": "Nói nhanh hơn để kịp trình bày hết các slide đã chuẩn bị", "isCorrect": False, "misconception": "knm.rush-when-over-time"},
+                    {"label": "Nói nhanh hơn để kịp thuyết trình hết các slide đã chuẩn bị", "isCorrect": False, "misconception": "knm.rush-when-over-time"},
                     {"label": "Bỏ phần kết vì phần đó chỉ là tóm tắt lại", "isCorrect": False, "misconception": "knm.rush-when-over-time"},
-                    {"label": "Xin thêm thời gian để trình bày trọn vẹn", "isCorrect": False},
+                    {"label": "Xin thêm thời gian để thuyết trình trọn vẹn", "isCorrect": False},
                 ],
             },
             {
@@ -174,7 +175,7 @@ Chuẩn bị **phương án không slide** cho bài trình bày gần nhất c�
             {
                 "key": "7.3-viet-tap",
                 "type": "essay",
-                "prompt": "Tập nói to trọn một bài trình bày có bấm giờ và quay lại. Viết 200–300 từ: (a) thời lượng thật so với thời lượng cho phép; (b) hai chỗ ý bị nhảy và câu chuyển bạn sẽ thêm; (c) hai câu quá dài và bản chẻ ngắn của chúng; (d) phương án không slide: ba ý bạn nói được mà không cần nhìn màn hình.",
+                "prompt": "Tập nói to trọn một bài thuyết trình có bấm giờ và quay lại. Viết 200–300 từ: (a) thời lượng thật so với thời lượng cho phép; (b) hai chỗ ý bị nhảy và câu chuyển bạn sẽ thêm; (c) hai câu quá dài và bản chẻ ngắn của chúng; (d) phương án không slide: ba ý bạn nói được mà không cần nhìn màn hình.",
                 "points": 5,
             },
         ],

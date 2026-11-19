@@ -2,26 +2,26 @@
 LESSON = {
     "title": "Bài 1.3 · Tuyên ngôn sứ mệnh cá nhân và khi giá trị bị thử",
     "durationMin": 50,
-    "description": "Viết một bản tuyên ngôn dùng được để từ chối, rà soát nó định kỳ, và xử lý hai tình huống giá trị bị thử: khi yêu cầu của tổ chức va vào nguyên tắc, và khi phải chọn giữa hai điều đều tốt.",
+    "description": "Bài này hướng dẫn cách viết một bản tuyên ngôn đủ cụ thể để dùng khi từ chối, cách rà soát bản tuyên ngôn định kỳ, và cách xử lý hai tình huống giá trị bị thử thách: khi yêu cầu của tổ chức va chạm với nguyên tắc cá nhân, và khi phải chọn giữa hai điều đều tốt.",
     "objectives": [
         "Viết được bản nháp tuyên ngôn sứ mệnh cá nhân có vai trò, đóng góp và điều sẽ từ chối",
-        "Nêu được lý do phải rà soát tuyên ngôn định kỳ và mốc rà soát của riêng mình",
-        "Liệt kê được các bước ở giữa hai cực chịu đựng và nghỉ việc khi giá trị xung đột với tổ chức",
-        "Dùng được bảng đối chiếu giá trị để giải thích một quyết định nghề nghiệp",
+        "Giải thích được lý do phải rà soát tuyên ngôn định kỳ và xác định được mốc rà soát của riêng mình",
+        "Vận dụng được các bước nằm giữa hai cực chịu đựng và nghỉ việc khi giá trị xung đột với tổ chức",
+        "Đánh giá được một quyết định nghề nghiệp bằng bảng đối chiếu giá trị",
     ],
     "summary": [
-        "Tuyên ngôn sứ mệnh cá nhân là bản mô tả bằng chữ về con người bạn muốn trở thành và nguyên tắc bạn dựa vào — phép thử của nó là: nó có giúp bạn từ chối được điều gì không.",
-        "Viết một lần rồi cất đi là hỏng: vai trò và hoàn cảnh đổi theo năm, nên bản tuyên ngôn cần mốc rà soát cố định và một lần rà soát bất thường mỗi khi đổi vai trò lớn.",
-        "Giữa chịu đựng và nghỉ việc còn ba bước: làm rõ, lên tiếng đúng kênh, thương lượng phạm vi — và ghi lại. Rời đi là bước cuối, không phải bước đầu.",
-        "Quyết định nghề nghiệp lớn nên được giải thích bằng thứ tự giá trị đã lập, chứ không bằng cảm giác lúc quyết.",
+        "Tuyên ngôn sứ mệnh cá nhân là bản mô tả bằng chữ về con người bạn muốn trở thành và nguyên tắc bạn dựa vào; phép thử của nó là liệu nó có giúp bạn từ chối được điều gì cụ thể hay không.",
+        "Một bản tuyên ngôn chỉ viết một lần rồi cất đi sẽ nhanh chóng lệch khỏi đời sống thật: vai trò và hoàn cảnh đổi theo năm, nên bản tuyên ngôn cần mốc rà soát cố định và một lần rà soát bất thường mỗi khi đổi vai trò lớn.",
+        "Giữa chịu đựng và rời đi còn bốn bước: làm rõ, nêu quan ngại đúng người đúng kênh, thương lượng phạm vi và ghi lại. Rời đi là bước cuối, không phải bước đầu.",
+        "Một quyết định nghề nghiệp lớn nên được giải thích bằng thứ tự giá trị đã lập và bảng đối chiếu, trong đó điều kiện loại trừ được đánh dấu trước khi so sánh, chứ không chỉ bằng cảm giác lúc quyết định.",
     ],
     "splitSections": True,
     "body": r"""
 ## Tuyên ngôn sứ mệnh cá nhân là gì
 
-Hai bài trước cho bạn hai thứ: một thứ tự giá trị đã được ép xuống còn ba mục, và một trọng tâm để dựa vào. Bài này ghép chúng thành một văn bản ngắn dùng được hằng ngày.
+Hai bài trước đã cung cấp hai kết quả: một thứ tự giá trị được rút xuống còn ba mục (bài 1.1) và một trọng tâm cuộc sống để dựa vào (bài 1.2). Bài này kết hợp hai kết quả đó thành một văn bản ngắn có thể dùng hằng ngày.
 
-**Bản tuyên ngôn sứ mệnh cá nhân** là bản viết ra con người bạn muốn trở thành, những đóng góp bạn muốn tạo ra, và các nguyên tắc bạn dựa vào để quyết định. Nó không phải bản kế hoạch có mốc thời gian, cũng không phải danh sách mục tiêu — nó là **hiến pháp cá nhân**: thứ đứng cao hơn từng quyết định lẻ và được dùng để soi khi các quyết định mâu thuẫn nhau.
+**Bản tuyên ngôn sứ mệnh cá nhân** (*personal mission statement*) là bản viết ra con người bạn muốn trở thành, những đóng góp bạn muốn tạo ra và các nguyên tắc bạn dựa vào để quyết định (Covey, 1989). Nó không phải là bản kế hoạch có mốc thời gian hay danh sách mục tiêu; có thể xem nó như một **hiến pháp cá nhân**, tức văn bản đứng cao hơn từng quyết định lẻ và được dùng để đối chiếu khi các quyết định mâu thuẫn nhau.
 
 | Tuyên ngôn sứ mệnh là | Tuyên ngôn sứ mệnh không phải là |
 |---|---|
@@ -30,28 +30,28 @@ Hai bài trước cho bạn hai thứ: một thứ tự giá trị đã được
 | Văn bản riêng, viết bằng ngôn ngữ của chính mình | Bản sao câu chữ hay từ sách hoặc từ người mình ngưỡng mộ |
 | Thứ được rà soát định kỳ | Thứ viết một lần rồi cất |
 
-> [!canh-bao] Phép thử duy nhất cho một bản tuyên ngôn: **nó có giúp bạn từ chối được điều gì cụ thể không?** "Tôi sống tử tế, không ngừng học hỏi và cống hiến hết mình" đúng với mọi người và vì thế không hướng dẫn được ai. Một tuyên ngôn không loại trừ điều gì thì cũng không chọn được điều gì.
+> [!canh-bao] Phép thử chính cho một bản tuyên ngôn là câu hỏi: **nó có giúp bạn từ chối được điều gì cụ thể hay không?** Câu “Tôi sống tử tế, không ngừng học hỏi và cống hiến hết mình” đúng với mọi người nên không định hướng được hành vi của ai. Một tuyên ngôn không loại trừ điều gì thì cũng không giúp chọn điều gì.
 
 ### Ba câu hỏi để viết bản nháp đầu tiên
 
-Đừng cố viết hay. Bản nháp đầu tiên chỉ cần trả lời được ba câu hỏi dưới đây bằng ngôn ngữ đời thường.
+Ở giai đoạn này chưa cần viết cho hay. Bản nháp đầu tiên chỉ cần trả lời ba câu hỏi dưới đây bằng ngôn ngữ đời thường.
 
-1. **Vai trò.** Trong năm năm tới, tôi giữ những vai trò nào — người con, bạn học, thành viên nhóm, người làm nghề gì đó, công dân? Với mỗi vai trò, tôi muốn người trong vai trò đối diện mô tả tôi bằng câu nào?
-2. **Đóng góp.** Nếu công việc tôi làm biến mất, thứ gì thật sự thiếu đi cho ai đó? Câu trả lời càng cụ thể càng tốt: "giúp sinh viên năm nhất đỡ lạc lối trong kỳ đầu" dùng được, "tạo giá trị cho cộng đồng" thì không.
+1. **Vai trò.** Trong năm năm tới, tôi giữ những vai trò nào (người con, bạn học, thành viên nhóm, người làm một nghề cụ thể, công dân)? Với mỗi vai trò, tôi muốn người trong vai trò đối diện mô tả tôi bằng câu nào?
+2. **Đóng góp.** Nếu công việc tôi làm biến mất, thứ gì thật sự thiếu đi cho ai đó? Câu trả lời càng cụ thể càng tốt: “giúp sinh viên năm nhất đỡ lạc lối trong kỳ đầu” dùng được, “tạo giá trị cho cộng đồng” thì không.
 3. **Nguyên tắc và ranh giới.** Ba giá trị đầu ở bài 1.1 của tôi là gì, và với mỗi giá trị, **tôi sẽ từ chối điều gì** để giữ nó?
 
-Ghép ba câu trả lời lại, cắt hết những chữ nghe kêu mà không kiểm tra được, giữ độ dài trong khoảng nửa trang. Bản nháp xong là dùng được — nó sẽ còn được sửa nhiều lần.
+Sau đó, hãy ghép ba câu trả lời lại, lược bỏ những từ ngữ nghe hay nhưng không kiểm tra được và giữ độ dài trong khoảng nửa trang. Bản nháp hoàn thành là có thể sử dụng, và sẽ còn được chỉnh sửa nhiều lần.
 
 :::mau Một bản tuyên ngôn mẫu (rút gọn, để tham khảo cấu trúc chứ không để chép)
 **Vai trò và cam kết**
 
-- *Người con:* mỗi tuần một cuộc gọi thật sự hỏi han, không phải nhắn tin cho xong.
-- *Thành viên nhóm:* nói sớm khi phần việc của tôi có nguy cơ trễ, kể cả khi việc đó khiến tôi mất mặt.
-- *Người làm nghề giáo dục:* làm ra thứ giúp người học tự đi tiếp được, không phải thứ khiến họ phụ thuộc vào tôi.
+- *Người con:* mỗi tuần tôi gọi về nhà một cuộc để hỏi han thật sự, không nhắn tin cho xong.
+- *Thành viên nhóm:* tôi nói sớm khi phần việc của mình có nguy cơ trễ, kể cả khi việc đó khiến tôi mất mặt.
+- *Người làm nghề giáo dục:* tôi làm ra những sản phẩm giúp người học tự đi tiếp, không phải những sản phẩm khiến họ phụ thuộc vào tôi.
 
 **Đóng góp tôi muốn tạo ra**
 
-Giúp sinh viên năm nhất ngành tôi đỡ mất một học kỳ để hiểu ngành mình học là gì — bằng tài liệu, buổi chia sẻ và việc trả lời tin nhắn của các em trong vòng 48 giờ.
+Giúp sinh viên năm nhất ngành tôi đỡ mất một học kỳ để hiểu ngành mình học là gì, thông qua tài liệu, buổi chia sẻ và việc trả lời tin nhắn của các em trong vòng 48 giờ.
 
 **Nguyên tắc và điều tôi từ chối**
 
@@ -64,21 +64,21 @@ Giúp sinh viên năm nhất ngành tôi đỡ mất một học kỳ để hi�
 
 ## Vì sao phải rà soát định kỳ
 
-Bản tuyên ngôn không phải bia đá. Ba loại thay đổi dưới đây đều làm nó lệch khỏi đời sống thật, và không loại nào báo trước.
+Bản tuyên ngôn không phải là một văn bản bất biến. Ba loại thay đổi dưới đây đều có thể làm nó lệch khỏi đời sống thật, và thường không báo trước.
 
-- **Vai trò đổi.** Ra trường, đi làm, chuyển ngành, lập gia đình — mỗi lần như vậy danh sách vai trò đổi, và cam kết viết cho vai trò cũ có thể vô nghĩa hoặc bất khả thi trong vai trò mới.
-- **Hiểu biết về chính mình đổi.** Sau vài lần trả giá thật, bạn phát hiện điều mình tưởng coi trọng hoá ra không, và điều mình ít nhắc tới hoá ra lại là thứ mình bảo vệ đến cùng.
-- **Hoàn cảnh đổi.** Sức khoẻ, tài chính, trách nhiệm với người thân — chúng đổi cả cái giá mà mỗi cam kết đòi hỏi.
+- **Vai trò đổi.** Ra trường, đi làm, chuyển ngành hay lập gia đình đều làm danh sách vai trò thay đổi, và cam kết viết cho vai trò cũ có thể trở nên vô nghĩa hoặc bất khả thi trong vai trò mới.
+- **Hiểu biết về chính mình đổi.** Sau vài lần trả giá thật, bạn có thể phát hiện điều mình tưởng coi trọng hoá ra không phải vậy, và điều mình ít nhắc tới lại là thứ mình bảo vệ đến cùng.
+- **Hoàn cảnh đổi.** Sức khoẻ, tài chính và trách nhiệm với người thân làm thay đổi cả cái giá mà mỗi cam kết đòi hỏi.
 
-Rà soát không có nghĩa viết lại từ đầu mỗi sáu tháng. Nó là ba câu hỏi ngắn: cam kết nào tôi đã **không** giữ nổi kỳ vừa rồi và vì sao; điều gì tôi từ chối được, điều gì không; có vai trò nào mới cần thêm vào không. Phần lớn lần rà soát chỉ sửa vài dòng — nhưng chính vài dòng ấy giữ cho văn bản còn mô tả đúng người đang sống.
+Việc rà soát không có nghĩa là viết lại từ đầu mỗi sáu tháng; nó gồm ba câu hỏi ngắn: cam kết nào tôi đã **không** giữ nổi kỳ vừa rồi và vì sao; điều gì tôi từ chối được, điều gì không; có vai trò nào mới cần thêm vào không. Nhiều lần rà soát chỉ cần sửa vài dòng, nhưng chính những chỉnh sửa nhỏ đó giúp văn bản tiếp tục mô tả đúng người đang sống.
 
-> [!ghi-nho] Đặt hai mốc cố định trong năm cho việc rà soát, cộng thêm một lần bất thường mỗi khi đổi vai trò lớn. Mốc cố định quan trọng hơn bạn nghĩ: không có mốc thì việc rà soát chỉ xảy ra sau khủng hoảng, tức là quá muộn để nó giúp được gì.
+> [!ghi-nho] Nên đặt hai mốc cố định trong năm cho việc rà soát, cộng thêm một lần rà soát bất thường mỗi khi đổi vai trò lớn. Mốc cố định có vai trò quan trọng: nếu không có mốc, việc rà soát nhiều khả năng chỉ xảy ra sau một cuộc khủng hoảng, khi đã quá muộn để nó phát huy tác dụng.
 
 ## Khi giá trị va vào yêu cầu của tổ chức
 
-Đây là tình huống làm lộ ra ai đã thật sự có hệ giá trị. Phản xạ thường gặp là nhìn thấy đúng hai lối: **im lặng làm theo** hoặc **bỏ đi**. Cả hai đều là phản ứng, và cả hai đều bỏ qua phần lớn khoảng ở giữa.
+Đây là tình huống cho thấy rõ một người đã thực sự có hệ giá trị hay chưa. Phản xạ thường gặp là chỉ nhìn thấy hai lối đi: **im lặng làm theo** hoặc **bỏ đi**. Cả hai đều là phản ứng tức thời và đều bỏ qua phần lớn khoảng giữa hai cực đó.
 
-Nhà kinh tế học Albert Hirschman mô tả ba cách con người đáp lại khi tổ chức mình thuộc về đi chệch hướng: **rời đi** (exit), **lên tiếng** (voice), và **ở lại vì gắn bó** (loyalty). Điểm quan trọng trong lập luận của ông: khi người ta chỉ biết tới lựa chọn rời đi, tổ chức mất luôn nguồn thông tin để tự sửa. Lên tiếng là lựa chọn tốn công hơn nhưng thường được thử trước.
+Theo Hirschman (1970), nhà kinh tế học, con người có ba cách đáp lại khi tổ chức mình thuộc về đi chệch hướng: **rời đi** (*exit*), **lên tiếng** (*voice*) và **ở lại vì gắn bó** (*loyalty*). Một điểm quan trọng trong lập luận của ông là khi người ta chỉ biết tới lựa chọn rời đi, tổ chức mất luôn nguồn thông tin để tự sửa. Lên tiếng là lựa chọn tốn công hơn nhưng đáng được cân nhắc trước khi rời đi.
 
 ![Chân dung Albert O. Hirschman năm 1945](https://upload.wikimedia.org/wikipedia/commons/6/63/Albert_O._Hirschman%2C_1945_%28cropped%29.jpg "Albert O. Hirschman (1915–2012), nhà kinh tế học, tác giả Exit, Voice, and Loyalty (1970) — khung ba lối đáp lại khi tổ chức mình thuộc về đi chệch hướng. Ảnh chụp năm 1945: [File:Albert O. Hirschman, 1945 (cropped).jpg](https://commons.wikimedia.org/wiki/File:Albert_O._Hirschman,_1945_(cropped).jpg), tác giả Sgt. Charles James, thuộc phạm vi công cộng.")
 
@@ -87,57 +87,57 @@ Nhà kinh tế học Albert Hirschman mô tả ba cách con người đáp lại
   <div style="font-size:1rem;color:rgba(127,127,127,0.95);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:.8rem">Ba lối đáp lại của Hirschman — và chỗ hay bị bỏ quên</div>
   <div style="display:flex;flex-wrap:wrap;gap:.5rem;font-size:1.1rem">
     <div style="flex:1 1 11rem;background:rgba(217,150,40,.14);border-radius:.4rem;padding:.7rem .8rem"><b>Rời đi</b><br><span style="font-size:1rem;opacity:.85">Nghỉ việc, rút khỏi nhóm. Dứt điểm, nhưng tổ chức mất luôn thông tin để sửa.</span></div>
-    <div style="flex:1 1 11rem;background:rgba(13,148,136,.16);border:2px solid rgba(13,148,136,.6);border-radius:.4rem;padding:.7rem .8rem"><b>Lên tiếng</b><br><span style="font-size:1rem;opacity:.85">Làm rõ, nêu quan ngại, thương lượng phạm vi. Tốn công nhất, và là lối hầu hết mọi người bỏ qua.</span></div>
+    <div style="flex:1 1 11rem;background:rgba(13,148,136,.16);border:2px solid rgba(13,148,136,.6);border-radius:.4rem;padding:.7rem .8rem"><b>Lên tiếng</b><br><span style="font-size:1rem;opacity:.85">Làm rõ, nêu quan ngại, thương lượng phạm vi. Tốn công nhất, và nhiều người bỏ qua lối này.</span></div>
     <div style="flex:1 1 11rem;background:rgba(139,92,246,.14);border-radius:.4rem;padding:.7rem .8rem"><b>Ở lại vì gắn bó</b><br><span style="font-size:1rem;opacity:.85">Ở lại và chờ. Lành mạnh khi kèm lên tiếng; thành chịu đựng khi thay cho lên tiếng.</span></div>
   </div>
-  <div style="font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6">Phản xạ thường thấy là nhảy thẳng từ ô ba sang ô một khi chịu hết nổi. Bảng dưới đây bẻ ô giữa ra thành các bước làm được.</div>
+  <div style="font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6">Phản xạ thường thấy là nhảy thẳng từ ô ba sang ô một khi không chịu đựng được nữa. Bảng dưới đây phân tách ô giữa thành các bước có thể thực hiện.</div>
 </div>
 ```
 
 | Bước | Việc cụ thể | Vì sao đứng ở vị trí này |
 |---|---|---|
-| 1. Làm rõ | Hỏi lại để biết yêu cầu thật sự là gì, ai yêu cầu, dựa trên căn cứ nào | Một phần đáng kể các "xung đột giá trị" hoá ra là hiểu nhầm về phạm vi hoặc thẩm quyền |
+| 1. Làm rõ | Hỏi lại để biết yêu cầu thật sự là gì, ai yêu cầu, dựa trên căn cứ nào | Một phần đáng kể các “xung đột giá trị” hoá ra là hiểu nhầm về phạm vi hoặc thẩm quyền |
 | 2. Nêu quan ngại | Nói với đúng người, đúng kênh, mô tả sự việc chứ không quy kết động cơ | Nêu sớm thì còn là góp ý; nêu muộn thì đã thành tố cáo |
 | 3. Thương lượng phạm vi | Đề xuất cách làm khác đạt cùng mục đích; xin rút khỏi đúng phần việc va vào nguyên tắc | Giữ được nguyên tắc mà không buộc tổ chức phải thua toàn bộ |
-| 4. Ghi lại | Lưu email, biên bản, tin nhắn về yêu cầu và về phản hồi của bạn | Bảo vệ bạn nếu sự việc đi xa, và giúp bạn nhìn lại chính mình sau này |
-| 5. Rời đi | Chỉ khi các bước trên đã thử và yêu cầu vẫn buộc bạn làm điều sai | Là lựa chọn hợp lệ và đôi khi là lựa chọn đúng — nhưng là bước cuối |
+| 4. Ghi lại | Lưu email, biên bản, tin nhắn về yêu cầu và về câu trả lời của bạn | Bảo vệ bạn nếu sự việc đi xa, và giúp bạn nhìn lại chính mình sau này |
+| 5. Rời đi | Chỉ khi các bước trên đã thử và yêu cầu vẫn buộc bạn làm điều sai | Đây là lựa chọn hợp lệ và đôi khi là lựa chọn đúng, nhưng là bước cuối cùng. |
 
 Có một ngoại lệ cần nói rõ: khi yêu cầu là **hành vi gian lận hoặc vi phạm pháp luật** rõ ràng, bước 1 và 2 rút ngắn lại rất nhanh và việc từ chối tham gia phải xảy ra ngay, song song với việc ghi lại. Thương lượng phạm vi không áp dụng cho việc sai bản chất; nó chỉ dùng cho những vùng xám về cách làm.
 
-> [!vi-du] Linh có 12 nghìn người theo dõi và được một nhãn hàng đề nghị 3 triệu đồng cho một bài đăng khen sản phẩm bạn chưa dùng bao giờ, kèm yêu cầu không gắn nhãn quảng cáo. Ở đây có hai lớp: khen thứ chưa dùng là nói điều mình không biết có đúng không, còn giấu việc được trả tiền là làm người xem hiểu sai về tư cách người nói. Lựa chọn giữ được cả hai phía: nhận hợp tác nhưng dùng thật hai tuần rồi viết đúng cảm nhận, và ghi rõ đây là bài có tài trợ. Nhãn hàng nào từ chối điều kiện đó thì thứ họ mua không phải nội dung của bạn — mà là lòng tin của những người theo dõi bạn, món bạn không có quyền bán hộ.
+> [!vi-du] Linh có 12 nghìn người theo dõi và được một nhãn hàng đề nghị 3 triệu đồng cho một bài đăng khen sản phẩm mình chưa dùng bao giờ, kèm yêu cầu không gắn nhãn quảng cáo. Ở đây có hai lớp vấn đề: khen một sản phẩm chưa dùng là nói điều mình không biết có đúng hay không, còn giấu việc được trả tiền là khiến người xem hiểu sai về tư cách của người nói. Một lựa chọn giữ được cả hai phía là nhận lời quảng cáo nhưng dùng thử thật trong hai tuần, viết đúng cảm nhận của mình và ghi rõ đây là bài có tài trợ. Nếu nhãn hàng từ chối điều kiện đó thì thứ họ muốn mua không phải là nội dung của Linh mà là lòng tin của những người theo dõi, thứ Linh không có quyền bán thay họ.
 
-> [!vi-du] Ngọc thực tập ở một công ty phần mềm, được giao viết mười đánh giá năm sao cho ứng dụng của công ty bằng mười tài khoản khác nhau. Đây không phải vùng xám — đó là tạo đánh giá giả. Bước 1 và 2 rút gọn thành một câu nói ngay với người giao việc: mình không làm phần này vì đó là đánh giá không có thật, và nếu nền tảng phát hiện thì tài khoản ứng dụng có thể bị gỡ. Bước 3 vẫn còn chỗ dùng: đề xuất việc thay thế đạt cùng mục đích — soạn kịch bản mời người dùng thật đánh giá sau khi họ dùng xong. Bước 4 làm ngay chiều hôm đó: lưu lại tin nhắn giao việc và câu trả lời của mình.
+> [!vi-du] Ngọc thực tập ở một công ty phần mềm, được giao viết mười đánh giá năm sao cho ứng dụng của công ty bằng mười tài khoản khác nhau. Đây không phải vùng xám mà là việc tạo đánh giá giả. Bước 1 và 2 rút gọn thành một câu nói ngay với người giao việc: mình không làm phần này vì đó là đánh giá không có thật, và nếu nền tảng phát hiện thì tài khoản ứng dụng có thể bị gỡ. Bước 3 vẫn còn chỗ dùng: đề xuất việc thay thế đạt cùng mục đích, chẳng hạn soạn kịch bản mời người dùng thật đánh giá sau khi họ dùng xong. Bước 4 làm ngay chiều hôm đó: lưu lại tin nhắn giao việc và câu trả lời của mình.
 
-> [!vi-du] Sơn làm nhóm trưởng một câu lạc bộ, được đề nghị ghi số người tham dự sự kiện là 200 thay vì 120 để báo cáo cho đẹp. Ở đây vẫn còn vùng thương lượng: Sơn đề xuất báo đúng 120 kèm ba dòng giải thích bối cảnh (trùng lịch thi giữa kỳ) và một đề xuất cải thiện cho kỳ sau. Cách này giữ được số liệu đúng mà vẫn trả lời được mối lo thật sự của người đề nghị — họ sợ báo cáo trông như một thất bại.
+> [!vi-du] Sơn làm trưởng nhóm một câu lạc bộ, được đề nghị ghi số người tham dự sự kiện là 200 thay vì 120 để báo cáo cho đẹp. Ở đây vẫn còn vùng thương lượng: Sơn đề xuất báo đúng 120 kèm ba dòng giải thích bối cảnh (trùng lịch thi giữa kỳ) và một đề xuất cải thiện cho kỳ sau. Cách này giữ được số liệu đúng mà vẫn trả lời được mối lo thật sự của người đề nghị, vì họ sợ báo cáo trông như một thất bại.
 
-> [!vi-du] Nhóm của Hải muốn dùng bài của khoá trước nộp lại cho nhanh. Phản ứng theo hai cực: hoặc im lặng đồng ý, hoặc mắng cả nhóm rồi bỏ nhóm. Cách theo thang trên: nói ngay và nói bằng sự việc — "mình không tham gia phần này, vì nếu bị phát hiện thì cả nhóm mất điểm toàn học phần" — kèm một đề xuất thay thế khả thi: "mình nhận viết phần khung tối nay, sáng mai cả nhóm điền dữ liệu thật." Giữ được nguyên tắc mà vẫn để nhóm một lối đi.
+> [!vi-du] Nhóm của Hải muốn dùng bài của khoá trước nộp lại cho nhanh. Phản ứng theo hai cực là hoặc im lặng đồng ý, hoặc mắng cả nhóm rồi bỏ nhóm. Cách xử lý theo các bước ở trên là nói ngay và nói bằng sự việc, chẳng hạn: “mình không tham gia phần này, vì nếu bị phát hiện thì cả nhóm mất điểm toàn học phần”, kèm một đề xuất thay thế khả thi: “mình nhận viết phần khung tối nay, sáng mai cả nhóm điền dữ liệu thật.” Cách này giữ được nguyên tắc mà vẫn để lại cho nhóm một lối đi.
 
 ## Ra quyết định lớn bằng giá trị
 
-Với các quyết định nghề nghiệp lớn — chọn nơi thực tập, nhận hay từ chối lời mời làm việc, đổi ngành — thứ tự giá trị ở bài 1.1 mới phát huy công dụng. Cách làm mất chừng ba mươi phút.
+Với các quyết định nghề nghiệp lớn như chọn nơi thực tập, nhận hay từ chối lời mời làm việc hoặc đổi ngành, thứ tự giá trị đã lập ở bài 1.1 mới phát huy tác dụng. Quy trình dưới đây mất khoảng ba mươi phút.
 
 1. Viết ba giá trị đầu của bạn thành ba dòng.
-2. Với mỗi phương án, ghi **bằng chứng cụ thể** cho thấy phương án ấy hỗ trợ hay cản trở từng giá trị. Bằng chứng phải kiểm tra được: "có người hướng dẫn dành 1 giờ/tuần" là bằng chứng, "môi trường trẻ trung năng động" thì không.
-3. Đánh dấu ô nào là **điều kiện loại trừ** — thứ mà nếu vi phạm thì mọi ưu điểm khác không bù được.
-4. Chọn, rồi viết một câu giải thích lựa chọn bằng chính ba giá trị ấy. Không viết nổi câu đó nghĩa là bạn đang chọn bằng thứ khác — có thể là cảm giác, có thể là sức ép từ người khác — và ít nhất bạn nên biết điều đó trước khi ký.
+2. Với mỗi phương án, ghi **bằng chứng cụ thể** cho thấy phương án ấy hỗ trợ hay cản trở từng giá trị. Bằng chứng phải kiểm tra được: “có người hướng dẫn dành 1 giờ/tuần” là bằng chứng, “môi trường trẻ trung năng động” thì không.
+3. Đánh dấu ô nào là **điều kiện loại trừ**, tức là thứ mà nếu bị vi phạm thì mọi ưu điểm khác không bù được.
+4. Chọn, rồi viết một câu giải thích lựa chọn bằng chính ba giá trị ấy. Không viết nổi câu đó nghĩa là bạn đang chọn dựa trên yếu tố khác, có thể là cảm giác hoặc sức ép từ người khác, và ít nhất bạn nên nhận biết điều đó trước khi quyết định.
 
 | | Nơi A (lương cao, việc lặp lại) | Nơi B (lương thấp hơn 20%, có người hướng dẫn) |
 |---|---|---|
-| Trung thực | Được yêu cầu làm đẹp số liệu báo cáo — **điều kiện loại trừ** | Không có dấu hiệu; hỏi được hai người từng làm |
+| Trung thực | Được yêu cầu làm đẹp số liệu báo cáo: **điều kiện loại trừ** | Không có dấu hiệu; hỏi được hai người từng làm |
 | Học hỏi | Việc lặp lại sau ba tháng đầu | Người hướng dẫn cam kết 1 giờ/tuần, có lộ trình rõ |
 | Trách nhiệm tài chính với gia đình | Hỗ trợ tốt hơn ngay lập tức | Đủ sống, chậm hơn khoảng một năm |
 
-> [!vi-du] Sau khi làm bảng này, Mai phát hiện thứ mình do dự thật ra không phải lương mà là khoảng cách: nơi B đi làm mất 70 phút mỗi chiều, tức mất luôn hai buổi tối học thêm tiếng Anh mỗi tuần — thứ gắn với giá trị học hỏi đứng thứ hai của bạn. Bảng không quyết định hộ Mai, nhưng nó đổi câu hỏi từ chọn A hay B thành đàm phán được hai ngày làm từ xa hay không. Nhiều quyết định tưởng là chọn một trong hai hoá ra là một cuộc thương lượng chưa ai mở lời.
+> [!vi-du] Sau khi làm bảng này, Mai nhận ra điều khiến mình do dự thật ra không phải mức lương mà là khoảng cách: đến nơi B mất 70 phút mỗi chiều, tức là mất hai buổi tối học thêm tiếng Anh mỗi tuần, hoạt động gắn với giá trị học hỏi đứng thứ hai của Mai. Bảng không quyết định thay Mai, nhưng nó đổi câu hỏi từ chọn A hay B thành liệu có đàm phán được hai ngày làm việc từ xa hay không. Nhiều quyết định tưởng là chọn một trong hai thực ra là một cuộc thương lượng chưa ai mở lời.
 
-Bảng ví dụ trên cho thấy vì sao **điều kiện loại trừ** phải được đánh dấu trước khi so sánh: nếu chỉ cộng điểm, nơi A có thể thắng. Đây cũng chính là tình huống mà một người có trọng tâm nguyên tắc trả lời khác với người có trọng tâm tiền bạc — không phải vì họ coi nhẹ thu nhập, mà vì họ đã quyết định trước rằng có những ô không đem ra đổi.
+Bảng ví dụ trên cho thấy vì sao **điều kiện loại trừ** phải được đánh dấu trước khi so sánh: nếu chỉ cộng điểm, nơi A có thể thắng. Đây cũng là tình huống mà người có trọng tâm nguyên tắc sẽ trả lời khác với người có trọng tâm tiền bạc, không phải vì họ coi nhẹ thu nhập mà vì họ đã quyết định trước rằng có những ô không đem ra đổi.
 
-> [!meo] Làm bảng này **trước** khi bước vào cuộc thương lượng lương, không phải sau. Biết trước ô nào không đổi được thì bạn thương lượng bình tĩnh hơn hẳn, và không rơi vào tình huống đồng ý xong mới thấy mình vừa bán mất thứ không định bán.
+> [!meo] Nên làm bảng này **trước** khi bước vào cuộc thương lượng lương, không phải sau. Khi biết trước ô nào không thể đổi, bạn có thể thương lượng bình tĩnh hơn và tránh tình huống đồng ý xong mới nhận ra mình vừa nhượng lại thứ không định nhượng.
 
 ## Luyện tập và tài liệu tham khảo
 
 ### Cá nhân (25 phút)
 
-Viết bản nháp tuyên ngôn sứ mệnh cá nhân theo ba câu hỏi ở mục **Tuyên ngôn sứ mệnh cá nhân là gì**, dài nửa trang. Yêu cầu bắt buộc: phần nguyên tắc phải có ít nhất **ba câu bắt đầu bằng "Tôi từ chối…"**, mỗi câu gắn với một giá trị. Cuối bản, ghi hai mốc rà soát trong năm.
+Viết bản nháp tuyên ngôn sứ mệnh cá nhân theo ba câu hỏi ở mục **Tuyên ngôn sứ mệnh cá nhân là gì**, dài nửa trang. Yêu cầu bắt buộc: phần nguyên tắc phải có ít nhất **ba câu bắt đầu bằng “Tôi từ chối…”**, mỗi câu gắn với một giá trị. Cuối bản, ghi hai mốc rà soát trong năm.
 
 ### Nhóm 3–4 người (25 phút)
 
@@ -155,7 +155,7 @@ Chọn một quyết định lớn bạn đang phải ra hoặc vừa ra trong s
 
 ### Nguồn tham khảo
 
-- Covey, S. R. (1989). *The 7 Habits of Highly Effective People*, chương "Begin with the End in Mind." New York: Free Press.
+- Covey, S. R. (1989). *The 7 Habits of Highly Effective People*, chương “Begin with the End in Mind.” New York: Free Press.
 - Hirschman, A. O. (1970). *Exit, Voice, and Loyalty: Responses to Decline in Firms, Organizations, and States.* Cambridge, MA: Harvard University Press.
 - Schein, E. H. (1990). *Career Anchors: Discovering Your Real Values.* San Diego: Pfeiffer.
 - Badaracco, J. L. (1997). *Defining Moments: When Managers Must Choose Between Right and Right.* Boston: Harvard Business School Press.
@@ -168,7 +168,7 @@ Chọn một quyết định lớn bạn đang phải ra hoặc vừa ra trong s
                 "key": "1.3-tuyen-ngon-la-gi",
                 "type": "mcq",
                 "prompt": "'Bản tuyên ngôn sứ mệnh cá nhân' là gì?",
-                "explanation": "Đó là bản viết ra con người mình muốn trở thành, đóng góp mình muốn tạo ra và nguyên tắc mình dựa vào — một thứ hiến pháp cá nhân, không phải danh sách mục tiêu có thời hạn.",
+                "explanation": "Đó là bản viết ra con người mình muốn trở thành, đóng góp mình muốn tạo ra và nguyên tắc mình dựa vào. Nó giống một hiến pháp cá nhân, không phải danh sách mục tiêu có thời hạn.",
                 "points": 2,
                 "options": [
                     {"label": "Bản mô tả con người mình muốn trở thành, đóng góp mình muốn tạo ra và nguyên tắc mình dựa vào để quyết định", "isCorrect": True},

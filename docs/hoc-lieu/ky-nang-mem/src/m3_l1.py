@@ -2,22 +2,22 @@
 LESSON = {
     "title": "Bài 3.1 · Tách khẳng định, bằng chứng và suy luận",
     "durationMin": 45,
-    "description": "Phản biện là kiểm chất lượng lập luận chứ không phải bắt bẻ; ba mảnh của một lập luận và cách tách chúng ra; thang suy luận của Argyris và năm câu hỏi dùng được ngay.",
+    "description": "Bài này trình bày tư duy phản biện như một quy trình kiểm tra chất lượng lập luận chứ không phải sự bắt bẻ, ba mảnh của một lập luận và cách tách chúng ra, thang suy luận của Argyris, và năm câu hỏi có thể áp dụng ngay.",
     "objectives": [
         "Tách được một phát biểu thành ba mảnh: khẳng định, bằng chứng và suy luận nối hai thứ đó",
-        "Chỉ ra được mình đang ở nấc nào trên thang suy luận trong một tình huống cụ thể",
-        "Đặt được năm câu hỏi kiểm tra cho một tuyên bố gặp trên mạng",
-        "Phân biệt được phản biện với thái độ hoài nghi mọi thứ",
+        "Xác định được mình đang ở nấc nào trên thang suy luận trong một tình huống cụ thể",
+        "Vận dụng được năm câu hỏi kiểm tra cho một tuyên bố gặp trên mạng",
+        "Phân biệt được tư duy phản biện với sự bắt bẻ và với thái độ hoài nghi mọi thứ",
     ],
     "summary": [
-        "Phản biện kết thúc bằng một kết luận đáng tin hơn, không phải bằng việc hạ bệ ai — nếu sau khi phản biện chỉ còn lại sự nghi ngờ thì việc chưa xong.",
-        "Mọi lập luận có ba mảnh: khẳng định, bằng chứng, và suy luận nối chúng. Phần lớn tranh cãi trên mạng vỡ ở mảnh thứ ba, chỗ không ai nói ra.",
-        "Thang suy luận giải thích vì sao hai người nhìn cùng một sự việc lại kết luận trái ngược: mỗi người chọn một phần dữ liệu rồi leo rất nhanh lên hành động.",
-        "Năm câu hỏi kiểm tra rẻ tới mức dùng được cho mọi thứ đọc trong ngày: khẳng định là gì, bằng chứng nào, ai nói và họ được gì, còn cách giải thích nào khác, điều gì sẽ khiến tôi đổi ý.",
+        "Phản biện kết thúc bằng một kết luận đáng tin hơn chứ không phải bằng việc hạ thấp ai; nếu sau khi phản biện chỉ còn lại sự nghi ngờ thì quá trình chưa hoàn tất.",
+        "Mỗi lập luận gồm ba mảnh: khẳng định, bằng chứng và suy luận nối chúng. Nhiều tranh cãi trên mạng hỏng ở mảnh thứ ba vì mảnh này thường không được nói ra.",
+        "Thang suy luận giúp giải thích vì sao hai người nhìn cùng một sự việc lại kết luận trái ngược: mỗi người chọn một phần dữ liệu rồi leo rất nhanh lên hành động.",
+        "Năm câu hỏi kiểm tra đơn giản tới mức có thể dùng cho mọi nội dung đọc trong ngày: khẳng định là gì, bằng chứng nào, ai nói và họ được gì, còn cách giải thích nào khác, điều gì sẽ khiến tôi đổi ý.",
     ],
     "splitSections": True,
     "body": r"""
-Tư duy phản biện bị hiểu nhầm nhiều nhất trong các kỹ năng mềm. Nó không phải năng khiếu tranh luận, cũng không phải thói quen nghi ngờ. Nó là một **quy trình kiểm tra chất lượng** áp lên các lập luận — của người khác và, phần khó hơn, của chính mình.
+Tư duy phản biện (*critical thinking*) là một trong những kỹ năng mềm bị hiểu nhầm nhiều nhất. Nó không phải là năng khiếu tranh luận, cũng không phải thói quen nghi ngờ. Trong giáo trình này, tư duy phản biện được hiểu là một **quy trình kiểm tra chất lượng** áp dụng lên các lập luận, cả của người khác và, khó hơn, của chính mình.
 
 ## Phản biện không phải là bắt bẻ
 
@@ -28,11 +28,13 @@ Tư duy phản biện bị hiểu nhầm nhiều nhất trong các kỹ năng m�
 | Kết thúc bằng | Một kết luận có điều kiện rõ ràng | Một người im lặng | Sự tê liệt, không quyết được gì |
 | Dấu hiệu nhận ra | Có nêu điều gì sẽ khiến mình đổi ý | Chỉ tìm lỗi, không nêu phương án | Đòi bằng chứng tuyệt đối cho mọi thứ |
 
-> [!ghi-nho] Phép thử cho một lần phản biện: sau khi làm xong, bạn có nói được một kết luận đáng tin hơn trước không? Nếu chỉ còn lại sự nghi ngờ thì bạn mới phá, chưa xây.
+> [!ghi-nho] Phép thử cho một lần phản biện: sau khi hoàn tất, bạn có nói được một kết luận đáng tin hơn trước hay không? Nếu chỉ còn lại sự nghi ngờ thì quá trình mới dừng ở việc phá bỏ mà chưa xây dựng.
 
-Cột thứ ba đáng chú ý vì nó hay được nhầm với tư duy phản biện tốt. Người hoài nghi mọi thứ đòi tiêu chuẩn bằng chứng cao tới mức không gì đạt được, nên cuối cùng vẫn quyết định theo cảm tính — chỉ khác là bây giờ có thêm cảm giác mình tỉnh táo.
+Cột thứ ba đáng chú ý vì dễ bị nhầm với tư duy phản biện tốt. Người hoài nghi mọi thứ đòi tiêu chuẩn bằng chứng cao đến mức không điều gì đạt được, nên cuối cùng vẫn quyết định theo cảm tính, chỉ khác là có thêm cảm giác rằng mình tỉnh táo.
 
 ## Ba mảnh của một lập luận
+
+Một lập luận gồm ba mảnh: **khẳng định** (*claim*), tức điều người nói muốn người nghe tin; **bằng chứng** (*evidence*), tức dữ kiện được đưa ra để đỡ khẳng định; và **suy luận**, tức giả định nối bằng chứng với khẳng định và thường không được nói ra. Mảnh thứ ba tương ứng với bảo chứng (*warrant*) trong mô hình lập luận của Toulmin (2003). Sơ đồ dưới đây minh hoạ ba mảnh đó.
 
 ```html
 <div style="border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0">
@@ -41,51 +43,51 @@ Cột thứ ba đáng chú ý vì nó hay được nhầm với tư duy phản b
     <div style="background:rgba(13,148,136,.14);border-radius:.4rem;padding:.6rem .8rem"><b>Bằng chứng</b> — dữ kiện đưa ra để đỡ khẳng định<br><span style="opacity:.85">Hai anh khoá trên mình quen đang làm trái ngành</span></div>
     <div style="background:rgba(217,150,40,.16);border:2px solid rgba(217,150,40,.55);border-radius:.4rem;padding:.6rem .8rem"><b>Suy luận</b> — giả định nối bằng chứng với khẳng định, thường không nói ra<br><span style="opacity:.85">Rằng hai người quen đủ đại diện cho cả ngành, và làm trái ngành nghĩa là thất nghiệp</span></div>
   </div>
-  <div style="font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6">Mảnh thứ ba là chỗ hầu hết lập luận yếu đi, và cũng là chỗ ít ai kiểm — vì nó nằm ngầm. Viết nó ra thành một câu là kỹ năng cốt lõi của cả module này.</div>
+  <div style="font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6">Mảnh thứ ba là chỗ nhiều lập luận yếu đi, và cũng là chỗ ít người kiểm tra vì nó nằm ngầm. Viết nó ra thành một câu là kỹ năng cốt lõi của cả module này.</div>
 </div>
 ```
 
-Thử với một phát biểu khác: "Ứng dụng X giúp học tiếng Anh nhanh gấp ba lần." Khẳng định rõ. Bằng chứng: một nghiên cứu do chính công ty công bố. Suy luận ngầm: rằng người trong nghiên cứu giống bạn, rằng nhóm đối chứng có học gì đó tương đương, rằng "nhanh gấp ba" đo bằng một bài kiểm tra có ý nghĩa. Ba giả định ấy đều có thể sai độc lập với nhau, và không cái nào được nhắc tới trong quảng cáo.
+Xét một phát biểu khác: “Ứng dụng X giúp học tiếng Anh nhanh gấp ba lần.” Khẳng định của phát biểu này rõ ràng. Bằng chứng là một nghiên cứu do chính công ty công bố. Suy luận ngầm gồm ba giả định: người trong nghiên cứu giống bạn, nhóm đối chứng có học một nội dung tương đương, và “nhanh gấp ba” được đo bằng một bài kiểm tra có ý nghĩa. Ba giả định ấy đều có thể sai độc lập với nhau, và không giả định nào được nhắc tới trong quảng cáo.
 
-> [!vi-du] Bài đăng trên nhóm sinh viên: "Đừng học thêm chứng chỉ, phí tiền. Mình có chứng chỉ mà vẫn trượt bốn vòng phỏng vấn." Tách ra: **khẳng định** — học chứng chỉ là phí tiền; **bằng chứng** — trải nghiệm của một người; **suy luận ngầm** — rằng chứng chỉ là yếu tố duy nhất quyết định kết quả phỏng vấn, và một trường hợp đủ để kết luận cho mọi người. Chỉ cần viết mảnh thứ ba ra là thấy ngay chỗ hỏng, mà không cần tranh cãi với người viết một câu nào.
+> [!vi-du] Bài đăng trên nhóm sinh viên: “Đừng học thêm chứng chỉ, phí tiền. Mình có chứng chỉ mà vẫn trượt bốn vòng phỏng vấn.” Khi tách ra, **khẳng định** là học chứng chỉ là phí tiền; **bằng chứng** là trải nghiệm của một người; **suy luận ngầm** là chứng chỉ là yếu tố duy nhất quyết định kết quả phỏng vấn, và một trường hợp đủ để kết luận cho mọi người. Chỉ cần viết mảnh thứ ba ra là có thể thấy chỗ hỏng, mà không cần tranh cãi với người viết.
 
-## Thang suy luận: vì sao ta nhảy tới kết luận
+## Thang suy luận: vì sao chúng ta nhảy tới kết luận
 
 ![Sơ đồ thang suy luận của Chris Argyris, từ dữ liệu quan sát được lên tới hành động](https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Ladder_of_inference.svg/1280px-Ladder_of_inference.svg.png "Thang suy luận (ladder of inference) của Chris Argyris: từ bể dữ liệu quan sát được, ta chọn một phần, gán nghĩa, rút ra giả định, kết luận, hình thành niềm tin rồi hành động — và niềm tin ấy lại quyết định lần sau ta chọn dữ liệu nào. Hình: [File:Ladder of inference.svg](https://commons.wikimedia.org/wiki/File:Ladder_of_inference.svg), tác giả User:Biogeographist, giấy phép CC BY-SA 4.0.")
 
-Điểm quan trọng của sơ đồ này không phải là các nấc, mà là **tốc độ**: người ta leo hết bảy nấc trong vài giây và chỉ nhớ nấc cuối. Hai người ngồi cùng một cuộc họp, nghe cùng những câu nói, ra về với hai kết luận trái ngược — không phải vì ai nói dối, mà vì mỗi người chọn một phần dữ liệu khác nhau ngay từ nấc thứ hai.
+Thang suy luận (*ladder of inference*) do Argyris (1990) đề xuất mô tả quá trình đi từ dữ liệu quan sát được tới hành động. Điểm quan trọng của sơ đồ này không nằm ở các nấc mà ở **tốc độ**: người ta có thể leo hết bảy nấc trong vài giây và chỉ nhớ nấc cuối. Hai người ngồi cùng một cuộc họp, nghe cùng những câu nói, vẫn có thể ra về với hai kết luận trái ngược, không phải vì ai nói dối mà vì mỗi người chọn một phần dữ liệu khác nhau ngay từ nấc thứ hai.
 
-Vòng lặp phản hồi ở bên trái sơ đồ là phần đắt nhất: niềm tin hiện tại quyết định lần sau ta chú ý tới dữ liệu nào. Đã tin một bạn cùng nhóm là người thiếu trách nhiệm thì lần sau bạn ấy nộp muộn năm phút bạn sẽ nhớ, còn ba lần nộp sớm thì không vào bộ nhớ.
+Vòng lặp phản hồi ở bên trái sơ đồ là phần có hệ quả lớn nhất: niềm tin hiện tại ảnh hưởng đến việc lần sau chúng ta chú ý tới dữ liệu nào. Chẳng hạn, khi đã tin một bạn cùng nhóm là người thiếu trách nhiệm, bạn dễ nhớ lần bạn ấy nộp muộn năm phút và ít ghi nhớ ba lần bạn ấy nộp sớm.
 
-Cách tụt xuống thang, theo thứ tự:
+Cách quay trở xuống thang suy luận gồm ba bước theo thứ tự sau:
 
-1. **Nói ra kết luận của mình** kèm dữ liệu mình đã dựa vào — "mình nghĩ nhóm đang chậm, vì hai phần việc tuần này chưa có ai nhận".
-2. **Hỏi người kia đang dựa vào dữ liệu nào** — có thể họ nhìn thấy phần bạn không thấy.
-3. **Kiểm giả định ở giữa** — mình đang giả định điều gì để đi từ dữ liệu ấy tới kết luận ấy?
+1. **Nói ra kết luận của mình** kèm dữ liệu mình đã dựa vào, chẳng hạn “mình nghĩ nhóm đang chậm, vì hai phần việc tuần này chưa có ai nhận”.
+2. **Hỏi người kia đang dựa vào dữ liệu nào**, vì có thể họ nhìn thấy phần bạn không thấy.
+3. **Kiểm tra giả định ở giữa** bằng cách tự hỏi: mình đang giả định điều gì để đi từ dữ liệu ấy tới kết luận ấy?
 
 ## Năm câu hỏi dùng được ngay
 
-Không cần nhớ lý thuyết. Năm câu dưới đây đủ cho gần như mọi thứ bạn đọc trong ngày, và mất chưa tới một phút:
+Việc áp dụng không đòi hỏi phải nhớ toàn bộ lý thuyết. Năm câu hỏi dưới đây có thể dùng cho nhiều nội dung bạn đọc trong ngày và mất chưa tới một phút:
 
-1. **Khẳng định ở đây chính xác là gì?** Viết thành một câu. Nhiều bài đăng dài không có nổi một khẳng định rõ ràng — riêng phát hiện ấy đã là kết luận.
+1. **Khẳng định ở đây chính xác là gì?** Viết thành một câu. Nhiều bài đăng dài không có nổi một khẳng định rõ ràng, và riêng phát hiện ấy đã là một kết luận.
 2. **Bằng chứng nào?** Số liệu, nghiên cứu, hay chỉ là một câu chuyện?
-3. **Ai nói, và họ được gì nếu tôi tin?** Không phải để bác bỏ, mà để biết đọc kỹ chỗ nào.
+3. **Ai nói, và họ được gì nếu tôi tin?** Mục đích không phải để bác bỏ mà để biết cần đọc kỹ chỗ nào.
 4. **Còn cách giải thích nào khác cho cùng dữ kiện này?** Bắt buộc nêu ít nhất một.
-5. **Điều gì sẽ khiến tôi đổi ý?** Nếu không có gì, thì thứ bạn đang giữ là niềm tin, không phải kết luận.
+5. **Điều gì sẽ khiến tôi đổi ý?** Nếu không có điều gì như vậy thì thứ bạn đang giữ là một niềm tin chứ không phải một kết luận.
 
-> [!meo] Câu thứ năm là câu đắt nhất và nên hỏi **trước** khi tra cứu. Viết ra trước điều gì sẽ khiến mình đổi ý, rồi mới đi tìm — làm ngược lại thì phần lớn thời gian ta chỉ đang gom bằng chứng cho kết luận đã có sẵn.
+> [!meo] Câu thứ năm có giá trị cao nhất và nên được đặt **trước** khi tra cứu. Hãy viết ra trước điều gì sẽ khiến mình đổi ý rồi mới đi tìm; nếu làm ngược lại, chúng ta nhiều khả năng chỉ đang gom bằng chứng cho kết luận đã có sẵn.
 
-> [!vi-du] Một video ngắn lan truyền: "Sinh viên bây giờ ra trường lương khởi điểm 30 triệu, ai bảo khó xin việc." Chạy năm câu: khẳng định là mức lương khởi điểm phổ biến ở mức 30 triệu; bằng chứng là ba bạn được phỏng vấn trong video; người nói là một kênh tuyển sinh, họ được lợi nếu bạn tin; cách giải thích khác là ba bạn ấy được chọn vì câu chuyện đẹp, hoặc thuộc nhóm ngành và thành phố cụ thể; điều khiến tôi đổi ý là một khảo sát có cỡ mẫu lớn, nêu rõ ngành và khu vực. Kết luận sau một phút: chưa đủ cơ sở để tin cũng như để bác — nhưng đã biết cần tìm gì tiếp.
+> [!vi-du] Một video ngắn lan truyền: “Sinh viên bây giờ ra trường lương khởi điểm 30 triệu, ai bảo khó xin việc.” Áp dụng năm câu hỏi: khẳng định là mức lương khởi điểm phổ biến ở mức 30 triệu; bằng chứng là ba bạn được phỏng vấn trong video; người nói là một kênh tuyển sinh, họ được lợi nếu bạn tin; cách giải thích khác là ba bạn ấy được chọn vì câu chuyện đẹp, hoặc thuộc nhóm ngành và thành phố cụ thể; điều khiến tôi đổi ý là một khảo sát có cỡ mẫu lớn, nêu rõ ngành và khu vực. Kết luận sau một phút là chưa đủ cơ sở để tin cũng như để bác bỏ, nhưng đã biết cần tìm thêm điều gì.
 
 ## Luyện tập và tài liệu tham khảo
 
 ### Cá nhân (15 phút)
 
-Chọn một bài đăng hoặc video bạn xem trong 24 giờ qua có đưa ra một tuyên bố. Tách nó thành ba mảnh: khẳng định, bằng chứng, suy luận ngầm — mảnh thứ ba phải viết thành một câu hoàn chỉnh bắt đầu bằng "Người nói đang giả định rằng…". Sau đó chạy năm câu hỏi và viết một dòng kết luận: tôi tin tới mức nào, và tôi cần thêm gì.
+Chọn một bài đăng hoặc video bạn xem trong 24 giờ qua có đưa ra một tuyên bố. Tách nó thành ba mảnh: khẳng định, bằng chứng, suy luận ngầm; mảnh thứ ba phải viết thành một câu hoàn chỉnh bắt đầu bằng “Người nói đang giả định rằng…”. Sau đó chạy năm câu hỏi và viết một dòng kết luận: tôi tin tới mức nào, và tôi cần thêm gì.
 
 ### Nhóm 3–4 người (25 phút)
 
-Mỗi người mang tới một tuyên bố có thật (bài đăng, quảng cáo khoá học, lời khuyên nghề nghiệp). Đổi chéo cho nhau. Nhiệm vụ: **không được phản bác**, chỉ được viết ra ba mảnh của lập luận và các giả định ngầm. Cuối buổi so sánh: cùng một tuyên bố, mỗi người tìm ra giả định ngầm khác nhau không — và vì sao.
+Mỗi người mang tới một tuyên bố có thật (bài đăng, quảng cáo khoá học, lời khuyên nghề nghiệp). Đổi chéo cho nhau. Nhiệm vụ: **không được phản bác**, chỉ được viết ra ba mảnh của lập luận và các giả định ngầm. Cuối buổi, cả nhóm so sánh xem với cùng một tuyên bố, mỗi người có tìm ra giả định ngầm khác nhau hay không và vì sao.
 
 ### Bài tập về nhà (45–60 phút)
 
@@ -110,7 +112,7 @@ Chọn một chuyện bạn đã kết luận về một người hoặc một n
                 "key": "3.1-phan-bien-la-gi",
                 "type": "mcq",
                 "prompt": "Đâu là mô tả đúng nhất về tư duy phản biện?",
-                "explanation": "Phản biện là quy trình kiểm chất lượng lập luận — kể cả của chính mình — và kết thúc bằng một kết luận đáng tin hơn, chứ không phải bằng việc thắng ai hay nghi ngờ mọi thứ.",
+                "explanation": "Phản biện là quy trình kiểm chất lượng lập luận (kể cả của chính mình) và kết thúc bằng một kết luận đáng tin hơn, chứ không phải bằng việc thắng ai hay nghi ngờ mọi thứ.",
                 "points": 2,
                 "options": [
                     {"label": "Quy trình kiểm tra chất lượng của một lập luận, kể cả lập luận của chính mình, nhằm đi tới kết luận đáng tin hơn", "isCorrect": True},
@@ -123,7 +125,7 @@ Chọn một chuyện bạn đã kết luận về một người hoặc một n
                 "key": "3.1-ba-manh",
                 "type": "matching",
                 "prompt": "Một bạn nói: Đừng học thêm chứng chỉ, phí tiền — mình có chứng chỉ mà vẫn trượt bốn vòng phỏng vấn. Nối mỗi phần với vai trò của nó trong lập luận.",
-                "explanation": "Khẳng định là điều muốn ta tin, bằng chứng là dữ kiện đưa ra, còn suy luận là giả định ngầm nối hai thứ — mảnh thứ ba thường là chỗ lập luận hỏng.",
+                "explanation": "Khẳng định là điều muốn chúng ta tin, bằng chứng là dữ kiện đưa ra, còn suy luận là giả định ngầm nối hai thứ. Mảnh thứ ba thường là chỗ lập luận hỏng.",
                 "points": 3,
                 "pairs": [
                     {"left": "Học thêm chứng chỉ là phí tiền", "right": "Khẳng định"},
@@ -162,12 +164,12 @@ Chọn một chuyện bạn đã kết luận về một người hoặc một n
                 "key": "3.1-cau-hoi-doi-y",
                 "type": "mcq",
                 "prompt": "Vì sao câu hỏi điều gì sẽ khiến tôi đổi ý nên được đặt trước khi đi tra cứu?",
-                "explanation": "Đặt trước thì ta biết mình đang tìm gì để kiểm; đặt sau thì phần lớn thời gian ta chỉ gom bằng chứng ủng hộ kết luận đã có sẵn.",
+                "explanation": "Đặt trước thì chúng ta biết mình đang tìm gì để kiểm; đặt sau thì phần lớn thời gian chúng ta chỉ gom bằng chứng ủng hộ kết luận đã có sẵn.",
                 "points": 2,
                 "options": [
-                    {"label": "Vì nếu không, ta có xu hướng chỉ gom những thứ ủng hộ kết luận mình đã có sẵn", "isCorrect": True},
-                    {"label": "Vì nó giúp ta tranh luận thắng người khác dễ hơn", "isCorrect": False, "misconception": "knm.critical-is-negative"},
-                    {"label": "Vì câu trả lời sẽ cho ta biết ai đúng ngay từ đầu", "isCorrect": False},
+                    {"label": "Vì nếu không, chúng ta có xu hướng chỉ gom những thứ ủng hộ kết luận mình đã có sẵn", "isCorrect": True},
+                    {"label": "Vì nó giúp chúng ta tranh luận thắng người khác dễ hơn", "isCorrect": False, "misconception": "knm.critical-is-negative"},
+                    {"label": "Vì câu trả lời sẽ cho chúng ta biết ai đúng ngay từ đầu", "isCorrect": False},
                     {"label": "Vì nó tiết kiệm thời gian bằng cách bỏ qua các nguồn trái chiều", "isCorrect": False, "misconception": "knm.confirmation-bias"},
                 ],
             },
@@ -175,7 +177,7 @@ Chọn một chuyện bạn đã kết luận về một người hoặc một n
                 "key": "3.1-nam-cau-hoi",
                 "type": "mcq",
                 "prompt": "Một video quảng bá nói: sinh viên ngành này ra trường lương khởi điểm 30 triệu, kèm phỏng vấn ba bạn cựu sinh viên. Bước kiểm tra nào cho nhiều thông tin nhất?",
-                "explanation": "Hỏi bằng chứng thuộc loại nào và ai được lợi nếu ta tin sẽ lộ ra ngay rằng đây là ba trường hợp được chọn, do một bên có lợi ích công bố.",
+                "explanation": "Hỏi bằng chứng thuộc loại nào và ai được lợi nếu chúng ta tin sẽ lộ ra ngay rằng đây là ba trường hợp được chọn, do một bên có lợi ích công bố.",
                 "points": 2,
                 "options": [
                     {"label": "Hỏi ba trường hợp này được chọn thế nào và ai được lợi nếu người xem tin con số đó", "isCorrect": True},

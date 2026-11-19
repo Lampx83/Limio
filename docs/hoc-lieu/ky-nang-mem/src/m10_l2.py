@@ -2,53 +2,53 @@
 LESSON = {
     "title": "Bài 10.2 · Thư ứng tuyển và chuẩn bị phỏng vấn",
     "durationMin": 45,
-    "description": "CV khác thư ứng tuyển ở đâu; tìm hiểu công ty và vị trí trước buổi phỏng vấn: tìm gì, ở đâu; chuẩn bị ba tới năm câu chuyện theo cấu trúc STAR; và phần hậu cần dễ bị bỏ quên.",
+    "description": "Bài học phân biệt CV với thư ứng tuyển, hướng dẫn tìm hiểu công ty và vị trí trước buổi phỏng vấn, chuẩn bị ba tới năm câu chuyện theo cấu trúc STAR, và nhắc tới phần hậu cần dễ bị bỏ quên.",
     "objectives": [
-        "Phân biệt được vai trò của CV và thư ứng tuyển, viết được một thư ứng tuyển ngắn",
-        "Tìm được thông tin cần thiết về công ty và vị trí trước buổi phỏng vấn",
-        "Chuẩn bị được ba tới năm câu chuyện theo cấu trúc STAR",
-        "Chuẩn bị được phần hậu cần cho phỏng vấn trực tiếp và phỏng vấn trực tuyến",
+        "Phân biệt vai trò của CV và thư ứng tuyển, đồng thời viết một thư ứng tuyển ngắn",
+        "Xác định và tìm kiếm thông tin cần thiết về công ty và vị trí trước buổi phỏng vấn",
+        "Xây dựng ba tới năm câu chuyện theo cấu trúc STAR",
+        "Lập danh mục hậu cần cho phỏng vấn trực tiếp và phỏng vấn trực tuyến",
     ],
     "summary": [
-        "CV trả lời tôi đã làm được gì; thư ứng tuyển trả lời vì sao là vị trí này, vì sao là nơi này và vì sao là tôi.",
-        "Tìm hiểu công ty để trả lời được vì sao chọn nơi này, hỏi được câu hỏi có chất lượng, và biết nơi đó có hợp với mình không.",
-        "STAR: bối cảnh – nhiệm vụ – hành động – kết quả; ba tới năm câu chuyện chuẩn bị trước phủ được phần lớn câu hỏi hành vi.",
-        "Phần hậu cần — đường đi, thiết bị, đường truyền, bản in CV — không làm bạn được nhận, nhưng hỏng thì đủ để hỏng cả buổi.",
+        "CV trả lời câu hỏi “tôi đã làm được gì”, còn thư ứng tuyển trả lời các câu hỏi vì sao là vị trí này, vì sao là nơi này và vì sao là tôi.",
+        "Tìm hiểu công ty giúp trả lời được vì sao chọn nơi này, hỏi được câu hỏi có chất lượng và đánh giá nơi đó có phù hợp với mình hay không.",
+        "Cấu trúc STAR gồm bối cảnh, nhiệm vụ, hành động và kết quả; ba tới năm câu chuyện được chuẩn bị trước có thể dùng lại cho nhiều câu hỏi hành vi.",
+        "Phần hậu cần, gồm đường đi, thiết bị, đường truyền và bản in CV, không quyết định việc bạn được nhận, nhưng nếu hỏng thì có thể làm hỏng cả buổi phỏng vấn.",
     ],
     "splitSections": True,
     "body": r"""
-Phần lớn ứng viên trượt không phải vì thiếu năng lực mà vì **không chuẩn bị** — trong khi câu hỏi phỏng vấn thì lặp lại tới mức đoán được.
+Nhiều ứng viên bị loại không phải vì thiếu năng lực mà vì **chưa chuẩn bị đủ**, trong khi nhiều câu hỏi phỏng vấn lặp lại thường xuyên nên có thể đoán trước. Bài này nối tiếp bài 10.1: sau khi có CV, người ứng tuyển cần một thư ứng tuyển (*cover letter*) phù hợp, cần tìm hiểu nơi mình ứng tuyển, và cần chuẩn bị câu trả lời cùng phần hậu cần cho buổi phỏng vấn.
 
 ## CV và thư ứng tuyển: hai việc khác nhau
 
 | | CV | Thư ứng tuyển |
 |---|---|---|
-| Trả lời câu hỏi | Tôi đã làm được những gì | Vì sao là vị trí này, vì sao là nơi này, vì sao là tôi |
-| Hình thức | Gạch đầu dòng, dữ kiện, một trang | Văn xuôi ngắn, 3–4 đoạn, dưới một trang |
-| Mức cá nhân hoá | Đảo thứ tự và sửa mục tiêu cho từng nơi | **Viết riêng cho từng nơi**, có tên công ty và tên vị trí |
-| Cái người đọc tìm | Sự khớp về kinh nghiệm và kỹ năng | Động lực, sự hiểu về công việc, cách bạn viết |
+| Trả lời câu hỏi | Tôi đã làm được những gì? | Vì sao là vị trí này, vì sao là nơi này, vì sao là tôi? |
+| Hình thức | CV dùng gạch đầu dòng và dữ kiện, dài một trang. | Thư là văn xuôi ngắn gồm 3–4 đoạn, dài dưới một trang. |
+| Mức cá nhân hoá | CV đảo thứ tự và sửa mục tiêu cho từng nơi. | **Thư được viết riêng cho từng nơi**, có tên công ty và tên vị trí. |
+| Cái người đọc tìm | Người đọc tìm sự khớp về kinh nghiệm và kỹ năng. | Người đọc tìm động lực, sự hiểu biết về công việc và cách bạn viết. |
 
-Bố cục một thư ứng tuyển dùng được: **đoạn 1** — ứng tuyển vị trí nào, biết tin từ đâu, một câu vì sao bạn quan tâm; **đoạn 2** — hai bằng chứng cụ thể cho thấy bạn làm được việc, lấy từ CV nhưng kể ngắn thành câu chuyện; **đoạn 3** — vì sao là công ty này, dựa trên điều bạn đã tìm hiểu được; **đoạn 4** — một câu đề nghị trao đổi thêm và lời cảm ơn.
+Một thư ứng tuyển có thể được bố cục thành bốn đoạn. **Đoạn 1** nêu vị trí ứng tuyển, nguồn biết tin và một câu giải thích vì sao bạn quan tâm. **Đoạn 2** trình bày hai bằng chứng cụ thể cho thấy bạn làm được việc, lấy từ CV nhưng kể ngắn gọn thành câu chuyện. **Đoạn 3** giải thích vì sao bạn chọn công ty này, dựa trên điều bạn đã tìm hiểu được. **Đoạn 4** gồm một câu đề nghị trao đổi thêm và lời cảm ơn.
 
-> [!canh-bao] Thư ứng tuyển chỉ có tác dụng khi nó **không thể dán sang nơi khác**. Nếu đổi tên công ty mà thư vẫn dùng được y nguyên thì nó chưa nói gì về nơi này, và người đọc nhận ra ngay.
+> [!canh-bao] Thư ứng tuyển chỉ phát huy tác dụng khi nó **không thể dán sang nơi khác**. Nếu đổi tên công ty mà thư vẫn dùng được y nguyên thì thư chưa nói được điều gì về nơi này, và người đọc có thể nhận ra điều đó ngay.
 
 ## Tìm hiểu công ty và vị trí
 
-Tìm hiểu trước không phải để khoe hiểu biết, mà để làm được ba việc: trả lời câu **"vì sao em chọn công ty chúng tôi"**, hỏi được câu hỏi có chất lượng ở cuối buổi, và tự đánh giá xem nơi này có hợp với mình không — buổi phỏng vấn là hai chiều.
+Việc tìm hiểu trước không nhằm khoe hiểu biết mà nhằm làm được ba việc: trả lời câu **“vì sao em chọn công ty chúng tôi”**, hỏi được câu hỏi có chất lượng ở cuối buổi, và tự đánh giá xem nơi này có phù hợp với mình hay không, vì phỏng vấn là quá trình hai chiều. Bảng dưới đây liệt kê các nhóm thông tin cần tìm và nơi tìm.
 
 | Tìm gì | Tìm ở đâu |
 |---|---|
 | Công ty làm gì, khách hàng là ai, đang tăng trưởng hay thu hẹp | Trang chủ, trang tuyển dụng, tin tức gần đây |
-| Vị trí này làm gì hằng ngày, thuộc bộ phận nào, báo cáo cho ai | Mô tả công việc; hỏi lại người tuyển dụng nếu chưa rõ |
-| Sản phẩm hoặc dịch vụ — dùng thử được thì dùng thử | Ứng dụng, cửa hàng, fanpage |
+| Vị trí này làm gì hằng ngày, thuộc bộ phận nào, báo cáo cho ai | Mô tả công việc; hỏi lại nhà tuyển dụng nếu chưa rõ |
+| Sản phẩm hoặc dịch vụ của công ty; nên dùng thử nếu có thể | Ứng dụng, cửa hàng, fanpage |
 | Văn hoá làm việc thực tế | Bài đăng của nhân viên, đánh giá trên các trang việc làm, người quen đang làm ở đó |
 | Người sẽ phỏng vấn bạn | Hồ sơ nghề nghiệp công khai của họ |
 
-> [!vi-du] Hai ứng viên cùng được hỏi "vì sao em chọn công ty chúng tôi". A: "Vì công ty có môi trường trẻ trung năng động và cơ hội phát triển." B: "Em có dùng ứng dụng của công ty ba tháng nay. Phần em thấy thú vị là cách tính năng nhắc nhở được thiết kế cho người mới bắt đầu — em cũng đang làm một dự án nhỏ về mảng này và muốn học cách một đội làm sản phẩm thật giải quyết bài toán đó." Câu của A dùng được cho mọi công ty, nên nó không nói gì. Câu của B mất khoảng ba mươi phút chuẩn bị.
+> [!vi-du] Hai ứng viên cùng được hỏi “vì sao em chọn công ty chúng tôi”. Ứng viên A trả lời: “Vì công ty có môi trường trẻ trung năng động và cơ hội phát triển.” Ứng viên B trả lời: “Em có dùng ứng dụng của công ty ba tháng nay. Phần em thấy thú vị là cách tính năng nhắc nhở được thiết kế cho người mới bắt đầu — em cũng đang làm một dự án nhỏ về mảng này và muốn học cách một đội làm sản phẩm thật giải quyết bài toán đó.” Câu trả lời của A dùng được cho mọi công ty nên không cho người nghe biết gì về động lực thật của A. Câu trả lời của B cần khoảng ba mươi phút chuẩn bị.
 
 ## Chuẩn bị câu chuyện theo STAR
 
-Các câu hỏi hành vi — "kể về một lần em…" — chiếm phần lớn buổi phỏng vấn, và chúng đều trả lời được bằng cùng một cấu trúc:
+Câu hỏi hành vi (*behavioral question*), chẳng hạn “kể về một lần em…”, thường chiếm một phần đáng kể của buổi phỏng vấn, và có thể được trả lời bằng cùng một cấu trúc gọi là STAR (*Situation, Task, Action, Result*), tức là bối cảnh, nhiệm vụ, hành động và kết quả:
 
 ```html
 <div style="border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0">
@@ -62,38 +62,38 @@ Các câu hỏi hành vi — "kể về một lần em…" — chiếm phần l�
 </div>
 ```
 
-Chuẩn bị **ba tới năm câu chuyện** là đủ, vì một câu chuyện tốt dùng lại được cho nhiều câu hỏi. Nên có: một lần bạn giải quyết vấn đề khó; một lần bạn làm việc nhóm hoặc xử lý bất đồng; một lần bạn **thất bại và học được gì**; một lần bạn học nhanh một thứ mới; và một lần bạn chủ động làm việc không ai giao.
+Chuẩn bị **ba tới năm câu chuyện** thường là đủ, vì một câu chuyện tốt có thể dùng lại cho nhiều câu hỏi. Các câu chuyện nên bao gồm: một lần bạn giải quyết vấn đề khó; một lần bạn làm việc nhóm hoặc xử lý bất đồng; một lần bạn **thất bại và học được gì**; một lần bạn học nhanh một điều mới; và một lần bạn chủ động làm việc mà không ai giao.
 
-> [!meo] Viết ra bốn dòng cho mỗi câu chuyện rồi **nói to một lần** — đúng như đã học ở bài 7.3. Câu chuyện đọc trong đầu thấy gọn, nói ra thành tiếng mới lộ chỗ dài dòng. Và đừng học thuộc lòng: nhớ bốn mốc, còn lời thì để tự nhiên.
+> [!meo] Hãy viết ra bốn dòng cho mỗi câu chuyện rồi **nói to một lần**, tương tự cách luyện tập đã học ở bài 7.3. Câu chuyện đọc thầm thấy gọn, nhưng nói thành tiếng mới lộ ra những chỗ dài dòng. Ngoài ra, không nên học thuộc lòng: hãy nhớ bốn mốc của STAR và để lời nói tự nhiên.
 
 ## Phần hậu cần hay bị bỏ quên
 
-Những thứ này không làm bạn được nhận, nhưng hỏng thì đủ để hỏng cả buổi:
+Những yếu tố này không quyết định việc bạn được nhận, nhưng nếu chuẩn bị sai thì có thể làm hỏng cả buổi phỏng vấn. Chúng được chia theo hình thức phỏng vấn như sau:
 
-- **Trực tiếp:** biết đường đi và thời gian di chuyển, đến sớm 10–15 phút, mang theo bản in CV và giấy bút, trang phục gọn gàng phù hợp với nơi ứng tuyển, tắt chuông điện thoại.
-- **Trực tuyến:** thử micro và camera **trước một ngày**, ngồi nơi yên tĩnh với nền phía sau gọn, đặt camera ngang tầm mắt, có phương án dự phòng nếu mất mạng (số điện thoại của người phỏng vấn, sẵn sàng chuyển sang gọi thoại), và mở sẵn CV cùng ghi chú ở màn hình phụ hoặc bản in — nhưng **không đọc** chúng khi nói.
-- **Cả hai:** đọc lại mô tả công việc và CV của chính mình ngay trước buổi phỏng vấn, vì bạn sẽ được hỏi đúng những gì mình viết.
+- **Trực tiếp:** bạn nên biết đường đi và thời gian di chuyển, đến sớm 10–15 phút, mang theo bản in CV và giấy bút, mặc trang phục gọn gàng phù hợp với nơi ứng tuyển và tắt chuông điện thoại.
+- **Trực tuyến:** bạn nên thử micro và camera **trước một ngày**, ngồi nơi yên tĩnh với nền phía sau gọn, đặt camera ngang tầm mắt, có phương án dự phòng nếu mất mạng (số điện thoại của người phỏng vấn, sẵn sàng chuyển sang gọi thoại), và mở sẵn CV cùng ghi chú ở màn hình phụ hoặc bản in, nhưng **không đọc** chúng khi nói.
+- **Cả hai:** bạn nên đọc lại mô tả công việc và CV của chính mình ngay trước buổi phỏng vấn, vì nhiều khả năng bạn sẽ được hỏi về những gì mình đã viết.
 
-> [!canh-bao] Điều nên tránh để không mất điểm ngay từ đầu: đến muộn mà không báo trước; nói xấu nơi làm cũ hoặc trường cũ; hỏi về lương và ngày nghỉ ngay câu đầu tiên; trả lời cụt lủn kiểu có hoặc không; và không nhớ nổi những gì chính mình viết trong CV.
+> [!canh-bao] Để không mất điểm ngay từ đầu, bạn nên tránh các điều sau: đến muộn mà không báo trước; nói xấu nơi làm cũ hoặc trường cũ; hỏi về lương và ngày nghỉ ngay câu đầu tiên; trả lời cụt lủn kiểu có hoặc không; và không nhớ nổi những gì chính mình viết trong CV.
 
 ## Luyện tập và tài liệu tham khảo
 
 ### Cá nhân (20 phút)
 
-Chọn một tin tuyển dụng thật. Làm hai việc: (a) tra cứu công ty theo bảng tìm gì ở đâu, ghi lại năm dòng thông tin và viết một câu trả lời riêng cho "vì sao em chọn nơi này" — câu ấy phải **không dùng được cho công ty khác**; (b) viết bốn dòng STAR cho một câu chuyện của bạn, phần hành động phải dài hơn phần bối cảnh.
+Hãy chọn một tin tuyển dụng thật và làm hai việc: (a) tra cứu công ty theo bảng “tìm gì, tìm ở đâu”, ghi lại năm dòng thông tin và viết một câu trả lời riêng cho câu hỏi “vì sao em chọn nơi này”, trong đó câu trả lời phải **không dùng được cho công ty khác**; (b) viết bốn dòng STAR cho một câu chuyện của bạn, trong đó phần hành động phải dài hơn phần bối cảnh.
 
 ### Nhóm 3–4 người (25 phút)
 
-Phỏng vấn thử theo cặp, đổi vai: người phỏng vấn hỏi ba câu hành vi ("kể về một lần em…"), người trả lời dùng STAR. Người thứ ba bấm giờ và ghi hai chỉ số: **tỉ lệ thời gian dành cho phần hành động**, và số lần người trả lời nói "nhóm em" ở chỗ lẽ ra phải nói "em". Sau mỗi lượt phản hồi đúng hai chỉ số đó.
+Các thành viên phỏng vấn thử theo cặp và đổi vai: người phỏng vấn hỏi ba câu hành vi (“kể về một lần em…”), người trả lời dùng STAR. Người thứ ba bấm giờ và ghi hai chỉ số: **tỉ lệ thời gian dành cho phần hành động**, và số lần người trả lời nói “nhóm em” ở chỗ lẽ ra phải nói “em”. Sau mỗi lượt, người thứ ba chỉ phản hồi đúng hai chỉ số đó.
 
 ### Bài tập về nhà (60 phút)
 
-Viết trọn bộ hồ sơ cho một vị trí thật: CV đã cá nhân hoá (từ bài 10.1) và một thư ứng tuyển bốn đoạn. Kèm theo **năm câu chuyện STAR** ở dạng bốn dòng mỗi câu chuyện. Phép thử cuối: đổi tên công ty trong thư ứng tuyển sang một nơi khác — nếu thư vẫn dùng được y nguyên, hãy viết lại đoạn ba.
+Hãy viết trọn bộ hồ sơ cho một vị trí thật, gồm CV đã cá nhân hoá (theo bài 10.1) và một thư ứng tuyển bốn đoạn, kèm theo **năm câu chuyện STAR** ở dạng bốn dòng cho mỗi câu chuyện. Phép thử cuối cùng là đổi tên công ty trong thư ứng tuyển sang một nơi khác; nếu thư vẫn dùng được y nguyên, hãy viết lại đoạn ba.
 
 ### Xem thêm
 
-- 🎬 [How to Ace an Interview: 5 Tips from a Harvard Career Advisor](https://www.youtube.com/watch?v=DHDrj0_bMQ0) — Harvard Extension School, 5 phút. Phần chuẩn bị và cấu trúc câu trả lời.
-- 🎬 [Looking for a Job? Highlight Your Ability, Not Your Experience](https://www.youtube.com/watch?v=guXxy8LH2QM) — Jason Shen, TED, 6 phút.
+- 🎬 [How to Ace an Interview: 5 Tips from a Harvard Career Advisor](https://www.youtube.com/watch?v=DHDrj0_bMQ0) — Harvard Extension School, 5 phút. Video đề cập phần chuẩn bị và cấu trúc câu trả lời.
+- 🎬 [Looking for a Job? Highlight Your Ability, Not Your Experience](https://www.youtube.com/watch?v=guXxy8LH2QM) — Jason Shen, TED, 6 phút. Nội dung đã được giới thiệu ở bài 10.1.
 
 ### Nguồn tham khảo
 
@@ -109,21 +109,21 @@ Viết trọn bộ hồ sơ cho một vị trí thật: CV đã cá nhân hoá (
             {
                 "key": "10.2-cv-vs-cover",
                 "type": "mcq",
-                "prompt": "Khác biệt giữa CV và thư xin việc (cover letter) là gì?",
+                "prompt": "Khác biệt giữa CV và thư ứng tuyển (cover letter) là gì?",
                 "explanation": "CV trình bày dữ kiện về những gì bạn đã làm được; thư ứng tuyển giải thích vì sao là vị trí này, vì sao là nơi này và vì sao là bạn.",
                 "points": 2,
                 "options": [
                     {"label": "CV trả lời tôi đã làm được gì; thư ứng tuyển trả lời vì sao vị trí này, vì sao nơi này và vì sao là tôi", "isCorrect": True},
-                    {"label": "CV dài hơn, thư xin việc ngắn hơn nhưng nội dung như nhau", "isCorrect": False},
-                    {"label": "Thư xin việc là bản tóm tắt của CV", "isCorrect": False},
-                    {"label": "Thư xin việc chỉ cần khi ứng tuyển vào công ty nước ngoài", "isCorrect": False},
+                    {"label": "CV dài hơn, thư ứng tuyển ngắn hơn nhưng nội dung như nhau", "isCorrect": False},
+                    {"label": "Thư ứng tuyển là bản tóm tắt của CV", "isCorrect": False},
+                    {"label": "Thư ứng tuyển chỉ cần khi ứng tuyển vào công ty nước ngoài", "isCorrect": False},
                 ],
             },
             {
                 "key": "10.2-tim-hieu-cong-ty",
                 "type": "mcq",
                 "prompt": "Vì sao việc tìm hiểu công ty trước khi phỏng vấn lại quan trọng?",
-                "explanation": "Nó cho phép trả lời được câu vì sao chọn nơi này, hỏi được câu hỏi có chất lượng, và tự đánh giá nơi đó có hợp với mình không — phỏng vấn là quá trình hai chiều.",
+                "explanation": "Nó cho phép trả lời được câu vì sao chọn nơi này, hỏi được câu hỏi có chất lượng, và tự đánh giá nơi đó có hợp với mình không; phỏng vấn là quá trình hai chiều.",
                 "points": 3,
                 "options": [
                     {"label": "Để trả lời được vì sao chọn nơi này, hỏi được câu hỏi có chất lượng, và tự đánh giá nơi đó có hợp với mình không", "isCorrect": True},
@@ -149,7 +149,7 @@ Viết trọn bộ hồ sơ cho một vị trí thật: CV đã cá nhân hoá (
                 "key": "10.2-chuan-bi-truoc",
                 "type": "mcq",
                 "prompt": "Trước buổi phỏng vấn tuyển dụng, ứng viên cần chuẩn bị những gì?",
-                "explanation": "Tìm hiểu công ty và vị trí, chuẩn bị ba tới năm câu chuyện STAR, đọc lại CV của chính mình, chuẩn bị câu hỏi để hỏi lại, và lo phần hậu cần.",
+                "explanation": "Ứng viên cần tìm hiểu công ty và vị trí, chuẩn bị ba tới năm câu chuyện STAR, đọc lại CV của chính mình, chuẩn bị câu hỏi để hỏi lại, và lo phần hậu cần.",
                 "points": 2,
                 "options": [
                     {"label": "Tìm hiểu công ty và vị trí, chuẩn bị 3–5 câu chuyện STAR, đọc lại chính CV của mình, soạn câu hỏi để hỏi lại, và kiểm tra phần hậu cần", "isCorrect": True},
@@ -162,7 +162,7 @@ Viết trọn bộ hồ sơ cho một vị trí thật: CV đã cá nhân hoá (
                 "key": "10.2-tranh-gi",
                 "type": "mcq",
                 "prompt": "Để tạo ấn tượng tốt với nhà tuyển dụng, ứng viên cần tránh điều gì?",
-                "explanation": "Đến muộn không báo, nói xấu nơi cũ, hỏi lương và ngày nghỉ ngay câu đầu, trả lời cụt lủn, và không nhớ nổi nội dung chính mình viết trong CV.",
+                "explanation": "Ứng viên cần tránh đến muộn không báo, nói xấu nơi cũ, hỏi lương và ngày nghỉ ngay câu đầu, trả lời cụt lủn, và không nhớ nổi nội dung chính mình viết trong CV.",
                 "points": 2,
                 "options": [
                     {"label": "Đến muộn không báo trước, nói xấu nơi làm cũ, và không nhớ nổi những gì mình viết trong CV", "isCorrect": True},
@@ -175,7 +175,7 @@ Viết trọn bộ hồ sơ cho một vị trí thật: CV đã cá nhân hoá (
                 "key": "10.2-phong-van-online",
                 "type": "mcq",
                 "prompt": "Với phỏng vấn trực tuyến, việc chuẩn bị nào là cần thiết nhất?",
-                "explanation": "Thử thiết bị và đường truyền trước một ngày, chọn nơi yên tĩnh nền gọn, camera ngang tầm mắt, và có phương án dự phòng khi mất mạng.",
+                "explanation": "Cần thử thiết bị và đường truyền trước một ngày, chọn nơi yên tĩnh có nền gọn, đặt camera ngang tầm mắt và có phương án dự phòng khi mất mạng.",
                 "points": 2,
                 "options": [
                     {"label": "Thử micro, camera và đường truyền từ hôm trước; chọn chỗ yên tĩnh; có phương án dự phòng nếu mất mạng", "isCorrect": True},

@@ -2,28 +2,28 @@
 LESSON = {
     "title": "Bài 7.2 · Thiết kế slide và hỗ trợ trực quan",
     "durationMin": 45,
-    "description": "Vì sao slide nhồi chữ làm khán giả ngừng nghe; quy tắc về số dòng, cỡ chữ và kiểu chữ; dùng hình ảnh và biểu đồ đúng cách; và cách trình bày đề tài kỹ thuật cho người ngoài ngành.",
+    "description": "Bài học giải thích vì sao slide nhiều chữ làm khán giả ngừng nghe, trình bày các quy tắc về số dòng, cỡ chữ và kiểu chữ, cách dùng hình ảnh và biểu đồ đúng mục đích, và cách thuyết trình đề tài kỹ thuật cho khán giả ngoài ngành.",
     "objectives": [
-        "Giải thích được vì sao đọc nguyên văn slide làm giảm hiệu quả trình bày",
+        "Giải thích được vì sao đọc nguyên văn slide làm giảm hiệu quả thuyết trình",
         "Áp dụng được quy tắc về lượng chữ, cỡ chữ và kiểu chữ trên slide",
-        "Chọn được hình ảnh và biểu đồ phục vụ thông điệp thay vì trang trí",
-        "Chuyển được một nội dung kỹ thuật thành slide cho khán giả ngoài ngành",
+        "Lựa chọn được hình ảnh và biểu đồ phục vụ thông điệp thay vì chỉ để trang trí",
+        "Chuyển đổi được một nội dung kỹ thuật thành slide phù hợp với khán giả ngoài ngành",
     ],
     "summary": [
-        "Khán giả đọc nhanh hơn người nói: slide nhiều chữ khiến họ đọc xong trước rồi ngừng nghe — hai kênh cùng tải chữ thì cạnh tranh nhau chứ không cộng lại.",
-        "Mỗi slide một ý, ít dòng chữ, cỡ chữ đủ lớn để đọc từ cuối phòng, kiểu chữ đơn giản và nhất quán.",
-        "Hình ảnh phải phục vụ nội dung, đủ nét, có nguồn; ảnh trang trí và hiệu ứng thừa chỉ lấy mất chú ý.",
-        "Với khán giả ngoài ngành: bỏ thuật ngữ, đổi công thức thành ví dụ, và giữ lại đúng phần họ dùng được.",
+        "Khán giả thường đọc nhanh hơn tốc độ người nói, nên slide nhiều chữ khiến họ đọc xong trước rồi ngừng nghe. Việc đọc chữ và nghe lời nói cùng lúc nhiều khả năng cạnh tranh nhau về năng lực xử lý chứ không bổ sung cho nhau.",
+        "Mỗi slide nên chứa một ý, ít dòng chữ, cỡ chữ đủ lớn để đọc từ cuối phòng, và kiểu chữ đơn giản, nhất quán.",
+        "Hình ảnh phải phục vụ nội dung, đủ nét và có nguồn; ảnh trang trí và hiệu ứng thừa chỉ làm phân tán chú ý. Mỗi biểu đồ trả lời một câu hỏi và có trục trung thực.",
+        "Với khán giả ngoài ngành, người trình bày bỏ hoặc giải thích thuật ngữ, đổi công thức thành ví dụ và giữ lại đúng phần khán giả có thể sử dụng.",
     ],
     "splitSections": True,
     "body": r"""
-Slide không phải bài thuyết trình. Nó là **chỗ dựa thị giác** cho bài nói — và khi bị dùng sai vai, nó trở thành thứ cạnh tranh với chính người nói.
+Slide không phải là bài thuyết trình. Slide là **chỗ dựa thị giác** (*visual aid*) cho bài nói; khi bị dùng sai vai trò, nó trở thành thứ cạnh tranh với chính người nói. Trong bài này, slide được thiết kế đúng vai trò hỗ trợ ấy được gọi là *slide dựa*.
 
 ## Vì sao slide nhồi chữ làm hỏng bài nói
 
-Khán giả đọc nhanh hơn tốc độ bạn nói. Khi slide đầy chữ, họ đọc xong trước, rồi **ngừng nghe** — phần còn lại của bạn thành nền. Tệ hơn, đọc chữ trên màn hình và nghe lời nói cùng lúc là hai luồng ngôn ngữ cạnh tranh cùng một chỗ trong trí nhớ làm việc; hai kênh ấy không cộng lại mà trừ nhau.
+Khán giả thường đọc nhanh hơn tốc độ bạn nói. Khi slide đầy chữ, họ đọc xong trước rồi **ngừng nghe**, và phần còn lại của bài nói trở thành âm thanh nền. Ngoài ra, việc đọc chữ trên màn hình và nghe lời nói cùng lúc là hai luồng ngôn ngữ cùng chiếm dụng trí nhớ làm việc (*working memory*). Nguyên tắc dư thừa (*redundancy principle*) và lý thuyết tải nhận thức (*cognitive load theory*) đều gợi ý rằng hai kênh ấy cạnh tranh với nhau chứ không cộng lại (Mayer, 2021; Sweller và cộng sự, 2011).
 
-Vì vậy: **đừng đọc nguyên văn slide**. Nếu mọi thứ cần nói đều nằm trên slide thì bài nói không cần bạn — gửi file là đủ. Cách chia đúng: slide giữ **từ khoá, con số, hình**; miệng giữ **câu chuyện, giải thích, chuyển ý**; tài liệu chi tiết phát riêng sau buổi nói.
+Vì vậy, bạn **không nên đọc nguyên văn slide**. Nếu mọi nội dung cần nói đều nằm trên slide thì bài nói không còn cần người trình bày, và chỉ cần gửi tệp cho khán giả là đủ. Cách phân chia phù hợp là slide giữ **từ khoá, con số và hình**, lời nói giữ **câu chuyện, giải thích và chuyển ý**, còn tài liệu chi tiết được phát riêng sau buổi nói.
 
 ```html
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:.8rem;margin:1.2rem 0">
@@ -46,61 +46,61 @@ Vì vậy: **đừng đọc nguyên văn slide**. Nếu mọi thứ cần nói �
 </div>
 ```
 
-Hai slide trên chứa **cùng một dữ liệu**. Bản bên trái buộc người nghe chọn giữa đọc và nghe; bản bên phải để họ nghe bạn kể phần còn lại — 68% có thực tập, nhưng chỉ 41% đúng ngành, và đó mới là chỗ đáng bàn.
+Hai slide trên chứa **cùng một dữ liệu**. Bản bên trái buộc khán giả phải chọn giữa đọc và nghe, còn bản bên phải để họ nghe người trình bày kể phần còn lại: 68% có thực tập nhưng chỉ 41% thực tập đúng ngành, và đó mới là điểm đáng bàn.
 
 ## Quy tắc chữ trên slide
 
 | Yếu tố | Khuyến nghị | Lý do |
 |---|---|---|
-| Số dòng chữ | Ít, khoảng **tối đa 6 dòng** một slide; mỗi dòng ngắn gọn | Nhiều hơn thì khán giả chuyển sang chế độ đọc |
-| Số ý | Một slide một ý | Hai ý trên một slide thì ý thứ hai luôn bị lướt |
-| Cỡ chữ | Đủ lớn để đọc từ hàng cuối; tiêu đề lớn hơn nội dung rõ rệt | Người ngồi xa không đọc được thì slide vô nghĩa với họ |
-| Kiểu chữ | Chữ không chân, đơn giản, dùng nhất quán cả bài; tối đa hai kiểu | Chữ trang trí làm giảm tốc độ đọc |
-| Tương phản | Chữ đậm trên nền sáng hoặc ngược lại, tránh nền ảnh rối | Phòng chiếu thường sáng hơn màn hình máy bạn |
+| Số dòng chữ | Tối đa khoảng **6 dòng** trên mỗi slide, mỗi dòng ngắn gọn. | Nếu nhiều hơn, khán giả có xu hướng chuyển sang đọc thay vì nghe. |
+| Số ý | Mỗi slide chỉ nên có một ý. | Khi có hai ý trên một slide, ý thứ hai dễ bị lướt qua. |
+| Cỡ chữ | Cỡ chữ đủ lớn để đọc từ hàng cuối, và tiêu đề lớn hơn nội dung rõ rệt. | Người ngồi xa không đọc được thì slide không còn giá trị với họ. |
+| Kiểu chữ | Dùng chữ không chân, đơn giản và nhất quán trong cả bài, với tối đa hai kiểu chữ. | Chữ trang trí có thể làm giảm tốc độ đọc. |
+| Tương phản | Dùng chữ tối trên nền sáng hoặc ngược lại, và tránh nền ảnh rối. | Phòng chiếu thường sáng hơn màn hình máy tính của bạn. |
 
-> [!meo] Phép thử phòng chiếu: chiếu slide lên rồi lùi ra cuối phòng. Đọc không nổi từ đó thì cỡ chữ chưa đạt — và đây là lỗi phổ biến nhất, vì lúc soạn ta luôn nhìn màn hình cách mắt 50 cm.
+> [!meo] Bạn có thể kiểm tra bằng cách chiếu slide lên rồi lùi ra cuối phòng. Nếu không đọc được từ vị trí đó thì cỡ chữ chưa đạt. Đây là lỗi thường gặp, vì lúc soạn slide chúng ta thường nhìn màn hình ở khoảng cách khoảng 50 cm.
 
 ## Hình ảnh và biểu đồ
 
-Nguyên tắc gọn: **hình phải phục vụ nội dung**. Ba yêu cầu cụ thể:
+Nguyên tắc chung là **hình phải phục vụ nội dung**, với ba yêu cầu cụ thể sau.
 
-- **Liên quan trực tiếp** tới ý đang nói. Ảnh trang trí cho đẹp lấy mất chú ý mà không thêm thông tin nào — đúng nguyên tắc mạch lạc trong thiết kế đa phương tiện.
-- **Đủ nét và đủ lớn**, không kéo méo tỉ lệ.
-- **Có nguồn**, ghi ngay dưới hình. Với học liệu dùng lại hình của người khác, đây là yêu cầu bắt buộc chứ không phải phép lịch sự.
+- Hình **liên quan trực tiếp** tới ý đang nói. Ảnh chỉ để trang trí làm phân tán chú ý mà không bổ sung thông tin nào, điều này phù hợp với nguyên tắc mạch lạc (*coherence principle*) trong thiết kế học tập đa phương tiện (Mayer, 2021).
+- Hình **đủ nét và đủ lớn**, đồng thời không bị kéo méo tỉ lệ.
+- Hình **có nguồn** được ghi ngay dưới hình. Khi sử dụng lại hình của người khác trong học liệu, đây là yêu cầu bắt buộc chứ không chỉ là phép lịch sự.
 
-Với biểu đồ: mỗi biểu đồ trả lời **một câu hỏi**. Ghi câu trả lời ngay ở tiêu đề biểu đồ ("Tỉ lệ thực tập đúng ngành giảm dần theo khoá") thay vì một nhãn trung tính ("Biểu đồ 3"). Trục phải bắt đầu từ 0 nếu so sánh độ lớn — cắt trục để phóng đại khác biệt là thứ bạn đã học nhận ra ở bài 3.3, đừng làm nó trên slide của mình.
+Với biểu đồ, mỗi biểu đồ nên trả lời **một câu hỏi**. Câu trả lời nên được ghi ngay ở tiêu đề biểu đồ, chẳng hạn “Tỉ lệ thực tập đúng ngành giảm dần theo khoá”, thay vì một nhãn trung tính như “Biểu đồ 3”. Trục cần bắt đầu từ 0 khi so sánh độ lớn. Việc cắt trục để phóng đại khác biệt là kỹ thuật gây hiểu lầm mà bạn đã học cách nhận ra ở bài 3.3, vì vậy không nên áp dụng nó trên slide của mình.
 
 ## Khi khán giả không cùng chuyên ngành
 
-Đây là tình huống sinh viên gặp nhiều nhất khi bảo vệ đồ án trước hội đồng ngoài chuyên môn hẹp, hoặc khi trình bày cho khách hàng.
+Đây là tình huống sinh viên có thể gặp khi bảo vệ đồ án trước hội đồng có thành viên ngoài chuyên môn hẹp, hoặc khi thuyết trình cho khách hàng. Bảng dưới đây tóm tắt các việc cần làm.
 
 | Việc cần làm | Cụ thể |
 |---|---|
-| Bỏ thuật ngữ, hoặc giải thích ngay lần đầu | "độ chính xác của mô hình" → "trong 100 bài chấm, máy chấm trùng với giáo viên bao nhiêu bài" |
-| Đổi công thức thành ví dụ có số | Thay vì công thức, cho một trường hợp cụ thể chạy qua |
-| Cắt phần chỉ dân trong ngành mới quan tâm | Kiến trúc kỹ thuật, tham số — đưa vào phụ lục để trả lời khi được hỏi |
-| Giữ lại phần họ dùng được | Kết quả, giới hạn, việc họ có thể làm với nó |
-| Dùng phép so sánh quen thuộc | Nhưng nói rõ chỗ phép so sánh ấy không còn đúng |
+| Bỏ thuật ngữ, hoặc giải thích ngay lần đầu | “độ chính xác của mô hình” → “trong 100 bài chấm, máy chấm trùng với giáo viên bao nhiêu bài” |
+| Đổi công thức thành ví dụ có số | Thay vì trình bày công thức, cho một trường hợp cụ thể chạy qua công thức đó. |
+| Cắt phần chỉ người trong ngành mới quan tâm | Đưa kiến trúc kỹ thuật và tham số vào phụ lục để trả lời khi được hỏi. |
+| Giữ lại phần khán giả dùng được | Giữ lại kết quả, giới hạn và việc khán giả có thể làm với kết quả đó. |
+| Dùng phép so sánh quen thuộc | Đồng thời nói rõ chỗ phép so sánh ấy không còn đúng. |
 
-> [!canh-bao] Đơn giản hoá **không phải** là nói sai cho dễ hiểu. Nếu một phép so sánh làm sai bản chất, hãy nói thêm một câu về giới hạn của nó. Khán giả ngoài ngành không kiểm được điều bạn nói — chính vì thế trách nhiệm nói đúng lại nặng hơn, không nhẹ đi.
+> [!canh-bao] Đơn giản hoá **không phải** là nói sai cho dễ hiểu. Nếu một phép so sánh làm sai bản chất, bạn cần nói thêm một câu về giới hạn của nó. Khán giả ngoài ngành khó tự kiểm chứng điều bạn nói, và vì vậy trách nhiệm nói đúng của người trình bày càng lớn hơn chứ không nhẹ đi.
 
 ## Luyện tập và tài liệu tham khảo
 
 ### Cá nhân (20 phút)
 
-Lấy một bộ slide bạn đã làm. Chọn slide nhiều chữ nhất và làm lại thành **hai slide dựa**: một slide giữ con số hoặc từ khoá chính, một slide giữ hình hoặc biểu đồ. Viết ra phần bạn sẽ **nói** thay cho phần chữ đã bỏ đi — đúng như bạn sẽ nói thành lời.
+Hãy lấy một bộ slide bạn đã làm, chọn slide nhiều chữ nhất và làm lại thành **hai slide dựa**: một slide giữ con số hoặc từ khoá chính, một slide giữ hình hoặc biểu đồ. Sau đó viết ra phần bạn sẽ **nói** thay cho phần chữ đã bỏ đi, đúng như bạn sẽ nói thành lời.
 
 ### Nhóm 3–4 người (25 phút)
 
-Mỗi người chiếu ba slide của mình lên (điện thoại hoặc máy tính đặt cách 3 mét). Nhóm chấm theo bốn tiêu chí: đọc được từ xa không, một slide có đúng một ý không, hình có phục vụ nội dung không, và **người trình bày có thể bỏ slide này mà bài vẫn chạy không**. Tiêu chí cuối lọc ra các slide chỉ tồn tại để cho đầy.
+Mỗi người chiếu ba slide của mình lên, bằng điện thoại hoặc máy tính đặt cách 3 mét. Nhóm đánh giá theo bốn tiêu chí: slide có đọc được từ xa hay không, mỗi slide có đúng một ý hay không, hình có phục vụ nội dung hay không, và **người trình bày có thể bỏ slide này mà bài vẫn mạch lạc hay không**. Tiêu chí cuối cùng giúp loại ra những slide chỉ tồn tại để lấp đầy bài.
 
 ### Bài tập về nhà (45–60 phút)
 
-Chọn một nội dung kỹ thuật hoặc chuyên ngành của bạn và làm hai phiên bản slide cho cùng một ý: một cho người trong ngành, một cho người ngoài ngành. Nộp kèm nửa trang: bạn đã bỏ thuật ngữ nào và thay bằng gì; phép so sánh bạn dùng và **giới hạn của phép so sánh đó**; phần nào bạn chuyển sang phụ lục.
+Hãy chọn một nội dung kỹ thuật hoặc chuyên ngành của bạn và làm hai phiên bản slide cho cùng một ý: một cho người trong ngành, một cho người ngoài ngành. Bạn nộp kèm nửa trang nêu rõ bạn đã bỏ thuật ngữ nào và thay bằng gì, phép so sánh bạn dùng cùng **giới hạn của phép so sánh đó**, và phần nào bạn chuyển sang phụ lục.
 
 ### Xem thêm
 
-- 🎬 [How to Avoid Death by PowerPoint](https://www.youtube.com/watch?v=Iwpi1Lm6dFo) — David JP Phillips, TEDxStockholmSalon, 20 phút. Giải thích bằng chính slide vì sao slide nhồi chữ làm giảm khả năng tiếp nhận.
+- 🎬 [How to Avoid Death by PowerPoint](https://www.youtube.com/watch?v=Iwpi1Lm6dFo) — David JP Phillips, TEDxStockholmSalon, 20 phút. Bài nói giải thích bằng chính các slide minh hoạ vì sao slide nhồi chữ làm giảm khả năng tiếp nhận của khán giả.
 
 ### Nguồn tham khảo
 
@@ -143,7 +143,7 @@ Chọn một nội dung kỹ thuật hoặc chuyên ngành của bạn và làm 
                 "key": "7.2-hinh-anh",
                 "type": "mcq",
                 "prompt": "Khi sử dụng hình ảnh trên slide, nguyên tắc nào phù hợp?",
-                "explanation": "Hình phải liên quan trực tiếp tới nội dung đang nói, đủ nét, không kéo méo, và ghi nguồn — ảnh trang trí chỉ lấy mất chú ý mà không thêm thông tin.",
+                "explanation": "Hình phải liên quan trực tiếp tới nội dung đang nói, đủ nét, không bị kéo méo và có ghi nguồn; ảnh trang trí chỉ làm phân tán chú ý mà không bổ sung thông tin.",
                 "points": 2,
                 "options": [
                     {"label": "Hình liên quan trực tiếp tới ý đang nói, đủ nét, giữ đúng tỉ lệ và có ghi nguồn", "isCorrect": True},
@@ -155,12 +155,12 @@ Chọn một nội dung kỹ thuật hoặc chuyên ngành của bạn và làm 
             {
                 "key": "7.2-khan-gia-khac-nganh",
                 "type": "mcq",
-                "prompt": "Bạn được yêu cầu trình bày một đề tài kỹ thuật trước khán giả không cùng chuyên ngành. Bạn nên làm gì?",
-                "explanation": "Bỏ hoặc giải thích ngay thuật ngữ, đổi công thức thành ví dụ có số, chuyển phần chuyên sâu vào phụ lục và giữ lại phần khán giả dùng được — đồng thời nêu giới hạn của các phép so sánh.",
+                "prompt": "Bạn được yêu cầu thuyết trình một đề tài kỹ thuật trước khán giả không cùng chuyên ngành. Bạn nên làm gì?",
+                "explanation": "Bỏ hoặc giải thích ngay thuật ngữ, đổi công thức thành ví dụ có số, chuyển phần chuyên sâu vào phụ lục và giữ lại phần khán giả dùng được, đồng thời nêu giới hạn của các phép so sánh.",
                 "points": 3,
                 "options": [
                     {"label": "Bỏ thuật ngữ hoặc giải thích ngay lần đầu, đổi công thức thành ví dụ có số, chuyển phần chuyên sâu vào phụ lục, giữ lại kết quả và giới hạn", "isCorrect": True},
-                    {"label": "Trình bày như với người trong ngành, ai không hiểu thì hỏi sau", "isCorrect": False, "misconception": "knm.audience-is-me"},
+                    {"label": "Thuyết trình như với người trong ngành, ai không hiểu thì hỏi sau", "isCorrect": False, "misconception": "knm.audience-is-me"},
                     {"label": "Dùng thật nhiều thuật ngữ để thể hiện chiều sâu chuyên môn", "isCorrect": False, "misconception": "knm.jargon-professional"},
                     {"label": "Đơn giản hoá tối đa, kể cả khi phép so sánh làm sai bản chất vấn đề", "isCorrect": False},
                 ],
