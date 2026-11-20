@@ -44,7 +44,7 @@ import { parseLessonView, splitLessonItems } from "@/lib/lessonFrameView";
 import { loadCourseLessonVideos, type LessonVideoInfo } from "@/lib/lessonVideo";
 import EnrollButton from "@/components/EnrollButton";
 import LessonFrameLayout, { LessonViewTabs } from "@/components/language/LessonFrame";
-import { LESSON_FRAME_ALL_COURSES_KEY, isLessonFrameAllCoursesEnabled, lessonFrameApplies, lessonLevelLabel, previewHidesSiteChrome } from "@/lib/lessonFramePolicy";
+import { LESSON_FRAME_ALL_COURSES_KEY, isLearnerInCourse, isLessonFrameAllCoursesEnabled, lessonFrameApplies, lessonLevelLabel, previewHidesSiteChrome } from "@/lib/lessonFramePolicy";
 import { getSiteSetting } from "@/lib/site-settings";
 import { ExamRefLearnerBlock, ExamRefPreviewBlock } from "@/components/exam/ExamRefBlock";
 import LessonPractice from "@/components/language/LessonPractice";
@@ -777,7 +777,8 @@ export default async function LessonPage({
     languageMode,
     allCoursesEnabled: isLessonFrameAllCoursesEnabled(await getSiteSetting(LESSON_FRAME_ALL_COURSES_KEY)),
     enrolled: !!enrolled,
-    learnerRole: isLearnerRole(getActiveRole(session?.user?.roles ?? [])),
+    // Giảng viên khác vào lớp bằng link mời cũng là học viên của khoá này (xem isLearnerInCourse).
+    learnerRole: isLearnerInCourse({ activeRoleIsLearner: isLearnerRole(getActiveRole(session?.user?.roles ?? [])), enrolled: !!enrolled, canEdit: !!canEdit }),
     previewMode: !!previewMode,
     stageMode: !!stageMode,
     teacherMode: !!teacherMode,

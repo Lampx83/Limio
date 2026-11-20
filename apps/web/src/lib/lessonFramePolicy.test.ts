@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   defaultPanelOpen,
   isLessonFrameAllCoursesEnabled,
+  isLearnerInCourse,
   lessonFrameApplies,
   lessonLevelLabel,
   panelIsDocked,
@@ -112,5 +113,18 @@ describe("xem thử ẩn header/footer của site", () => {
     expect(previewHidesSiteChrome(true, true)).toBe(false);
     expect(previewHidesSiteChrome(false, false)).toBe(false);
     expect(previewHidesSiteChrome(false, true)).toBe(false);
+  });
+});
+
+describe("isLearnerInCourse", () => {
+  it("vai học viên: luôn là học viên", () => {
+    expect(isLearnerInCourse({ activeRoleIsLearner: true, enrolled: false, canEdit: false })).toBe(true);
+  });
+  it("giảng viên khác được mời vào lớp (đã ghi danh, không có quyền sửa khoá): là học viên của khoá này", () => {
+    expect(isLearnerInCourse({ activeRoleIsLearner: false, enrolled: true, canEdit: false })).toBe(true);
+  });
+  it("người dạy khoá này (có quyền sửa) hoặc chưa ghi danh: vẫn là giảng viên", () => {
+    expect(isLearnerInCourse({ activeRoleIsLearner: false, enrolled: true, canEdit: true })).toBe(false);
+    expect(isLearnerInCourse({ activeRoleIsLearner: false, enrolled: false, canEdit: false })).toBe(false);
   });
 });

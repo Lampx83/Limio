@@ -29,6 +29,15 @@ export interface LessonFrameInput {
 }
 
 /**
+ * Người này có đang là HỌC VIÊN của khoá này không (để `lessonFrameApplies` bật khung). Vai "học viên" thì đương nhiên. Giảng viên khác được mời vào lớp
+ * bằng link `/enroll/<mã>` thì tài khoản vẫn ở vai "giảng viên" nhưng ở khoá này họ chỉ là người học: đã ghi danh và KHÔNG có quyền sửa khoá,
+ * nên phải thấy đúng giao diện học viên (khoá ngoại ngữ: khung bài học riêng). Người dạy khoá này (chủ khoá, đồng giảng viên, quản trị) giữ giao diện giảng viên.
+ */
+export function isLearnerInCourse(i: { activeRoleIsLearner: boolean; enrolled: boolean; canEdit: boolean }): boolean {
+  return i.activeRoleIsLearner || (i.enrolled && !i.canEdit);
+}
+
+/**
  * Có dùng khung 3 cột không. Học viên ĐÃ GHI DANH, và giảng viên đang "xem như học viên" (`previewMode`, để thấy đúng cái học viên thấy);
  * giữ giao diện cũ cho người đọc chưa ghi danh, chiếu lớp, giảng viên đứng lớp và bài có bài giảng slide. Công tắc tắt thì chỉ còn khoá ngoại ngữ.
  */
