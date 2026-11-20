@@ -17,8 +17,8 @@
   --text: 36 30 22;
   --text-muted: 92 80 64;
   --text-faint: 150 138 118;
-  --brand: 74 99 60;
-  --brand-soft: 236 240 224;
+  --brand: 92 128 62;
+  --brand-soft: 236 243 224;
   background: rgb(var(--bg));
 }
 .dark [data-lesson-frame]:has(:is(.hsk-paper, .hsk-front)) {
@@ -39,4 +39,32 @@
 .dark .lesson-hsk:has(:is(.hsk-paper, .hsk-front)) {
   --hk-pink: 214 96 112;
   --hk-pink-deep: 232 130 144;
+}
+
+/*
+ * Thẻ từ vựng (khối "Từ mới"): vạch hồng ở đầu thẻ đậm hơn, nhãn từ loại (đg., d., tt.…) có nền hồng rõ hơn, và rê chuột / chọn bằng bàn phím thì thẻ sáng lên:
+ * nền sáng hơn kèm ánh hồng, viền hồng đầy đủ, thẻ nổi nhẹ lên. Chỉ áp ở giao diện giấy sách (bản gốc Limio); màu hồng là biến `--hk-pink` (đỏ con dấu ở đây).
+ */
+.lesson-hsk:has(:is(.hsk-paper, .hsk-front)) .hsk-wc {
+  border-top: 4px solid rgb(var(--hk-pink) / 0.85);
+}
+.lesson-hsk:has(:is(.hsk-paper, .hsk-front)) .hsk-pos {
+  background: color-mix(in srgb, rgb(var(--hk-pink)) 17%, rgb(var(--surface)));
+}
+.lesson-hsk:has(:is(.hsk-paper, .hsk-front)) .hsk-wc[data-term] {
+  transition: border-color 0.15s, box-shadow 0.18s, background-color 0.18s, transform 0.18s;
+}
+.lesson-hsk:has(:is(.hsk-paper, .hsk-front)) .hsk-wc[data-term]:hover,
+.lesson-hsk:has(:is(.hsk-paper, .hsk-front)) .hsk-wc[data-term]:focus-visible,
+.lesson-hsk:has(:is(.hsk-paper, .hsk-front)) .hsk-wc[data-term]:has(.hsk-wc-body:focus-visible) {
+  border-color: rgb(var(--hk-pink) / 0.5);
+  border-top-color: rgb(var(--hk-pink));
+  background: color-mix(in srgb, rgb(var(--hk-pink)) 8%, rgb(var(--surface)));
+  box-shadow: 0 8px 20px rgb(var(--hk-pink) / 0.26), 0 0 0 1px rgb(var(--hk-pink) / 0.3);
+  transform: translateY(-2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lesson-hsk:has(:is(.hsk-paper, .hsk-front)) .hsk-wc[data-term]:hover {
+    transform: none;
+  }
 }
