@@ -5,6 +5,7 @@ import { signOut } from "next-auth/react";
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 import { useEffect, useRef, useState } from "react";
+import FeedbackMenuItem from "./FeedbackMenuItem";
 import RoleSwitcher from "./RoleSwitcher";
 import { useEffectiveRole } from "./useEffectiveRole";
 
@@ -124,6 +125,7 @@ export default function UserMenu({
           <div className="py-1">
             <Item href="/me/dashboard" onClick={close}>Tổng quan của tôi</Item>
             <Item href="/me/settings" onClick={close}>Cài đặt tài khoản</Item>
+            <FeedbackMenuItem onClick={close} />
             {isOrgAdmin && (
               <Item href="/org-admin/settings" onClick={close}>
                 Quản trị trường (OrgAdmin)

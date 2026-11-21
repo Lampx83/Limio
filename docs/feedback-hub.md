@@ -10,7 +10,7 @@ Limio có thể dùng **Feedback Hub** (https://github.com/Lampx83/FeedbackHub) 
      node scripts/setup-project.mjs docs/feedback-hub.project.json --print-secret
    ```
    (script nằm trong repo Feedback Hub). Lệnh in **khoá ký token** — lưu vào kho bí mật.
-2. Thêm vào `.env.prod` (đã có dòng trống trong `.env.prod.example`; compose truyền sẵn vào container web):
+2. Thêm vào `.env.prod` (`docker-compose.prod.yml` đã truyền sẵn vào container web):
    ```
    FEEDBACK_HUB_URL=https://<hub>
    FEEDBACK_HUB_PROJECT=limio
@@ -20,22 +20,27 @@ Limio có thể dùng **Feedback Hub** (https://github.com/Lampx83/FeedbackHub) 
 
 ## Hành vi
 
-- Chỉ người **đã đăng nhập** thấy nút. Khách vãng lai không thấy (hub đặt `anonymousSubmit=false`).
-- **Ẩn khi làm bài thi** (`/thi`, `/exam-take`, `/play`, `/join`) để không xao nhãng thí sinh.
-- Khi admin đang "đăng nhập thay" một học viên, góp ý vẫn đứng tên **admin thật**, không phải học viên.
-- Quyền **quản trị dự án trên hub** lấy từ `isAdmin()` trong DB lúc cấp token (không tin vai trò trong JWT). Các vai trò khác là người gửi thường, chỉ thấy góp ý của mình.
+- Chỉ người **đã đăng nhập** thấy mục **"Góp ý cho Limio"** trong menu người dùng (góc phải header). **Không có nút nổi**: các góc màn hình của Limio đã kín nút mở menu và thanh CTA di động.
+- Mục menu ẩn ở trang làm bài thi (`/thi`, `/exam-take`, `/play`, `/join`).
+- Mỗi góp ý tự kèm ngữ cảnh: đường dẫn, `contentRef` (`lesson:<id>`, `course:<slug>`, `thread:<id>`), khoá học, vai trò đang dùng và cỡ màn hình (`extra`) — người đọc không phải hỏi lại "bài nào, máy nào".
+- **Ảnh chụp trang** tự đính kèm (tệp `trang-chup.png`, người gửi xem trước và bỏ được; cấu hình *Bật sẵn* trong `feedback-hub.project.json`). Ô mật khẩu luôn bị che. Trang nào hiện dữ liệu nhạy cảm của người khác (bảng điểm, danh sách lớp) thì thêm `data-feedbackhub-mask` vào vùng đó để che trong ảnh.
+- Khi admin đang "đăng nhập thay" một học viên, góp ý vẫn đứng tên **admin thật**.
+- Quyền **quản trị dự án trên hub** lấy từ `isAdmin()` trong DB lúc cấp token. Vai trò khác chỉ thấy góp ý của mình.
 - Token HS256 sống 10 phút, ký ở máy chủ; khoá ký không bao giờ xuống trình duyệt.
 
 ## Tắt / quay lại
 
 Bỏ `FEEDBACK_HUB_URL` hoặc `FEEDBACK_HUB_SECRET` rồi tạo lại container: nút biến mất, route `/api/feedback-token` trả 404. Không có dữ liệu nào của Limio bị đụng tới.
 
-## Mã liên quan
+## Mã liên quan (tệp có sẵn chỉ sửa 8 dòng)
 
-- `apps/web/src/lib/feedback-hub.ts` — cấu hình, ký token, danh sách trang thi.
-- `apps/web/src/app/api/feedback-token/route.ts` — cấp token cho người đã đăng nhập.
-- `apps/web/src/components/FeedbackHubWidget.tsx` — nạp `widget.js`, ẩn nút ở trang thi.
-- `apps/web/src/app/layout.tsx` — quyết định hiện widget.
+Sửa trong tệp có sẵn: `app/layout.tsx` (+2: import và `<FeedbackHub />`), `components/UserMenu.tsx` (+2: import và `<FeedbackMenuItem />`), `docker-compose.prod.yml` (+4: truyền biến).
+
+Tệp mới:
+- `lib/feedback-hub.ts` — cấu hình, ký token (chỉ máy chủ).
+- `lib/feedback-hub-paths.ts` — phần dùng được ở trình duyệt: trang thi, ngữ cảnh góp ý.
+- `app/api/feedback-token/route.ts` — cấp token cho người đã đăng nhập.
+- `components/FeedbackHub.tsx` (máy chủ, quyết định hiện hay không), `FeedbackHubWidget.tsx` (nạp `widget.js`), `FeedbackMenuItem.tsx` (mục menu).
 
 ## Muốn AI xử lý góp ý?
 

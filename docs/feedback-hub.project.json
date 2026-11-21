@@ -20,6 +20,7 @@
     "attachments": true,
     "planApproval": false,
     "successCriteria": false,
+    "screenshot": "default",
     "models": []
   },
   "theme": { "primary": "#4D7C0F", "primaryText": "#ffffff", "position": "bottom-left", "label": "Góp ý", "locale": "vi" }

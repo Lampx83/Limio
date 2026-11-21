@@ -48,7 +48,7 @@ x-web-env: &web-env
   # cần recreate container. Thiếu 2 dòng này ban đầu khiến GA không nhận
   # được Measurement ID nào dù .env.prod đã set (compose không tự truyền
   # biến vào container trừ khi khai rõ trong `environment:`).
-  # Hộp góp ý Feedback Hub (docs/feedback-hub.md). Bỏ trống = tắt. Đọc lúc chạy, không cần build lại.
+  # Feedback Hub (docs/feedback-hub.md); bỏ trống = tắt.
   FEEDBACK_HUB_URL: ${FEEDBACK_HUB_URL:-}
   FEEDBACK_HUB_PROJECT: ${FEEDBACK_HUB_PROJECT:-}
   FEEDBACK_HUB_SECRET: ${FEEDBACK_HUB_SECRET:-}
