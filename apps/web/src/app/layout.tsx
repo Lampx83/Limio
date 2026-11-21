@@ -8,6 +8,9 @@ import { Providers } from "@/components/Providers";
 import Footer from "@/components/Footer";
 import FooterGate from "@/components/FooterGate";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import FeedbackHubWidget from "@/components/FeedbackHubWidget";
+import { auth } from "@/lib/auth";
+import { hubEnabled, hubProject, hubUrl } from "@/lib/feedback-hub";
 import { AiTokensPageProvider } from "@/components/AiTokensPageContext";
 import { getAiTokensPageLocked } from "@/lib/site-settings";
 import { getEnv } from "@/lib/env";
@@ -115,6 +118,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const aiTokensPageUnlocked = !(await getAiTokensPageLocked().catch(() => true));
+  // Hộp góp ý (Feedback Hub): mặc định tắt; chỉ hiện cho người đã đăng nhập. Xem docs/feedback-hub.md.
+  const showFeedback = hubEnabled() && Boolean((await auth().catch(() => null))?.user?.id);
 
   return (
     <html lang="vi" className={`${inter.variable} ${nunito.variable}`} suppressHydrationWarning>
@@ -139,6 +144,9 @@ export default async function RootLayout({
             <Footer />
           </FooterGate>
           <Toaster />
+          {showFeedback && (
+            <FeedbackHubWidget hub={hubUrl()} project={hubProject()} basePath={process.env.NEXT_PUBLIC_BASE_PATH ?? ""} />
+          )}
           </AiTokensPageProvider>
         </Providers>
       </body>
