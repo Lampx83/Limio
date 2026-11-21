@@ -48,14 +48,14 @@ export function classifyHskItem(item: ItemLike, index: number): HskKind {
 }
 
 /** Loại từng khối + số mục (1, 2, …) cho khối đầu tiên của mỗi loại hội thoại / từ mới / ngữ pháp. */
-export function planHskSections(items: ItemLike[], startNo = 0): {
+export function planHskSections(items: ItemLike[], startNo = 0, forceAuthored = false): {
   kinds: HskKind[];
   headAt: Map<number, { no: number; section: HskSection }>;
   count: number;
   /** Bài tác giả soạn (xem hskAuthored.ts): đoạn của từng khối chữ, mỗi đoạn có tiêu đề mục đánh số hoặc nhãn nhỏ riêng. Bài sách thì rỗng. */
   segs: Map<number, AuthoredSeg[]>;
 } {
-  if (isAuthoredLesson(items)) {
+  if (forceAuthored || isAuthoredLesson(items)) {
     const kinds: HskKind[] = items.map((it) => (it.type === "dialogue" ? "dialogue" : it.type !== "richtext" ? "other" : authoredKind(htmlOf(it))));
     const { segs, count } = planAuthored(items, kinds, startNo);
     return { kinds, headAt: new Map(), count, segs };

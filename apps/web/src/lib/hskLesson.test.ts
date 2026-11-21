@@ -123,6 +123,19 @@ describe("đổi màu cam nhập sẵn và bỏ nhãn", () => {
   });
 });
 
+describe("planHskSections — phần đuôi sau khối luyện cuối của bài tác giả", () => {
+  // Đuôi (tự đánh giá, cảnh chốt chương) được dựng riêng nên chỉ còn khối chữ không có nhãn mục tiêu/tổng kết.
+  const tail = [rt('<h3 id="muc-ket-qua">Kết quả</h3><p>{{您^nín}}</p>')];
+  it("chỉ nhìn các khối của đuôi thì bị coi là bài sách (không có segs)", () => {
+    expect(planHskSections(tail).segs.size).toBe(0);
+  });
+  it("cờ forceAuthored (tính trên toàn bài) giữ đuôi là bài tác giả để token pinyin được dựng ruby", () => {
+    const p = planHskSections(tail, 0, true);
+    expect(p.kinds).toEqual(["authored"]);
+    expect(p.segs.size).toBe(1);
+  });
+});
+
 describe("ngôn ngữ giảng giải của khoá HSK", () => {
   it("mặc định tiếng Việt; slug:en cho bản tiếng Anh; slug:en vẫn nhận ra là khoá dùng giao diện HSK", () => {
     expect(hskDecorLang("a", "a,b:en")).toBe("vi");

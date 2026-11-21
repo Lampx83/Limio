@@ -123,8 +123,14 @@ export default function LessonContent({
   hsk = false,
   hskLang = "vi",
   hskStartNo = 0,
+  hskAuthored = false,
 }: {
   items: ContentItem[];
+  /**
+   * Cả bài là bài tác giả soạn (tính trên TOÀN BÀI, không chỉ trên `items`). Phần đuôi sau khối luyện cuối được dựng riêng nên có thể không còn khối nào mang
+   * nhãn mục tiêu/tổng kết; thiếu cờ này thì đuôi bị coi là bài sách và ký hiệu pinyin {{汉字^pīnyīn}} hiện thô.
+   */
+  hskAuthored?: boolean;
   /** Ngôn ngữ của khoá cho tiêu đề mục và nhãn của giao diện HSK ("vi" mặc định). */
   hskLang?: "vi" | "en";
   /** Giao diện bài HSK (xem lib/hskLesson.ts): mục đánh số, khối không khung, thẻ từ mới có flashcard. */
@@ -150,7 +156,7 @@ export default function LessonContent({
    */
   interactive?: boolean;
 }) {
-  const plan = hsk ? planHskSections(items, hskStartNo) : null;
+  const plan = hsk ? planHskSections(items, hskStartNo, hskAuthored) : null;
   return (
     // Khung bài học Language (kiểu sách): các khối liền nhau hơn (câu yêu cầu và phiếu của nó là một cụm), không cách nhau cả một khoảng trắng.
     <div className={numberTranscripts ? "space-y-4" : "space-y-6"}>

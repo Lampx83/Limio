@@ -582,7 +582,9 @@ export default function PracticeSheet({
             </span>
           )}
         </span>
-        {graded && !ok && (reveal || expl) && (
+        {/* Có đáp án đúng ngắn (reveal): hiện đáp án + lời giải ở đây. Không có reveal thì khối "ps-review" bên dưới đã hiện lời giải
+            (kèm phần xem bài làm), nên KHÔNG hiện ở cả hai chỗ (trước đây giải thích lặp hai lần ở ghép cặp, sắp xếp, kéo thả). */}
+        {graded && !ok && reveal && (
           <div className="ps-fix" role="status">
             {reveal && (
               <div>

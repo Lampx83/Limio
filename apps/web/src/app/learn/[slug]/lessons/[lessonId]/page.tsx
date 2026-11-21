@@ -56,6 +56,7 @@ import HanFontLoader from "@/components/HanFontLoader";
 import HskHero from "@/components/lesson/HskHero";
 import HskSectionHead from "@/components/lesson/HskSectionHead";
 import { HSK_DECOR_SLUGS_KEY, HSK_SECTIONS, hskDecorLang, isHskDecorCourse, planHskSections } from "@/lib/hskLesson";
+import { isAuthoredLesson } from "@/lib/hskAuthored";
 import PracticeTabs from "@/components/lesson/PracticeTabs";
 import StatementTab from "@/components/lesson/StatementTab";
 import LessonRichText from "@/components/lesson/LessonRichText";
@@ -1355,6 +1356,7 @@ export default async function LessonPage({
               hsk={hskDecor}
               hskLang={hskLang}
               hskStartNo={planHskSections(sections.theory).count + 1}
+              hskAuthored={isAuthoredLesson(shownItems)}
             />
           </div>
         )}
