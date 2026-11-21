@@ -172,19 +172,27 @@ export function pinyinSyllables(word: string): string[] | null {
 
 /**
  * Ghép pinyin vào TỪNG chữ Hán của phần chính để hiện thẳng hàng dưới chữ (kiểu giáo trình). Trả đúng một âm tiết cho mỗi chữ Hán theo thứ tự, hoặc null khi không ghép chắc được:
- * phần chính có chữ Latin/kana/Hangul, hoặc số âm tiết khác số chữ Hán (pinyin thiếu/thừa, sai chính tả…). Khi đó hiện pinyin ở dòng riêng, không ghép bừa.
+ * phần chính có kana/Hangul, hoặc có cụm chữ Latin mà pinyin không ghi nguyên văn, hoặc số âm tiết khác số chữ Hán (pinyin thiếu/thừa, sai chính tả…). Khi đó hiện pinyin ở dòng riêng, không ghép bừa.
+ * Cụm chữ Latin trong câu (AI, App…) không có âm tiết: nếu pinyin ghi đúng cụm đó (khớp theo thứ tự, không phân biệt hoa thường) thì bỏ nó khỏi phần pinyin rồi ghép ruby cho các chữ Hán còn lại.
  */
 export function alignReading(main: string, reading: string): string[] | null {
-  if (!reading || /[A-Za-z\u3040-\u30ff\uac00-\ud7af]/.test(main)) return null;
+  if (!reading || /[぀-ヿ가-힯]/.test(main)) return null;
   const hanCount = [...main].filter((c) => HAN.test(c)).length;
+  const latinRuns = (main.match(/[A-Za-z0-9]+/g) ?? []).map((w) => w.toLowerCase());
+  let nextLatin = 0;
   const syl: string[] = [];
   for (const raw of reading.split(/[\s'’\-/／,，;；]+/)) {
-    const word = raw.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, "");
+    const word = raw.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "");
     if (!word) continue;
+    if (nextLatin < latinRuns.length && word.toLowerCase() === latinRuns[nextLatin]) {
+      nextLatin += 1;
+      continue;
+    }
     const parts = pinyinSyllables(word);
     if (!parts) return null;
     syl.push(...parts);
   }
+  if (nextLatin !== latinRuns.length) return null;
   return syl.length === hanCount && hanCount > 0 ? syl : null;
 }
 

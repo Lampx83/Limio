@@ -213,8 +213,14 @@ describe("pinyinSyllables / alignReading — pinyin thẳng hàng dưới từng
   });
   it("số âm tiết khác số chữ Hán, hoặc có chữ Latin/kana, thì không ghép (null)", () => {
     expect(alignReading("你好吗？", "Nǐ hǎo?")).toBeNull();
-    expect(alignReading("我用 App 学习。", "Wǒ yòng App xuéxí.")).toBeNull();
     expect(alignReading("日本語です。", "Nihongo desu.")).toBeNull();
+    // cụm chữ Latin được pinyin ghi đúng nguyên văn: bỏ ra khỏi phần pinyin, ruby vẫn ghép cho các chữ Hán
+    expect(alignReading("我用 App 学习。", "Wǒ yòng App xuéxí.")).toEqual(["wǒ", "yòng", "xué", "xí"]);
+    expect(alignReading("我让AI把这两台的特点总结一下。", "Wǒ ràng AI bǎ zhè liǎng tái de tèdiǎn zǒngjié yíxià.")).toEqual(["wǒ", "ràng", "bǎ", "zhè", "liǎng", "tái", "de", "tè", "diǎn", "zǒng", "jié", "yí", "xià"]);
+    expect(alignReading("用 AI 和 App", "Yòng AI hé App")).toEqual(["yòng", "hé"]);
+    // pinyin không ghi cụm Latin thì không ghép (null): rơi về dòng pinyin liền
+    expect(alignReading("我让AI总结。", "Wǒ ràng zǒngjié.")).toBeNull();
+    expect(alignReading("我让AI总结。", "Wǒ ràng ChatBot zǒngjié.")).toBeNull();
     expect(alignReading("你好", "")).toBeNull();
     expect(alignReading("二十", "èrshí")).toEqual(["èr", "shí"]);
     expect(alignReading("女儿", "nǚ'ér")).toEqual(["nǚ", "ér"]); // dấu ' tách âm tiết như chính tả pinyin
