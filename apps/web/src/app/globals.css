@@ -1666,7 +1666,10 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
 /* Lựa chọn ngắn ngay trong dòng: nút viền mảnh để nhìn là biết bấm được; chọn rồi thì viền và chữ mực xanh, nền xanh rất nhạt. */
 .ps-alts {
   display: inline-flex;
-  flex-wrap: nowrap;
+  /* Hàng nút tự xuống dòng khi các lựa chọn dài (câu mô tả hình kèm pinyin): `nowrap` làm hàng rộng cả nghìn px, phiếu (overflow: hidden)
+     chỉ thấy lựa chọn đầu và không cuộn được nên học viên không bao giờ thấy lựa chọn b, c. Mỗi lựa chọn vẫn không bị bẻ giữa chừng (white-space ở dưới). */
+  flex-wrap: wrap;
+  max-width: 100%;
   align-items: center;
   gap: 0.375rem;
   margin: 0 0.25rem;
@@ -1675,11 +1678,15 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
 }
 .ps-alt {
   display: inline-block;
+  /* Lựa chọn dài (cả một câu kèm pinyin) được xuống dòng bên trong nút thay vì kéo nút rộng quá khung phiếu. */
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
   min-height: 2rem;
   padding: 0 0.75rem;
   margin: 0;
   border: 1px solid color-mix(in srgb, rgb(var(--text-muted)) 55%, transparent);
-  border-radius: 999px;
+  border-radius: 1rem;
   background: transparent;
   color: rgb(var(--text));
   font: inherit;
@@ -1714,7 +1721,14 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
   gap: 0.375rem 1.75rem;
 }
 .ps-opts.ps-opts-row > li {
-  flex: 0 0 auto;
+  /* Được co lại và xuống dòng trong cột hẹp: phương án tiếng Trung kèm pinyin rộng hơn nhiều so với số chữ, nên `0 0 auto` làm nó
+     tràn mép phiếu (overflow: hidden) và bị cắt ở khổ 1024 px (cột phiếu bên phải bài đọc) và ở điện thoại. */
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+.ps-opts.ps-opts-row .ps-opt-text {
+  min-width: 0;
 }
 .ps-opt {
   position: relative;
