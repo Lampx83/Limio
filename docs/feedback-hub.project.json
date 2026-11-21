@@ -1,0 +1,26 @@
+{
+  "slug": "limio",
+  "name": "Limio (limio.vn)",
+  "allowedOrigins": ["https://limio.vn", "http://localhost:3000"],
+  "submitRoles": [],
+  "adminRoles": ["ADMIN"],
+  "anonymousSubmit": false,
+  "mode": "collect",
+  "deliver": "branch",
+  "types": [
+    { "id": "bug", "label": "Báo lỗi", "kind": "bug" },
+    { "id": "feature", "label": "Đề xuất tính năng", "kind": "function" },
+    { "id": "course_content", "label": "Nội dung khoá học chưa đúng", "kind": "content" },
+    { "id": "other", "label": "Khác", "kind": "other" }
+  ],
+  "features": {
+    "scopePicker": true,
+    "elementPicker": true,
+    "voice": false,
+    "attachments": true,
+    "planApproval": false,
+    "successCriteria": false,
+    "models": []
+  },
+  "theme": { "primary": "#4D7C0F", "primaryText": "#ffffff", "position": "bottom-left", "label": "Góp ý", "locale": "vi" }
+}

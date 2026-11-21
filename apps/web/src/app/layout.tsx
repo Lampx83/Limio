@@ -9,6 +9,9 @@ import { Providers } from "@/components/Providers";
 import Footer from "@/components/Footer";
 import FooterGate from "@/components/FooterGate";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import FeedbackHubWidget from "@/components/FeedbackHubWidget";
+import { auth } from "@/lib/auth";
+import { hubEnabled, hubProject, hubUrl } from "@/lib/feedback-hub";
 import { AiTokensPageProvider } from "@/components/AiTokensPageContext";
 import { getAiTokensPageLocked } from "@/lib/site-settings";
 import { getEnv } from "@/lib/env";
@@ -147,6 +150,8 @@ export default async function RootLayout({
   const spaceBrand = space ? toBrand(space) : null;
   // I18N: ngôn ngữ giao diện (cookie chọn tay > course.language của khoá đang xem > vi).
   const uiLang = await getUiLang();
+  // Hộp góp ý (Feedback Hub): mặc định tắt; chỉ hiện cho người đã đăng nhập. Xem docs/feedback-hub.md.
+  const showFeedback = hubEnabled() && Boolean((await auth().catch(() => null))?.user?.id);
 
   return (
     <html lang={uiLang} className={`${inter.variable} ${nunito.variable} ${slideBody.variable}`} suppressHydrationWarning>
@@ -171,6 +176,9 @@ export default async function RootLayout({
           <div data-app-content className="flex flex-1 flex-col">{children}</div>
           <FooterGate>{spaceBrand ? <SpaceFooter space={spaceBrand} /> : <Footer />}</FooterGate>
           <Toaster />
+          {showFeedback && (
+            <FeedbackHubWidget hub={hubUrl()} project={hubProject()} basePath={process.env.NEXT_PUBLIC_BASE_PATH ?? ""} />
+          )}
           </AiTokensPageProvider>
           </I18nProvider>
         </Providers>
