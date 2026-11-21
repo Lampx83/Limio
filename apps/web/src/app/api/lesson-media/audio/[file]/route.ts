@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { guardedLessonMedia } from "@/lib/lessonMediaGuard";
+import { bufferResponse, getCachedAudio, loadAudioOnce } from "@/lib/audioBufferCache";
 import { lessonAudioKeyFromFilename } from "@/lib/storage-keys";
 import { audioMimeForFilename } from "@/lib/lessonAudio";
 import {
@@ -31,6 +32,11 @@ export const GET = guardedLessonMedia(async function GET(
 
   const key = lessonAudioKeyFromFilename(file);
   if (!key) return new NextResponse("not_found", { status: 404 });
+
+  // Đã đọc cả file trước đó (xem audioBufferCache): trả thẳng từ bộ nhớ, không chạm kho — kể cả khi kho đang chậm.
+  const cached = getCachedAudio(file);
+  if (cached) return bufferResponse(cached, mime, req);
+
   const resolved = await resolveKey(key);
   if (!resolved) return new NextResponse("not_found", { status: 404 });
 
@@ -39,13 +45,8 @@ export const GET = guardedLessonMedia(async function GET(
   }
   const streamed = await streamStorageWithRange(key, mime, req);
   if (streamed) return streamed;
-  const buf = await resolved.get();
-  return new NextResponse(new Uint8Array(buf), {
-    headers: {
-      "content-type": mime,
-      "content-length": String(buf.length),
-      "accept-ranges": "bytes",
-      "cache-control": "public, max-age=604800, immutable",
-    },
-  });
+  // Kho không phát từng đoạn được: đọc cả file MỘT lần (các yêu cầu cùng lúc dùng chung), nhớ lại, rồi trả đúng đoạn được xin.
+  // Trước đây mỗi yêu cầu đọc lại cả file và trả 200 bỏ qua Range → tua / đệm tiếp đều chờ lại từ đầu.
+  const buf = await loadAudioOnce(file, () => resolved.get());
+  return bufferResponse(buf, mime, req);
 });

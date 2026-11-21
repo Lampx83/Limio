@@ -27,7 +27,8 @@ const get = (file: string, headers: Record<string, string> = {}) =>
   );
 
 describe("GET /api/lesson-media/audio/[file]", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    (await import("@/lib/audioBufferCache")).resetAudioBufferCache();
     resolveKey.mockReset().mockResolvedValue({ absPath: "/data/x", get: vi.fn() });
     streamWithRange.mockReset().mockResolvedValue(new Response("audio", { status: 206 }));
     streamStorageWithRange.mockReset().mockResolvedValue(null);
@@ -87,5 +88,67 @@ describe("GET /api/lesson-media/audio/[file]", () => {
     const res = await get(`${FILE}.mp3`, { range: "bytes=10-" });
     expect(res.status).toBe(206);
     expect(streamStorageWithRange).toHaveBeenCalledTimes(1);
+  });
+
+  describe("kho chỉ đọc được cả file (không phát từng đoạn)", () => {
+    const BYTES = Buffer.from("0123456789");
+    const arrange = () => {
+      const readAll = vi.fn().mockResolvedValue(BYTES);
+      resolveKey.mockResolvedValue({ absPath: null, get: readAll });
+      return readAll;
+    };
+
+    it("trả đúng đoạn được xin bằng 206 thay vì cả file bằng 200", async () => {
+      arrange();
+      const res = await get(`${FILE}.mp3`, { range: "bytes=2-5" });
+      expect(res.status).toBe(206);
+      expect(res.headers.get("content-range")).toBe("bytes 2-5/10");
+      expect(res.headers.get("content-length")).toBe("4");
+      expect(Buffer.from(await res.arrayBuffer()).toString()).toBe("2345");
+    });
+
+    it("không có Range → 200 cả file", async () => {
+      arrange();
+      const res = await get(`${FILE}.mp3`);
+      expect(res.status).toBe(200);
+      expect(res.headers.get("accept-ranges")).toBe("bytes");
+      expect(Buffer.from(await res.arrayBuffer()).toString()).toBe("0123456789");
+    });
+
+    it("Range ngoài file → 416", async () => {
+      arrange();
+      const res = await get(`${FILE}.mp3`, { range: "bytes=50-" });
+      expect(res.status).toBe(416);
+      expect(res.headers.get("content-range")).toBe("bytes */10");
+    });
+
+    it("chỉ đọc kho MỘT lần: yêu cầu sau (tua) lấy từ bộ nhớ, không chạm kho nữa", async () => {
+      const readAll = arrange();
+      await get(`${FILE}.mp3`, { range: "bytes=0-" });
+      resolveKey.mockClear();
+      streamStorageWithRange.mockClear();
+      const res = await get(`${FILE}.mp3`, { range: "bytes=7-" });
+      expect(res.status).toBe(206);
+      expect(Buffer.from(await res.arrayBuffer()).toString()).toBe("789");
+      expect(readAll).toHaveBeenCalledTimes(1);
+      expect(resolveKey).not.toHaveBeenCalled();
+      expect(streamStorageWithRange).not.toHaveBeenCalled();
+    });
+
+    it("nhiều yêu cầu cùng lúc dùng chung một lần đọc kho", async () => {
+      const readAll = arrange();
+      const rs = await Promise.all([get(`${FILE}.mp3`, { range: "bytes=0-" }), get(`${FILE}.mp3`, { range: "bytes=3-" }), get(`${FILE}.mp3`)]);
+      expect(rs.map((r) => r.status)).toEqual([206, 206, 200]);
+      expect(readAll).toHaveBeenCalledTimes(1);
+    });
+
+    it("đọc kho lỗi thì không nhớ lỗi: yêu cầu sau thử lại", async () => {
+      const readAll = vi.fn().mockRejectedValueOnce(new Error("nas")).mockResolvedValue(BYTES);
+      resolveKey.mockResolvedValue({ absPath: null, get: readAll });
+      await expect(get(`${FILE}.mp3`)).rejects.toThrow("nas");
+      const res = await get(`${FILE}.mp3`);
+      expect(res.status).toBe(200);
+      expect(readAll).toHaveBeenCalledTimes(2);
+    });
   });
 });
