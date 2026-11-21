@@ -1,0 +1,1745 @@
+{
+  "module": {
+    "title": "Module 3 — Execute: Apply, Compare and Automate",
+    "description": "Run the cycle on a real task: execute and verify a regional sales chart (Case 1), compare a human-written, an AI-drafted and a human-reviewed prompt plan (A/B/C), and turn the tested briefing into a reusable, reviewable workflow. Includes the lecture notes, slides, Activity 1 and Activity 2 sheets and the retail CSV.",
+    "lessons": [
+      {
+        "title": "Module 3 materials: lecture notes, slides, activity sheets and the retail CSV",
+        "durationMin": 6,
+        "description": "What is attached to Module 3 (lecture notes, two slide decks, two activity sheets and the retail CSV), which parts belong to Periods 7 to 9, and how to use them with the lessons.",
+        "look": {
+          "palette": "sunset",
+          "font": "modern"
+        },
+        "body": "Module 3 is where you stop describing prompts and start running them. Three periods, two hands-on activities and one dataset. Everything you need is attached to this lesson.\n\n## What is attached\n\n- **Lecture notes (PDF).** The notes for the whole course. Module 3 is Periods 7 to 9, sections 7.1 to 9.5. Use them for the full wording, the verified tables and the practice questions at the end of each period.\n- **Slides, 150 pages (PDF).** The complete deck with checkpoint questions and key takeaways.\n- **Slides, 81 pages (PDF).** The short version, for a quick preview or revision.\n- **Activity 1 sheet, Student version (PDF).** *AI-Assisted Retail Data Visualisation*, Case 1, Period 7. About 55 to 70 minutes of practice.\n- **Activity 2 sheet, Student version (PDF).** *Human vs AI-Assisted Prompt Design (A/B/C)*, Period 8. About 70 to 90 minutes of practice.\n- **The CSV.** `Slidescope_Retail_Store_Sales_Enhanced_2025.csv`, used by both activities.\n\nThe activity times are practice time on top of the 45-minute lessons; they do not change the course schedule. Activity 3 belongs to Module 4 and is attached there.\n\n## Where each period is\n\n| Period | Lecture notes | Slides (150 pages) | Slides (81 pages) | Activity |\n|---|---|---|---|---|\n| 7 Task Execution, Data Visualisation Case | 7.1 to 7.6 | 68 to 78 (checkpoint on 77) | 39 to 45 | Activity 1 |\n| 8 AI-Assisted Prompting | 8.1 to 8.6 | 79 to 88 (checkpoint on 87) | 46 to 51 | Activity 2 |\n| 9 Reuse and Automate Workflows | 9.1 to 9.5 | 89 to 98 (checkpoint on 96, references on 98) | 52 to 53 | \"Prepare the next run\" practice (slide 94) |\n\nThe Module 3 opener is slide 67 of the long deck. The short deck covers only the opening slide of Period 9.\n\n## The CSV in one minute\n\n200 transactions, 13 columns, one row per transaction: `Transaction_ID`, `Store_Region`, `Product_Category`, `Payment_Method`, `Customer_Type`, `Unit_Price`, `Items_Sold`, `Gross_Amount`, `Discount_Percent`, `Discount_Amount`, `Net_Sales_Amount`, `Average_Price_Per_Item`, `Effective_Discount_Per_Item`.\n\n- Four regions: East, North, South, West. Four product categories: Apparel, Electronics, Furniture, Grocery.\n- The file has **no dates, no costs or profit and no currency**, and no customer identities. Everything you conclude must stay inside that.\n- In the spreadsheet, region is column B and `Net_Sales_Amount` is column K.\n\n> [!canh-bao] Use an institutionally approved chatbot and upload only this teaching CSV. Do not add private or confidential business records.\n\n## How to use them\n\n1. **Before a period:** skim the matching slides to see the shape of the task.\n2. **In the lesson:** try each \"Predict\" and \"Find the error\" box before opening it, then do the quiz and rate your confidence for every question.\n3. **After the quiz:** read the matching sections of the lecture notes.\n4. **Activities:** work in a spreadsheet next to the chatbot. Keep an untouched copy of the CSV and build your own pivot table. Figures in the lessons were recalculated from the file, but a chatbot's answer will vary from run to run, so always check the tool's numbers against yours.\n5. **For revision:** use the flashcards at the end of each lesson, then return to the short slides.\n\n> [!meo] Each activity has an Assignments tab in its lesson (Activity 1 in Period 7, Activity 2 in Period 8). The Student sheet is the full instruction; the assignment tab is where you submit.",
+        "summary": [
+          "Attached to Module 3: lecture notes, a 150-page and an 81-page slide deck, the Student sheets of Activity 1 and Activity 2, and the retail CSV.",
+          "The table shows which notes sections, slides and activity belong to Periods 7, 8 and 9.",
+          "The CSV has 200 transactions and 13 columns but no dates, costs or currency, so keep every conclusion inside what it contains."
+        ]
+      },
+      {
+        "title": "Period 7 · Task Execution — Data Visualisation Case",
+        "durationMin": 45,
+        "description": "Case 1: run the five-step cycle on one regional net-sales chart. Write a verifiable prompt, execute it, check the totals, scale, labels and claims against the CSV, then refine the chart without changing the evidence.",
+        "look": {
+          "palette": "sunset",
+          "font": "modern"
+        },
+        "objectivesLead": "By the end of this period you can:",
+        "objectives": [
+          "Run the five-step cycle (Define, Design, Execute, Evaluate, Refine) on a regional net-sales chart task",
+          "Write a chart prompt that names the grouping field, the measure, the aggregation, the scale and what must not be claimed",
+          "Reproduce the four regional totals and the overall total in a spreadsheet and use them to check an AI-made chart",
+          "Spot chart faults (wrong measure, truncated axis, invented currency, missing region) and claims the data cannot support",
+          "Refine a correct chart for a manager and show that the underlying values did not change",
+          "Write a caption with one verified observation and one stated limit"
+        ],
+        "body": "A regional manager sends you one line: *\"Which of our four regions sells the most? I need a chart for tomorrow.\"* You have the 200-row retail CSV and a chatbot that can draw a bar chart in seconds. The chart will look professional whatever it contains. This period is about the work between \"the chatbot answered\" and \"I can put this in front of the manager\". You will run the full cycle, **Define → Design → Execute → Evaluate → Refine**, on one small task, Case 1.\n\n> [!ghi-nho] Case 1 is the whole course in miniature. A fluent, good-looking answer is only a draft. It becomes evidence after you have checked the numbers, the scale and every sentence of interpretation against the CSV.\n\n:::Predict before you read\nBefore you look at any table in this lesson, write down two guesses: (1) which region has the **highest total** net sales, and (2) which region has the **highest average net sales per transaction**. Are they the same region? You will check both guesses in section 7.3.\n:::\n\n## The five-step cycle on Case 1\n\n| Stage | What you do in Case 1 |\n|---|---|\n| **Define** | Fix the question, the audience, the deliverables and what the chart cannot say |\n| **Design** | Write the chart prompt: grouping field, measure, aggregation rule, scale, labels, exclusions |\n| **Execute** | Run it in a tool that can really read the file and draw charts (or use the honest fallback) and save the actual output |\n| **Evaluate** | Check the measure, all four totals, the axis, the labels and every written claim against the CSV |\n| **Refine** | Make one visible improvement, rerun, then recheck |\n\nThe question is **descriptive**: \"Which region has the highest and which the lowest total net sales in the provided file?\" A bar chart of four named categories can answer that. It cannot show whether a region is improving (the file has no dates), whether it is profitable (no costs) or whether it runs more efficiently (no store counts or opening hours).\n\n## Define: question, output and data\n\nDefine the manager's question as a regional net-sales comparison, then ask for four deliverables: a **chart**, a **four-row table**, a **short interpretation** (two or three sentences) and **one documented source check**.\n\nThe input is the complete 200-row CSV. The grouping field is `Store_Region`, the measure is `Net_Sales_Amount` and the aggregation is **SUM**. If the question is \"how much in total?\", do not average individual sales. Count transactions (`Transaction_ID`) as well if the manager needs to tell *total recorded value* from *how often sales happen*.\n\n> [!canh-bao] \"Net sales\" is not \"gross sales\" and not \"profit\". The file also has Gross_Amount, Discount_Amount and Unit_Price. Name the exact column in the prompt, or the tool may choose a different one.\n\n## Design: write the chart prompt\n\nCompare two prompts for the same task.\n\n```prompt Prompt A — vague\nMake a sales chart by region for my manager.\n```\n\n*Why it is weak:* it does not say which column is the measure, whether to sum or average, whether the axis starts at zero, what to do about currency or what not to claim. The chatbot fills every gap with a guess, and you will not know which guesses it made.\n\n```prompt Prompt B — verifiable\nUsing the attached retail CSV, calculate SUM(Net_Sales_Amount) and COUNT(Transaction_ID) for each Store_Region. Show the table and a horizontal bar chart sorted by net sales, with the axis starting at zero. Label the axis \"Total net sales (currency unspecified)\". Show the overall total as a check and explain the grouping method in two sentences. Do not add dates, profit, targets or causal explanations.\n```\n\n*Why it is better:* every field is named, the aggregation is explicit, the scale is fixed, a check total is requested and unsupported content is excluded. Each sentence changes something you can test afterwards. It is not better because it is longer: \"make it look professional\" would add words but nothing checkable.\n\nHere is the reference table, calculated from the full CSV. Compare it with your two guesses.\n\n| Region | Transactions | Total net sales | Net sales per transaction |\n|---|---|---|---|\n| North | 57 | 260,026.33 | 4,561.87 |\n| South | 53 | 236,980.99 | 4,471.34 |\n| West | 51 | 213,240.41 | 4,181.18 |\n| East | 39 | 182,004.38 | 4,666.78 |\n| **Total** | **200** | **892,252.11** | **4,461.26** |\n\nNorth has the highest total and East the lowest. But East has the **highest** net sales per transaction, because it has far fewer transactions (39). A region with the smallest total is not automatically the weakest, which is one more reason not to write \"best\" or \"worst\" under a chart of sums.\n\nThe overall 4,461.26 is 892,252.11 / 200. It is **not** the average of the four regional averages (that would give about 4,470.29). The transaction counts must add up to 200 and the four totals to 892,252.11; if either fails, something was dropped or double-counted.\n\n> [!meo] Keep full precision in calculations and round only for display. If chart labels are rounded (for example to thousands), say on the chart that the rounding is for display only.\n\n## Execute: run the prompt and keep the evidence\n\nRun the prompt in a chatbot with genuine file-analysis and chart capability, where you have one. Start by asking it to report the **row count and column names** it sees. If it says 200 rows and 13 columns, you have some evidence that it read the file rather than guessed.\n\nIf the tool cannot open the CSV or draw a chart, use an honest fallback:\n\n1. Build a pivot table in a spreadsheet (rows `Store_Region`, values SUM of `Net_Sales_Amount`) and draw the chart there. Label it \"spreadsheet-created\".\n2. Or paste your four checked totals into the chatbot, say where they came from and ask for a chart specification or a caption.\n3. Never write that the chatbot analysed a file or drew a chart when it did not.\n\nSave the prompt version, the tool and model (if visible), the run date and the actual response and chart. Leave the original CSV unchanged.\n\n> [!canh-bao] A chart that appears on screen proves nothing about how it was made. Some tools describe a chart they never drew, or draw one from numbers they invented. Your own pivot table is what turns the output into evidence.\n",
+        "sections": [
+          {
+            "layout": "cards",
+            "title": "7.5 Evaluate: check the chart and its claims",
+            "intro": "A correct ranking does not prove why regions differ. Before you accept an AI chart, run these five checks.",
+            "parts": [
+              {
+                "title": "Measure",
+                "md": "Is it **net sales**, not gross sales, discounts or profit? The axis title and the chart title must say so. \"Most profitable region\" is a wrong title for this chart; \"Recorded net sales by store region\" is a suitable one."
+              },
+              {
+                "title": "Values",
+                "md": "Recalculate each regional sum from the CSV. The four counts must add up to 200 and the four totals to the whole-file sum."
+              },
+              {
+                "title": "Scale",
+                "md": "Bars encode value by **length**, so the axis must start at zero. A truncated axis makes a modest gap look enormous."
+              },
+              {
+                "title": "Labels and units",
+                "md": "All four region names are present and correct. The file gives no currency, so none may appear. If values are rounded, the chart says it is for display only."
+              },
+              {
+                "title": "Claims",
+                "md": "For each sentence ask: which number in my table supports this? \"North has the highest recorded net sales\" passes. \"North's stores are more efficient\" and \"East is declining\" have no support in the file."
+              }
+            ],
+            "outro": "Practise on a deliberately flawed answer. The text below is **invented for practice; it is not the output of a real run**.\n\n:::Find the error\n> **Chart title:** Most profitable region\n>\n> The vertical axis starts at 150,000. The labels read \"$260,026\", \"$236,981\" and \"$213,240\". The three bars are North, South and West.\n>\n> **Commentary:** \"North leads. East is missing because its sales declined and caused a loss.\"\n\nWrite down every problem you can find. There are at least five.\n:::\n\n:::Open the solution after you have tried\n1. The title says *profit*; the chart shows net sales.\n2. The axis starts at 150,000, not zero, so bar lengths exaggerate the gaps.\n3. The dollar signs add a currency the file never states.\n4. East is missing, so the four-region comparison is incomplete.\n5. \"Declined\" needs dates and \"caused a loss\" needs costs and causes. The file has none of these, so the sentence must be deleted.\n\nNotice that the numbers themselves might be right. A chart can be **correct and still misleading**, and its commentary can be unsupported even when the chart is sound. Judge them separately.\n:::\n\n> [!ghi-nho] Fix what is wrong, keep what is verified. One bad sentence is no reason to throw away four correct totals, and four correct totals are no reason to publish one bad sentence."
+          },
+          {
+            "layout": "text",
+            "title": "7.6 Refine: improve the chart without changing the evidence",
+            "parts": [
+              {
+                "title": "",
+                "md": "Refinement should answer a **visible problem**: hard-to-read order, clutter, labels that do not help the manager find the answer in 20 seconds. It never changes the underlying numbers.\n\n```prompt Refinement follow-up\nKeep the verified regional sums unchanged. Sort the bars from highest to lowest, remove distracting gridlines, highlight North and East, and use rounded labels in thousands. Keep the zero baseline. Add a short footnote: the file has no dates, costs or currency. Do not make causal claims.\n```\n\n*Why it works:* it says what must stay fixed (sums, zero baseline) before it says what to change, and it asks for a footnote that keeps the limits visible. Compare it with \"make it look better\", which invites the tool to change anything.\n\n| May change | Must not change |\n|---|---|\n| Order of bars, colours, gridlines, label size, rounding for display | The four totals, the measure, the zero baseline, the four region labels |\n| Wording of title and footnote, if it becomes more accurate | A claim that the data do not support |\n\nAfter the rerun, compare both versions and **recheck** all four values, the axis labels and the meaning of the bars. A reversed order with correct totals usually means the sort criterion changed; check that first. Save both outputs and write one sentence on why the revised chart is easier to read."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Check it yourself",
+            "parts": [
+              {
+                "title": "",
+                "md": "1. Open the CSV in a spreadsheet and keep an untouched copy of the original sheet.\n2. Insert a pivot table with `Store_Region` in rows and SUM of `Net_Sales_Amount` in values. Alternatively use a formula such as `=SUMIF(Raw!B2:B201, A2, Raw!K2:K201)` after naming the sheet *Raw*. Region is column B and net sales column K.\n3. Compare each of the four sums with the chart or table the AI gave you. Add the four sums and compare with SUM of all 200 values in column K.\n4. Look at the first tick on the value axis and at every label and unit.\n5. Read each interpretation sentence and find the number that supports it.\n\n**Keep a verification record** with the task brief, the original prompt, the input filename and version, the verified table, the first chart, the checks you made, the revised prompt and the final chart. Add two or three sentences about what improved and **one claim you deliberately avoided**. A classmate should be able to recreate the four totals from your record without copying the AI output.\n\n> [!vi-du] A caption that passes: \"North has the largest total recorded net sales in this file and East the smallest. These are sums of recorded transactions; they are not adjusted for transaction counts or store numbers and say nothing about profit or causes.\"\n\n**Try it:** (1) explain why a line chart suits four unordered region names badly; (2) name two design changes that improve a correct bar chart without changing its values; (3) write a one-sentence caption with one verified observation and one limit.\n\n**Activity 1** applies this whole cycle to the CSV. Open the Assignments tab of this lesson for the task and rubric, and the Student activity sheet attached to the Module 3 materials lesson."
+              }
+            ]
+          }
+        ],
+        "flashcards": {
+          "title": "Flashcards · Period 7",
+          "items": [
+            {
+              "term": "Aggregation",
+              "meaning": "Combining records into one value per group, such as the total net sales of each region.",
+              "example": "SUM(Net_Sales_Amount) grouped by Store_Region gives four numbers from 200 rows."
+            },
+            {
+              "term": "SUM versus average",
+              "meaning": "For \"how much in total?\" use SUM. An average of individual sales answers a different question (typical size of one sale).",
+              "example": "East has the lowest total but the highest average per transaction."
+            },
+            {
+              "term": "Zero baseline",
+              "meaning": "A value axis that starts at zero. Bars encode value by length, so a truncated axis exaggerates differences."
+            },
+            {
+              "term": "Chart encoding",
+              "meaning": "How a chart maps data to visual features such as bar length and position. Check that the encoded measure is the one you asked for."
+            },
+            {
+              "term": "Net sales is not profit",
+              "meaning": "Net_Sales_Amount records sales after discount. It contains no costs, so it cannot support claims about profit, margin or efficiency."
+            },
+            {
+              "term": "Evaluate checklist",
+              "meaning": "Measure, values, scale, labels and units, claims. A correct ranking never explains why regions differ."
+            },
+            {
+              "term": "Chart specification",
+              "meaning": "A written description of a chart (data, type, axes, labels) that you can build in another tool. Use it when the chatbot cannot draw."
+            },
+            {
+              "term": "Spreadsheet fallback",
+              "meaning": "A pivot table or SUMIF formula that reproduces the grouped totals independently. State honestly which output came from the spreadsheet."
+            },
+            {
+              "term": "Chart refinement",
+              "meaning": "Improving readability (order, clutter, emphasis, labels) while keeping values, measure and baseline unchanged, then rechecking."
+            },
+            {
+              "term": "Verification record",
+              "meaning": "Brief, prompts, input version, verified table, charts, checks and revision notes saved together so a peer can reproduce the totals."
+            }
+          ]
+        },
+        "summary": [
+          "Case 1 runs the full cycle on one chart: define the question, write a verifiable prompt, execute and save the real output, evaluate it against the CSV, then refine.",
+          "Establish correct aggregated numbers first: SUM of Net_Sales_Amount by Store_Region, four transaction counts that add up to 200, and an overall total that reconciles.",
+          "Judge the chart for the right measure, a zero baseline, complete labels, no invented units and claims that stay inside the data. Ranking is not explanation.",
+          "Refine one visible problem, keep the values fixed, recheck, and save both versions with the checks you made."
+        ],
+        "quiz": {
+          "title": "Quiz · Period 7",
+          "passThresholdPct": 70,
+          "requireConfidence": true,
+          "questions": [
+            {
+              "key": "pe.p07.pe056",
+              "type": "mcq",
+              "prompt": "During a chart task, which step comes immediately after Execute in the course cycle?",
+              "explanation": "In Define → Design → Execute → Evaluate → Refine, Evaluate comes straight after Execute: the tool has produced something and now you check it against the CSV. Publishing immediately skips that stage, and it is the tempting mistake because a finished-looking chart feels done. Redefining the objective belongs earlier in the cycle.",
+              "options": [
+                {
+                  "label": "Rewrite all constraints automatically",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.cycle-order"
+                },
+                {
+                  "label": "Publish the chart immediately",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.accepts-unchecked"
+                },
+                {
+                  "label": "Evaluate the produced result",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Redefine the original objective",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.cycle-order"
+                }
+              ]
+            },
+            {
+              "key": "pe.p07.pe057",
+              "type": "mcq",
+              "prompt": "What is the chart task in Case 1?",
+              "explanation": "The CSV has Store_Region and Net_Sales_Amount for 200 undated transactions, so the comparison it supports is total net sales by region. Profit margin needs costs, a monthly forecast needs dates and store visits are not recorded. Profit margin is the tempting wrong choice because it sounds like what a manager wants, but the file has no cost field.",
+              "options": [
+                {
+                  "label": "Forecast monthly revenue by region",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.beyond-data"
+                },
+                {
+                  "label": "Compare profit margin by region",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.beyond-data"
+                },
+                {
+                  "label": "Compare total net sales by region",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Estimate store visits by region",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.beyond-data"
+                }
+              ]
+            },
+            {
+              "key": "pe.p07.pe058",
+              "type": "mcq",
+              "prompt": "A chart shows East as 182,004.38 and North as 260,026.33. Which interpretation is justified?",
+              "explanation": "Two sums establish a ranking of recorded net sales: North is higher than East. They cannot show margin, demand or efficiency, which need costs, customer data or store counts. \"Demand\" is the tempting choice because high sales feel like high demand, yet sales also depend on prices, store size and the number of transactions.",
+              "options": [
+                {
+                  "label": "North's recorded net sales are higher",
+                  "isCorrect": true
+                },
+                {
+                  "label": "North's profit margin is higher",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.beyond-data"
+                },
+                {
+                  "label": "North's customer demand is higher",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.beyond-data"
+                },
+                {
+                  "label": "North's stores are more efficient",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.beyond-data"
+                }
+              ]
+            },
+            {
+              "key": "pe.p07.pe059",
+              "type": "mcq",
+              "prompt": "A bar chart starts its vertical axis at 180,000 and magnifies small differences. What edit best supports fair reading?",
+              "explanation": "Bars encode value by length, so every bar must start from the same zero baseline. With an axis starting at 180,000, East's bar (182,004) would look about forty times shorter than North's, although East's total is about 70% of North's. Removing axis labels hides the distortion instead of fixing it.",
+              "options": [
+                {
+                  "label": "Scale each bar independently by region",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.distorted-scale"
+                },
+                {
+                  "label": "Remove labels from the vertical axis",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.distorted-scale"
+                },
+                {
+                  "label": "Use a zero baseline for these bars",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Replace amounts with decorative icons",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.accepts-unchecked"
+                }
+              ]
+            },
+            {
+              "key": "pe.p07.pe060",
+              "type": "mcq",
+              "prompt": "What should be checked when reviewing an AI-made regional chart?",
+              "explanation": "A chart is analytically sound when its labels name the right measure, its totals match the CSV and every stated claim is supported. Colours, fonts, animation and image size change how it looks, not whether it is right. Brand colours are the tempting choice because they are easy to see, which is exactly why they are not evidence.",
+              "options": [
+                {
+                  "label": "Manager's mood and meeting venue",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.accepts-unchecked"
+                },
+                {
+                  "label": "Image size and animation effects",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.accepts-unchecked"
+                },
+                {
+                  "label": "Labels, totals and stated claims",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Brand colors and font novelty",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.accepts-unchecked"
+                }
+              ]
+            },
+            {
+              "key": "pe.p07.pe061",
+              "type": "mcq",
+              "prompt": "Your chatbot cannot create a chart from the uploaded file. What is a workable fallback?",
+              "explanation": "If the chatbot cannot draw a chart, ask for a chart specification that you check and build with another permitted tool (or draw the chart in a spreadsheet from verified totals). A capability cannot be assumed without seeing it executed. Many tools do draw charts, which makes the first option tempting, but you must confirm what your tool actually did.",
+              "options": [
+                {
+                  "label": "Claim every interface supports charts",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.assumed-execution"
+                },
+                {
+                  "label": "Report imaginary plot coordinates",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.assumed-execution"
+                },
+                {
+                  "label": "Assume an unseen chart was created",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.assumed-execution"
+                },
+                {
+                  "label": "Request a checked chart specification",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p07.pe062",
+              "type": "mcq",
+              "prompt": "The chart's order is reversed after a revision, but the totals stay correct. What should be done?",
+              "explanation": "When the order is reversed but the totals stay correct, the sort criterion has most likely changed (for example ascending instead of descending). Check that first, separately from totals and labels. Deleting the CSV or doubting the amounts are over-reactions, and reading the reversal as demand growth invents a cause.",
+              "options": [
+                {
+                  "label": "Check whether the ranking criterion changed",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Describe the reversal as demand growth",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.beyond-data"
+                },
+                {
+                  "label": "Delete the input CSV and restart",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.all-or-nothing"
+                },
+                {
+                  "label": "Assume the amounts also became wrong",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.all-or-nothing"
+                }
+              ]
+            },
+            {
+              "key": "pe.p07.pe063",
+              "type": "mcq",
+              "prompt": "Two charts use the same verified totals; one has a truncated bar axis and one uses zero. Which is preferable for relative sizes?",
+              "explanation": "The totals are identical, so the difference is the scale. A shared zero baseline with clear units keeps bar lengths proportional to values. A truncated axis without a note distorts relative size, bars rescaled individually cannot be compared, and larger decorative labels do not repair either problem.",
+              "options": [
+                {
+                  "label": "The zero-baseline chart with clear units",
+                  "isCorrect": true
+                },
+                {
+                  "label": "The truncated chart with no scale note",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.distorted-scale"
+                },
+                {
+                  "label": "The chart with bars rescaled individually",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.distorted-scale"
+                },
+                {
+                  "label": "The chart with larger decorative labels",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.accepts-unchecked"
+                }
+              ]
+            },
+            {
+              "key": "pe.p07.pe064",
+              "type": "mcq",
+              "prompt": "The AI chart labels values as dollars. What is the specific problem?",
+              "explanation": "The file never states a currency, so dollar labels add a unit that nothing in the data supports; the axis should say \"currency unspecified\". The other problems are invented: Net_Sales_Amount is numeric and can be summed, every row has a Transaction_ID and four categories are easy to read.",
+              "options": [
+                {
+                  "label": "Currency was never specified in the file",
+                  "isCorrect": true
+                },
+                {
+                  "label": "The net-sales figures cannot be summed",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.beyond-data"
+                },
+                {
+                  "label": "The chart contains too many categories",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.beyond-data"
+                },
+                {
+                  "label": "The regional data lack transaction IDs",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.beyond-data"
+                }
+              ]
+            },
+            {
+              "key": "pe.p07.pe065",
+              "type": "mcq",
+              "prompt": "The revised chart looks clearer but omits West. Which review finding is strongest?",
+              "explanation": "The manager asked for a four-region comparison, so leaving out West fails completeness however clean the chart looks. The omission does not prove that West has no sales, a tidier look does not make the numbers more precise, and nothing here measures store efficiency.",
+              "options": [
+                {
+                  "label": "The chart now measures store efficiency",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.beyond-data"
+                },
+                {
+                  "label": "The omission proves West has no sales",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.beyond-data"
+                },
+                {
+                  "label": "The chart fails regional completeness",
+                  "isCorrect": true
+                },
+                {
+                  "label": "The chart improves numerical precision",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.accepts-unchecked"
+                }
+              ]
+            },
+            {
+              "key": "pe.p07.pe066",
+              "type": "mcq",
+              "prompt": "Which prompt best defines a verifiable regional chart?",
+              "explanation": "A verifiable prompt names the measure (net sales), the grouping (region) and a checkable requirement (every bar labelled), so you can recompute the result. \"Striking\", \"deserves the most praise\" and \"most successful marketing effort\" are subjective or need data the file lacks. The first of these sounds like a designer's brief, but nothing in it can be checked.",
+              "options": [
+                {
+                  "label": "Sum net sales by region; label every bar",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Make a striking sales graphic for leaders",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.accepts-unchecked"
+                },
+                {
+                  "label": "Show which region deserves the most praise",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.beyond-data"
+                },
+                {
+                  "label": "Find the most successful marketing effort",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.beyond-data"
+                }
+              ]
+            },
+            {
+              "key": "pe.p07.pe067",
+              "type": "mcq",
+              "prompt": "The AI returns a correct chart but argues East's decline caused a loss. What is the right disposition?",
+              "explanation": "A chart and its narrative can be judged separately. The totals check out, so keep the chart. No dates, causes or profit figures support \"decline\" or \"loss\", so remove that claim. Rejecting every total discards verified work, publishing both lets an unsupported claim ride on a correct chart, and a profit estimate would invent data.",
+              "options": [
+                {
+                  "label": "Reject all totals because text is flawed",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.all-or-nothing"
+                },
+                {
+                  "label": "Retain the chart; remove the causal claim",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Replace the claim with a profit estimate",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.beyond-data"
+                },
+                {
+                  "label": "Publish both because the chart is correct",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.all-or-nothing"
+                }
+              ]
+            },
+            {
+              "key": "pe.p07.pe068",
+              "type": "mcq",
+              "prompt": "A student records the initial prompt and the revised chart prompt. What else improves comparison?",
+              "explanation": "Comparing versions requires both prompts, both outputs and the check results; together they make the work traceable and repeatable. Keeping only the final screenshot or deleting the CSV removes the evidence, and renaming the initial prompt as final falsifies the record.",
+              "options": [
+                {
+                  "label": "Keep only the final screenshot",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.lost-evidence"
+                },
+                {
+                  "label": "Rename the initial prompt as final",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.lost-evidence"
+                },
+                {
+                  "label": "Delete the regional CSV after use",
+                  "isCorrect": false,
+                  "misconception": "pe.p07.lost-evidence"
+                },
+                {
+                  "label": "Save both outputs and the check results",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p07.x1",
+              "type": "ordering",
+              "prompt": "Put the steps of Case 1 in the order you would carry them out.",
+              "explanation": "You define the task first, write a prompt that names fields and checks, run it and save the real output, verify it independently against the CSV, and only then refine and recheck. Refining before verifying would polish a chart whose numbers you have not confirmed.",
+              "sequence": [
+                "Write the task brief: question, audience, four deliverables",
+                "Write the chart prompt with named fields, SUM and a zero baseline",
+                "Run it and save the actual output with prompt version, tool and date",
+                "Recalculate the four totals in a spreadsheet and check labels, axis and claims",
+                "Write a follow-up for one design change, rerun and recheck"
+              ]
+            },
+            {
+              "key": "pe.p07.x2",
+              "type": "fill_in",
+              "workOnPaper": true,
+              "prompt": "East has 39 transactions and total net sales of 182,004.38. What is East's net sales per transaction, to two decimal places?",
+              "explanation": "182,004.38 / 39 = 4,666.78. This is the highest figure among the four regions, even though East has the lowest total. A total and an average answer different questions, so check which one the manager asked for.",
+              "answers": [
+                "4666.78",
+                "4,666.78"
+              ]
+            },
+            {
+              "key": "pe.p07.x3",
+              "type": "matching",
+              "prompt": "Match each chart problem to the right fix.",
+              "explanation": "Each fix repairs the specific fault without changing the verified data: restore a zero baseline, name the real measure, remove an unsupported unit and put back the omitted region. None of the fixes involves altering the totals.",
+              "pairs": [
+                {
+                  "left": "The value axis starts at 180,000",
+                  "right": "Reset the baseline to zero"
+                },
+                {
+                  "left": "The title says \"Most profitable region\"",
+                  "right": "Retitle it \"Recorded net sales by store region\""
+                },
+                {
+                  "left": "Labels show dollar signs",
+                  "right": "Remove the currency or state that it is unspecified"
+                },
+                {
+                  "left": "Only three regions appear",
+                  "right": "Restore all four regions and rerun the grouping"
+                }
+              ]
+            }
+          ]
+        },
+        "assignments": [
+          {
+            "title": "Activity 1 · AI-assisted retail data visualisation (Case 1)",
+            "description": "## Activity 1 · AI-assisted retail data visualisation (Case 1)\n\n**Period 7 · about 55 to 70 minutes of practice · CLO2, CLO3, CLO4.** Full Student sheet: attached to the Module 3 materials lesson.\n\n### Business question and goal\n\nA retail manager wants a comparison of the four store regions. **Question: which region contributes the most total net sales?** Deliver a four-region calculation table, a bar chart and a brief, evidence-based interpretation. Improve the chart after you have checked it.\n\n**Success standard.** Use every transaction in the source CSV, the exact fields `Store_Region` and `Net_Sales_Amount`, a zero baseline on the bar chart and all four region labels. Do not invent a currency, a profit figure or an explanation for differences in sales.\n\n### What you need\n\n- `Slidescope_Retail_Store_Sales_Enhanced_2025.csv` (200 transactions, 13 columns).\n- A spreadsheet (Excel, Google Sheets or equivalent) and, if available, an approved chatbot. No coding.\n- Fallback: if your chatbot cannot open CSV files, calculate the totals in a spreadsheet and paste the four-row result into the chatbot with a provenance note. If it cannot draw a chart, draw it in the spreadsheet. State the real role of the chatbot; never claim it analysed a file or made a chart when it did not.\n\n### Workflow\n\n**Define (5 min).** Write a task brief: decision user (retail manager), question, output (four-row table, bar chart, 2 to 3 sentences of interpretation, check record) and success checks (all four regions, accurate sums, zero baseline, no unsupported claims).\n\n**Design (10 min).** Open the CSV, locate `Transaction_ID`, `Store_Region` and `Net_Sales_Amount`, and check that there are four named regions and numeric net sales. Adapt the starter prompt in your own words and save it as **V1**.\n\n```prompt Starter prompt V1\nUse the attached retail CSV. Treat each row as a transaction. Group records by Store_Region and compute SUM(Net_Sales_Amount) for each of the four regions. Give a table with exact values to two decimals and show the aggregation method. Create a bar chart with region labels, a clearly named measure and a zero baseline. State that currency is unspecified. Give one finding supported by the table; do not claim profit, trends or causes.\n```\n\n**Execute (10 min).** Run V1 with the CSV (or disclose the spreadsheet-only fallback). Record the chatbot name or model, the date and whether it really read the data. Save the returned table and chart, or screenshots. If there is no chart support, make a bar chart from the verified spreadsheet table and label it \"spreadsheet-created\". Locate the exact calculation the tool claims; if it could not calculate it, record that limitation.\n\n**Evaluate (15 min).** In a separate Summary worksheet, build a pivot table (rows `Store_Region`, values SUM of `Net_Sales_Amount`) or a SUMIF formula, without overwriting the source data. Record:\n\n| Check | What you must record |\n|---|---|\n| Group totals | Four independent spreadsheet sums, each compared with V1 |\n| Grand total | The four regional totals added together, compared with SUM of all raw `Net_Sales_Amount` |\n| Encoding | Four correct region labels, bar height represents net sales, vertical axis starts at zero |\n| Interpretation | Name the highest region using verified evidence; give no cause or currency claim |\n\n**Human verification gate.** If any sum, label or scale is wrong, fix the calculation or the chart before you refine. A fluent AI response is not a substitute for a cross-check.\n\n**Refine (10 min).** Choose **one** improvement: sort the bars, clearer labels, less gridline clutter or a purposeful highlight. Write and run **V2**, keeping the original values and the zero baseline, then check both charts again.\n\n```prompt Follow-up starter V2\nKeep the independently checked region totals and a zero baseline. [State ONE design improvement.] Regenerate the chart and explain what changed. Do not change the underlying figures or interpret them as profit.\n```\n\n### What to submit (as text)\n\nPaste or describe each item; if you include a chart, state its axis, order, labels and whether it was made by the chatbot or by a spreadsheet.\n\n- Your task brief and both prompt versions (V1 and V2).\n- The V1 and V2 charts (or screenshots described), each with the true tool or spreadsheet source noted.\n- Your four-region verification table, the raw grand-total check and the check method.\n- Two or three sentences interpreting the result, and a short revision reflection.\n- Tool and model (if visible), run date, CSV filename and any limitations.\n\n### Reflection\n\n1. Could a visually polished chart still be misleading? Give one check that would reveal the problem.\n2. Did your design change improve the manager's reading of the comparison? How do you know?\n3. What can you conclude about sales differences, and what cannot be inferred from this CSV?",
+            "responseFormat": "text",
+            "maxScore": 100,
+            "rubricText": "Practice rubric from the Activity 1 Student sheet: five criteria, each scored 0 (missing or incorrect), 1 (partly met) or 2 (fully met). Total 10 points; the score out of 100 is the total multiplied by 10. Formative unless a course assessor approves a weight.\n\n1. Task and data. 2 points: correct question, exact fields (Store_Region, Net_Sales_Amount) and all four regions.\n2. Prompt and run record. 2 points: both prompts (V1, V2) and reproducible execution conditions (tool or model, date, whether the file was really read, fallback disclosed).\n3. Independent verification. 2 points: four regional sums and the grand total checked against the source in a spreadsheet, with the check method recorded.\n4. Chart integrity. 2 points: correct labels, net sales as the measure, zero baseline, no invented currency.\n5. Refinement and interpretation. 2 points: a meaningful V2 change, values and scale rechecked, and an evidence-based statement with no cause, profit or currency claim.\n\nScore 2 only with evidence of the described standard. Alternative defensible outputs (horizontal or vertical bars, different colours, a spreadsheet-made chart) are acceptable: correct numbers, a meaningful design change and transparent provenance matter more than style.",
+            "countsTowardGrade": false
+          }
+        ]
+      },
+      {
+        "title": "Period 8 · AI-Assisted Prompting",
+        "durationMin": 45,
+        "description": "Use AI to draft a prompt plan, then review it and test it fairly. Compare a human-written prompt (A), an AI-drafted workflow (B) and a human-reviewed version (C) on one briefing task with a shared 0/1/2 rubric.",
+        "look": {
+          "palette": "sunset",
+          "font": "modern"
+        },
+        "objectivesLead": "By the end of this period you can:",
+        "objectives": [
+          "Explain why AI may help draft a prompt plan and why the draft still needs review and testing",
+          "Write a meta-prompt that asks AI to plan and clarify, but not to run the analysis",
+          "Review an AI-drafted workflow for invented context, impossible requirements, changed scope and missing checks",
+          "Compare a human-written prompt (A), an AI-drafted workflow (B) and a human-reviewed version (C) with one task, one CSV and one five-criterion rubric",
+          "State a defensible conclusion when scores differ or tie, and document the versions that led to it"
+        ],
+        "body": "The regional chart went well, so the manager raises the stakes: *\"Next time I want one page, two charts (by region and by product category), three findings I can trust and a note on what the data cannot tell me.\"* That is a bigger job than Case 1. It involves inspecting the file, calculating two summaries, designing two charts, drawing conclusions and formatting a page. You could write the prompt yourself, or you could ask the chatbot to help you write the prompts. Which is better? You will not decide by how expert the prompt sounds. You will decide by testing the briefings it produces.\n\n> [!ghi-nho] A/B/C compares **prompt-writing methods** on one shared task. It is not a new business case, and its result applies to the runs you actually made, not to every task or model.\n\n:::Predict before you read\nBefore reading on, write down which of A (you write the prompt), B (AI drafts the prompt plan) and C (you review and edit B) you expect to score highest, and one result that would make you change your mind. At the end of this period you will see what a fair comparison allows you to conclude.\n:::\n\n## When AI-assisted prompting helps\n\nAsking AI to draft a prompt plan is useful when:\n\n- the task has **several deliverables** (two charts, three findings, limitations, one page);\n- the **process is unclear** and you want AI to suggest stages and ask what is missing;\n- the work is **repeated** and you want prompts you can adapt.\n\nWhat it produces first is a **draft prompt or workflow**, not a verified answer. A generated prompt can change your objective, add assumptions or ask for things you cannot supply. It still needs your review and a test, and length alone is no evidence of quality.\n\n## Define the briefing task and write prompt A\n\nUse one brief for all three approaches.\n\n| Item | Brief |\n|---|---|\n| Audience | Retail manager |\n| Input | The full 200-record retail CSV |\n| Deliverables | Two correctly labelled bar charts (net sales by `Store_Region` and by `Product_Category`), three findings backed by checked numbers, an explicit limitations note, one page |\n| Success | Figures reconcile to the source, charts are readable and nothing goes beyond the evidence |\n\n```prompt Prompt A — human-written\nUsing the attached retail transaction CSV, prepare a one-page briefing for a retail manager. Compare summed Net_Sales_Amount by Store_Region and by Product_Category using two bar charts. Include three findings supported by calculations and the main data limitations. Do not invent dates, currency, profit or causal effects.\n```\n\n*Assessment:* this may work well, especially in a tool that can analyse files. But it does not say how to check the totals, and it does not say what to do if the interface cannot draw charts. It is a baseline. Whether it is a strong result is something you measure, not assume.\n\nIf only verified spreadsheet figures are available, give those figures to the chatbot and ask for a briefing and chart instructions based on them. Do not claim that a file was analysed.\n",
+        "sections": [
+          {
+            "layout": "cards",
+            "title": "8.3 Ask AI to draft the workflow (B) and review it (C)",
+            "intro": "Same task, same CSV, three ways of getting to the prompts.",
+            "parts": [
+              {
+                "title": "A: you write it",
+                "md": "You write the prompt yourself, without AI drafting help. Save the exact text you run. A is the baseline."
+              },
+              {
+                "title": "B: AI drafts it",
+                "md": "You give AI the same brief and ask for a plan and prompts, **without running the analysis**. Save the plan exactly as it came back. Do not correct it silently before testing."
+              },
+              {
+                "title": "C: you review B",
+                "md": "You copy B, mark every edit and improve only what is useful: closing evidence gaps, removing invented or impossible requirements, adding checks."
+              }
+            ],
+            "outro": "Instead of asking for a finished briefing straight away, ask for a plan:\n\n```prompt Meta-prompt B — draft a workflow\nHelp me turn the one-page retail briefing task into a practical prompt sequence. Ask about any missing requirement that could affect correctness. Then draft prompts for data inspection, summarisation, visualisation and the final briefing. Keep the plan limited to the fields available in the CSV. Do not execute the analysis until I have reviewed the prompts.\n```\n\n*Why it is a good meta-prompt:* it asks for clarification before drafting, limits the plan to the fields that exist and separates planning from execution, so you get a chance to review before anything is run.\n\nAn **illustrative** reply would propose four stages: (1) inspect rows, columns and valid fields; (2) summarise net sales by region and category; (3) create and check the two charts; (4) write the briefing. This is an instructional outline, not the transcript of a model run. Real replies differ, so read yours with care.\n\n> [!canh-bao] A generated plan can be impressive and still inefficient: pages of output that do not help the manager, a chart tool you do not have, or a quiet assumption that every region has equal store coverage. Ask of each sentence: does it change a requirement I can check?"
+          },
+          {
+            "layout": "text",
+            "title": "8.4 Review the AI plan",
+            "parts": [
+              {
+                "title": "",
+                "md": "Review each stage of the AI-drafted plan for the problems below, then add independent verification and clear chart labels before you test.\n\n| Look for | Example in a draft | What you do |\n|---|---|---|\n| Invented context | A made-up company history, a profit target, a report date | Delete it, or replace it with the manager's real information |\n| Impossible requirements | \"Show monthly trends\" from a file with no dates | Remove the requirement |\n| Changed scope | \"Compare regions\" becomes \"rank stores\" | Restore the unit you were asked for (the file has no store identifier) |\n| Missing checks | No reconciliation of totals | Add a stage that sums each table and compares it with the whole-file total |\n| Unavailable tools | An instruction to use a charting tool you do not have | Allow chart specifications as a fallback |\n| Redundant text | Pages of persona and tone instructions | Cut anything that does not change a checkable requirement |\n\nThe reviewed version keeps the useful stages and closes the gaps. An **illustrative** reviewed sequence:\n\n```prompt Prompt C, stage 1 — inspect\nRead the attached CSV. Confirm the number of rows, the column names and what one record represents. Identify the relevant grouping and net-sales fields. State unavailable fields and stop if the file cannot be read.\n```\n\n```prompt Prompt C, stage 2 — calculate\nSum Net_Sales_Amount by Store_Region and by Product_Category. Count records. Show the two tables with full-precision totals. Reconcile each table with the same overall net-sales total and explain the aggregation rule. Pause for review.\n```\n\n```prompt Prompt C, stages 3–4 — visualise and brief\nUse the approved tables to produce two readable, zero-based bar charts (or chart specifications if rendering is unavailable). Label measures and avoid inventing units. Write one page with three evidence-backed findings, data limitations and one question for further investigation. Do not infer causes.\n```\n\n*What review added:* a stop if the file cannot be read, a reconciliation step, a pause before charts, a fallback for rendering and a ban on inferring causes. *Human review before use:* confirm that the grouping is by region and category, that the measure is a **sum** of net sales and that nothing is converted into a currency. The two grouped tables must each add up to the same whole-file total, with 200 records.\n\n:::Find the error\nAn AI-drafted stage reads: \"Compare the monthly sales trend of each store, forecast next quarter's profit, and use the best available chart tool to publish the result to the team channel.\"\n\nHow many problems can you find against the brief in section 8.2?\n:::\n\n:::Open the solution after you have tried\nFour problems. (1) \"Monthly\" needs dates, which the CSV does not have. (2) \"Each store\" changes the unit; the file groups by region. (3) \"Forecast profit\" needs costs and a model of the future, neither of which is in the data or the brief. (4) \"Publish to the team channel\" gives the draft an action nobody approved; it should stop for human review. Edit C so that none of these survive.\n:::"
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "8.5 Compare the outputs",
+            "parts": [
+              {
+                "title": "",
+                "md": "Comparing the prompt texts is not enough. Compare the **briefings** they produce, under matched conditions.\n\n**A fair comparison** keeps these the same for A, B and C: the CSV (or the same verified summary if the tool cannot read files), the brief, the model and tool settings where you can control them, and the output format. Run each variant in a separate clean chat, with its full sequence if it needs several turns. Record the date, tool and any difference that could affect fairness.\n\nScore each final briefing with the course rubric. Each criterion gets 0 (missing or incorrect), 1 (partly met) or 2 (fully met), so a briefing can earn at most **10 points**.\n\n| Criterion | Look for |\n|---|---|\n| Task | Compares net sales by region and category |\n| Figures | Totals match independent checks against the CSV |\n| Findings | Three findings follow from the data; limits are stated |\n| Coverage | Includes all four regions and every category |\n| Presentation | One page, two clear charts and readable labels |\n\nAdd time spent and the number of corrections you needed as descriptive effort measures. They help you judge whether a result was worth its cost, but they are not a sixth score.\n\n> [!ghi-nho] No briefing earns full marks for Figures until its region and category totals match your own spreadsheet. Score each criterion separately: accurate numbers cannot make up for missing limitations.\n\n> [!canh-bao] The example scores on the course slide (A = 7, B = 8, C = 9) show how to use the rubric. They are not observed results from a controlled experiment, and they do not show that B or C always wins. A shorter, tested prompt can match a long generated workflow."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "8.6 Run and compare A, B and C",
+            "parts": [
+              {
+                "title": "",
+                "md": "1. Record the fixed conditions: CSV filename and version, tool and model, date, output format and any fairness caveat.\n2. Write A yourself and save the exact text.\n3. Ask AI to draft B (do not run the analysis), then save the plan and prompts exactly as returned.\n4. Copy B, mark every edit and write C.\n5. Run A, B and C in separate clean chats. Save the three briefings, charts, totals, prompts, settings, time and any failure. Do not invent outputs you did not get.\n6. Verify region and category totals independently, then score.\n7. Name the version you would reuse for this task, explain why and say what could change the result (another model, a fresh run, another tool).\n\nIf a tool cannot read files or draw charts, use **one consistent fallback for all three**: build the tables and charts in a spreadsheet and give the same verified summary to each chatbot run. Say so in your method.\n\n**Reading the result.** If B meets every checked criterion, prefer B unless C shows added value. If A and an AI-drafted prompt tie on the rubric, the defensible statement is \"comparable on this task in these runs\". Document what you changed: label the AI draft, your edits and the tested result, and keep unsuccessful outputs and their scores. They are part of the evidence.\n\n**Check it yourself.** Build a pivot table with `Store_Region` in rows and SUM of `Net_Sales_Amount` in values, then another with `Product_Category`. Both must add up to 892,252.11 across 200 records.\n\n:::Reference category totals (open after you have built your own pivot table)\n| Product category | Transactions | Total net sales |\n|---|---|---|\n| Apparel | 54 | 259,252.42 |\n| Furniture | 51 | 231,255.44 |\n| Grocery | 49 | 201,931.10 |\n| Electronics | 46 | 199,813.15 |\n| **Total** | **200** | **892,252.11** |\n\nThe regional totals are in Period 7: North 260,026.33, South 236,980.99, West 213,240.41, East 182,004.38.\n:::\n\n**Try it:** (1) explain why comparing final briefings tells you more than comparing prompt lengths; (2) draft prompt A and state two requirements that might be missing; (3) write a meta-prompt for B and name three assumptions you would check in its reply; (4) explain how you would adapt the experiment if only spreadsheet summaries could be analysed.\n\n**Activity 2** runs this comparison on your CSV. Open the Assignments tab of this lesson, and use the Student activity sheet attached to the Module 3 materials lesson."
+              }
+            ]
+          }
+        ],
+        "flashcards": {
+          "title": "Flashcards · Period 8",
+          "items": [
+            {
+              "term": "Meta-prompt",
+              "meaning": "A prompt that asks AI to help plan or write prompts, for example to propose stages and draft a prompt for each.",
+              "example": "\"Ask what is missing, draft the prompts, but do not run the analysis yet.\""
+            },
+            {
+              "term": "A / B / C comparison",
+              "meaning": "A: you write the prompt. B: AI drafts the plan and prompts. C: you review and edit B. The three outputs are compared on one task."
+            },
+            {
+              "term": "Human-reviewed prompt",
+              "meaning": "AI-generated instructions that you have checked and edited before testing. Review is not optional."
+            },
+            {
+              "term": "Fair comparison",
+              "meaning": "Same CSV, brief, tool, model settings and output format, run in separate clean chats, scored with the same rubric."
+            },
+            {
+              "term": "Rubric (0/1/2)",
+              "meaning": "Explicit criteria scored 0, 1 or 2. Five criteria give at most 10 points: Task, Figures, Findings, Coverage, Presentation."
+            },
+            {
+              "term": "Invented context",
+              "meaning": "Facts a draft adds that the file or brief never supplied: dates, a profit target, a company history. Remove them in review."
+            },
+            {
+              "term": "Changed scope",
+              "meaning": "A draft silently alters what is asked, such as turning a comparison of regions into a ranking of stores.",
+              "note": "The file has regions, not store identifiers."
+            },
+            {
+              "term": "Review gate",
+              "meaning": "A point between stages where you check assumptions and outputs before the next stage runs."
+            },
+            {
+              "term": "Effort measures",
+              "meaning": "Time spent and number of corrections. Record them to judge cost, but do not count them as part of the briefing score."
+            },
+            {
+              "term": "Task-specific tie",
+              "meaning": "If two versions score the same, report comparable performance on this task in these runs, not a universal winner."
+            }
+          ]
+        },
+        "summary": [
+          "AI can draft a prompt plan for a complex task. Treat the draft as a proposal to review, never as a validated specification.",
+          "Review for invented context, impossible requirements, changed scope, missing checks and unavailable tools, then add independent verification before testing.",
+          "Compare the final briefings, not the prompts: same CSV, brief, tool and format, separate clean chats, one 0/1/2 rubric and totals checked in a spreadsheet.",
+          "Prompt length and professional-sounding language are not evidence of quality. Report what the runs showed and document every version."
+        ],
+        "quiz": {
+          "title": "Quiz · Period 8",
+          "passThresholdPct": 70,
+          "requireConfidence": true,
+          "questions": [
+            {
+              "key": "pe.p08.pe069",
+              "type": "mcq",
+              "prompt": "What does AI-assisted prompt generation produce first?",
+              "explanation": "AI-assisted prompt generation produces a draft prompt or workflow: wording and steps for you to review. It does not produce a verified decision, an audited dataset or a guaranteed better output. The guarantee option is the tempting one because fluent drafts sound authoritative.",
+              "options": [
+                {
+                  "label": "A verified business decision",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.ai-as-authority"
+                },
+                {
+                  "label": "A draft prompt or workflow",
+                  "isCorrect": true
+                },
+                {
+                  "label": "An independently audited dataset",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.ai-as-authority"
+                },
+                {
+                  "label": "A guaranteed superior output",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.ai-as-authority"
+                }
+              ]
+            },
+            {
+              "key": "pe.p08.pe070",
+              "type": "mcq",
+              "prompt": "What should a learner do with an AI-generated prompt?",
+              "explanation": "A generated prompt can alter objectives or insert assumptions, so you review its requirements before testing. Publishing it unread, treating it as validated or assuming it contains no invented facts all give the draft more trust than the evidence allows.",
+              "options": [
+                {
+                  "label": "Publish it without reading details",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.ai-as-authority"
+                },
+                {
+                  "label": "Treat it as a validated specification",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.ai-as-authority"
+                },
+                {
+                  "label": "Assume it contains no invented facts",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.ai-as-authority"
+                },
+                {
+                  "label": "Review its requirements before testing",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p08.pe071",
+              "type": "mcq",
+              "prompt": "A one-page briefing needs two charts and three findings. Which requirement should appear explicitly?",
+              "explanation": "The prompt's output specification should mirror the brief: two charts and three supported findings. A profit forecast is not available in the CSV, a codebase and a paper change the task, and \"unlimited charts, optional findings\" leaves the deliverables undefined, so they cannot be checked.",
+              "options": [
+                {
+                  "label": "Profit forecasts and margin predictions",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.drifting-spec"
+                },
+                {
+                  "label": "A full codebase and a research paper",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.drifting-spec"
+                },
+                {
+                  "label": "Two charts and three supported findings",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Unlimited charts and optional findings",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.drifting-spec"
+                }
+              ]
+            },
+            {
+              "key": "pe.p08.pe072",
+              "type": "mcq",
+              "prompt": "An AI drafting assistant asks what decisions the briefing should support. What is the best response?",
+              "explanation": "When the drafting assistant asks what decisions the briefing should support, give the manager's real decision. That clarifies the objective without fabricating anything. Letting the AI choose, inventing a profit target or replacing the data with a scenario substitutes guesses for facts and distorts the task.",
+              "options": [
+                {
+                  "label": "Ask it to choose any decision",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.invented-context"
+                },
+                {
+                  "label": "Invent a profit target for context",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.invented-context"
+                },
+                {
+                  "label": "Replace the data with a scenario",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.invented-context"
+                },
+                {
+                  "label": "Provide the manager's actual decision",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p08.pe073",
+              "type": "mcq",
+              "prompt": "Why compare variants A, B and C on the same task?",
+              "explanation": "You compare A, B and C on the same task so that differences in the outputs can be traced to the prompt method, using shared criteria. The comparison is not designed to prove that longer prompts win, to let the third version win or to rank chatbot brands.",
+              "options": [
+                {
+                  "label": "To prove longer prompts are stronger",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.length-equals-quality"
+                },
+                {
+                  "label": "To make the third version win by design",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.rigged-comparison"
+                },
+                {
+                  "label": "To assess outputs using shared criteria",
+                  "isCorrect": true
+                },
+                {
+                  "label": "To rank chatbot brands by popularity",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.rigged-comparison"
+                }
+              ]
+            },
+            {
+              "key": "pe.p08.pe074",
+              "type": "mcq",
+              "prompt": "AI writes a prompt that requires monthly trends from the undated retail CSV. What should the reviewer change?",
+              "explanation": "The CSV has no dates, so monthly trends cannot be calculated, and the reviewer must remove that requirement. Keeping it and guessing, relabelling transaction IDs as months or adding a fictional report date all manufacture evidence the file does not contain.",
+              "options": [
+                {
+                  "label": "Keep the request and guess results",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.invented-context"
+                },
+                {
+                  "label": "Relabel transaction IDs as months",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.invented-context"
+                },
+                {
+                  "label": "Remove the monthly-trend requirement",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Add a fictional report date",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.invented-context"
+                }
+              ]
+            },
+            {
+              "key": "pe.p08.pe075",
+              "type": "mcq",
+              "prompt": "Version C includes more constraints than B, but B meets every checked criterion. What conclusion is warranted?",
+              "explanation": "Fitness of an output is established by tests, not by prompt length or origin. If B meets every checked criterion, C's extra constraints have shown no value, so prefer B unless C earns a higher score or needs fewer corrections. Scoring C higher for text or complexity rewards length, and discarding B because of where it came from judges origin instead of results.",
+              "options": [
+                {
+                  "label": "Prefer C because it has more text",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.length-equals-quality"
+                },
+                {
+                  "label": "Score C higher for its complexity",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.length-equals-quality"
+                },
+                {
+                  "label": "Discard B because AI wrote C",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.rigged-comparison"
+                },
+                {
+                  "label": "Prefer B unless C shows added value",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p08.pe076",
+              "type": "mcq",
+              "prompt": "In a 0–2 rubric, a briefing has accurate figures but no limitations. Which evaluation is appropriate?",
+              "explanation": "Rubric criteria are scored separately. Accurate figures earn credit under Figures; the missing limitations cost points under Findings, where limits are expected. Calling the gap a style issue or giving full credit everywhere ignores it, and discarding the accurate figures ignores what the briefing did well.",
+              "options": [
+                {
+                  "label": "Treat the missing caveat as a style issue",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.blended-rubric"
+                },
+                {
+                  "label": "Discard accurate figures as unimportant",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.blended-rubric"
+                },
+                {
+                  "label": "Give accuracy credit; deduct for limitations",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Give full credit on every criterion",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.blended-rubric"
+                }
+              ]
+            },
+            {
+              "key": "pe.p08.pe077",
+              "type": "mcq",
+              "prompt": "A student asks AI to draft a workflow. Which requested feature makes the draft safer to test?",
+              "explanation": "Explicit review points between steps give you chances to check assumptions and outputs before the next stage runs, which makes the draft safer to test. A promise that every result is correct, a hidden automatic approval and an instruction to skip source checks all remove control.",
+              "options": [
+                {
+                  "label": "Explicit review points between steps",
+                  "isCorrect": true
+                },
+                {
+                  "label": "A promise that every result is correct",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.ai-as-authority"
+                },
+                {
+                  "label": "A hidden automatic approval stage",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.ai-as-authority"
+                },
+                {
+                  "label": "An instruction to skip source checks",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.ai-as-authority"
+                }
+              ]
+            },
+            {
+              "key": "pe.p08.pe078",
+              "type": "mcq",
+              "prompt": "An AI-generated prompt silently changes “compare regions” into “rank stores.” What is the primary defect?",
+              "explanation": "The brief asks to compare regions, and the file does not identify stores. Turning \"compare regions\" into \"rank stores\" changes the unit of analysis, so the draft now answers a different question. Brevity, a persona or more examples would not repair that change of scope.",
+              "options": [
+                {
+                  "label": "It makes the wording too concise",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.length-equals-quality"
+                },
+                {
+                  "label": "It changes the analysis unit",
+                  "isCorrect": true
+                },
+                {
+                  "label": "It lacks an elaborate persona",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.length-equals-quality"
+                },
+                {
+                  "label": "It requests too few examples",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.length-equals-quality"
+                }
+              ]
+            },
+            {
+              "key": "pe.p08.pe079",
+              "type": "mcq",
+              "prompt": "A human-written prompt and an AI-drafted prompt both pass the same rubric. What is the defensible result?",
+              "explanation": "Equal scores on the same rubric support a narrow, task-specific conclusion: comparable performance in these runs. They do not show that human prompts always win or that AI prompts always win, and a tie is itself a result of testing, not proof that no testing took place.",
+              "options": [
+                {
+                  "label": "Report comparable performance on this task",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Claim the human prompt always wins",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.rigged-comparison"
+                },
+                {
+                  "label": "Assume the tie proves no testing occurred",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.rigged-comparison"
+                },
+                {
+                  "label": "Claim the AI prompt always wins",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.rigged-comparison"
+                }
+              ]
+            },
+            {
+              "key": "pe.p08.pe080",
+              "type": "mcq",
+              "prompt": "After editing an AI-drafted prompt, how should the learner document it?",
+              "explanation": "Label the AI draft, your edits and the tested result so the comparison can be audited. Keeping only the final generated text, giving both versions the same name or deleting unsuccessful outputs and scores hides what changed and why.",
+              "options": [
+                {
+                  "label": "Keep only the final generated text",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.no-version-trail"
+                },
+                {
+                  "label": "Rename both versions identically",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.no-version-trail"
+                },
+                {
+                  "label": "Label the draft, edits and tested result",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Delete unsuccessful outputs and scores",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.no-version-trail"
+                }
+              ]
+            },
+            {
+              "key": "pe.p08.x1",
+              "type": "fill_in",
+              "prompt": "The A/B/C rubric has five criteria, each scored 0, 1 or 2. What is the maximum total for one briefing?",
+              "explanation": "Five criteria at a maximum of 2 points each give 10 points. The slide's example totals (7, 8 and 9) show how to add up the scores; they are not results of a real experiment.",
+              "workOnPaper": true,
+              "answers": [
+                "10",
+                "10 points",
+                "ten"
+              ]
+            },
+            {
+              "key": "pe.p08.x2",
+              "type": "ordering",
+              "prompt": "Put the steps of a fair A/B/C comparison in the right order.",
+              "explanation": "Fix the conditions before you write anything, write A, get B drafted without running the analysis, derive C from B with marked edits, run all three in clean chats, verify the totals independently and only then score. Scoring before verifying would reward figures you have not checked.",
+              "sequence": [
+                "Record the fixed conditions: CSV, brief, tool or model, output format",
+                "Write prompt A yourself",
+                "Ask AI to draft a workflow and prompts (B) without running the analysis",
+                "Copy B, review it and mark your edits to produce C",
+                "Run A, B and C in separate clean chats",
+                "Verify region and category totals independently in a spreadsheet",
+                "Score each final briefing with the same rubric"
+              ]
+            },
+            {
+              "key": "pe.p08.x3",
+              "type": "true_false",
+              "prompt": "The example scores on the course slide (A = 7, B = 8, C = 9) are results of a controlled experiment, so human-reviewed prompts always win.",
+              "explanation": "False. The slide scores are illustrative: they show how to use the rubric, not what any model did. Even real scores from your own runs would only describe those runs, on that task, with that tool.",
+              "options": [
+                {
+                  "label": "True",
+                  "isCorrect": false,
+                  "misconception": "pe.p08.rigged-comparison"
+                },
+                {
+                  "label": "False",
+                  "isCorrect": true
+                }
+              ]
+            }
+          ]
+        },
+        "assignments": [
+          {
+            "title": "Activity 2 · Human vs AI-assisted prompt design (A/B/C)",
+            "description": "## Activity 2 · Human vs AI-assisted prompt design (A/B/C)\n\n**Period 8 · about 70 to 90 minutes of practice · CLO2, CLO3, CLO4.** A method comparison on the same retail context; there is no new business case. Full Student sheet: attached to the Module 3 materials lesson.\n\n### One fixed management task\n\nPrepare a one-page retail sales briefing for a manager from the provided CSV. Compare total `Net_Sales_Amount` across all four `Store_Region` values and all four `Product_Category` values. Include **exactly two clear charts** (one by region, one by category), **three findings** backed by checked numbers and the **major data limitations**.\n\n**Controlled comparison.** Keep the data, brief, model or tool, accessible features and output format the same for A, B and C. Compare the briefings each approach produces. Do not reward longer prompts for being longer.\n\n### Files, tools and record\n\n- Source: `Slidescope_Retail_Store_Sales_Enhanced_2025.csv` (200 transactions, 13 columns), an approved chatbot and a spreadsheet. Upload only this permitted CSV.\n- If file or chart functions are missing, use **one consistent fallback for all three variants**: build the region and category aggregates and the charts in a spreadsheet and give the same verified summary to each chatbot run. Mark spreadsheet work as such.\n- Record before you start: CSV filename and version; tool and model (note if unknown); date, account features and a separate clean chat per variant; output requirement (English, one page, two charts, three findings, limitations); any setting or tool difference that could affect fairness.\n\n### Build the three versions\n\n**A, human-written prompt (10 min).** Write your own complete prompt without asking AI to draft it. Save the exact final text you execute as A.\n\n```prompt A starter brief\nUsing the retail CSV, prepare a one-page sales briefing comparing total net sales by store region and product category. Include two charts, three findings supported by the data, and the main limitations. [Add the checks and output instructions you think are necessary.]\n```\n\n**B, AI-drafted workflow (15 min).** In a preparation chat, give the chatbot the same business brief and the CSV (or the agreed fallback). Answer any clarification with the fixed requirements you recorded. Do not ask it to run the analysis in the drafting conversation.\n\n```prompt Prompt to generate B\nHelp me turn the fixed one-page retail briefing into an analysis workflow. Ask only important missing questions. Then propose stages and executable prompts for inspecting data, aggregating net sales, making two charts and writing the briefing. Use only the provided CSV; do not do the analysis yet. Preserve the same task, data and required outputs.\n```\n\nSave the AI-produced workflow and prompts **exactly** as B. Do not silently correct B before testing. If an instruction asks for private data, invented facts, unsanctioned actions or inaccessible tools, stop, document the issue, obtain an instructor-approved safe substitute and disclose that B was not run unmodified.\n\n**C, human-reviewed B (10 min).** Copy B and mark every edit. Review it for wrong fields, changed scope, omitted categories, hallucinated dates, currency or profit, unclear calculation checks, unachievable chart requirements, risky access and redundant text. Write C by improving only what is useful.\n\n```prompt Review checklist for C\nInspect → Summarise → Visualise → Brief. At each stage, ask what inputs are available, what output must be checked and whether the next stage is safe to proceed. Preserve the brief and the evidence requirements. [Make your own targeted changes to B.]\n```\n\n### Execute, evaluate and refine the comparison\n\n1. Open a separate clean run for A, B and C with the same brief, CSV or shared verified inputs, tool or model and output format. If a variant needs several turns, run its full sequence.\n2. Save for each variant the final briefing, charts, underlying totals, exact prompts, visible tool settings, time spent and any failures. Do not invent missing outputs.\n3. Verify region and category totals independently in the spreadsheet before scoring (PivotTable rows `Store_Region` or `Product_Category`, values SUM of `Net_Sales_Amount`). Confirm that both sets reconcile to the full-file sum.\n4. Score the **output** of each variant with the five criteria below, and explain score differences with evidence from the briefings.\n5. Choose the approach you would reuse for this task, justify the choice and note what could change the result.\n\n**Verification gate.** No briefing receives full Figures points until its region and category totals match your spreadsheet. If the source cannot be read, describe the fallback and score only what the run actually demonstrated.\n\n### Scorecard (leave blank until you have the outputs)\n\nFor every criterion: 2 fully met, 1 partly met, 0 missing or incorrect; maximum 10 per briefing. The slide's example numbers are not a result from your runs.\n\n| Criterion | Look for | A | B | C |\n|---|---|---|---|---|\n| Task | Compares net sales by region and category | | | |\n| Figures | Totals match independent checks against the CSV | | | |\n| Findings | Three findings follow from the data; limits are stated | | | |\n| Coverage | Includes all four regions and every category | | | |\n| Presentation | One page, two clear charts and readable labels | | | |\n| Total / 10 | Add criterion points | | | |\n\nAlso record for each version the final score, total time (minutes) and an execution or fallback note.\n\n### What to submit (as text)\n\n- The exact A prompt, the B prompts as drafted by the AI, and the C prompts with your edits marked.\n- Your three briefings, or an accurate description of any failed or incomplete run, with the two-chart requirement checked.\n- The region and category verification sheet, the five-criterion scorecard and the effort record.\n- A short comparative judgement naming the most useful version in your runs.\n- Tool or model, date, file, and stated limits and permissions.\n\n### Reflection\n\n1. Which version met the task with the strongest checked evidence? Point to the output, not prompt length.\n2. What did the AI drafter misunderstand or omit? Which C edit addressed a verified weakness?\n3. Would another model, a fresh run or a different tool change your result? What would you hold constant?",
+            "responseFormat": "text",
+            "maxScore": 100,
+            "rubricText": "Based on the Activity 2 Student sheet. Each criterion is scored 0 (missing or incorrect), 1 (partly met) or 2 (fully met). Total 10 points; the score out of 100 is the total multiplied by 10. Formative unless a course assessor approves a weight.\n\n1. Prompt record. 2 points: the exact A prompt, the B prompts exactly as the AI drafted them, and the C prompts with every edit marked; any case where B could not be run unmodified is disclosed.\n2. Fair-comparison record. 2 points: fixed conditions recorded (CSV and version, tool or model, date, a separate clean chat per variant, output format), with a consistent fallback for all three variants if file or chart tools were missing, and any fairness caveat noted.\n3. Independent verification. 2 points: region and category totals checked in a spreadsheet, both reconciled to the full-file sum, before any scoring; no full Figures points for a briefing whose totals do not match.\n4. Scorecard. 2 points: all five criteria (Task, Figures, Findings, Coverage, Presentation) scored 0, 1 or 2 for each of A, B and C using evidence from the actual briefings, with final scores, time and an execution or fallback note; examples from the slide are not copied.\n5. Comparative judgement and reflection. 2 points: names the most useful version in the learner's own runs, points to output evidence rather than prompt length, says what the AI drafter misunderstood or omitted and which C edit fixed a verified weakness, and states what could change the result and what would be held constant.\n\nDo not give credit for invented outputs. If a run was incomplete, score only what was demonstrated.",
+            "countsTowardGrade": false
+          }
+        ]
+      },
+      {
+        "title": "Period 9 · Reuse and Automate Workflows",
+        "durationMin": 45,
+        "description": "Turn the tested briefing into a reusable template, outline a six-stage workflow and an optional skill, and plan scheduled runs with fresh inputs, review gates and failure handling. Know when to keep the work manual.",
+        "look": {
+          "palette": "sunset",
+          "font": "modern"
+        },
+        "objectivesLead": "By the end of this period you can:",
+        "objectives": [
+          "Identify repeatable work and distinguish a prompt, template, workflow, skill and automation",
+          "Turn a tested briefing prompt into a reusable template with placeholders for file, period and audience",
+          "Specify the input, output and check for each of six workflow stages, including what happens when a check fails",
+          "Write an automation request that names its source and destination, saves a draft, handles failure and keeps a human review step",
+          "Explain why the undated teaching CSV cannot establish a reporting period or support monthly claims",
+          "Decide when automation should be deferred and the workflow kept manual"
+        ],
+        "body": "The manager liked the one-page briefing. *\"Can you send me the same thing every month?\"* The quickest way is to copy last month's answer and change the title. That is not a report. It is an old answer wearing a new heading. Reuse means keeping a **tested method** and feeding it **fresh data and fresh checks** every time. In this period you turn the Period 8 briefing into a reusable template, think through how to package it as a skill and how to schedule it, and learn when to keep it manual.\n\n> [!ghi-nho] You can reuse the method, the template and the checks. You can never reuse last month's numbers, last month's file or last month's approval.\n\n:::Predict before you read\nThe CSV you have used is named *Slidescope_Retail_Store_Sales_Enhanced_2025.csv*. Could you start a monthly pipeline by calling it \"January\"? Write down your answer and what you would need to see in the file or its metadata to justify it. You will check it in section 9.1.\n:::\n\n## Spot repeatable work\n\nThe Period 8 briefing has a repeatable structure: receive a file, check what it covers, calculate two summaries, make two charts, draft three findings and state the limits. Recurring work with a stable structure is a good candidate for reuse; sensitive, one-off or unsupported tasks are not.\n\nFour words are easy to confuse. They are separate choices, even when a product bundles them in one interface.\n\n| Term | What it is | What it depends on |\n|---|---|---|\n| **Template** | Reusable prompt text with placeholders such as `[FILE]`, `[REPORTING PERIOD]`, `[AUDIENCE]` | You filling the placeholders each run |\n| **Workflow** | Ordered stages with their inputs and review gates | Clear stages and checks |\n| **Skill** | A packaged set of instructions and supporting resources, where the product supports it | The product feature and your account |\n| **Automation** | A run started by a schedule or trigger | Access to inputs, permissions and tools that really exist |\n\n> [!canh-bao] The slides imagine a future \"Month 1\" CSV only to explain recurring work. The teaching CSV has **no transaction dates and no month identifier**. It cannot be treated as January, October or any other month. A true month-by-month workflow needs reporting-period metadata, consistent extraction definitions and permission to retrieve each new file.\n\n## Build a reusable template\n\n```prompt Reusable template\nPrepare a one-page retail briefing using [APPROVED FILE] for [REPORTING PERIOD] for [AUDIENCE]. Confirm the reporting period is documented in the file or its trusted metadata. Inspect rows and fields. Calculate summed net sales by region and product category and reconcile each table with the whole-file total. Then provide two bar charts or verified chart specifications, three supported findings and limitations. Pause before any distribution or final publication.\n```\n\n*Why it works:* the stable parts (task, definitions, chart requirements, checks) stay fixed and the variable parts are placeholders. It asks the model to confirm the reporting period instead of assuming it, includes reconciliation and ends with a pause for a human.\n\n- **Keep:** the task, the metric definitions, the checks and the report layout.\n- **Replace each run:** the input file, the reporting period and the audience. A reporting period must come from a trusted source, not from a year in a filename.\n\nTest the template first on an approved input and check that the output really uses the new values. A template that silently keeps old values, or leaves the brackets in the text, is not working.\n\n:::Find the error\nSomeone saves last month's finished briefing and changes only the title to \"March report\". Which of the four terms (template, workflow, skill, automation) have they actually used, and what is missing?\n:::\n\n:::Open the solution after you have tried\nNone of them. A saved answer is an output, not a template: it has no placeholders, no stages and no checks, and it contains last month's numbers. The method has not been reused; the result has been recycled.\n:::\n",
+        "sections": [
+          {
+            "layout": "steps",
+            "title": "9.3 Package the workflow as a skill: six stages",
+            "intro": "Where the product supports it, a skill packages a tested set of instructions and resources (the template, the metric definitions, the checks). Keep the method simple enough to run as ordinary saved prompts when skills are unavailable. For each stage, define who supplies the input, what is produced and what can stop progress.",
+            "parts": [
+              {
+                "title": "1. Receive",
+                "md": "**Input:** approved CSV and a documented reporting period.\n\n**Output:** an identified file version.\n\n**Check:** correct permission and scope."
+              },
+              {
+                "title": "2. Inspect",
+                "md": "**Input:** the original file.\n\n**Output:** a row and field inventory.\n\n**Check:** expected columns are present; transaction IDs are unique."
+              },
+              {
+                "title": "3. Calculate",
+                "md": "**Input:** checked records.\n\n**Output:** the two grouping tables.\n\n**Check:** sums and counts reconcile to the whole file."
+              },
+              {
+                "title": "4. Visualise",
+                "md": "**Input:** verified tables.\n\n**Output:** two charts or specifications.\n\n**Check:** axes, categories, totals and readable labels."
+              },
+              {
+                "title": "5. Draft",
+                "md": "**Input:** verified evidence.\n\n**Output:** a one-page briefing.\n\n**Check:** findings are qualified and unknowns are disclosed."
+              },
+              {
+                "title": "6. Approve",
+                "md": "**Input:** the reviewed document.\n\n**Output:** an approved distribution copy.\n\n**Check:** the manager approves external use."
+              }
+            ],
+            "outro": "**A failed check produces an exception report, not a polished briefing.** If `Net_Sales_Amount` is missing, calculation stops and the workflow asks for a valid extract. It does not invent the column or fall back to old data. Test that your skill asks for missing inputs rather than quietly reusing earlier ones.\n\n> [!meo] What belongs in a skill: input requirements, metric definitions, the report template and the verification steps. What does not: passwords, access tokens, broad posting permissions or promises of accuracy."
+          },
+          {
+            "layout": "text",
+            "title": "9.4 Schedule the routine work",
+            "parts": [
+              {
+                "title": "",
+                "md": "A skill stores the method. An automation runs it. Scheduling works only when the account has the right tool, permissions, access to the input and a tested run plan. A text document or a folder of saved prompts is a fully valid alternative for learners without these features.\n\nIf scheduling is available, an **illustrative** automation request might read:\n\n```prompt Automation specification — do not run without approval\nOn an approved monthly schedule, obtain the previous reporting period's permitted extract from [APPROVED SOURCE]. Run the tested briefing workflow. Save a draft in [APPROVED DESTINATION], record the file version and calculations, and notify the reviewer. Never send a management report or modify source data without explicit human approval. If the file is missing or its columns have changed, flag the failure.\n```\n\n*Why it is safer than \"send me the report every month\":* it names the source and destination, saves a **draft** rather than sending, records the file version and calculations, says what to do on failure and keeps a human in charge of distribution.\n\nA scheduling instruction alone cannot grant file access, define a data pipeline or establish compliance. Before you automate, confirm who owns the input, what the destination permissions are, what the retention rules say and who is responsible for review. If you cannot establish those, **keep the manual version** and still keep the method documentation. Test one manual run before you schedule anything."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "9.5 Prepare the next run",
+            "parts": [
+              {
+                "title": "",
+                "md": "Test the next run with an approved replacement file or a changed brief. Check that it recalculates the results, reports missing columns clearly and asks for human review before publication.\n\n**An illustrative test.** Copy the checked CSV to a separate learning folder and name it so its role is obvious. Supply it through the template and verify that the output still reconciles to 892,252.11 across 200 records. This tests a known reference file. It is not proof of a real monthly pipeline.\n\n**For a genuine second extract,** compare the field definitions, the transaction coverage, the unique IDs and the grouping totals before you use it. A difference in total sales may reflect a change in the source's scope as well as in business activity.\n\n| If the new file... | The workflow should... |\n|---|---|\n| Lacks the net-sales column | Stop at inspection and report the missing column; do not invent or substitute one |\n| Has only three regions | Report the missing region and ask whether the extract is incomplete before any chart |\n| Has different field definitions | Flag the difference and retest before reuse |\n| Has no documented period | Ask for the period; do not infer it from a filename |\n\n**Try it:** (1) name three placeholders you need to reuse the briefing next month; (2) explain why the uploaded CSV cannot establish its own reporting period; (3) make a one-page checklist with one check per stage; (4) give one reason to keep the workflow manual until access and approval are confirmed."
+              }
+            ]
+          }
+        ],
+        "flashcards": {
+          "title": "Flashcards · Period 9",
+          "items": [
+            {
+              "term": "Template",
+              "meaning": "Reusable instructions with replaceable inputs. The stable parts stay fixed; the file, period and audience change each run.",
+              "example": "Prepare a briefing using [FILE] for [PERIOD] for [AUDIENCE]."
+            },
+            {
+              "term": "Workflow",
+              "meaning": "Ordered stages with their inputs, outputs and review gates: receive, inspect, calculate, visualise, draft, approve."
+            },
+            {
+              "term": "Skill",
+              "meaning": "Platform-dependent packaging of instructions and resources (template, metric definitions, checks). Not available in every tool; saved prompts are a valid fallback."
+            },
+            {
+              "term": "Automation",
+              "meaning": "A run started by a schedule or trigger. It can use only the inputs, permissions and tools that actually exist."
+            },
+            {
+              "term": "Review gate",
+              "meaning": "A point where a person validates or approves an output before work continues or anything is distributed."
+            },
+            {
+              "term": "Reporting period",
+              "meaning": "The time span a file covers. It must come from trusted metadata, not from a filename or a guess.",
+              "note": "The teaching CSV has no dates, so it cannot be \"January\"."
+            },
+            {
+              "term": "Exception report",
+              "meaning": "What the workflow produces when a check fails: a clear description of the problem, not a polished briefing."
+            },
+            {
+              "term": "Fresh data, fresh checks",
+              "meaning": "Every run recalculates from the new input and repeats the checks. An old answer with a new title is not a report."
+            },
+            {
+              "term": "Reproducible weekly summary",
+              "meaning": "A versioned template, the input file version and a log of checks together, so another person can repeat the run."
+            },
+            {
+              "term": "Keep it manual",
+              "meaning": "Stay manual until input ownership, destination permissions, retention rules and review responsibility are confirmed."
+            }
+          ]
+        },
+        "summary": [
+          "Reuse a tested method, never an old answer: a template has placeholders, a workflow has stages and review gates, a skill packages them where supported, and an automation runs them on a trigger.",
+          "Each run needs fresh data, a trusted reporting period and fresh checks. The teaching CSV has no dates, so it cannot stand in for a month.",
+          "When a check fails the workflow produces an exception report, and a person approves anything that leaves the team.",
+          "Optional tools may package or schedule the work. Their availability does not remove the need for permission, verification and human approval, and a manual workflow is a valid choice."
+        ],
+        "quiz": {
+          "title": "Quiz · Period 9",
+          "passThresholdPct": 70,
+          "requireConfidence": true,
+          "questions": [
+            {
+              "key": "pe.p09.pe081",
+              "type": "mcq",
+              "prompt": "Which task is a strong candidate for prompt reuse?",
+              "explanation": "Prompt reuse suits recurring work with a stable structure, such as a weekly sales briefing. A password request is sensitive and one-off, a unique apology is not repeatable and an undocumented guess about demand is not worth preserving. The one-off options are tempting because they feel important, but nothing in them recurs.",
+              "options": [
+                {
+                  "label": "A private one-time password request",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.wrong-candidate"
+                },
+                {
+                  "label": "A recurring weekly sales briefing",
+                  "isCorrect": true
+                },
+                {
+                  "label": "A unique unrepeatable apology",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.wrong-candidate"
+                },
+                {
+                  "label": "An undocumented guess about demand",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.wrong-candidate"
+                }
+              ]
+            },
+            {
+              "key": "pe.p09.pe082",
+              "type": "mcq",
+              "prompt": "A reusable prompt uses [FILE] and [AUDIENCE]. What should happen each run?",
+              "explanation": "A reusable template separates stable instructions from variable inputs, so each run replaces placeholders with the current file, period and audience. Hardcoding the first file, leaving placeholders in the output or assuming last month's values persist makes the result stale or incomplete.",
+              "options": [
+                {
+                  "label": "Hardcode the first file permanently",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.stale-reuse"
+                },
+                {
+                  "label": "Replace placeholders with current inputs",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Leave the placeholders in the output",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.stale-reuse"
+                },
+                {
+                  "label": "Assume last month's values persist",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.stale-reuse"
+                }
+              ]
+            },
+            {
+              "key": "pe.p09.pe083",
+              "type": "mcq",
+              "prompt": "In the course, a skill mainly packages what?",
+              "explanation": "In this course a skill packages reusable instructions and supporting resources, such as the template, the metric definitions and the checks. It does not create a new data model, guarantee approval or fix financial facts like a currency rate.",
+              "options": [
+                {
+                  "label": "A new proprietary data model",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.tool-overclaim"
+                },
+                {
+                  "label": "A guaranteed autonomous approval",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.tool-overclaim"
+                },
+                {
+                  "label": "A fixed monthly currency rate",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.tool-overclaim"
+                },
+                {
+                  "label": "Reusable instructions and resources",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p09.pe084",
+              "type": "mcq",
+              "prompt": "A scheduled report relies on a monthly file that might be missing. What should the workflow specify?",
+              "explanation": "The workflow should check that the source file exists before it calculates, and stop with a clear exception if it does not. Omitting the date, reusing older numbers silently or inventing a file would deliver a stale or false report. Being scheduled on time does not make the data current.",
+              "options": [
+                {
+                  "label": "Omit the report date without explanation",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.silent-gap-fill"
+                },
+                {
+                  "label": "Reuse the older numbers without notice",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.silent-gap-fill"
+                },
+                {
+                  "label": "Invent a source file if missing",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.silent-gap-fill"
+                },
+                {
+                  "label": "Check that the source file exists",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p09.pe085",
+              "type": "mcq",
+              "prompt": "A class has no access to scheduled tasks. How can it practise workflow design?",
+              "explanation": "Without scheduling tools you can still practise workflow design: a manual run checklist teaches the same planning and verification. Do not remove human approval, assume everyone has the feature or claim that an automatic run took place. A feature you did not use cannot be reported as used.",
+              "options": [
+                {
+                  "label": "Remove all human approval steps",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.unsafe-delegation"
+                },
+                {
+                  "label": "Create and test a manual run checklist",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Assume every student has the feature",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.tool-overclaim"
+                },
+                {
+                  "label": "Claim an automatic run took place",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.tool-overclaim"
+                }
+              ]
+            },
+            {
+              "key": "pe.p09.pe086",
+              "type": "mcq",
+              "prompt": "What remains necessary for scheduled AI drafts?",
+              "explanation": "Scheduled creation of a draft is not distribution: a person reviews the draft before it is sent. Hidden replacement of source data, unrestricted folder access and permanent permission to publish give automation more authority than it should have.",
+              "options": [
+                {
+                  "label": "Hidden replacement of source data",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.unsafe-delegation"
+                },
+                {
+                  "label": "Unrestricted access to all folders",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.unsafe-delegation"
+                },
+                {
+                  "label": "Human review before distribution",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Permanent permission to publish",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.unsafe-delegation"
+                }
+              ]
+            },
+            {
+              "key": "pe.p09.pe087",
+              "type": "mcq",
+              "prompt": "A monthly template uses a new CSV without dates. What is the most serious risk?",
+              "explanation": "Monthly claims require dated records and documented coverage, and this CSV has neither, so calling its totals a monthly trend is the serious risk. A consistent table format, an audience line and a renamed placeholder are harmless when the content is checked.",
+              "options": [
+                {
+                  "label": "Calling the result a monthly trend",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Keeping a consistent table format",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.period-unverified"
+                },
+                {
+                  "label": "Listing the target audience",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.period-unverified"
+                },
+                {
+                  "label": "Renaming the input placeholder",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.period-unverified"
+                }
+              ]
+            },
+            {
+              "key": "pe.p09.pe088",
+              "type": "mcq",
+              "prompt": "A student packages a briefing workflow as a skill. What should be included?",
+              "explanation": "A skill should carry what makes reuse safe: input requirements and verification steps. Unrestricted posting permissions, claims of guaranteed accuracy and private login details are unnecessary in a packaged workflow and make it riskier.",
+              "options": [
+                {
+                  "label": "Input requirements and verification steps",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Unrestricted posting permissions",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.unsafe-delegation"
+                },
+                {
+                  "label": "Claims of guaranteed model accuracy",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.tool-overclaim"
+                },
+                {
+                  "label": "Private login tokens and passwords",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.unsafe-delegation"
+                }
+              ]
+            },
+            {
+              "key": "pe.p09.pe089",
+              "type": "mcq",
+              "prompt": "A template worked once, then the reporting file structure changed. What is the right next step?",
+              "explanation": "A changed file structure can break calculations or change what a column means, so you retest the workflow with the new columns before reuse. Assuming the old instructions fit, using the previous output as new data or hiding the field changes lets the break pass unnoticed.",
+              "options": [
+                {
+                  "label": "Use the previous output as new data",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.stale-reuse"
+                },
+                {
+                  "label": "Assume the old instructions still fit",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.stale-reuse"
+                },
+                {
+                  "label": "Retest the workflow with new columns",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Hide the field changes in the report",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.silent-gap-fill"
+                }
+              ]
+            },
+            {
+              "key": "pe.p09.pe090",
+              "type": "mcq",
+              "prompt": "A team wants reproducible weekly summaries. Which setup is strongest?",
+              "explanation": "Reproducing weekly summaries needs the instructions (a versioned template), the input (a specific file version) and evidence of verification (a check log). A chart without its data, a promise to remember or unlabelled screenshots cannot be re-run or audited.",
+              "options": [
+                {
+                  "label": "Versioned template, input file and check log",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Saved chart image without input data",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.thin-record"
+                },
+                {
+                  "label": "A promise to remember last week's work",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.thin-record"
+                },
+                {
+                  "label": "Unlabeled screenshots of successive chats",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.thin-record"
+                }
+              ]
+            },
+            {
+              "key": "pe.p09.x1",
+              "type": "matching",
+              "prompt": "Match each term to its description.",
+              "explanation": "A template is reusable text with placeholders, a workflow is ordered stages with review gates, a skill is packaged instructions and resources where a product supports it, and an automation is a scheduled or triggered run limited by access. A review gate is the point where a person checks or approves.",
+              "pairs": [
+                {
+                  "left": "Template",
+                  "right": "Reusable prompt text with placeholders"
+                },
+                {
+                  "left": "Workflow",
+                  "right": "Ordered stages with inputs and review gates"
+                },
+                {
+                  "left": "Skill",
+                  "right": "Packaged instructions and resources, where the product supports it"
+                },
+                {
+                  "left": "Automation",
+                  "right": "A scheduled or triggered run, limited by the access it has"
+                },
+                {
+                  "left": "Review gate",
+                  "right": "A point where a person checks or approves before work continues"
+                }
+              ]
+            },
+            {
+              "key": "pe.p09.x2",
+              "type": "true_false",
+              "prompt": "A year in a CSV's filename is a reliable way to establish the file's reporting period for a monthly report.",
+              "explanation": "False. A reporting period should come from the data (a date or period field) or trusted metadata. A filename is a label anyone can change, and a year alone cannot identify a month or confirm what the file covers.",
+              "options": [
+                {
+                  "label": "True",
+                  "isCorrect": false,
+                  "misconception": "pe.p09.period-unverified"
+                },
+                {
+                  "label": "False",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p09.x3",
+              "type": "ordering",
+              "prompt": "Put the six stages of the briefing workflow in order.",
+              "explanation": "The workflow starts with an approved, identified input, inspects it, calculates and reconciles before any chart, builds charts from verified tables, drafts from verified evidence and ends with human approval. Drafting before reconciling would write findings on unchecked figures.",
+              "sequence": [
+                "Receive an approved input with a documented reporting period",
+                "Inspect the data: rows, fields, duplicate IDs",
+                "Calculate and reconcile the two grouping tables",
+                "Create the charts from verified tables",
+                "Draft the one-page summary with limitations",
+                "Human approval before release"
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "misconceptions": [
+    {
+      "code": "pe.p07.cycle-order",
+      "name": "Mixes up the order of the five-step cycle",
+      "description": "You treat the stages as interchangeable, for example redefining the objective or rewriting constraints right after the tool answers. Each stage uses the output of the one before, and the first check against the source belongs before anything is published or refined. Sign: you jump from \"the tool answered\" straight to another action."
+    },
+    {
+      "code": "pe.p07.beyond-data",
+      "name": "Reads or asks for more than the CSV can support",
+      "description": "You infer profit, demand, efficiency, growth or causes from totals of net sales, or you ask for forecasts, visits or monthly figures the file does not contain. The CSV has regions, categories and sales amounts for 200 undated transactions, nothing more. Sign: your claim needs a column you cannot point to."
+    },
+    {
+      "code": "pe.p07.distorted-scale",
+      "name": "Accepts a scale that distorts bar lengths",
+      "description": "You think the axis is a free design choice: truncating it, hiding its labels or scaling each bar separately seems harmless. Bars encode value by length, so only a shared zero baseline keeps lengths proportional to values. Sign: small differences look large, or readers cannot tell what the axis shows."
+    },
+    {
+      "code": "pe.p07.accepts-unchecked",
+      "name": "Accepts a chart or prompt because it looks polished",
+      "description": "You treat appearance (colours, fonts, animation, a striking look) as a sign that the numbers and claims are right. Looks tell you nothing about whether the measure, totals, labels and statements are correct. Sign: you praise the design before recalculating anything."
+    },
+    {
+      "code": "pe.p07.assumed-execution",
+      "name": "Assumes the tool did something it did not do",
+      "description": "You write as if every chatbot can open files and draw charts, or you accept coordinates, descriptions or an \"unseen chart\" as if they had been produced. A capability counts only when you can see the output and its source. Sign: you cannot say how the chart was made."
+    },
+    {
+      "code": "pe.p07.all-or-nothing",
+      "name": "Treats one problem as proof that everything is right or wrong",
+      "description": "You react to a single issue by deleting everything, doubting every number, or you accept everything because one part is correct. Totals, chart and narrative can be judged separately: keep what passes its check and repair what fails. Sign: your fix is \"start over\" or \"publish as is\"."
+    },
+    {
+      "code": "pe.p07.lost-evidence",
+      "name": "Discards the prompts, outputs and checks",
+      "description": "You keep only the final picture, or you rename or delete earlier versions once the chart is finished. Without both prompts, both outputs and the check results nobody, including you, can see what changed or reproduce the totals. Sign: you cannot show what V1 looked like."
+    },
+    {
+      "code": "pe.p08.ai-as-authority",
+      "name": "Trusts an AI-drafted prompt or plan without reviewing it",
+      "description": "You treat a generated prompt as a finished, validated specification, publish it unread or remove the human checks from the workflow. A draft can change your objective, add invented facts or skip verification, and nothing in it guarantees a better result. Sign: you test or run the plan without reading it first."
+    },
+    {
+      "code": "pe.p08.length-equals-quality",
+      "name": "Treats a longer or more elaborate prompt as a better prompt",
+      "description": "You assume more text, more constraints, a persona or a more complex workflow means a stronger result, or you try to fix a problem by adding words. Quality is shown by what the tested output achieves against the criteria, not by how the prompt sounds. Sign: you prefer a version because it is longer or more complex."
+    },
+    {
+      "code": "pe.p08.rigged-comparison",
+      "name": "Misreads what a fair prompt comparison is for",
+      "description": "You treat the comparison as a way to make a favoured version win, to rank products or to prove a universal rule such as \"AI always wins\". A fair comparison holds task, data and criteria constant so you can say what happened in these runs. Sign: your conclusion is wider than your evidence, or the design favours one version."
+    },
+    {
+      "code": "pe.p08.invented-context",
+      "name": "Fills gaps in the task with invented facts",
+      "description": "When a requirement cannot be met from the file or brief, you supply a guess: a target, a report date, a scenario in place of the data, or you relabel columns. Invented context makes the output look complete while quietly changing the task. Sign: the briefing mentions something nobody told the AI."
+    },
+    {
+      "code": "pe.p08.drifting-spec",
+      "name": "Lets the task specification drift from the brief",
+      "description": "You accept or write requirements that differ from the brief: extra deliverables, forecasts the file cannot support, optional outputs, or a changed unit of analysis. The prompt should mirror the brief so the result can be checked against it. Sign: the output list or the grouping no longer matches what the manager asked for."
+    },
+    {
+      "code": "pe.p08.blended-rubric",
+      "name": "Blends rubric criteria instead of scoring each separately",
+      "description": "You let one strong criterion lift or sink the others: accurate figures excuse missing limitations, or a missing caveat is waved away as style. Each criterion measures something different and is scored on its own evidence. Sign: your scores for all criteria rise and fall together."
+    },
+    {
+      "code": "pe.p08.no-version-trail",
+      "name": "Does not keep a labelled trail of versions and results",
+      "description": "You keep only the final text, give versions the same name or delete weak outputs and scores once you have a winner. Without the draft, your edits and the tested results, nobody can tell what changed or whether the comparison was fair. Sign: you cannot say which edit improved which weakness."
+    },
+    {
+      "code": "pe.p09.wrong-candidate",
+      "name": "Picks one-off, sensitive or unsupported tasks for reuse",
+      "description": "You choose tasks to save as templates because they feel important, not because they repeat. Reuse pays off when work recurs with a stable structure. A one-time sensitive request, a unique message or an undocumented guess has nothing to template. Sign: the task cannot be described by fixed steps and replaceable inputs."
+    },
+    {
+      "code": "pe.p09.stale-reuse",
+      "name": "Reuses old inputs, outputs or unresolved placeholders",
+      "description": "You treat reuse as copying: keeping the first file, last month's values, an earlier output as new data, or leaving brackets in the text. A reusable template separates stable instructions from variable inputs and fills every placeholder from the current run. Sign: this run's report contains something from the last one."
+    },
+    {
+      "code": "pe.p09.silent-gap-fill",
+      "name": "Fills a missing or changed input without telling anyone",
+      "description": "When a source file is missing or its structure changes you carry on anyway: omitting the date, reusing older numbers, inventing a source or hiding the change. The result looks complete but rests on something false or stale. Sign: nobody is told that an input is missing or different."
+    },
+    {
+      "code": "pe.p09.tool-overclaim",
+      "name": "Credits a skill or schedule with powers it does not have",
+      "description": "You expect a skill or automation to supply new data, approve reports, fix facts such as exchange rates or guarantee accuracy, or you assume or pretend that a feature exists. They only run what you have defined, with the access you have actually set up. Sign: you cannot say where the input comes from or who approves the result."
+    },
+    {
+      "code": "pe.p09.unsafe-delegation",
+      "name": "Gives automation access, credentials or authority it should not have",
+      "description": "You remove human approval, grant broad folder access, allow permanent publishing rights or put passwords and tokens inside a packaged workflow. Automation drafts; people approve and distribute. Sign: nobody reviews before something leaves the team, or the workflow holds secrets."
+    },
+    {
+      "code": "pe.p09.period-unverified",
+      "name": "Assumes a reporting period without trusted metadata",
+      "description": "You treat an undated file as if it supported month-by-month statements, taking the period from a filename, a year or an assumption. Monthly claims need dated records and documented coverage. Sign: your report says \"monthly\" or \"trend\" but you cannot point to a date field or period metadata."
+    },
+    {
+      "code": "pe.p09.thin-record",
+      "name": "Keeps too little to reproduce the run",
+      "description": "You rely on a chart image, a screenshot, a promise to remember or a set of unlabelled chats. Reproducing a result needs the instructions, the input version and the checks that were made. Sign: another person could not repeat your run."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "pe.p07.cycle-order",
+      "body": "Write down what each of the five stages produces and what the next stage needs from it. Then find the point where you first compare the tool's output with the CSV. Anything you publish, refine or redefine before that point rests on an unchecked output.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p07.beyond-data",
+      "body": "For each claim or request, name the column in the CSV that would support it. If you cannot, the claim or the request goes beyond the data. A ranking of sums supports a statement about recorded net sales and nothing about profit, demand, efficiency or causes.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p07.distorted-scale",
+      "body": "Look at the first tick on the value axis. If it is not zero, bar lengths no longer match values; a bar for 70% of the maximum can look tiny. A fair chart for comparing sizes uses one shared zero baseline with labelled units. Hiding the labels hides the problem; it does not fix it.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p07.accepts-unchecked",
+      "body": "Set the visuals aside and check three things: do the labels name the right measure, do the totals match your own spreadsheet, and is every sentence supported by a number? A good-looking chart can be wrong and a plain one can be right. Decide on the checks, then on the design.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p07.assumed-execution",
+      "body": "Ask what evidence shows that the tool read the file and drew the chart: a row count, a table you can recompute, a visible image. If the tool cannot do it, use a spreadsheet or request a specification you can build elsewhere, and state which part came from where.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p07.all-or-nothing",
+      "body": "Split the output into parts (totals, labels, scale, order, commentary) and check each one. Keep the parts that pass, fix the ones that fail, and recheck after the change. Throwing away verified work wastes effort, and publishing unsupported text because the chart is right passes a claim you never tested.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p07.lost-evidence",
+      "body": "Save every prompt version with its output, the tool and date, the input filename and the checks you made. Label versions honestly and never rename an early draft as final. A peer should be able to repeat your totals from the record without using the AI output.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p08.ai-as-authority",
+      "body": "Read the draft requirement by requirement and compare it with your brief: does each line keep the objective, use only fields in the CSV and leave a place for you to check before the next stage? A draft is a proposal. What makes a plan safe to test is the review points you keep or add, not the confidence of its wording.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p08.length-equals-quality",
+      "body": "Ask what each extra sentence changes that you can check. Then compare the outputs, not the prompts: if a shorter version meets every criterion, the extra length has not earned anything. Match the fix to the defect; a wrong unit or scope is not repaired by more detail.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p08.rigged-comparison",
+      "body": "Write the conclusion you are entitled to: which version did what, on this task, under these conditions. Check that everything except the prompt method was held constant, and that no version was favoured by sequence, effort or origin. A tie supports a statement about this task and nothing broader.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p08.invented-context",
+      "body": "Ask what the file or the manager actually supplies for this requirement. If the answer is nothing, either ask the manager for the real information or remove the requirement. Never fill the gap with a guess; mark it as unknown and state it in the limitations.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p08.drifting-spec",
+      "body": "Put the brief and the prompt side by side and tick off the outputs, the grouping unit and the data used. Anything in the prompt that is not in the brief, or in the file, is drift; anything missing from the prompt is a gap. A precise brief states exactly what must be produced.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p08.blended-rubric",
+      "body": "Score one criterion at a time, pointing to the part of the briefing that is your evidence. Accurate numbers earn credit where numbers are scored; a gap elsewhere costs points where that is scored. If you cannot point to evidence for a 2, it is not a 2.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p08.no-version-trail",
+      "body": "Label each version (A, B as drafted, C with edits marked) and keep its output, settings, time and score together. Keep the unsuccessful runs, since they show what the edits fixed. A reviewer should be able to follow the trail from the first draft to the final briefing.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p09.wrong-candidate",
+      "body": "Ask whether the task recurs, whether its steps stay the same and which parts change each time. Recurring work with a stable structure and variable inputs is a template candidate. Sensitive, unrepeatable or unsupported items are not, and putting them into a saved prompt spreads the problem.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p09.stale-reuse",
+      "body": "Before each run, list the placeholders and write the current value for each. Check that no earlier file, number or output feeds the new run, and that no bracket is left in the result. If the file structure changed, retest before you reuse the instructions.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p09.silent-gap-fill",
+      "body": "Make the workflow check that the source exists and has the expected columns before it calculates. If a check fails, produce an exception report that says what is missing or changed and stop. Never replace the missing item with an invented or older one without saying so.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p09.tool-overclaim",
+      "body": "Write down what the feature really does: which instructions and resources it holds, which inputs it needs and which permissions it has. Anything beyond that is your responsibility. If you do not have the feature, practise with a manual checklist and say so honestly.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p09.unsafe-delegation",
+      "body": "Give the workflow the least access it needs: a named source, a named destination and draft-only output. Keep credentials out of saved instructions, and keep a review gate before any distribution or publication.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p09.period-unverified",
+      "body": "Check the file for a date or period field and for documentation from a trusted source. If neither exists, do not claim a period or trend; ask for period-labelled data. Formatting, audience lines and placeholder names are not the risk here: unsupported time claims are.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p09.thin-record",
+      "body": "List what a stranger would need to rerun your work: the versioned template, the exact input file and the log of checks. Anything that is only in your memory or in an unlabelled screenshot cannot be audited, so save it with a label.",
+      "priority": 10
+    }
+  ]
+}
