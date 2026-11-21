@@ -97,6 +97,27 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
       ro?.disconnect();
     };
   }, [measure, tabs.length]);
+  // Thanh bước dính ở đỉnh: đo chiều cao thật của nó để các cột dính bên trong (đoạn văn / câu hỏi chia đôi) đặt đỉnh NGAY DƯỚI thanh,
+  // không bị thanh đè lên đầu cột (câu đầu bị che). Biến `--ps-top` được LessonPractice dùng; không có thanh thì nó dùng mặc định 5rem.
+  const navRef = useRef<HTMLDivElement>(null);
+  const [navH, setNavH] = useState(0);
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) {
+      setNavH(0);
+      return;
+    }
+    const read = () => setNavH(Math.ceil(el.getBoundingClientRect().height));
+    read();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(read) : null;
+    ro?.observe(el);
+    window.addEventListener("resize", read);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", read);
+    };
+  }, [tabs.length]);
+  const topStyle = navH > 0 ? ({ "--ps-top": `calc(3.75rem + ${navH}px + 0.5rem)` } as React.CSSProperties) : undefined;
   // Thẻ đang mở luôn nằm trong tầm nhìn (chỉ cuộn trong hàng thẻ, không cuộn cả trang).
   useEffect(() => {
     const bar = barRef.current;
@@ -139,7 +160,7 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
   const showSteps = tabs.length <= 12;
   const stepBar =
     tabs.length > 1 ? (
-      <div role="group" aria-label={tr("practice.tabs.aria")} data-testid="practice-step-nav" className="sticky top-[3.75rem] z-20 mb-3 flex items-stretch border border-token bg-[rgb(var(--surface))] shadow-sm">
+      <div ref={navRef} role="group" aria-label={tr("practice.tabs.aria")} data-testid="practice-step-nav" className="sticky top-[3.75rem] z-20 mb-3 flex items-stretch border border-token bg-[rgb(var(--surface))] shadow-sm">
         <button type="button" onClick={() => step(-1)} disabled={cur === 0} aria-label={tr("practice.tabs.prev")} className={stepBtn}>
           <ChevronLeft size={18} aria-hidden />
           <span className="hidden sm:inline">{tr("practice.tabs.prevShort")}</span>
@@ -188,7 +209,7 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
   if (hsk) {
     // Giao diện bài HSK: lưới thẻ hoạt động (biểu tượng, tên, số câu, thanh tiến độ); thẻ đang mở màu hồng, nội dung mở ngay bên dưới.
     return (
-      <section ref={secRef} className="hsk-tabs" data-testid="practice-tabs">
+      <section ref={secRef} className="hsk-tabs" data-testid="practice-tabs" style={topStyle}>
         {stepBar}
         <Collapse open={listOpen}>
         <div role="tablist" aria-label={tr("practice.tabs.aria")} className="hsk-tablist">
@@ -253,7 +274,7 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
   }
 
   return (
-    <section ref={secRef} className={hsk ? "hsk-tabs mt-5" : "mt-5"} data-testid="practice-tabs">
+    <section ref={secRef} className={hsk ? "hsk-tabs mt-5" : "mt-5"} data-testid="practice-tabs" style={topStyle}>
       {stepBar}
       <Collapse open={listOpen}>
       <div className="relative">

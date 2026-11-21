@@ -918,11 +918,11 @@ export default function LessonPractice({
           <div data-split={split ? "true" : undefined} className={`${sheet ? "mt-3" : "mt-4"} grid gap-4 ${split ? `lg:grid-cols-[1.1fr_1fr] ${sheet ? "lg:items-stretch" : "lg:items-start"} lg:gap-2.5` : ""}`}>
             {hasBody && !lightIntro && stepPassage && parts && (
               <div
-                className={`${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} p-5 ${sheet && split ? "" : "lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll"} ${split && !sheet ? "lg:sticky lg:top-20" : ""} [&_p]:leading-8`}
+                className={`${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} p-5 ${sheet && split ? "" : "lg:max-h-[calc(100vh-var(--ps-top,5rem)-2rem)] lg:overflow-y-auto lp-scroll"} ${split && !sheet ? "lg:sticky lg:top-[var(--ps-top,5rem)]" : ""} [&_p]:leading-8`}
                 data-testid="lp-passage"
               >
                 {/* Phiếu chia đôi: thẻ giãn cao bằng cột câu hỏi (đường kẻ dọc suốt chiều cao); hình/đoạn bên trong dính theo cuộn. */}
-                <div className={sheet && split ? "lg:sticky lg:top-20 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll" : undefined}>
+                <div className={sheet && split ? "lg:sticky lg:top-[var(--ps-top,5rem)] lg:max-h-[calc(100vh-var(--ps-top,5rem)-2rem)] lg:overflow-y-auto lp-scroll" : undefined}>
                 {blankMode && blankQ ? (
                   <PassageBlanks
                     nodes={blankMode.nodes}
@@ -948,7 +948,7 @@ export default function LessonPractice({
               </div>
             )}
             {/* Chia đôi: cột câu hỏi cũng tự cuộn riêng (như cột đoạn văn) khi nhiều câu dài; thẻ đầu cột (bản đồ câu hỏi) dính ở đỉnh nên luôn thấy. */}
-            <div className={`min-w-0 space-y-3 ${splitView ? "lg:sticky lg:top-20 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll" : ""}`}>
+            <div className={`min-w-0 space-y-3 ${splitView ? "lg:sticky lg:top-[var(--ps-top,5rem)] lg:max-h-[calc(100vh-var(--ps-top,5rem)-2rem)] lg:overflow-y-auto lp-scroll" : ""}`}>
               {splitView && !sheet && (
                 <div className="sticky top-0 z-10 -mb-3 bg-[rgb(var(--bg))] pb-3">
                 <div className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
