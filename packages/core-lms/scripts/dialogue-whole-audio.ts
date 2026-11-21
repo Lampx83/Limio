@@ -72,7 +72,7 @@ async function main() {
   const owner = await prisma.user.findUnique({ where: { email: ownerEmail }, select: { id: true } });
   if (!owner) throw new Error(`Không thấy tài khoản ${ownerEmail}`);
   const rows = await prisma.contentItem.findMany({
-    where: { type: "dialogue", lesson: { module: { courseId, ...(only ? { lesson: { title: { contains: only } } } : {}) } } },
+    where: { type: "dialogue", lesson: { module: { courseId }, ...(only ? { title: { contains: only } } : {}) } },
     select: { id: true, payload: true, lesson: { select: { title: true } } },
   });
   const tmp = mkdtempSync(join(tmpdir(), "dlg-whole-"));
