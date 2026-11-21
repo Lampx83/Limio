@@ -180,7 +180,7 @@ export default async function LessonPage({
   const lesson = await prisma.lesson.findUnique({
     where: { id: params.lessonId },
     include: {
-      module: { include: { course: { select: { id: true, slug: true, title: true, coverUrl: true, themeColor: true, priceCents: true, currency: true, version: true, status: true, publicAccess: true, languageMode: true, language: true } } } },
+      module: { include: { course: { select: { id: true, slug: true, title: true, coverUrl: true, themeColor: true, priceCents: true, currency: true, version: true, status: true, publicAccess: true, languageMode: true, language: true, protectedMedia: true } } } },
       // isLocked của bài nằm sẵn trong `lesson`; của module lấy qua include ở trên.
       contentItems: { orderBy: { orderIndex: "asc" } },
       quizzes: {
@@ -449,17 +449,20 @@ export default async function LessonPage({
           {/* Bản in cũng mở cho người xem thử: quy tắc truy cập của trang in
               giống hệt trang này, nên giấu nút đi chỉ làm khó người dùng chứ
               không giữ được gì. */}
-          <div className="mt-5">
-            <a
-              href={`/learn/${params.slug}/lessons/${params.lessonId}/print`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-pill"
-            >
-              <Download size={16} />
-              {t("learn.printPdf")}
-            </a>
-          </div>
+          {/* Khoá bản quyền: không có nút in (chặn chắc ở chính trang /print). */}
+          {!course.protectedMedia && (
+            <div className="mt-5">
+              <a
+                href={`/learn/${params.slug}/lessons/${params.lessonId}/print`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-pill"
+              >
+                <Download size={16} />
+                {t("learn.printPdf")}
+              </a>
+            </div>
+          )}
         </header>
         <div className="mt-8">
           <LessonContent
@@ -1200,7 +1203,7 @@ export default async function LessonPage({
               </div>
             )}
             {/* Khung 3 cột (thầy chốt 10/11/2026): bỏ nút "In / Lưu PDF". Trang /print vẫn còn, các bài ngoài khung vẫn có nút. */}
-            {!lessonFrame && (
+            {!lessonFrame && !lesson.module.course.protectedMedia && (
               <div className="flex flex-wrap items-center gap-2 max-sm:w-full sm:ml-auto">
                 {/* Bản in mở tab mới, trang in tự gọi hộp thoại in. */}
                 <LessonContentToolbar

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { blockToPlainLines } from "@/lib/langBlocks";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
@@ -39,9 +40,10 @@ export async function generateMetadata({
   const tx = await getT();
   const lesson = await prisma.lesson.findUnique({
     where: { id: params.lessonId },
-    select: { title: true, module: { select: { course: { select: { title: true } } } } },
+    select: { title: true, module: { select: { course: { select: { title: true, protectedMedia: true } } } } },
   });
-  if (!lesson) return { title: tx("learn.print.metaTitle") };
+  // Khoá bản quyền: không đưa tên bài vào <title> của trang bị chặn.
+  if (!lesson || lesson.module.course.protectedMedia) return { title: tx("learn.print.metaTitle") };
   const clean = (v: string) => v.replace(/[/:\\?%*|"<>]/g, "-").trim();
   return { title: `${clean(lesson.title)} — ${clean(lesson.module.course.title)}` };
 }
@@ -74,6 +76,7 @@ export default async function LessonPrintPage({
               status: true,
               publicAccess: true,
               priceCents: true,
+              protectedMedia: true,
             },
           },
         },
@@ -104,6 +107,23 @@ export default async function LessonPrintPage({
       const paid = course.priceCents !== null && course.priceCents > 0;
       redirect(`/catalog/${params.slug}${paid ? "?paywall=1" : ""}`);
     }
+  }
+
+  // Khoá bật "Học liệu có bản quyền": không dựng bản in cho BẤT KỲ AI (kể cả người dạy, bài xem thử, ?gv=1)
+  // và không tự gọi hộp thoại in. Đây là chỗ chặn chắc; chỉ ẩn nút thì vẫn gõ được địa chỉ.
+  // docs/tieu-chi/chan-in-hoc-lieu-ban-quyen.md, AC1.
+  if (course.protectedMedia) {
+    return (
+      <main className="mx-auto max-w-xl px-6 py-16">
+        <div className="banner-warning">
+          <h1 className="text-h3 font-semibold">{tx("learn.print.blockedTitle")}</h1>
+          <p className="mt-2 text-body">{tx("learn.print.blockedBody")}</p>
+        </div>
+        <Link href={`/learn/${params.slug}/lessons/${params.lessonId}`} className="btn btn-primary btn-sm mt-6 inline-flex">
+          {tx("learn.print.back")}
+        </Link>
+      </main>
+    );
   }
 
   // Ghi chú chỉ đi vào bản in khi CẢ HAI đúng: người xem có quyền sửa khoá, và

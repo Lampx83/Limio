@@ -53,6 +53,10 @@ export default function ProtectedMediaPanel({
           còn hiệu lực và người dạy khoá này. Người chưa mua, hoặc người nhận được đường dẫn từ bạn bè, sẽ không
           tải được. Bài đặt là &quot;xem thử&quot; vẫn mở cho mọi người.
         </p>
+        <p className="mt-1 text-xs text-muted">
+          Bật cũng tắt chức năng in và lưu PDF của bài học, slide và link chia sẻ bài giảng gắn với khoá, kể cả với
+          giảng viên. Muốn in bản có ghi chú để cầm lên lớp, hãy tắt tạm rồi bật lại.
+        </p>
       </header>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -80,7 +84,8 @@ export default function ProtectedMediaPanel({
       {enabled && (
         <p className="mt-2 text-xs text-muted">
           Lưu ý: cách này chặn việc chia sẻ đường dẫn và người chưa mua. Người đã mua vẫn có thể tự lưu file về
-          máy, và Limio chưa chống chụp màn hình hay gắn tên người xem lên tài liệu.
+          máy, và Limio chưa chống chụp màn hình hay gắn tên người xem lên tài liệu. Chặn in chắc ở nút và trang
+          bản in; còn khi bấm Ctrl+P trên trang bài thì chỉ làm khó người dùng thông thường, ai cố tình vẫn lấy được chữ.
         </p>
       )}
       {err && <p className="mt-2 text-xs text-danger-600">{err}</p>}

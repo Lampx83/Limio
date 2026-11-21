@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { getLiveDeckByShareCode, getOrganizationSlideBrandForUser } from "@feedbackme/core-lms";
+import { getLiveDeckByShareCode, getOrganizationSlideBrandForUser, isLiveDeckPrintBlocked } from "@feedbackme/core-lms";
 import { resolveEffectiveBrand } from "@/lib/limioLiveBrand";
 import { toPublicSlides } from "@/lib/limioLiveShare";
+import { getT } from "@/lib/i18n/server";
+import PrintBlock from "@/components/lesson/PrintBlock";
 import SharedDeckView from "./SharedDeckView";
 
 // Link xem chỉ đọc của bài giảng Limio-Live: ai có link cũng xem được, không cần đăng nhập. Luôn đọc mới từ DB
@@ -36,7 +38,14 @@ export default async function SharedLiveDeckPage({ params }: Props) {
     deckTemplate: deck.brandTemplate,
   }).brand;
 
+  // Bài giảng gắn vào bài học của khoá bật "Học liệu có bản quyền": không nút "Tải PDF" và in ra trang trắng
+  // (docs/tieu-chi/chan-in-hoc-lieu-ban-quyen.md, AC4). Link vẫn mở cho ai có mã, như trước.
+  const printBlocked = await isLiveDeckPrintBlocked(deck.id, prisma);
+  const tx = printBlocked ? await getT() : null;
+
   return (
+    <>
+    {printBlocked && tx && <PrintBlock message={tx("learn.print.blockedStrip")} />}
     <SharedDeckView
       deckId={deck.id}
       motif={deck.motif}
@@ -47,6 +56,8 @@ export default async function SharedLiveDeckPage({ params }: Props) {
       theme={deck.theme}
       brand={brand}
       slides={toPublicSlides(deck.slides)}
+      allowPdf={!printBlocked}
     />
+    </>
   );
 }

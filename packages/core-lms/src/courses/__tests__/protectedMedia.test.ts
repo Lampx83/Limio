@@ -15,6 +15,8 @@ import {
   extractLessonMediaFilenames,
   findProtectingCourseIds,
   findProtectingCourseIdsForExamAsset,
+  isLessonPrintBlocked,
+  isLiveDeckPrintBlocked,
   registerLessonMedia,
   setCourseProtectedMedia,
   syncProtectedMediaForCourse,
@@ -311,5 +313,49 @@ describe("Bài luyện nhúng trong khoá bản quyền (đề ẩn)", () => {
     expect(await findProtectingCourseIdsForExamAsset(`${exam.id}-1790000000102-0123456789abcdef.png`)).toEqual([]);
     expect(await findProtectingCourseIdsForExamAsset("khong-co-tien-to-id-de.png")).toEqual([]);
     expect(await findProtectingCourseIdsForExamAsset("00000000-0000-4000-8000-000000000000-1-ab.png")).toEqual([]);
+  });
+});
+
+describe("chặn in học liệu (docs/tieu-chi/chan-in-hoc-lieu-ban-quyen.md)", () => {
+  it("isLessonPrintBlocked: theo cờ của khoá, kể cả bài xem thử; bài không tồn tại → không chặn", async () => {
+    const owner = await makeUser("pm-pb1@e.com");
+    const { courseId, moduleId } = await makeCourse(owner, "pm-pb1");
+    const normal = await addLessonWith(owner, moduleId, "<p>a</p>");
+    const preview = await addLessonWith(owner, moduleId, "<p>b</p>", { previewable: true, index: 1 });
+
+    expect(await isLessonPrintBlocked(normal)).toBe(false);
+    await setCourseProtectedMedia(owner, courseId, true);
+    expect(await isLessonPrintBlocked(normal)).toBe(true);
+    expect(await isLessonPrintBlocked(preview)).toBe(true);
+    await setCourseProtectedMedia(owner, courseId, false);
+    expect(await isLessonPrintBlocked(normal)).toBe(false);
+
+    expect(await isLessonPrintBlocked("00000000-0000-4000-8000-000000000000")).toBe(false);
+  });
+
+  it("isLiveDeckPrintBlocked: chỉ chặn bài giảng đang gắn vào bài học của khoá bật cờ", async () => {
+    const owner = await makeUser("pm-pb2@e.com");
+    const prot = await makeCourse(owner, "pm-pb2a");
+    const plain = await makeCourse(owner, "pm-pb2b");
+    const lessonProt = await addLessonWith(owner, prot.moduleId, "<p>a</p>");
+    const lessonPlain = await addLessonWith(owner, plain.moduleId, "<p>b</p>");
+    const deckLoose = await prisma.liveDeck.create({ data: { userId: owner, title: "Rời" } });
+    const deckProt = await prisma.liveDeck.create({ data: { userId: owner, title: "Trong khoá bản quyền" } });
+    const deckPlain = await prisma.liveDeck.create({ data: { userId: owner, title: "Trong khoá thường" } });
+    await prisma.lesson.update({ where: { id: lessonProt }, data: { liveDeckId: deckProt.id } });
+    await prisma.lesson.update({ where: { id: lessonPlain }, data: { liveDeckId: deckPlain.id } });
+    await setCourseProtectedMedia(owner, prot.courseId, true);
+
+    expect(await isLiveDeckPrintBlocked(deckLoose.id)).toBe(false);
+    expect(await isLiveDeckPrintBlocked(deckProt.id)).toBe(true);
+    expect(await isLiveDeckPrintBlocked(deckPlain.id)).toBe(false);
+
+    // Gỡ khỏi bài học hoặc tắt cờ thì in lại được ngay.
+    await prisma.lesson.update({ where: { id: lessonProt }, data: { liveDeckId: null } });
+    expect(await isLiveDeckPrintBlocked(deckProt.id)).toBe(false);
+    await prisma.lesson.update({ where: { id: lessonProt }, data: { liveDeckId: deckProt.id } });
+    expect(await isLiveDeckPrintBlocked(deckProt.id)).toBe(true);
+    await setCourseProtectedMedia(owner, prot.courseId, false);
+    expect(await isLiveDeckPrintBlocked(deckProt.id)).toBe(false);
   });
 });

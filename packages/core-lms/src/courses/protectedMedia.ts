@@ -203,3 +203,25 @@ export async function canAccessProtectedMedia(
   }
   return false;
 }
+
+/**
+ * Bài học này có bị chặn in không (docs/tieu-chi/chan-in-hoc-lieu-ban-quyen.md). Theo đúng cờ "Học liệu có
+ * bản quyền" của khoá, KHÔNG miễn cho bài xem thử và không miễn cho người dạy: xem thử là cho đọc, không phải
+ * cho mang đi. Bài không tồn tại → false (trang gọi tự xử lý 404 theo luật riêng).
+ */
+export async function isLessonPrintBlocked(lessonId: string, db: DbClient = prisma): Promise<boolean> {
+  const lesson = await db.lesson.findUnique({
+    where: { id: lessonId },
+    select: { module: { select: { course: { select: { protectedMedia: true } } } } },
+  });
+  return lesson?.module.course.protectedMedia === true;
+}
+
+/** Bài giảng Limio-Live đang gắn vào bài học của khoá bật cờ → chặn in (kể cả khi xem qua link chia sẻ). */
+export async function isLiveDeckPrintBlocked(deckId: string, db: DbClient = prisma): Promise<boolean> {
+  const lesson = await db.lesson.findFirst({
+    where: { liveDeckId: deckId, module: { course: { protectedMedia: true } } },
+    select: { id: true },
+  });
+  return lesson !== null;
+}
