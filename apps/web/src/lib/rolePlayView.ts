@@ -178,7 +178,7 @@ export function pinyinSyllables(word: string): string[] | null {
 export function alignReading(main: string, reading: string): string[] | null {
   if (!reading || /[぀-ヿ가-힯]/.test(main)) return null;
   const hanCount = [...main].filter((c) => HAN.test(c)).length;
-  const latinRuns = (main.match(/[A-Za-z0-9]+/g) ?? []).map((w) => w.toLowerCase());
+  const latinRuns = (main.match(/[A-Za-z]+/g) ?? []).map((w) => w.toLowerCase());
   let nextLatin = 0;
   const syl: string[] = [];
   for (const raw of reading.split(/[\s'’\-/／,，;；]+/)) {
