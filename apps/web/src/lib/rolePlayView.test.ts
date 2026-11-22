@@ -225,6 +225,8 @@ describe("pinyinSyllables / alignReading — pinyin thẳng hàng dưới từng
     expect(alignReading("二十", "èrshí")).toEqual(["èr", "shí"]);
     expect(alignReading("女儿", "nǚ'ér")).toEqual(["nǚ", "ér"]); // dấu ' tách âm tiết như chính tả pinyin
     expect(alignReading("他有两个儿子。", "Tā yǒu liǎng ge érzi.")).toEqual(["tā", "yǒu", "liǎng", "ge", "ér", "zi"]);
+    // chữ số (số thứ tự ô trống "[[1]]", "2 月"…) không phải cụm Latin: pinyin không ghi lại thì vẫn ghép được
+    expect(alignReading("我买了一1面包。", "Wǒ mǎi le yí miànbāo.")).toEqual(["wǒ", "mǎi", "le", "yí", "miàn", "bāo"]);
   });
   it("mainTextLang phân biệt Trung/Nhật/Hàn", () => {
     expect(mainTextLang("你好吗？")).toBe("zh-Hans");
