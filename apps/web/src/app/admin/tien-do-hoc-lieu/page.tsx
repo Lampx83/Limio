@@ -20,6 +20,8 @@ type Group = {
   id: string;
   title: string;
   note?: string;
+  /** Gập lại mặc định (bảng dài). */
+  collapsed?: boolean;
   columns: { key: string; label: string }[];
   rows: { label: string; sub?: string; cells: Record<string, Cell> }[];
 };
@@ -33,6 +35,8 @@ type Project = {
   pipelines?: { name: string; status: string; note?: string }[];
   forecast?: { text: string; assumptions?: string[] };
   groups?: Group[];
+  /** Báo cáo việc sinh học liệu, mới nhất trước. */
+  reports?: { at: string; title: string; body?: string }[];
   notes?: string[];
 };
 
@@ -126,6 +130,35 @@ export default async function AdminContentProgressPage() {
             </div>
           )}
 
+          {p.reports && p.reports.length > 0 && (
+            <div>
+              <h3 className="text-h3">Báo cáo việc sinh học liệu</h3>
+              <ul className="mt-2 space-y-2">
+                {p.reports.slice(0, 12).map((r) => (
+                  <li key={r.at + r.title} className="rounded-lg border border-token p-3 text-sm">
+                    <div className="text-caption">{formatDateTime(new Date(r.at))}</div>
+                    <div className="font-semibold">{r.title}</div>
+                    {r.body && <div className="mt-0.5 whitespace-pre-line text-muted">{r.body}</div>}
+                  </li>
+                ))}
+              </ul>
+              {p.reports.length > 12 && (
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-caption">Xem thêm {p.reports.length - 12} báo cáo cũ hơn</summary>
+                  <ul className="mt-2 space-y-2">
+                    {p.reports.slice(12).map((r) => (
+                      <li key={r.at + r.title} className="rounded-lg border border-token p-3 text-sm">
+                        <div className="text-caption">{formatDateTime(new Date(r.at))}</div>
+                        <div className="font-semibold">{r.title}</div>
+                        {r.body && <div className="mt-0.5 whitespace-pre-line text-muted">{r.body}</div>}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </div>
+          )}
+
           {p.pipelines && p.pipelines.length > 0 && (
             <div>
               <h3 className="text-h3">Đang chạy</h3>
@@ -154,10 +187,8 @@ export default async function AdminContentProgressPage() {
             </div>
           )}
 
-          {p.groups?.map((g) => (
-            <div key={g.id}>
-              <h3 className="text-h3">{g.title}</h3>
-              {g.note && <p className="text-caption mt-0.5">{g.note}</p>}
+          {p.groups?.map((g) => {
+            const table = (
               <div className="mt-2 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="text-left text-caption">
@@ -187,8 +218,21 @@ export default async function AdminContentProgressPage() {
                   </tbody>
                 </table>
               </div>
-            </div>
-          ))}
+            );
+            return g.collapsed ? (
+              <details key={g.id}>
+                <summary className="text-h3 cursor-pointer">{g.title}</summary>
+                {g.note && <p className="text-caption mt-0.5">{g.note}</p>}
+                {table}
+              </details>
+            ) : (
+              <div key={g.id}>
+                <h3 className="text-h3">{g.title}</h3>
+                {g.note && <p className="text-caption mt-0.5">{g.note}</p>}
+                {table}
+              </div>
+            );
+          })}
 
           {p.groups && p.groups.length > 0 && (
             <p className="text-caption">
