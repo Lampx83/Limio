@@ -20,8 +20,11 @@
     "attachments": true,
     "planApproval": false,
     "successCriteria": false,
-    "screenshot": "default",
-    "models": []
+    "screenshot": "optional",
+    "models": [],
+    "textSelection": true,
+    "selectionScope": "#lesson-content",
+    "hidePaths": ["/thi", "/exam-take", "/play", "/join", "/instructor/classroom", "/instructor/limio-live"]
   },
   "theme": { "primary": "#4D7C0F", "primaryText": "#ffffff", "position": "bottom-left", "label": "Góp ý", "locale": "vi" }
 }

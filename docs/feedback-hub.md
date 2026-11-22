@@ -20,13 +20,20 @@ Limio có thể dùng **Feedback Hub** (https://github.com/Lampx83/FeedbackHub) 
 
 ## Hành vi
 
-- Chỉ người **đã đăng nhập** thấy mục **"Góp ý cho Limio"** trong menu người dùng (góc phải header). **Không có nút nổi**: các góc màn hình của Limio đã kín nút mở menu và thanh CTA di động.
-- Mục menu ẩn ở trang làm bài thi (`/thi`, `/exam-take`, `/play`, `/join`).
+- Chỉ người **đã đăng nhập** thấy ba lối vào hộp góp ý. **Không có nút nổi**: các góc màn hình của Limio đã kín nút mở menu và thanh CTA di động.
+  - **Biểu tượng 💡 trên header**, cạnh chuông thông báo — widget của hub tự vẽ vào `<span data-feedbackhub-launcher hidden />` trong `AppHeader.tsx` (một dòng), cùng màu với các biểu tượng khác, có số góp ý đang chờ người dùng trả lời.
+  - **Bôi đen chữ trong bài học** → bong bóng "✏️ Góp ý đoạn này" ngay dưới đoạn chọn; bấm vào là mở hộp góp ý loại "Nội dung khoá học chưa đúng" với đoạn chữ điền sẵn. Chỉ trong `#lesson-content`. Phần này **bật trên hub**, Limio không có mã riêng.
+  - Mục **"Góp ý cho Limio"** trong menu người dùng (góc phải header).
+- Cả ba ẩn ở trang làm bài thi (`/thi`, `/exam-take`, `/play`, `/join`); nút header và bong bóng ẩn thêm ở lớp học tương tác và Limio-Live. Danh sách này nằm ở `features.hidePaths` của dự án trên hub (sửa ở bảng điều khiển hub hoặc `feedback-hub.project.json`), không phải trong mã Limio.
 - Mỗi góp ý tự kèm ngữ cảnh: đường dẫn, `contentRef` (`lesson:<id>`, `course:<slug>`, `thread:<id>`), khoá học, vai trò đang dùng và cỡ màn hình (`extra`) — người đọc không phải hỏi lại "bài nào, máy nào".
-- **Ảnh chụp trang** tự đính kèm (tệp `trang-chup.png`, người gửi xem trước và bỏ được; cấu hình *Bật sẵn* trong `feedback-hub.project.json`). Ô mật khẩu luôn bị che. Trang nào hiện dữ liệu nhạy cảm của người khác (bảng điểm, danh sách lớp) thì thêm `data-feedbackhub-mask` vào vùng đó để che trong ảnh.
+- **Ảnh chụp trang** là tuỳ chọn, **mặc định không đính kèm**: người gửi tự tick "Đính kèm ảnh chụp trang này" và xem trước được (tệp `trang-chup.png`; cấu hình `screenshot: "optional"` trong `feedback-hub.project.json`). Ô mật khẩu luôn bị che. Trang nào hiện dữ liệu nhạy cảm của người khác (bảng điểm, danh sách lớp) thì thêm `data-feedbackhub-mask` vào vùng đó để che trong ảnh.
 - Khi admin đang "đăng nhập thay" một học viên, góp ý vẫn đứng tên **admin thật**.
 - Quyền **quản trị dự án trên hub** lấy từ `isAdmin()` trong DB lúc cấp token. Vai trò khác chỉ thấy góp ý của mình.
 - Token HS256 sống 10 phút, ký ở máy chủ; khoá ký không bao giờ xuống trình duyệt.
+
+## Đọc góp ý (người và AI)
+
+Góp ý nằm ở hub. Chủ dự án xem ở bảng điều khiển hub, hoặc admin Limio bấm 💡 trên header. Để **AI/dòng lệnh** đọc: cấp một **khoá chỉ đọc** (hub → dự án `limio` → *Khoá & nhúng* → *Khoá chỉ đọc*; chỉ đọc được dự án này, không ghi được gì), rồi trên mỗi máy chạy một lần `node scripts/feedback.mjs setup`. Sau đó mọi AI/tài khoản trên máy đó dùng chung: `node scripts/feedback.mjs list | show <id> | attachment <id> <aid>`. Khoá lưu ở `~/.config/feedbackhub/key` (quyền 600), không nằm trong repo. Thu hồi khoá ngay trên hub nếu lộ.
 
 ## Tắt / quay lại
 

@@ -119,6 +119,8 @@ export default async function AppHeader({ space = null }: { space?: SpaceBrand |
 
           {/* Nút quét QR của học viên đang ẩn (ScanQrButton); bật lại bằng cách render nó ở đây. */}
           {user && activeRole === "instructor" && <HeaderCalendar />}
+          {/* Nút góp ý do widget Feedback Hub tự vẽ (ẩn tới khi widget sẵn sàng; ẩn ở trang thi theo cấu hình hub). */}
+          {user && <span data-feedbackhub-launcher hidden />}
           {user && (
             <NotificationBell
               initialUnread={notiUnread}
