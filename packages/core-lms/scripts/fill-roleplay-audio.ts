@@ -44,7 +44,8 @@ async function main() {
   const language = (course.language ?? "zh").toLowerCase().split("-")[0]!;
 
   const qs = await prisma.examQuestion.findMany({
-    where: { type: "essay", exam: { ownerContentItem: { lesson: { module: { courseId } } } } },
+    // `--only "Chủ đề 6"`: chỉ các câu đóng vai của module có tên chứa chuỗi này (không có thì cả khoá).
+    where: { type: "essay", exam: { ownerContentItem: { lesson: { module: { courseId, ...(arg("only") ? { title: { contains: arg("only")! } } : {}) } } } } },
     select: { id: true, examId: true, config: true },
   });
   const withRp = qs.filter((q) => Array.isArray((q.config as { roleplay?: { turns?: unknown } } | null)?.roleplay?.turns));

@@ -44,7 +44,8 @@ async function main() {
   const language = (course.language ?? "zh").toLowerCase().split("-")[0]!;
 
   const items = await prisma.contentItem.findMany({
-    where: { type: "dialogue", lesson: { module: { courseId } } },
+    // `--only "Chủ đề 6"`: chỉ các hội thoại của module có tên chứa chuỗi này (không có thì cả khoá).
+    where: { type: "dialogue", lesson: { module: { courseId, ...(arg("only") ? { title: { contains: arg("only")! } } : {}) } } },
     select: { id: true, payload: true },
   });
   const need = items.filter((it) => force || ((it.payload as { turns?: Turn[] }).turns ?? []).some((t) => !t.audioUrl));
