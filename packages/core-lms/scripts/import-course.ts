@@ -1142,20 +1142,33 @@ export function markdownToHtml(
 
     if (t.startsWith("> ")) {
       const quote: string[] = [];
-      while (i < lines.length && lines[i]!.trim().startsWith("> ")) {
-        quote.push(lines[i]!.trim().slice(2));
+      // Dòng ">" trơn (không dấu cách) là dòng trống TRONG khối trích dẫn, không phải điểm kết thúc: trước đây nó cắt khối làm đôi
+      // và lòi một ký tự ">" ra giao diện (hộp "Cấu trúc" có hai dòng cách nhau bằng ">").
+      while (i < lines.length && (lines[i]!.trim() === ">" || lines[i]!.trim().startsWith("> "))) {
+        const l = lines[i]!.trim();
+        quote.push(l === ">" ? "" : l.slice(2));
         i++;
       }
+      // Các dòng liền nhau gộp thành một đoạn (như trước); dòng trống tách đoạn, ghép lại bằng <br>.
+      const paragraphs = (lines: string[]) => {
+        const out2: string[] = [];
+        let cur: string[] = [];
+        for (const x of lines) {
+          if (x.trim() === "") { if (cur.length) out2.push(cur.join(" ")); cur = []; } else cur.push(x);
+        }
+        if (cur.length) out2.push(cur.join(" "));
+        return out2;
+      };
       const tag = /^\[!([a-z-]+)\]\s*(.*)$/.exec(quote[0] ?? "");
       if (tag && CALLOUTS[tag[1]!]) {
-        const body = [tag[2] ?? "", ...quote.slice(1)].filter((x) => x.trim() !== "");
-        out.push(calloutBox(tag[1]!, inline(body.join(" "))));
+        const body = paragraphs([tag[2] ?? "", ...quote.slice(1)]);
+        out.push(calloutBox(tag[1]!, body.map((x) => inline(x)).join("<br>")));
         continue;
       }
       out.push(
         `<blockquote style="margin:1rem 0;padding:.6rem .9rem;border-left:4px solid rgba(${hue},.5);` +
           `background:rgba(${hue},.06);border-radius:0 .35rem .35rem 0;font-size:${TEXT};line-height:1.8">` +
-          `${inline(quote.join(" "))}</blockquote>`,
+          `${paragraphs(quote).map((x) => inline(x)).join("<br>")}</blockquote>`,
       );
       continue;
     }
