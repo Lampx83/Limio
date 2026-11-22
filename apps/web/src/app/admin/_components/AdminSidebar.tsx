@@ -22,6 +22,7 @@ import {
   Building2,
   type LucideIcon,
   HardDrive,
+  ListChecks,
 } from "lucide-react";
 
 type Item = {
@@ -66,6 +67,7 @@ const GROUPS: Group[] = [
     items: [
       { label: "Section catalog", href: "/admin/catalog-sections", icon: LayoutGrid },
       { label: "Khoá học", href: "/admin/courses", icon: GraduationCap },
+      { label: "Tiến độ học liệu", href: "/admin/tien-do-hoc-lieu", icon: ListChecks },
     ],
   },
   {
