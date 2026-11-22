@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { UserAvatar, StatusBadge, DateTime } from "@/components/ui";
-import GradeForm from "./GradeForm";
+import GradeForm, { type SavedAiSuggestion } from "./GradeForm";
 import WritingFeedbackReview from "@/components/WritingFeedbackReview";
 import AttachmentPreview from "./AttachmentPreview";
 import RubricBox from "./RubricBox";
@@ -23,6 +23,7 @@ export default function SubmissionModal({
   maxScore,
   assignmentId,
   rubricText,
+  aiSuggestion = null,
   nav,
   onClose,
 }: {
@@ -39,6 +40,8 @@ export default function SubmissionModal({
   maxScore: number;
   assignmentId: string;
   rubricText: string | null;
+  /** Gợi ý AI đã lưu của bài này (chấm hàng loạt), nếu có. */
+  aiSuggestion?: SavedAiSuggestion | null;
   nav?: SubmissionNav | null;
   onClose: () => void;
 }) {
@@ -196,6 +199,7 @@ export default function SubmissionModal({
                   initialFeedback={submission.feedback}
                   isGraded={isGraded}
                   attachmentUrl={submission.attachmentUrl}
+                  aiSuggestion={aiSuggestion}
                   onDirtyChange={setDirty}
                   onSavedNext={nav?.onNext}
                 />

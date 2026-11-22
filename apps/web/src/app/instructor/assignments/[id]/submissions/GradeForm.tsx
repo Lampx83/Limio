@@ -23,6 +23,19 @@ function describeAiGradeError(status: number, code: string | undefined): string 
   return "Gợi ý điểm thất bại. Thử lại sau.";
 }
 
+/** Gợi ý AI đã lưu từ lần chấm hàng loạt (chưa phải điểm chốt). */
+export type SavedAiSuggestion = {
+  score: number;
+  feedback: string;
+  rationale: string;
+  criteria: { name: string; maxPoints: number; points: number }[] | null;
+  hadRubric: boolean;
+  unread: Unread | null;
+  truncated: { sentChars: number; totalChars: number } | null;
+  /** `stale` = học viên đã nộp lại sau khi AI đọc — không điền sẵn. */
+  state: "fresh" | "stale";
+};
+
 export default function GradeForm({
   submissionId,
   maxScore,
@@ -30,6 +43,7 @@ export default function GradeForm({
   initialFeedback,
   isGraded,
   attachmentUrl = null,
+  aiSuggestion = null,
   onDirtyChange,
   onSavedNext,
 }: {
@@ -40,26 +54,31 @@ export default function GradeForm({
   isGraded: boolean;
   /** Có tệp/link đính kèm → nói trước cho GV biết AI đọc được tới đâu. */
   attachmentUrl?: string | null;
+  /** Gợi ý AI đã lưu sẵn (chấm hàng loạt). Bài chưa chấm + gợi ý còn mới thì điền sẵn vào ô điểm/nhận xét. */
+  aiSuggestion?: SavedAiSuggestion | null;
   /** Báo khi điểm/nhận xét đang khác bản đã lưu — để modal hỏi trước khi chuyển bài. */
   onDirtyChange?: (dirty: boolean) => void;
   /** Có bài kế tiếp → hiện nút "Chấm & bài tiếp"; gọi sau khi lưu thành công. */
   onSavedNext?: (() => void) | null;
 }) {
   const router = useRouter();
-  const [score, setScore] = useState(
-    initialScore !== null ? String(initialScore) : "",
-  );
-  const [feedback, setFeedback] = useState(initialFeedback ?? "");
+  // Điền sẵn từ gợi ý AI chỉ khi bài CHƯA chấm và gợi ý còn mới. Mốc "chưa lưu" tính theo phần điền sẵn: điền sẵn rồi
+  // để nguyên thì chuyển bài không bị hỏi "chưa lưu" (vẫn chưa ghi gì vào DB — chỉ "Chấm điểm" mới ghi).
+  const seed = !isGraded && aiSuggestion?.state === "fresh" ? aiSuggestion : null;
+  const baseScore = initialScore ?? seed?.score ?? null;
+  const baseFeedback = initialFeedback ?? seed?.feedback ?? "";
+  const [score, setScore] = useState(baseScore !== null ? String(baseScore) : "");
+  const [feedback, setFeedback] = useState(baseFeedback);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     const scoreDirty =
       score.trim() === ""
-        ? initialScore !== null
-        : Number(score) !== initialScore;
-    const feedbackDirty = feedback.trim() !== (initialFeedback ?? "").trim();
+        ? baseScore !== null
+        : Number(score) !== baseScore;
+    const feedbackDirty = feedback.trim() !== baseFeedback.trim();
     onDirtyChange?.(scoreDirty || feedbackDirty);
-  }, [score, feedback, initialScore, initialFeedback, onDirtyChange]);
+  }, [score, feedback, baseScore, baseFeedback, onDirtyChange]);
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
   const [scoreError, setScoreError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -174,6 +193,47 @@ export default function GradeForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-3" noValidate>
+      {aiSuggestion && !isGraded && (
+        <div className="rounded-lg border border-violet-200 bg-violet-50 p-3 text-xs text-violet-900">
+          <p className="font-medium">
+            ✨ Gợi ý của AI (chưa chốt): {aiSuggestion.score}/{maxScore}
+            {aiSuggestion.state === "stale" && " — bài đã được nộp lại sau khi AI đọc, không điền sẵn"}
+          </p>
+          {aiSuggestion.state === "fresh" && (
+            <p className="mt-1">Điểm và nhận xét bên dưới được điền sẵn từ gợi ý này. Bạn xem lại và bấm &ldquo;Chấm điểm&rdquo; thì mới lưu.</p>
+          )}
+          <p className="mt-1">AI: {aiSuggestion.rationale}</p>
+          {aiSuggestion.criteria && aiSuggestion.criteria.length > 0 && (
+            <p className="mt-1">
+              Theo tiêu chí: {aiSuggestion.criteria.map((c) => `${c.name} ${c.points}/${c.maxPoints}`).join("; ")}.
+            </p>
+          )}
+          {!aiSuggestion.hadRubric && <p className="mt-1">⚠ Chưa có rubric nên AI chấm kém căn cứ hơn.</p>}
+          {aiSuggestion.unread && (
+            <p className="mt-1">
+              ⚠ AI chưa đọc {aiSuggestion.unread.what} học viên nộp kèm. {aiSuggestion.unread.why}
+            </p>
+          )}
+          {aiSuggestion.truncated && (
+            <p className="mt-1">
+              ⚠ Bài dài khoảng {estimatePages(aiSuggestion.truncated.totalChars)} trang — AI chỉ chấm phần đầu.
+            </p>
+          )}
+          {aiSuggestion.state === "stale" && (
+            <button
+              type="button"
+              className="mt-2 rounded border border-violet-300 bg-white px-2 py-1 text-xs font-medium hover:bg-violet-100"
+              onClick={() => {
+                setScore(String(aiSuggestion.score));
+                setFeedback(aiSuggestion.feedback);
+                setScoreError(null);
+              }}
+            >
+              Vẫn dùng gợi ý cũ
+            </button>
+          )}
+        </div>
+      )}
       <div>
         <button
           type="button"

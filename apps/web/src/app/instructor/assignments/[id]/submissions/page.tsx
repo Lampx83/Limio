@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import {
   canEditCourse,
   isAdmin,
+  listAiGradeSuggestions,
   listSubmissionsForInstructor,
   listTeamSubmissionsForInstructor,
 } from "@feedbackme/core-lms";
@@ -11,6 +12,7 @@ import { auth } from "@/lib/auth";
 import RosterTable from "./RosterTable";
 import TeamRosterTable from "./TeamRosterTable";
 import RubricBox from "./RubricBox";
+import AiBatchPanel from "./AiBatchPanel";
 import { EmptyState } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -95,6 +97,9 @@ export default async function SubmissionsPage({
     notFound();
   }
 
+  // Gợi ý điểm AI đã lưu (chấm hàng loạt) — chỉ giảng viên thấy, học viên không đọc được bảng này.
+  const suggestions = await listAiGradeSuggestions(userId, params.id);
+
   // Bài tập nộp theo nhóm (docs/group-submission-AC.md mục D): mỗi nhóm một dòng.
   if (assignment.submissionMode === "team" && ctx.kind === "lesson") {
     const teamView = await listTeamSubmissionsForInstructor(userId, params.id);
@@ -123,6 +128,7 @@ export default async function SubmissionsPage({
           <Stat label="Đã chấm" value={graded} tone="success" />
         </div>
         <RubricBox assignmentId={assignment.id} initialRubric={assignment.rubricText} />
+        <AiBatchPanel assignmentId={assignment.id} />
         <section className="mt-8">
           <h2 className="text-lg font-semibold">
             Danh sách nhóm <span className="text-sm font-normal text-faint">({teams})</span>
@@ -132,6 +138,7 @@ export default async function SubmissionsPage({
             unassigned={teamView.unassigned}
             maxScore={assignment.maxScore}
             courseId={ctx.courseId}
+            suggestions={suggestions}
           />
         </section>
       </main>
@@ -199,6 +206,8 @@ export default async function SubmissionsPage({
 
       <RubricBox assignmentId={assignment.id} initialRubric={assignment.rubricText} />
 
+      <AiBatchPanel assignmentId={assignment.id} />
+
       {/* Roster: STT – Người nộp – Trạng thái, theo danh sách đăng ký khoá học */}
       <section className="mt-8">
         <h2 className="text-lg font-semibold">
@@ -232,6 +241,7 @@ export default async function SubmissionsPage({
             maxScore={assignment.maxScore}
             assignmentId={assignment.id}
             rubricText={assignment.rubricText}
+            suggestions={suggestions}
           />
         )}
       </section>

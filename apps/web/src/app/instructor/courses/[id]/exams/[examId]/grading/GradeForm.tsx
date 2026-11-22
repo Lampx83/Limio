@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bot } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import { aiSuggestErrorText } from "@/lib/aiErrorText";
 
 interface Props {
   answerId: string;
@@ -45,11 +46,7 @@ export default function GradeForm({
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       const code = typeof data?.error === "string" ? data.error : "llm_failed";
-      setError(
-        code === "openai_not_configured"
-          ? "Chưa cấu hình AI. Vào Admin → Tích hợp để thêm khóa."
-          : `Gợi ý lỗi: ${code}`,
-      );
+      setError(aiSuggestErrorText(code) ?? `Gợi ý lỗi: ${code}`);
       return;
     }
     if (typeof data.suggestedScore === "number") {

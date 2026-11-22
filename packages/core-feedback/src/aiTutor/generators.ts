@@ -1394,6 +1394,8 @@ export interface AssignmentGradeSuggestion {
   rationale: string;
   /** Bài dài hơn ngân sách ký tự → model chỉ nhận phần đầu; giao diện phải nói cho giảng viên. */
   truncated?: { sentChars: number; totalChars: number };
+  /** Token thật của lượt gọi (vào + ra) — chấm hàng loạt cộng lại để báo chi phí của cả lô. */
+  tokensUsed: number;
 }
 
 const ASSIGNMENT_GRADE_SCHEMA = {
@@ -1545,6 +1547,7 @@ Chấm từng tiêu chí (evidence trước, points sau) rồi trả JSON.`;
     criteria,
     feedback: toPlainText(data.feedback),
     rationale: toPlainText(data.rationale),
+    tokensUsed: inputTokens + outputTokens,
     ...(totalChars > sentChars ? { truncated: { sentChars, totalChars } } : {}),
   };
 }

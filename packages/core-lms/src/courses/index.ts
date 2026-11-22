@@ -35,3 +35,4 @@ export * from "./teacherCheckInCalc";
 export * from "./teacherCheckIn";
 export * from "./protectedMedia";
 export * from "./personalizationReadiness";
+export * from "./aiGradeBatch";

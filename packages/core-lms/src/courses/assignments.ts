@@ -106,7 +106,7 @@ async function loadLessonCourse(lessonId: string, db: PrismaClient) {
   return lesson.module.courseId;
 }
 
-async function loadAssignmentCourse(assignmentId: string, db: PrismaClient) {
+export async function loadAssignmentCourse(assignmentId: string, db: PrismaClient) {
   const a = await db.assignment.findUnique({
     where: { id: assignmentId },
     select: {
@@ -133,7 +133,7 @@ async function loadAssignmentCourse(assignmentId: string, db: PrismaClient) {
   return { courseId, maxScore: a.maxScore, tournamentCreatorId };
 }
 
-async function assertCanGradeAssignment(
+export async function assertCanGradeAssignment(
   userId: string,
   scope: { courseId: string | null; tournamentCreatorId: string | null },
   db: PrismaClient,

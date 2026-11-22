@@ -15,6 +15,7 @@ const globalForQueue = globalThis as unknown as {
   realtimePublishQueue: Queue | undefined;
   autoGradeQueue: Queue | undefined;
   classMailQueue: Queue | undefined;
+  aiGradeBatchQueue: Queue | undefined;
 };
 
 export function getBullmqConnection(): Redis {
@@ -32,6 +33,7 @@ export const QUEUE_NAMES = {
   realtimePublish: "realtime-publish",
   autoGrade: "auto-grade",
   classMail: "class-mail",
+  aiGradeBatch: "ai-grade-batch",
 } as const;
 
 export function getRealtimePublishQueue(): Queue {
@@ -84,5 +86,24 @@ export function getClassMailQueue(): Queue {
     },
   });
   globalForQueue.classMailQueue = q;
+  return q;
+}
+
+/**
+ * Chấm bài tập bằng AI hàng loạt. Job dài (cả lớp, mỗi bài vài chục giây) nên retry ít; chạy lại an toàn vì tiến độ
+ * nằm ở DB (cursor) và bài đã có gợi ý mới không bị gọi lại.
+ */
+export function getAiGradeBatchQueue(): Queue {
+  if (globalForQueue.aiGradeBatchQueue) return globalForQueue.aiGradeBatchQueue;
+  const q = new Queue(QUEUE_NAMES.aiGradeBatch, {
+    connection: getBullmqConnection(),
+    defaultJobOptions: {
+      removeOnComplete: { count: 500, age: 24 * 3600 },
+      removeOnFail: { count: 1000, age: 7 * 24 * 3600 },
+      attempts: 2,
+      backoff: { type: "exponential", delay: 10_000 },
+    },
+  });
+  globalForQueue.aiGradeBatchQueue = q;
   return q;
 }

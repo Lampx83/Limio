@@ -219,6 +219,17 @@ export const GUIDES: readonly GuideEntry[] = [
     ],
   },
   {
+    id: "bai-tap-ai-ca-lop",
+    title: "AI gợi ý điểm cho cả lớp",
+    keywords: ["ai chấm cả lớp", "chấm hàng loạt", "gợi ý điểm cả lớp", "chấm tất cả bài", "chấm cả lớp một lần", "chốt theo gợi ý", "chấm nhanh bằng ai", "hết ví token", "ví token"],
+    destinationIds: ["assignments"],
+    body: `Ở trang bài nộp của một bài tập, dưới khung rubric, bấm "Gợi ý điểm bằng AI cho n bài chưa chấm". Hộp xác nhận cho biết số bài, ước lượng token cần và số dư ví của thầy/cô; bấm "Bắt đầu" để chạy. Lô chạy nền nên đóng trang vẫn chạy, có thanh tiến độ và nút "Dừng". AI chỉ lưu gợi ý, chưa có điểm nào được ghi và học viên không thấy gợi ý. Bảng danh sách có cột "Gợi ý AI"; mở cửa sổ chấm thì điểm và nhận xét được điền sẵn để thầy/cô xem lại rồi mới bấm "Chấm điểm". Muốn chốt nhanh, tích các bài có gợi ý rồi bấm "Chốt theo gợi ý AI cho n bài"; lúc này điểm và nhận xét đến tay học viên nên có hỏi xác nhận. Ví không đủ cho cả lớp thì chỉ chạy phần đầu vừa ví, nạp thêm rồi chạy tiếp, bài đã có gợi ý không chạy lại. Bài nộp theo nhóm chạy một lần cho mỗi nhóm; chưa có chốt hàng loạt cho bài nhóm.`,
+    useCases: [
+      `Lớp có bốn mươi bài nộp, thầy/cô cho AI gợi ý điểm cả lớp một lần rồi xem lại từng bài và chốt những bài đồng ý với gợi ý.`,
+      `Ví token chỉ đủ cho một phần lớp, thầy/cô chạy phần đầu trước, nạp thêm token rồi chạy tiếp những bài còn lại.`,
+    ],
+  },
+  {
     id: "bai-tap-nhom",
     title: "Bài tập nộp theo nhóm",
     keywords: ["nhóm", "nộp nhóm", "nộp theo nhóm", "bài tập nhóm", "điểm nhóm", "trưởng nhóm", "chia nhóm làm bài", "đổi tên nhóm"],

@@ -9,7 +9,7 @@ import { DateTime, StatusBadge, UserAvatar } from "@/components/ui";
 import { apiUrl } from "@/lib/apiUrl";
 import { lmsErrorMessage } from "@/lib/lmsErrors";
 import { toast } from "@/lib/toast";
-import GradeForm from "./GradeForm";
+import GradeForm, { type SavedAiSuggestion } from "./GradeForm";
 import AttachmentPreview from "./AttachmentPreview";
 import type { SubmissionNav } from "./SubmissionModal";
 
@@ -24,12 +24,15 @@ export default function TeamSubmissionModal({
   entry,
   latest,
   maxScore,
+  aiSuggestion = null,
   nav,
   onClose,
 }: {
   entry: TeamSubmissionEntry;
   latest: Latest;
   maxScore: number;
+  /** Gợi ý AI đã lưu của nhóm này (chấm hàng loạt), nếu có. */
+  aiSuggestion?: SavedAiSuggestion | null;
   nav?: SubmissionNav | null;
   onClose: () => void;
 }) {
@@ -195,6 +198,7 @@ export default function TeamSubmissionModal({
                   initialFeedback={latest.feedback}
                   isGraded={isGraded}
                   attachmentUrl={latest.attachmentUrl}
+                  aiSuggestion={aiSuggestion}
                   onDirtyChange={setDirty}
                   onSavedNext={nav?.onNext}
                 />

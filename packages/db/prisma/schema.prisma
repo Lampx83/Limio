@@ -82,6 +82,7 @@ model User {
   feedbackDeliveries             FeedbackDelivery[]
   assignmentSubmissions          AssignmentSubmission[]    @relation("Submitter")
   gradedSubmissions              AssignmentSubmission[]    @relation("Grader")
+  aiGradeBatches                 AssignmentAiGradeBatch[]
   forumThreads                   ForumThread[]
   forumPosts                     ForumPost[]
   questProgress                  UserQuestProgress[]
@@ -1831,6 +1832,8 @@ model Assignment {
   sectionDues       AssignmentSectionDue[]
 
   @@index([lessonId])
+  aiGradeSuggestions AssignmentAiGradeSuggestion[]
+  aiGradeBatches     AssignmentAiGradeBatch[]
   @@index([tournamentMissionId])
   // `/me/dashboard` filters Assignment by dueAt >= now (or null) and orders by
   // dueAt asc to surface upcoming work. Without this index Postgres falls back
@@ -1929,6 +1932,8 @@ model AssignmentSubmission {
   speakingFeedbacks SpeakingFeedback[]
 
   // Idempotent — one row per (assignment, user). Re-submission updates this row.
+  // Gợi ý điểm của AI (chấm hàng loạt) — chưa phải điểm chốt, học viên không thấy.
+  aiGradeSuggestion AssignmentAiGradeSuggestion?
   @@unique([assignmentId, userId])
   @@index([userId, submittedAt])
   @@index([assignmentId, status])
@@ -1937,6 +1942,73 @@ model AssignmentSubmission {
 
 enum SubmissionMode {
   individual
+/// Gợi ý điểm của AI cho một bài nộp (chấm hàng loạt, docs/tieu-chi/cham-bai-tap-bang-ai-hang-loat.md).
+/// KHÔNG phải điểm chốt: `AssignmentSubmission.score/status` giữ nguyên cho tới khi giảng viên bấm chấm.
+/// Học viên không đọc được bảng này. Nộp nhóm: một dòng cho bài đại diện của nhóm (lần nộp mới nhất).
+model AssignmentAiGradeSuggestion {
+  id           String   @id @default(uuid())
+  submissionId String   @unique
+  assignmentId String
+  score        Int
+  feedback     String   @db.Text
+  rationale    String   @db.Text
+  /// [{ name, maxPoints, points }] — chỉ tên tiêu chí và điểm, không chép lại bằng chứng.
+  criteria     Json?
+  hadRubric    Boolean  @default(false)
+  /// Tên các phần đính kèm AI đã đọc.
+  readSources  Json?
+  /// { what, why } khi có tệp AI không đọc được.
+  unread       Json?
+  /// { sentChars, totalChars } khi bài dài hơn ngân sách AI.
+  truncated    Json?
+  tokensUsed   Int?
+  /// `AssignmentSubmission.updatedAt` lúc gợi ý; bài sửa sau mốc này thì gợi ý đã cũ.
+  basedOnSubmissionUpdatedAt DateTime
+  batchId      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  submission AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  assignment Assignment           @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@index([assignmentId])
+}
+
+enum AiGradeBatchStatus {
+  running
+  completed
+  stopped
+  halted
+}
+
+/// Một lượt "Gợi ý điểm bằng AI cho các bài chưa chấm". Tối đa một lượt `running` mỗi bài tập
+/// (chỉ mục duy nhất từng phần trong migration — Prisma không diễn đạt được).
+model AssignmentAiGradeBatch {
+  id            String             @id @default(uuid())
+  assignmentId  String
+  startedById   String
+  status        AiGradeBatchStatus @default(running)
+  /// Danh sách bài nộp sẽ chạy, theo thứ tự (mảng id).
+  queue         Json
+  total         Int
+  done          Int                @default(0)
+  failed        Int                @default(0)
+  skipped       Int                @default(0)
+  tokensUsed    Int                @default(0)
+  stopRequested Boolean            @default(false)
+  /// "no_token_budget" | "global_token_cap" | … khi lô dừng vì ví/trần hệ thống.
+  haltReason    String?
+  /// [{ submissionId, code }] — bài lỗi hoặc chưa gợi ý được, kèm mã lý do.
+  problems      Json?
+  startedAt     DateTime           @default(now())
+  finishedAt    DateTime?
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  startedBy  User       @relation(fields: [startedById], references: [id], onDelete: Cascade)
+
+  @@index([assignmentId, status])
+}
+
   team
 }
 

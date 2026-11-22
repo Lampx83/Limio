@@ -119,6 +119,17 @@ const EXPORT_SELECT = {
         },
         orderBy: { generatedAt: "asc" },
       },
+      // Gợi ý điểm của AI (chấm hàng loạt) về bài nộp của chính người dùng: điểm + nhận xét AI soạn cho giảng viên,
+      // chưa chắc là điểm chốt. Chỉ liệt kê bài có gợi ý — nội dung bài nộp không nằm trong khối này.
+      assignmentSubmissions: {
+        where: { aiGradeSuggestion: { isNot: null } },
+        select: {
+          id: true,
+          assignmentId: true,
+          aiGradeSuggestion: { select: { score: true, feedback: true, rationale: true, criteria: true, createdAt: true } },
+        },
+        orderBy: { submittedAt: "asc" },
+      },
       // LANG G7 — lời nói của người dùng đã được máy chuyển thành chữ (kèm link file ghi âm) và góp ý bài nói.
       submissionTranscripts: {
         select: { id: true, courseId: true, submissionId: true, audioUrl: true, language: true, text: true, durationSec: true, createdAt: true },

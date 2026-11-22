@@ -22,6 +22,11 @@ import {
   type ClassMailJobResult,
 } from "../lib/queue/classMailJob";
 import {
+  processAiGradeBatchJob,
+  type AiGradeBatchJobData,
+  type AiGradeBatchJobResult,
+} from "../lib/queue/aiGradeBatchJob";
+import {
   processAutoGradeJob,
   type AutoGradeJobData,
   type AutoGradeJobResult,
@@ -115,6 +120,25 @@ classMailWorker.on("failed", (job, err) => {
   reportJobFailure(QUEUE_NAMES.classMail, job, err);
 });
 workers.push(classMailWorker);
+
+// Chấm bài tập bằng AI hàng loạt. Mỗi job là một lô chạy tuần tự nhiều phút; concurrency thấp để không dồn lời gọi
+// AI (đã có semaphore chung ở openaiClient, nhưng lô của nhiều giảng viên cùng lúc vẫn tranh nhau).
+const aiGradeBatchWorker = new Worker<AiGradeBatchJobData, AiGradeBatchJobResult>(
+  QUEUE_NAMES.aiGradeBatch,
+  processAiGradeBatchJob,
+  {
+    connection: getBullmqConnection(),
+    concurrency: Number(process.env.AI_GRADE_BATCH_CONCURRENCY ?? "2"),
+    // Một bài có thể chuyển chữ cả file ghi âm; khoá job đủ lâu để không bị coi là treo giữa chừng.
+    lockDuration: 5 * 60 * 1000,
+  },
+);
+aiGradeBatchWorker.on("ready", () => console.log(`[worker:${QUEUE_NAMES.aiGradeBatch}] ready`));
+aiGradeBatchWorker.on("failed", (job, err) => {
+  console.error(`[worker:${QUEUE_NAMES.aiGradeBatch}] job ${job?.id} failed:`, err.message);
+  reportJobFailure(QUEUE_NAMES.aiGradeBatch, job, err);
+});
+workers.push(aiGradeBatchWorker);
 
 async function shutdown(signal: string) {
   console.log(`[worker] received ${signal}, shutting down...`);

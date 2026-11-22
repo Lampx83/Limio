@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import type { TeamSubmissionEntry } from "@feedbackme/core-lms";
 import { DateTime, EmptyState, StatusBadge, UserAvatar } from "@/components/ui";
 import TeamSubmissionModal from "./TeamSubmissionModal";
+import type { SavedAiSuggestion } from "./GradeForm";
 import { neighborTeams } from "./teamNav";
 
 type MiniUser = { id: string; displayName: string; email: string };
@@ -30,11 +31,14 @@ export default function TeamRosterTable({
   unassigned,
   maxScore,
   courseId,
+  suggestions = {},
 }: {
   entries: TeamSubmissionEntry[];
   unassigned: MiniUser[];
   maxScore: number;
   courseId: string;
+  /** Gợi ý AI đã lưu, theo submissionId (chấm hàng loạt). Một nhóm có thể mang gợi ý ở bất kỳ dòng nào của lần nộp mới nhất. */
+  suggestions?: Record<string, SavedAiSuggestion>;
 }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -212,6 +216,13 @@ export default function TeamRosterTable({
           entry={open}
           latest={open.latest}
           maxScore={maxScore}
+          aiSuggestion={
+            open.latest
+              ? (suggestions[open.latest.submissionId] ??
+                open.latest.members.map((m) => suggestions[m.submissionId]).find(Boolean) ??
+                null)
+              : null
+          }
           nav={
             nav && {
               position: nav.position,

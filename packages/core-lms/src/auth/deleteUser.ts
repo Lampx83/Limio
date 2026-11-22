@@ -100,6 +100,10 @@ export async function deleteUser(
     // LANG G6 — góp ý bài viết do AI chứa trích đoạn bài viết riêng của học viên (đã gửi tới nhà cung cấp
     // AI): nội dung riêng tư, không có giá trị thống kê sau khi ẩn danh, nên xoá hẳn như ghi chú.
     await tx.writingFeedback.deleteMany({ where: { userId: targetUserId } });
+    // Chấm bài tập bằng AI hàng loạt — gợi ý điểm/nhận xét AI soạn về bài nộp của người này (học viên) và các lô do
+    // người này bấm chạy (giảng viên). Bài nộp được giữ ẩn danh nên gợi ý đi kèm phải xoá hẳn.
+    await tx.assignmentAiGradeSuggestion.deleteMany({ where: { submission: { userId: targetUserId } } });
+    await tx.assignmentAiGradeBatch.deleteMany({ where: { startedById: targetUserId } });
     // LANG G7 — bài nói: file ghi âm là lời nói riêng của học viên. Bản chữ + góp ý xoá hẳn; liên kết file
     // trên bài nộp được gỡ và TÊN FILE trả về cho tầng gọi (kho file thuộc apps/web) để xoá khỏi kho.
     await tx.speakingFeedback.deleteMany({ where: { userId: targetUserId } });

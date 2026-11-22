@@ -930,6 +930,15 @@ mục 1–17 ở trên (cập nhật 2026-10-19) thì theo mục ở trên.
 - **Bài tập:** khối Bài tập trong trang bài học có "Xem bài nộp" và bút chì (sửa). Trang bài nộp có khung
   **"Rubric chấm điểm (không bắt buộc)"** nằm TRÊN bảng "Danh sách". Cửa sổ chấm: "✨ Gợi ý điểm bằng AI",
   "Điểm", "Nhận xét", "✓ Chấm điểm" hoặc "Cập nhật điểm", "Quay lại danh sách".
+  Dưới khung rubric có khung **"✨ Gợi ý điểm bằng AI cho cả lớp"** (chỉ hiện khi còn bài chưa chấm hoặc vừa chạy xong một
+  lô): nút **"Gợi ý điểm bằng AI cho n bài chưa chấm"** mở hộp xác nhận ghi số bài, ước lượng token cần và số dư ví
+  của thầy/cô; ô tích **"Chạy lại cả bài đã có gợi ý (tốn thêm token)"**; nút **"Bắt đầu (n bài)"** và "Huỷ". Ví không đủ
+  cho cả lớp thì chỉ chạy phần đầu vừa ví (theo thứ tự nộp). Lô chạy nền (đóng trang vẫn chạy), có thanh tiến độ
+  "Đã xong x/n bài" và nút **"Dừng"**. AI **chỉ lưu gợi ý**, không ghi điểm, học viên không thấy. Bảng danh sách có thêm
+  cột "Gợi ý AI" (điểm gợi ý, "đã cũ" nếu học viên nộp lại), ô tích "Chỉ bài có gợi ý AI"; mở cửa sổ chấm thì điểm và
+  nhận xét được điền sẵn từ gợi ý (chưa lưu). Thanh tím phía trên bảng có **"Chọn tất cả bài có gợi ý"** và nút
+  **"Chốt theo gợi ý AI cho n bài"** (có hỏi xác nhận; ghi điểm thật và nhận xét học viên sẽ thấy). Bài nộp theo nhóm:
+  chạy một lần cho mỗi nhóm, gợi ý hiện trong cửa sổ chấm nhóm; chưa có chốt hàng loạt cho bài nhóm.
 - **Menu bôi đen** ("Viết annotation", "Hỏi AI về đoạn này", "Góp ý đoạn này") chỉ dùng được với người đã ghi danh (và chủ khoá)
   ngoài chế độ xem trước.
 - **Học viên** thấy trang khoá có "Lộ trình của bạn" (các bước + nhãn Cần ôn / Nên luyện thêm), "Bảng xếp hạng", "Champions".

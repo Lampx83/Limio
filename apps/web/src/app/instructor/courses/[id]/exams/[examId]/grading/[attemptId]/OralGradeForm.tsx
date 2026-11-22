@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bot } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import { aiSuggestErrorText } from "@/lib/aiErrorText";
 
 interface Breakdown {
   topic: string;
@@ -59,7 +60,7 @@ export default function OralGradeForm({
     setSuggesting(false);
     if (!res.ok) {
       const code = typeof data?.error === "string" ? data.error : "llm_failed";
-      setError(GENERATE_ERROR[code] ?? `Gợi ý lỗi: ${code}`);
+      setError(GENERATE_ERROR[code] ?? aiSuggestErrorText(code) ?? `Gợi ý lỗi: ${code}`);
       return;
     }
     if (typeof data.aiSuggestedScore === "number") {

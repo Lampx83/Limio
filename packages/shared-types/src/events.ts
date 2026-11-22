@@ -225,6 +225,11 @@ export const LearningEventType = {
   VanDapPlanGenerated: "vandap.plan.generated",
   VanDapPlanEdited: "vandap.plan.edited",
   VanDapScenarioEdited: "vandap.scenario.edited",
+  // Chấm bài tập bằng AI hàng loạt (docs/tieu-chi/cham-bai-tap-bang-ai-hang-loat.md). Subject là giảng viên bấm nút;
+  // payload chỉ mang id và số đếm, KHÔNG mang chữ bài nộp, điểm hay nhận xét. Không tính là hoạt động học (tiền tố
+  // "grading." trong NON_LEARNER_ACTIVITY_PREFIXES) — `assignment.*` là của học viên nên không dùng được.
+  GradingAiBatchStarted: "grading.ai_batch.started",
+  GradingAiBatchCompleted: "grading.ai_batch.completed",
   /** B9.2 — learner opened a lesson the feedback routed them to (uptake). */
   FeedbackRemediationClicked: "feedback.remediation.clicked",
   AdaptivePathUpdated: "adaptive.path.updated",
@@ -667,6 +672,25 @@ export interface ExamOralEvaluationGeneratedPayload {
 export interface ExamOralLegacySwitchedPayload {
   /** true = vấn đáp bản cũ đã bị tắt. */
   disabled: boolean;
+}
+
+/** Sự kiện `grading.ai_batch.*`: chỉ id và số đếm. */
+export interface GradingAiBatchStartedPayload {
+  assignmentId: string;
+  batchId: string;
+  total: number;
+}
+export interface GradingAiBatchCompletedPayload {
+  assignmentId: string;
+  batchId: string;
+  total: number;
+  done: number;
+  failed: number;
+  skipped: number;
+  tokensUsed: number;
+  status: "completed" | "stopped" | "halted";
+  /** Mã lý do khi lô dừng vì ví/trần hệ thống. */
+  haltReason?: string;
 }
 
 /** Mọi sự kiện `vandap.*` chỉ mang id và số liệu. */
