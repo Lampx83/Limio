@@ -48,29 +48,49 @@ for v in pinyin_dict.values():
 SYL.discard("")
 MAXSYL = max(map(len, SYL))
 
-def split_syl(s, n):
-    """Tách chuỗi pinyin liền (không dấu cách) thành đúng n âm tiết; None nếu không tách được."""
+# Các cách đọc (không thanh) của từng chữ, để chọn đúng chỗ cắt khi pinyin liền có nhiều cách tách (rènao → rè|nao chứ không phải rèn|ao; dàngāo → dàn|gāo)
+READINGS = {}
+for cp, v in pinyin_dict.items():
+    READINGS[chr(cp)] = {strip_tone(x.lower()) for x in v.split(",") if x}
+
+def split_syl(s, n, han=None):
+    """Tách chuỗi pinyin liền (không dấu cách) thành đúng n âm tiết; None nếu không tách được.
+    Có `han` (các chữ Hán tương ứng): ưu tiên cách tách mà từng âm tiết là một cách đọc có thật của chữ đó; không có thì tách tham lam theo âm tiết dài nhất."""
     s = unicodedata.normalize("NFC", s)
-    memo = {}
-    def go(i, k):
-        if k == 0: return [] if i == len(s) else None
-        if (i, k) in memo: return memo[(i, k)]
-        r = None
-        for j in range(min(len(s), i + MAXSYL), i, -1):
-            if s[i:j] in SYL:
-                rest = go(j, k - 1)
-                if rest is not None: r = [s[i:j]] + rest; break
-        memo[(i, k)] = r
-        return r
-    return go(0, n)
+    def run(check):
+        memo = {}
+        def go(i, k):
+            if k == 0: return [] if i == len(s) else None
+            if (i, k) in memo: return memo[(i, k)]
+            r = None
+            idx = n - k
+            for j in range(min(len(s), i + MAXSYL), i, -1):
+                seg = s[i:j]
+                if seg in SYL and (not check or strip_tone(seg) in READINGS.get(han[idx], {strip_tone(seg)})):
+                    rest = go(j, k - 1)
+                    if rest is not None: r = [seg] + rest; break
+            memo[(i, k)] = r
+            return r
+        return go(0, n)
+    if han and len(han) == n:
+        r = run(True)
+        if r is not None: return r
+    return run(False)
 
 std = {}
 csv_path = sys.argv[1] if len(sys.argv) > 1 else os.path.expanduser("~/Documents/Limio/hsk4-goc/hsk30.csv")
+# Từ của khoá (level4-words.tsv, cùng thư mục với hsk30.csv) mà bảng chuẩn xếp cấp 7-9 (亲戚, 登机, 度假…) vẫn cần ruby đúng: nhận thêm.
+course_words = set()
+_tsv = os.path.join(os.path.dirname(csv_path), "level4-words.tsv")
+if os.path.exists(_tsv):
+    for r in csv.DictReader(open(_tsv, encoding="utf-8"), delimiter="\t"):
+        course_words.add(r.get("Han", ""))
 if os.path.exists(csv_path):
     for row in csv.DictReader(open(csv_path, encoding="utf-8")):
         han, py, lv = row.get("Simplified", ""), row.get("Pinyin", ""), row.get("Level", "")
-        if not (2 <= len(han) <= 4) or lv not in {"1", "2", "3", "4", "5", "6"} or han in std: continue
-        if not all(c in L1 or c == "儿" for c in han) or not py: continue
+        if not (2 <= len(han) <= 4) or han in std: continue
+        if lv not in {"1", "2", "3", "4", "5", "6"} and not (lv == "7-9" and han in course_words): continue
+        if not all(c in base or c == "儿" for c in han) or not py: continue  # cả 6763 chữ GB2312 (亲戚 qīn qi có 戚 thuộc cấp 2)
         py = py.split("/")[0].strip().lower()
         parts = [x for x in re.split(r"[\s'’]+", py) if x]
         n = len(han)
@@ -78,11 +98,11 @@ if os.path.exists(csv_path):
         er_final = han.endswith("儿") and py.endswith("r") and not re.search(r"['’][eēéěè]r$", py)
         body = "".join(parts)
         if er_final:
-            sy = split_syl(body[:-1], n - 1)
+            sy = split_syl(body[:-1], n - 1, han[:-1])
             if sy is None: continue
             sy = sy + ["r"]
         else:
-            sy = split_syl(body, n)
+            sy = split_syl(body, n, han)
             if sy is None: continue
         std[han] = " ".join(sy)
 words.update(std)
