@@ -1454,7 +1454,9 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
     flex-direction: column;
   }
   .ps-exercise > div.grid[data-split="true"] .practice-sheet {
-    flex: 1 1 auto;
+    /* KHÔNG co (shrink 0): phiếu có overflow:hidden nên min-height tự động = 0, nếu cho co thì nó bị ép bằng chiều cao tối đa của cột
+       (cột tự cuộn, max-h theo màn hình) và cắt mất các câu phía dưới mà cột ngoài không có gì để cuộn, tức không hiện thanh cuộn. */
+    flex: 1 0 auto;
     display: flex;
     flex-direction: column;
   }
