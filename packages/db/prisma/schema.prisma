@@ -1940,8 +1940,6 @@ model AssignmentSubmission {
   @@index([assignmentId, teamId])
 }
 
-enum SubmissionMode {
-  individual
 /// Gợi ý điểm của AI cho một bài nộp (chấm hàng loạt, docs/tieu-chi/cham-bai-tap-bang-ai-hang-loat.md).
 /// KHÔNG phải điểm chốt: `AssignmentSubmission.score/status` giữ nguyên cho tới khi giảng viên bấm chấm.
 /// Học viên không đọc được bảng này. Nộp nhóm: một dòng cho bài đại diện của nhóm (lần nộp mới nhất).
@@ -2009,6 +2007,8 @@ model AssignmentAiGradeBatch {
   @@index([assignmentId, status])
 }
 
+enum SubmissionMode {
+  individual
   team
 }
 
