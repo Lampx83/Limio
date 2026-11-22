@@ -48,6 +48,39 @@ function applySandhi(text: string, out: string[]): void {
   }
 }
 
+
+const PRONOUN = "我你他她它们咱";
+/**
+ * Chữ đa âm đứng ngoài từ đã biết: chọn âm theo ngữ cảnh như sách chuẩn (trợ từ/bổ ngữ thanh nhẹ, 儿化 viết r).
+ *  - 得: de (睡得好, 考得不好, 压得喘不过气), dé chỉ trong 得到 / 获得 / 取得…, děi sau đại từ (我得走).
+ *  - 着: zháo trong 睡着 / 睡不着 / 找着 (cuối cụm hoặc trước 了); còn lại zhe.
+ *  - 觉: jiào trong 睡觉 / 睡个好觉 / 午觉; jué trong 觉得 / 感觉.
+ *  - 都: dōu (đều); dū chỉ trong 首都 / 成都 / 都市…
+ *  - 儿: r khi đứng cuối cụm sau một chữ khác (点儿, 玩儿, 哪儿), trừ 女儿 / 婴儿 / 幼儿… (ér).
+ */
+function charInContext(cs: string[], i: number, base: string): string {
+  const c = cs[i]!;
+  const prev = i > 0 ? cs[i - 1]! : "";
+  const next = cs[i + 1] ?? "";
+  if (c === "得" && prev) {
+    if (next === "到" || "获取赢博".includes(prev)) return "dé";
+    if (PRONOUN.includes(prev) && next && !"很不太多快慢好真".includes(next)) return "děi";
+    return "de";
+  }
+  if (c === "着") {
+    const p2 = i > 1 ? cs[i - 2]! : "";
+    const tail = !next || next === "了";
+    if (tail && "睡找猜碰摸".includes(prev)) return "zháo";
+    if (tail && prev === "不" && "睡找猜碰摸".includes(p2)) return "zháo";
+    return base;
+  }
+  // 都: phó từ "đều" (dōu) gần như mọi lúc; chỉ là dū trong tên/từ chỉ đô thị (首都, 成都, 都市, 大都市…)
+  if (c === "都") return (prev && "首成京迁古".includes(prev)) || (next && "市城".includes(next)) ? "dū" : "dōu";
+  if (c === "觉" && prev && !(next && "得悟察醒".includes(next)) && "睡个好午懒补".includes(prev)) return "jiào";
+  if (c === "儿" && prev && !"女婴幼孤胎男宝新".includes(prev) && !next) return "r";
+  return base;
+}
+
 /**
  * Âm tiết cho TỪNG chữ Hán của `text` theo thứ tự (không tính ký tự khác). Chữ không có trong bảng nhận "".
  * Trả null khi `text` không có chữ Hán hoặc có kana/Hangul (không phải tiếng Trung).
@@ -56,13 +89,13 @@ export function hanSyllables(text: string): string[] | null {
   if (!HAN.test(text) || KANA_HANGUL.test(text)) return null;
   load();
   const out: string[] = [];
-  // Duyệt từng đoạn chữ Hán liền nhau: ghép từ dài nhất (3 rồi 2 chữ) trước, không có thì âm mặc định của chữ.
+  // Duyệt từng đoạn chữ Hán liền nhau: ghép từ dài nhất (4, 3 rồi 2 chữ) trước, không có thì âm mặc định của chữ.
   for (const run of text.match(/[㐀-鿿]+/g) ?? []) {
     const start = out.length;
     const cs = [...run];
     for (let i = 0; i < cs.length; ) {
       let took = 0;
-      for (const n of [3, 2]) {
+      for (const n of [4, 3, 2]) {
         if (i + n > cs.length) continue;
         const w = words!.get(cs.slice(i, i + n).join(""));
         if (w) {
@@ -72,7 +105,7 @@ export function hanSyllables(text: string): string[] | null {
         }
       }
       if (!took) {
-        out.push(chars!.get(cs[i]!) ?? "");
+        out.push(charInContext(cs, i, chars!.get(cs[i]!) ?? ""));
         took = 1;
       }
       i += took;
