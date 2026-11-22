@@ -531,8 +531,9 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   Tất cả / Chưa giải đáp / Đã xử lý và nút "Stale >48h", liên kết "Mở thread"; trong chủ đề bấm **"Đánh dấu là
   câu trả lời"** để chuyển sang "Đã xử lý".
 - **Ghi chú theo vùng chọn và Hỏi AI** (cho học viên đã ghi danh và chủ khoá): bôi đen
-  một đoạn chữ trong bài → bấm chuột phải → **"Viết annotation"** hoặc **"Hỏi AI về đoạn
-  này"**. Ghi chú có hai chế độ **"Riêng tư"** và **"Cả lớp"** ("Chia sẻ với cả lớp").
+  một đoạn chữ trong bài (hoặc bấm đúp một từ) → menu hiện ngay dưới đoạn chọn (bấm chuột phải cũng
+  mở được) → **"Viết annotation"**, **"Hỏi AI về đoạn này"** hoặc **"Góp ý đoạn này"** (gửi góp ý về nội dung cho
+  đội Limio). Ghi chú có hai chế độ **"Riêng tư"** và **"Cả lớp"** ("Chia sẻ với cả lớp").
   Không có trong chế độ xem trước. Ngoài ra có khung nổi **"Trợ giảng AI"** (tính vào
   Token AI).
 - **KHÔNG có tính năng thông báo lớp.** Không viết.
@@ -929,6 +930,6 @@ mục 1–17 ở trên (cập nhật 2026-10-19) thì theo mục ở trên.
 - **Bài tập:** khối Bài tập trong trang bài học có "Xem bài nộp" và bút chì (sửa). Trang bài nộp có khung
   **"Rubric chấm điểm (không bắt buộc)"** nằm TRÊN bảng "Danh sách". Cửa sổ chấm: "✨ Gợi ý điểm bằng AI",
   "Điểm", "Nhận xét", "✓ Chấm điểm" hoặc "Cập nhật điểm", "Quay lại danh sách".
-- **Menu chuột phải** ("Viết annotation", "Hỏi AI về đoạn này") chỉ dùng được với người đã ghi danh (và chủ khoá)
+- **Menu bôi đen** ("Viết annotation", "Hỏi AI về đoạn này", "Góp ý đoạn này") chỉ dùng được với người đã ghi danh (và chủ khoá)
   ngoài chế độ xem trước.
 - **Học viên** thấy trang khoá có "Lộ trình của bạn" (các bước + nhãn Cần ôn / Nên luyện thêm), "Bảng xếp hạng", "Champions".

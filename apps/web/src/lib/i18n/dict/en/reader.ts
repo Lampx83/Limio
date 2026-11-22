@@ -19,6 +19,7 @@ export const enReader: PartialDict<typeof viReader> = {
   "reader.ann.menu.write": "Write an annotation",
   "reader.ann.menu.sameBlock": "Select text within a single paragraph",
   "reader.ann.menu.askAi": "Ask AI about this passage",
+  "reader.ann.menu.feedback": "Suggest a fix for this passage",
   "reader.ann.new": "New annotation",
   "reader.ann.close": "Close",
   "reader.ann.placeholder": "What do you think about this passage?",

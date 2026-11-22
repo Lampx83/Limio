@@ -22,7 +22,7 @@ Limio có thể dùng **Feedback Hub** (https://github.com/Lampx83/FeedbackHub) 
 
 - Chỉ người **đã đăng nhập** thấy ba lối vào hộp góp ý. **Không có nút nổi**: các góc màn hình của Limio đã kín nút mở menu và thanh CTA di động.
   - **Biểu tượng 💡 trên header**, cạnh chuông thông báo — widget của hub tự vẽ vào `<span data-feedbackhub-launcher hidden />` trong `AppHeader.tsx` (một dòng), cùng màu với các biểu tượng khác, có số góp ý đang chờ người dùng trả lời.
-  - **Bôi đen chữ trong bài học** → bong bóng "✏️ Góp ý đoạn này" ngay dưới đoạn chọn; bấm vào là mở hộp góp ý loại "Nội dung khoá học chưa đúng" với đoạn chữ điền sẵn. Chỉ trong `#lesson-content`. Phần này **bật trên hub**, Limio không có mã riêng.
+  - **Bôi đen chữ trong bài học** (hoặc bấm đúp một từ) → menu của Limio hiện ngay dưới đoạn chọn, có mục **"Góp ý đoạn này"** cạnh "Viết annotation" và "Hỏi AI về đoạn này" (`LessonAnnotations.tsx` gọi `FeedbackHub.open()`; widget nhớ đoạn bôi đen gần nhất tối đa 2 phút và đưa vào hộp góp ý). Bong bóng "✏️ Góp ý đoạn này" riêng của hub **phải tắt** ở hub (`features.textSelection: false`), kẻo hai nút chồng nhau.
   - Mục **"Góp ý cho Limio"** trong menu người dùng (góc phải header).
 - Cả ba ẩn ở trang làm bài thi (`/thi`, `/exam-take`, `/play`, `/join`); nút header và bong bóng ẩn thêm ở lớp học tương tác và Limio-Live. Danh sách này nằm ở `features.hidePaths` của dự án trên hub (sửa ở bảng điều khiển hub hoặc `feedback-hub.project.json`), không phải trong mã Limio.
 - Mỗi góp ý tự kèm ngữ cảnh: đường dẫn, `contentRef` (`lesson:<id>`, `course:<slug>`, `thread:<id>`), khoá học, vai trò đang dùng và cỡ màn hình (`extra`) — người đọc không phải hỏi lại "bài nào, máy nào".

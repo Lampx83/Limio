@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Globe, Lock, MessageSquare, MessageSquarePlus, Pencil, Send, Sparkles, Trash2, X } from "lucide-react";
+import { Globe, Lock, Lightbulb, MessageSquare, MessageSquarePlus, Pencil, Send, Sparkles, Trash2, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import {
   captureAnchor,
@@ -276,6 +276,29 @@ export default function LessonAnnotations({
       lastPointer.current = e.pointerType;
     };
 
+    // Chuột: thả chuột sau khi bôi đen (kể cả bấm đúp chọn một từ) thì menu hiện ngay dưới vùng chọn, không cần chuột phải.
+    // Menu tự đóng khi bấm ra ngoài (effect bên dưới), nên không cần theo dõi việc bỏ chọn.
+    const onMouseUp = (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      if ((e.target as Element | null)?.closest?.("[role='menu']")) return;
+      setTimeout(() => {
+        const s = currentSelection();
+        if (!s || s.text.replace(/\s+/g, "").length < 2) return;
+        const rects = s.range.getClientRects();
+        const last = rects.length ? rects[rects.length - 1]! : s.range.getBoundingClientRect();
+        if (!last.width && !last.height) return;
+        setThread(null);
+        setComposer(null);
+        setMenu({
+          x: last.right - MENU_W / 2,
+          y: last.bottom + 10,
+          quote: s.text,
+          anchor: captureAnchor(s.range),
+          touch: false,
+        });
+      }, 10);
+    };
+
     // Cảm ứng không có chuột phải: hiện thanh dưới vùng chọn khi người dùng
     // ngừng kéo tay cầm chọn chữ.
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -327,6 +350,7 @@ export default function LessonAnnotations({
     };
 
     const c = container();
+    c?.addEventListener("mouseup", onMouseUp);
     document.addEventListener("contextmenu", onContext);
     document.addEventListener("pointerdown", onPointerDown, true);
     document.addEventListener("selectionchange", onSelectionChange);
@@ -337,6 +361,7 @@ export default function LessonAnnotations({
       document.removeEventListener("pointerdown", onPointerDown, true);
       document.removeEventListener("selectionchange", onSelectionChange);
       c?.removeEventListener("click", onClick);
+      c?.removeEventListener("mouseup", onMouseUp);
     };
   }, [containerId]);
 
@@ -364,6 +389,14 @@ export default function LessonAnnotations({
   const askAi = () => {
     if (!menu) return;
     window.dispatchEvent(new CustomEvent("limio:ask-ai", { detail: { quote: menu.quote } }));
+    setMenu(null);
+  };
+
+  // Góp ý về đoạn đang chọn qua Feedback Hub: widget nhớ đoạn bôi đen gần nhất (tối đa 2 phút) và điền sẵn khi mở hộp góp ý.
+  // Chỉ có khi widget đã nạp (hub bật + đã đăng nhập). Bong bóng "Góp ý đoạn này" riêng của hub tắt ở cấu hình hub (features.textSelection).
+  const hubReady = () => Boolean((window as unknown as { FeedbackHub?: { __loaded?: boolean } }).FeedbackHub?.__loaded);
+  const suggestFix = () => {
+    (window as unknown as { FeedbackHub?: { open?: () => void } }).FeedbackHub?.open?.();
     setMenu(null);
   };
 
@@ -433,7 +466,7 @@ export default function LessonAnnotations({
           style={{
             width: MENU_W,
             left: clamp(menu.x, 8, window.innerWidth - MENU_W - 8),
-            top: clamp(menu.y, 8, window.innerHeight - 110),
+            top: clamp(menu.y, 8, window.innerHeight - 160),
           }}
         >
           <button
@@ -462,6 +495,17 @@ export default function LessonAnnotations({
             >
               <Sparkles size={16} className="shrink-0 text-brand-600" />
               <span className="font-medium">{t("reader.ann.menu.askAi")}</span>
+            </button>
+          )}
+          {hubReady() && (
+            <button
+              role="menuitem"
+              type="button"
+              onClick={suggestFix}
+              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors hover:bg-[rgb(var(--surface-muted))]"
+            >
+              <Lightbulb size={16} className="shrink-0 text-brand-600" />
+              <span className="font-medium">{t("reader.ann.menu.feedback")}</span>
             </button>
           )}
         </div>

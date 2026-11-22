@@ -16,6 +16,7 @@ export const viReader = {
   "reader.ann.menu.write": "Viết annotation",
   "reader.ann.menu.sameBlock": "Hãy chọn trong cùng một đoạn nội dung",
   "reader.ann.menu.askAi": "Hỏi AI về đoạn này",
+  "reader.ann.menu.feedback": "Góp ý đoạn này",
   "reader.ann.new": "Annotation mới",
   "reader.ann.close": "Đóng",
   "reader.ann.placeholder": "Bạn nghĩ gì về đoạn này?",

@@ -22,7 +22,7 @@
     "successCriteria": false,
     "screenshot": "optional",
     "models": [],
-    "textSelection": true,
+    "textSelection": false,
     "selectionScope": "#lesson-content",
     "hidePaths": ["/thi", "/exam-take", "/play", "/join", "/instructor/classroom", "/instructor/limio-live"]
   },
