@@ -23,7 +23,7 @@ type Group = {
   /** Gập lại mặc định (bảng dài). */
   collapsed?: boolean;
   columns: { key: string; label: string }[];
-  rows: { label: string; sub?: string; cells: Record<string, Cell> }[];
+  rows: { label: string; sub?: string; cells: Record<string, Cell>; links?: { label: string; href: string }[] }[];
 };
 type Project = {
   id: string;
@@ -199,6 +199,7 @@ export default async function AdminContentProgressPage() {
                           {c.label}
                         </th>
                       ))}
+                      {g.rows.some((r) => r.links?.length) && <th className="px-3 py-2">Xem bài</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -213,6 +214,17 @@ export default async function AdminContentProgressPage() {
                             <Dot s={r.cells[c.key]?.state ?? "todo"} title={r.cells[c.key]?.detail} />
                           </td>
                         ))}
+                        {g.rows.some((r) => r.links?.length) && (
+                          <td className="px-3 py-2">
+                            <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+                              {r.links?.map((l) => (
+                                <a key={l.href} href={l.href} className="link text-xs" target="_blank" rel="noopener">
+                                  {l.label}
+                                </a>
+                              ))}
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
