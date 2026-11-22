@@ -52,3 +52,7 @@ Tệp mới:
 ## Muốn AI xử lý góp ý?
 
 Đổi `mode` sang `execute` trên hub và chạy worker của Feedback Hub trên máy có bản làm việc của Limio — xem README của hub. Với Limio (có thi trực tuyến, dữ liệu học viên) nên giữ `deliver: branch` để người duyệt rồi mới triển khai.
+
+## Đọc góp ý (dành cho người và AI lập trình)
+
+Xem [feedback-doc-gop-y.md](feedback-doc-gop-y.md): cấp khoá chỉ đọc, `node scripts/feedback.mjs setup`, các lệnh đọc.
