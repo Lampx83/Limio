@@ -77,12 +77,15 @@ export default function SpaceRegisterDialog({
   label,
   intro,
   backPath,
+  buttonClassName,
 }: {
   lang: SpaceLang;
   label: string;
   intro: string;
   /** Trang chủ space — nơi quay lại sau khi đăng ký/đăng nhập. */
   backPath: string;
+  /** Thay kiểu nút mở hộp thoại (mặc định: nút vuông theo màu space). */
+  buttonClassName?: string;
 }) {
   const t = T[lang];
   const ref = useRef<HTMLDialogElement>(null);
@@ -146,7 +149,7 @@ export default function SpaceRegisterDialog({
       <button
         type="button"
         onClick={() => ref.current?.showModal()}
-        className="bg-[var(--sp)] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[var(--sp-dark)]"
+        className={buttonClassName ?? "bg-[var(--sp)] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[var(--sp-dark)]"}
       >
         {label} →
       </button>

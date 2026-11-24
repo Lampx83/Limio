@@ -6,6 +6,7 @@ import { ArrowDown, ArrowUp, ExternalLink, Plus, Trash2, Upload } from "lucide-r
 import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
 import { derivePalette, isHexColor } from "@/lib/space/theme";
+import { spaceBasePath } from "@/lib/space/aliases";
 import { SPACE_EDITABLE_COPY, SPACE_TEMPLATES } from "@/lib/space/templates";
 import type { SpaceStored } from "@/lib/space/settings";
 import type { SpaceLang } from "@/lib/space/types";
@@ -89,6 +90,9 @@ export default function SpaceSettingsManager({
     vi: { ...(initial.copy?.vi as Partial<Record<CopyKey, string>>) },
   });
   const [courses, setCourses] = useState<CourseRow[]>(toRows(initial));
+  // Giao diện kiểu Limio (như /hsk) và dải số liệu: không có ô riêng trong form, nhưng phải mang theo khi lưu để không mất.
+  const [limioBrand, setLimioBrand] = useState<boolean>(initial.limioBrand === true);
+  const [stats, setStats] = useState<SpaceStored["stats"]>(initial.stats);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -97,7 +101,7 @@ export default function SpaceSettingsManager({
     soft: tones.soft,
     accent2: tones.accent2,
   });
-  const homePath = slug === "micro4asia" ? "/micro4asia" : `/s/${slug}`;
+  const homePath = spaceBasePath(slug);
   const inSpace = new Set(courses.map((c) => c.slug));
   const addable = orgCourses.filter((c) => !inSpace.has(c.slug));
   const statusOf = (s: string) => orgCourses.find((c) => c.slug === s)?.status ?? null;
@@ -127,6 +131,8 @@ export default function SpaceSettingsManager({
       vi: { ...(s.copy?.vi as Partial<Record<CopyKey, string>>) },
     });
     setCourses(toRows(s));
+    setLimioBrand(s.limioBrand === true);
+    setStats(s.stats);
     if (!slug) setSlug(id);
     toast.success("Đã nạp mẫu vào form", { description: "Bấm Lưu để áp dụng." });
   }
@@ -172,6 +178,8 @@ export default function SpaceSettingsManager({
       heroVisualUrl,
       siteUrl,
       siteLabel,
+      ...(limioBrand ? { limioBrand: true } : {}),
+      ...(stats ? { stats } : {}),
       langs,
       defaultLang,
       courses: courses.map((c) => ({
@@ -246,6 +254,15 @@ export default function SpaceSettingsManager({
         <div>
           <label className="label" htmlFor="sp-suffix">Hậu tố tên trang khi chia sẻ</label>
           <input id="sp-suffix" className={field} value={titleSuffix} onChange={(e) => setTitleSuffix(e.target.value)} placeholder={orgName} maxLength={40} />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" className="mt-0.5" checked={limioBrand} onChange={(e) => setLimioBrand(e.target.checked)} />
+            <span>
+              Dùng nhận diện mặc định của Limio
+              <span className="help block">Trang chủ kiểu Limio (lát chanh + chữ Limio, thẻ cấp bo tròn) thay cho logo trường/đối tác. Trang khoá học của space giữ giao diện Limio.</span>
+            </span>
+          </label>
         </div>
         <div>
           <span className="label">Mẫu</span>

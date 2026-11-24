@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { builtinMicro4Asia } from "../builtin";
+import { hskTemplate } from "../templates";
+import { spaceBasePath } from "../aliases";
 import { buildSpaceConfig, isValidSpaceSlug, normalizeStored, safeUrl } from "../settings";
 import { derivePalette, isHexColor, mixHex, spaceThemeCss } from "../theme";
 import { resolveSpaceLang } from "../lang";
@@ -146,5 +148,52 @@ describe("space: ranh giới khoá và mẫu", () => {
     expect(s.dark).toBe("#445566");
     expect(s.soft).toBeUndefined();
     expect(s.accent2).toBe("#AABBCC");
+  });
+});
+
+describe("space HSK (cấu hình trong DB)", () => {
+  const stored = hskTemplate();
+  const cfg = buildSpaceConfig({ slug: "hsk", orgName: "Limio", orgLogoUrl: null, stored: normalizeStored(stored) });
+
+  it("chín cấp, slug hsk-<cấp>-goc, không trùng", () => {
+    expect(cfg.courses.map((c) => c.slug)).toEqual(Array.from({ length: 9 }, (_, i) => `hsk-${i + 1}-goc`));
+    expect(new Set(cfg.courses.map((c) => c.slug)).size).toBe(9);
+    for (const c of cfg.courses) {
+      for (const l of ["vi", "en"] as const) {
+        expect(c.topic[l], `${c.slug} topic ${l}`).not.toBe("");
+        expect(c.outcome[l], `${c.slug} outcome ${l}`).not.toBe("");
+      }
+    }
+  });
+
+  it("lưu qua DB giữ nguyên cờ limioBrand, dải số liệu và toàn bộ chữ (không bị cắt)", () => {
+    expect(cfg.limioBrand).toBe(true);
+    expect(cfg.stats.vi).toEqual(stored.stats!.vi);
+    for (const l of ["vi", "en"] as const) {
+      const src = stored.copy![l]!;
+      for (const k of Object.keys(src) as Array<keyof typeof src>) {
+        if (k === "breadcrumbHome" || k === "switchTo" || k === "switchLabel") continue; // không có trong form/DB
+        expect(cfg.copy[l][k], `${l}.${String(k)}`).toEqual(src[k]);
+      }
+    }
+  });
+
+  it("dùng nhận diện mặc định của Limio, không mang thương hiệu NEU/MICRO4ASIA", () => {
+    expect(cfg.partnerLogoUrl).toBeNull();
+    expect(JSON.stringify(normalizeStored(stored))).not.toMatch(/neu|micro4asia/i);
+    expect(isHexColor(cfg.palette.primary)).toBe(true);
+    expect(cfg.defaultLang).toBe("vi");
+    expect(cfg.langs).toEqual(["vi", "en"]);
+  });
+
+  it("space khác không có limioBrand thì không bật cờ", () => {
+    const other = buildSpaceConfig({ slug: "dh-a", orgName: "ĐH A", orgLogoUrl: null, stored: normalizeStored({ name: "A" }) });
+    expect(other.limioBrand).toBeUndefined();
+  });
+
+  it("URL ngắn /hsk và /micro4asia; space khác vẫn đi qua /s/<slug>", () => {
+    expect(spaceBasePath("hsk")).toBe("/hsk");
+    expect(spaceBasePath("micro4asia")).toBe("/micro4asia");
+    expect(spaceBasePath("dh-a")).toBe("/s/dh-a");
   });
 });

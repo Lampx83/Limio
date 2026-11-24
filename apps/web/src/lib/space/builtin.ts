@@ -102,3 +102,6 @@ export function builtinMicro4AsiaEnabled(): boolean {
   const v = (process.env.SPACE_BUILTIN_MICRO4ASIA ?? "").trim().toLowerCase();
   return v === "1" || v === "true";
 }
+
+/** Slug của space HSK (/hsk). Cấu hình nằm trong DB (Organization.space), không dựng sẵn trong mã; mẫu nạp ở templates.ts. */
+export const HSK_SLUG = "hsk";
