@@ -1,5 +1,6 @@
 import { prisma, type PaymentProvider, type PrismaClient } from "@feedbackme/db";
 import { extendEnrollmentAccess } from "./courseAccess";
+import { grantBundleAccess } from "./bundleAccess";
 
 /**
  * Cấp quyền học khi cổng thanh toán nội địa (VNPay…) báo kết quả server-to-server (docs/tieu-chi/thanh-toan-vnpay.md,
@@ -56,6 +57,13 @@ export async function settleGatewayPayment(
       data: { status: "paid", paidAt: new Date(), gatewayTxnRef: input.gatewayTxnRef ?? null },
     });
     if (flipped.count === 0) return { result: "already_confirmed", orderId: order.id };
+
+    // Đơn COMBO: ghi danh mọi khoá của combo trong cùng giao dịch (docs/tieu-chi/combo-khoa-hoc.md, AC5).
+    if (order.bundleId) {
+      await grantBundleAccess(order.userId, order.bundleId, tx as typeof prisma);
+      return { result: "paid", orderId: order.id };
+    }
+    if (!order.courseId) return { result: "order_not_found" };
 
     const course = await tx.course.findUniqueOrThrow({
       where: { id: order.courseId },

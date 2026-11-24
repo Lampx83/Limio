@@ -157,7 +157,9 @@ export async function processStripeWebhook(event: Stripe.Event) {
     const order = await prisma.order.findFirst({
       where: { providerRef: sess.id },
     });
-    if (!order || order.status === "paid") return;
+    // Đơn combo (không gắn một khoá) chỉ đi bằng VNPay; Stripe không bao giờ tạo ra nó.
+    if (!order || order.status === "paid" || !order.courseId) return;
+    const orderCourseId = order.courseId;
     await prisma.$transaction(async (tx) => {
       await tx.order.update({
         where: { id: order.id },
@@ -169,7 +171,7 @@ export async function processStripeWebhook(event: Stripe.Event) {
         },
       });
       const course = await tx.course.findUniqueOrThrow({
-        where: { id: order.courseId },
+        where: { id: orderCourseId },
         select: { id: true, version: true },
       });
       const plan = order.accessPlanId

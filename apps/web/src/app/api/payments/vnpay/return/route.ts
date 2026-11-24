@@ -20,13 +20,20 @@ export async function GET(req: Request) {
   const order = txnRef
     ? await prisma.order.findFirst({
         where: { provider: "vnpay", providerRef: txnRef },
-        select: { course: { select: { slug: true } } },
+        select: { course: { select: { slug: true } }, bundle: { select: { slug: true } } },
       })
     : null;
   if (!order) return to("/");
 
+  const ok = url.searchParams.get("vnp_ResponseCode") === "00";
+  // Đơn combo: thành công → trang học của người dùng (đủ các khoá vừa mở); huỷ → quay lại trang combo.
+  if (order.bundle) {
+    const bslug = encodeURIComponent(order.bundle.slug);
+    return ok ? to("/me?paid=1") : to(`/combo/${bslug}?cancelled=1`);
+  }
+  if (!order.course) return to("/");
   const slug = encodeURIComponent(order.course.slug);
-  return url.searchParams.get("vnp_ResponseCode") === "00"
+  return ok
     ? to(`/learn/${slug}?paid=1`)
     : to(`/catalog/${slug}?cancelled=1`);
 }

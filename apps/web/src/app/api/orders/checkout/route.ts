@@ -3,7 +3,7 @@ import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
 import { createCheckoutSession } from "@/lib/payments";
-import { VnpayPaymentError, createVnpayPayment } from "@/lib/vnpayPayment";
+import { VnpayPaymentError, createVnpayBundlePayment, createVnpayPayment } from "@/lib/vnpayPayment";
 import { clientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -11,11 +11,33 @@ export const runtime = "nodejs";
 /**
  * Tạo thanh toán cho khoá có phí.
  * Body: { courseId, accessPlanId?, provider?: "stripe" | "vnpay" } — bỏ trống provider = Stripe (như trước).
+ * Combo (docs/tieu-chi/combo-khoa-hoc.md): { bundleId, provider: "vnpay" } — chỉ VNPay.
  */
 export async function POST(req: Request) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  const body = (await readJson(req)) as { courseId?: string; accessPlanId?: string; provider?: string } | null;
+  const body = (await readJson(req)) as { courseId?: string; bundleId?: string; accessPlanId?: string; provider?: string } | null;
+
+  if (body?.bundleId) {
+    if (body.provider !== "vnpay") return NextResponse.json({ error: "bundle_requires_vnpay" }, { status: 400 });
+    const origin = new URL(req.url).origin;
+    try {
+      const r = await createVnpayBundlePayment({
+        userId,
+        bundleId: body.bundleId,
+        ipAddr: clientIp(req) === "unknown" ? "127.0.0.1" : clientIp(req),
+        returnUrl: `${origin}/api/payments/vnpay/return`,
+      });
+      return NextResponse.json(r);
+    } catch (e) {
+      if (e instanceof VnpayPaymentError) {
+        const status = e.code === "vnpay_not_configured" ? 503 : e.code === "bundle_not_found" ? 404 : 400;
+        return NextResponse.json({ error: e.code }, { status });
+      }
+      return NextResponse.json({ error: "checkout_failed" }, { status: 500 });
+    }
+  }
+
   if (!body?.courseId || (body.provider !== undefined && body.provider !== "stripe" && body.provider !== "vnpay")) {
     return NextResponse.json({ error: "validation_failed" }, { status: 400 });
   }

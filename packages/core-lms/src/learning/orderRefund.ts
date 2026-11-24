@@ -27,6 +27,8 @@ export type ChargeRefundOutcome =
   | { result: "partial"; orderId: string }
   /** Sự kiện đã được xử lý trước đó. */
   | { result: "already_refunded"; orderId: string }
+  /** Đơn combo (không gắn một khoá): combo chỉ có VNPay, hoàn tiền làm tay — bỏ qua an toàn. */
+  | { result: "unsupported_order"; orderId: string }
   /** Hoàn toàn bộ. `enrollmentRevoked=false` khi học viên còn lý do khác để giữ quyền (hoặc không có ghi danh). */
   | { result: "refunded"; orderId: string; enrollmentRevoked: boolean };
 
@@ -37,6 +39,8 @@ export async function processChargeRefund(
   return db.$transaction(async (tx) => {
     const order = await tx.order.findUnique({ where: { paymentIntentRef: facts.paymentIntentRef } });
     if (!order) return { result: "order_not_found" };
+    if (!order.courseId) return { result: "unsupported_order", orderId: order.id };
+    const orderCourseId = order.courseId;
 
     // Số tiền đã hoàn chỉ tăng: sự kiện cũ đến muộn sau sự kiện mới không được kéo nó lùi.
     const refundedCents = Math.max(order.refundedCents ?? 0, Math.max(0, facts.refundedCents));
@@ -59,18 +63,18 @@ export async function processChargeRefund(
     // (b) một mã kích hoạt học viên đã dùng cho khoá này.
     const [otherPaid, redeemedCode] = await Promise.all([
       tx.order.findFirst({
-        where: { userId: order.userId, courseId: order.courseId, status: "paid", id: { not: order.id } },
+        where: { userId: order.userId, courseId: orderCourseId, status: "paid", id: { not: order.id } },
         select: { id: true },
       }),
       tx.courseAccessCode.findFirst({
-        where: { courseId: order.courseId, redeemedByUserId: order.userId, status: "redeemed" },
+        where: { courseId: orderCourseId, redeemedByUserId: order.userId, status: "redeemed" },
         select: { id: true },
       }),
     ]);
     if (otherPaid || redeemedCode) return { result: "refunded", orderId: order.id, enrollmentRevoked: false };
 
     const enrollment = await tx.enrollment.findUnique({
-      where: { userId_courseId: { userId: order.userId, courseId: order.courseId } },
+      where: { userId_courseId: { userId: order.userId, courseId: orderCourseId } },
       select: { id: true, status: true },
     });
     if (!enrollment || enrollment.status === "refunded") {
@@ -81,8 +85,8 @@ export async function processChargeRefund(
     await emitEvent(
       order.userId,
       LearningEventType.EnrollmentRefunded,
-      { enrollmentId: enrollment.id, courseId: order.courseId, orderId: order.id },
-      { courseId: order.courseId, eventKey: `enrollment.refunded:${order.id}` },
+      { enrollmentId: enrollment.id, courseId: orderCourseId, orderId: order.id },
+      { courseId: orderCourseId, eventKey: `enrollment.refunded:${order.id}` },
       tx as typeof prisma,
     );
     return { result: "refunded", orderId: order.id, enrollmentRevoked: true };

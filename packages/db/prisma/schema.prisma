@@ -556,6 +556,7 @@ model Course {
   tournaments           Tournament[]
   orders                Order[]
   timerTemplates        TimerTemplate[]
+  bundleItems           CourseBundleItem[]
   exams                 Exam[]
   questionBanks         QuestionBank[]
   vanDapExams           VanDapExam[]
@@ -2909,7 +2910,10 @@ enum PaymentProvider {
 model Order {
   id           String          @id @default(uuid())
   userId       String
-  courseId     String
+  /// null khi là đơn COMBO (có bundleId). Đơn mua lẻ luôn có courseId.
+  courseId     String?
+  /// Đơn mua trọn combo (docs/tieu-chi/combo-khoa-hoc.md): khi paid, ghi danh mọi khoá của combo. null = đơn mua lẻ.
+  bundleId     String?
   // Gói đã chọn lúc checkout (thời hạn truy cập). null = mua theo giá phẳng
   // Course.priceCents cũ (vĩnh viễn) — đường trước khi có CourseAccessPlan,
   // giữ nguyên để không phải migrate Order lịch sử.
@@ -2937,13 +2941,15 @@ model Order {
   updatedAt    DateTime        @updatedAt
 
   user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course     Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course     Course?           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  bundle     CourseBundle?     @relation(fields: [bundleId], references: [id], onDelete: SetNull)
   accessPlan CourseAccessPlan? @relation(fields: [accessPlanId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
   @@index([courseId, status])
   @@index([status, createdAt])
   // Growth events: phân trang order.paid / order.refunded theo thời gian.
+  @@index([bundleId, status])
   @@index([paidAt])
   @@index([refundedAt])
 }
@@ -2976,6 +2982,52 @@ model CourseAccessPlan {
 
 // =====================================================================
 // Mã kích hoạt khoá học có phí (thay cho luồng "liên hệ giảng viên" đã bỏ).
+// =====================================================================
+// Combo khoá học (docs/tieu-chi/combo-khoa-hoc.md): bán trọn bộ nhiều khoá (vd 5 quyển HSK 4) bằng một lần
+// thanh toán. Mỗi combo một giá và một thời hạn; khi đơn paid, mọi khoá của combo được ghi danh/gia hạn cùng
+// thời hạn. Chỉ admin platform tạo/sửa/xuất bản (đụng giá bán thật, như CourseAccessPlan).
+// =====================================================================
+
+model CourseBundle {
+  id                 String       @id @default(uuid())
+  slug               String       @unique
+  title              String
+  /// HTML đã làm sạch khi hiển thị (cùng kiểu Course.description).
+  description        String       @default("")
+  coverUrl           String?
+  /// Đợt đầu chỉ VND (priceCents = đồng, như AccessPlan VND).
+  currency           String       @default("VND")
+  priceCents         Int
+  /// Giá GỐC hiển thị gạch ngang; % giảm tính từ hai giá, không lưu. null = không khuyến mãi.
+  originalPriceCents Int?
+  /// null = vĩnh viễn; số dương = số tháng truy cập kể từ lúc mua (cộng dồn nếu còn hạn).
+  durationMonths     Int?
+  /// Chỉ dùng draft và published.
+  status             CourseStatus @default(draft)
+  publishedAt        DateTime?
+  createdBy          String
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  items  CourseBundleItem[]
+  orders Order[]
+
+  @@index([status])
+}
+
+model CourseBundleItem {
+  id         String @id @default(uuid())
+  bundleId   String
+  courseId   String
+  orderIndex Int    @default(0)
+
+  bundle CourseBundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  course Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([bundleId, courseId])
+  @@index([courseId])
+}
+
 //
 // Học viên trả tiền cho giảng viên ngoài hệ thống (chuyển khoản, tiền mặt —
 // hệ thống không biết và không cần biết cách nào); giảng viên sinh một mã,

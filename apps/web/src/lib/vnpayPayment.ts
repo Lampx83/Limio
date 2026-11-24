@@ -15,7 +15,9 @@ export type VnpayPaymentErrorCode =
   | "course_not_enrollable"
   | "course_is_free"
   | "access_plan_not_found"
-  | "currency_not_supported";
+  | "currency_not_supported"
+  | "bundle_not_found"
+  | "bundle_not_purchasable";
 
 export class VnpayPaymentError extends Error {
   constructor(public readonly code: VnpayPaymentErrorCode) {
@@ -91,6 +93,82 @@ export async function createVnpayPayment(input: CreateVnpayPaymentInput): Promis
       vnp_CurrCode: "VND",
       vnp_TxnRef: txnRef,
       vnp_OrderInfo: vnpayOrderInfo(`Thanh toan khoa hoc ${course.slug}`),
+      vnp_OrderType: "other",
+      vnp_Locale: "vn",
+      vnp_ReturnUrl: input.returnUrl,
+      vnp_IpAddr: input.ipAddr,
+      vnp_CreateDate: formatVnpayDate(now),
+      vnp_ExpireDate: formatVnpayDate(new Date(now.getTime() + VNPAY_EXPIRE_MINUTES * 60_000)),
+    },
+    cfg.hashSecret,
+  );
+  return { orderId, url };
+}
+
+export interface CreateVnpayBundlePaymentInput {
+  userId: string;
+  bundleId: string;
+  ipAddr: string;
+  returnUrl: string;
+}
+
+/**
+ * Như createVnpayPayment nhưng cho COMBO (docs/tieu-chi/combo-khoa-hoc.md, AC4): đơn `pending` gắn `bundleId`
+ * (courseId = null), số tiền lấy từ combo lúc này. Combo nháp, có khoá chưa xuất bản, hoặc không phải VND thì từ chối.
+ */
+export async function createVnpayBundlePayment(
+  input: CreateVnpayBundlePaymentInput,
+): Promise<{ orderId: string; url: string }> {
+  const cfg = await getVnpayConfig();
+  if (!cfg) throw new VnpayPaymentError("vnpay_not_configured");
+
+  const bundle = await prisma.courseBundle.findUnique({
+    where: { id: input.bundleId },
+    select: {
+      id: true,
+      slug: true,
+      status: true,
+      priceCents: true,
+      currency: true,
+      items: { select: { course: { select: { status: true } } } },
+    },
+  });
+  if (!bundle) throw new VnpayPaymentError("bundle_not_found");
+  if (bundle.status !== "published" || bundle.items.length < 2 || bundle.items.some((i) => i.course.status !== "published")) {
+    throw new VnpayPaymentError("bundle_not_purchasable");
+  }
+  if (bundle.currency.toUpperCase() !== "VND" || !Number.isInteger(bundle.priceCents) || bundle.priceCents <= 0) {
+    throw new VnpayPaymentError("currency_not_supported");
+  }
+
+  const orderId = randomUUID();
+  const txnRef = orderId.replace(/-/g, "");
+  await prisma.order.create({
+    data: {
+      id: orderId,
+      userId: input.userId,
+      courseId: null,
+      bundleId: bundle.id,
+      accessPlanId: null,
+      amountCents: bundle.priceCents,
+      currency: "VND",
+      provider: "vnpay",
+      status: "pending",
+      providerRef: txnRef,
+    },
+  });
+
+  const now = new Date();
+  const url = buildVnpayPaymentUrl(
+    cfg.paymentUrl,
+    {
+      vnp_Version: VNPAY_VERSION,
+      vnp_Command: "pay",
+      vnp_TmnCode: cfg.tmnCode,
+      vnp_Amount: String(bundle.priceCents * 100),
+      vnp_CurrCode: "VND",
+      vnp_TxnRef: txnRef,
+      vnp_OrderInfo: vnpayOrderInfo(`Thanh toan combo ${bundle.slug}`),
       vnp_OrderType: "other",
       vnp_Locale: "vn",
       vnp_ReturnUrl: input.returnUrl,
