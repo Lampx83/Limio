@@ -527,6 +527,10 @@ model Course {
   // Pricing — null = free; positive = paid (cents of `currency`).
   priceCents             Int?
   currency               String       @default("USD")
+  /// Giá GỐC để hiển thị gạch ngang cạnh giá bán (khuyến mãi). Chỉ để hiển thị: số tiền thu vẫn là giá của gói truy cập
+  /// (hoặc priceCents). Cùng đơn vị với priceCents (VND = đồng). null = không có giá gốc / không khuyến mãi.
+  /// "% giảm" không lưu mà tính từ giá gốc và giá bán (apps/web/src/lib/formatPrice.ts: discountPercent).
+  originalPriceCents     Int?
   /// Nộp bài theo nhóm — số người tối đa mỗi nhóm (null = không giới hạn).
   teamMaxSize            Int?
   /// Nộp bài theo nhóm — khi khác null, sinh viên không tự tạo/vào/rời nhóm

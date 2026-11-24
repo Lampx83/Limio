@@ -235,6 +235,34 @@ describe("publish flow", () => {
     expect(row.enrollMode).toBe("invite_only");
   });
 
+  it("giá gốc: lưu được khi lớn hơn giá bán, từ chối khi không lớn hơn, xoá cùng giá khi chuyển invite_only", async () => {
+    const ownerId = await makeUser("o-original-price@example.com");
+    const c = await createCourse(ownerId, { title: "Original price", description: "x" });
+
+    await updateCourse(ownerId, c.courseId, { priceCents: 199_000, originalPriceCents: 599_000, currency: "VND" });
+    let row = await prisma.course.findUniqueOrThrow({ where: { id: c.courseId } });
+    expect(row.originalPriceCents).toBe(599_000);
+
+    // Giá gốc ≤ giá bán: khuyến mãi vô nghĩa → từ chối, giữ nguyên giá trị cũ.
+    await expect(updateCourse(ownerId, c.courseId, { originalPriceCents: 199_000 })).rejects.toBeInstanceOf(CourseError);
+    // Hạ giá bán xuống ngang giá gốc cũng bị từ chối (so với giá gốc đang lưu).
+    await expect(updateCourse(ownerId, c.courseId, { priceCents: 599_000 })).rejects.toBeInstanceOf(CourseError);
+    row = await prisma.course.findUniqueOrThrow({ where: { id: c.courseId } });
+    expect(row.originalPriceCents).toBe(599_000);
+    expect(row.priceCents).toBe(199_000);
+
+    // null = bỏ khuyến mãi.
+    await updateCourse(ownerId, c.courseId, { originalPriceCents: null });
+    row = await prisma.course.findUniqueOrThrow({ where: { id: c.courseId } });
+    expect(row.originalPriceCents).toBeNull();
+
+    await updateCourse(ownerId, c.courseId, { originalPriceCents: 599_000 });
+    await updateCourse(ownerId, c.courseId, { enrollMode: "invite_only" });
+    row = await prisma.course.findUniqueOrThrow({ where: { id: c.courseId } });
+    expect(row.priceCents).toBeNull();
+    expect(row.originalPriceCents).toBeNull();
+  });
+
   it("khoá invite_only từ trước, chỉ sửa giá mà không đổi enrollMode, vẫn bị ép về null", async () => {
     const ownerId = await makeUser("o-invite-already@example.com");
     const c = await createCourse(ownerId, { title: "Invite already", description: "x" });

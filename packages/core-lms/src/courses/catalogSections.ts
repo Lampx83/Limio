@@ -62,6 +62,7 @@ const COURSE_CARD_SELECT = {
   language: true,
   coverUrl: true,
   priceCents: true,
+  originalPriceCents: true,
   currency: true,
   personalizationEnabled: true,
   // Khoá bán theo CourseAccessPlan (1 năm/2 năm/vĩnh viễn) có thể không có
@@ -84,6 +85,7 @@ export type CatalogSectionCourseCard = {
   language: string;
   coverUrl: string | null;
   priceCents: number | null;
+  originalPriceCents: number | null;
   currency: string;
   personalizationEnabled: boolean;
   cheapestAccessPlan: { priceCents: number; currency: string } | null;

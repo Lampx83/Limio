@@ -18,6 +18,19 @@ export function formatPrice(priceCents: number, currency: string): string {
   }).format(priceCents / 100);
 }
 
+/**
+ * % giảm giá (làm tròn, tối thiểu 1, tối đa 99) khi giá gốc LỚN HƠN giá bán; null khi không có khuyến mãi hợp lệ
+ * (thiếu giá gốc, giá bán miễn phí, hoặc giá gốc ≤ giá bán). Không lưu trong DB: luôn tính từ hai giá.
+ */
+export function discountPercent(
+  originalCents: number | null | undefined,
+  saleCents: number | null | undefined,
+): number | null {
+  if (!originalCents || !saleCents || saleCents <= 0 || originalCents <= saleCents) return null;
+  const pct = Math.round((1 - saleCents / originalCents) * 100);
+  return Math.min(99, Math.max(1, pct));
+}
+
 export function isFree(priceCents: number | null | undefined): boolean {
   return priceCents === null || priceCents === undefined || priceCents === 0;
 }

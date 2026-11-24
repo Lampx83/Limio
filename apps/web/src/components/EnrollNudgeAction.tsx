@@ -22,6 +22,7 @@ export default function EnrollNudgeAction({
   courseId,
   slug,
   priceCents,
+  originalPriceCents,
   currency,
   paymentEnabled,
   accessPlans = [],
@@ -30,6 +31,7 @@ export default function EnrollNudgeAction({
   courseId: string;
   slug: string;
   priceCents?: number | null;
+  originalPriceCents?: number | null;
   currency?: string;
   paymentEnabled?: boolean;
   accessPlans?: AccessPlanOption[];
@@ -47,6 +49,7 @@ export default function EnrollNudgeAction({
         slug={slug}
         alreadyEnrolled={false}
         priceCents={priceCents}
+        originalPriceCents={originalPriceCents}
         currency={currency}
         paymentEnabled={paymentEnabled}
         freeLabel={t("catalog.enroll.now")}
@@ -65,6 +68,7 @@ export default function EnrollNudgeAction({
           slug={slug}
           alreadyEnrolled={false}
           priceCents={priceCents}
+          originalPriceCents={originalPriceCents}
           currency={currency}
           paymentEnabled={paymentEnabled}
           accessPlans={accessPlans}

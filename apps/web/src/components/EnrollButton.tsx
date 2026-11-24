@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { toast } from "@/lib/toast";
-import { formatPrice, isFree } from "@/lib/formatPrice";
+import { isFree } from "@/lib/formatPrice";
+import { PriceBlock } from "@/components/PriceTag";
 import { apiUrl } from "@/lib/apiUrl";
 import { enrollErrorMessage } from "@/lib/enrollErrors";
 import { accessSummary } from "@/lib/accessSummary";
@@ -54,6 +55,7 @@ export default function EnrollButton({
   slug,
   alreadyEnrolled,
   priceCents,
+  originalPriceCents,
   currency = "VND",
   paymentEnabled = false,
   accessPlans = [],
@@ -68,6 +70,8 @@ export default function EnrollButton({
   slug: string;
   alreadyEnrolled: boolean;
   priceCents?: number | null;
+  /** Giá gốc để hiện gạch ngang cạnh giá bán (khuyến mãi); chỉ để hiển thị. */
+  originalPriceCents?: number | null;
   currency?: string;
   paymentEnabled?: boolean;
   /** Gói bán theo thời hạn (CourseAccessPlan). Rỗng = đường cũ, giá phẳng + mã kích hoạt. */
@@ -216,7 +220,12 @@ export default function EnrollButton({
                   <span className="block text-xs text-faint">{t("catalog.enroll.accessFor", { duration: durationSuffix(p.durationMonths, t) })}</span>
                 </span>
               </span>
-              <span className="font-bold tabular-nums">{formatPrice(p.priceCents, p.currency)}</span>
+              <PriceBlock
+                size="sm"
+                originalCents={p.id === accessPlans[0]?.id ? originalPriceCents : null}
+                saleCents={p.priceCents}
+                currency={p.currency}
+              />
             </label>
           ))}
         </div>
@@ -287,7 +296,7 @@ export default function EnrollButton({
       <div className="space-y-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-faint">{t("catalog.enroll.tuition")}</p>
-          <p className="text-xl font-bold tabular-nums">{formatPrice(priceCents!, currency)}</p>
+          <PriceBlock align="left" originalCents={originalPriceCents} saleCents={priceCents!} currency={currency} />
         </div>
         <div className="flex flex-wrap gap-2">
           <input

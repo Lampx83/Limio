@@ -69,6 +69,8 @@ export const UpdateCourseInput = z.object({
   authors: bookTextField,
   edition: bookTextField,
   priceCents: z.number().int().min(0).optional().nullable(),
+  /** Giá gốc hiển thị gạch ngang (xem schema.prisma). Phải lớn hơn giá bán khi khoá có giá phẳng. */
+  originalPriceCents: z.number().int().min(0).optional().nullable(),
   currency: z.enum(["VND", "USD"]).optional(),
   personalizationEnabled: z.boolean().optional(),
   languageMode: z.boolean().optional(),
@@ -104,6 +106,8 @@ export class CourseError extends Error {
       | "section_name_taken"
       | "section_has_enrollments"
       | "researcher_only"
+      | "study_locked"
+      | "study_section_variant_locked"
       | "sample_requires_public"
       | "learner_sample_requires_open_free"
       | "language_mode_requires_personalization",
@@ -230,6 +234,22 @@ export async function updateCourse(
       ).enrollMode;
     if (resultingEnrollMode === "invite_only") {
       (data as Record<string, unknown>).priceCents = null;
+      (data as Record<string, unknown>).originalPriceCents = null;
+    }
+  }
+
+  // Giá gốc chỉ có nghĩa khi lớn hơn giá bán: giá gốc ≤ giá bán thì "khuyến mãi" vô nghĩa (hiện sai % giảm).
+  // Khoá bán theo gói truy cập không có priceCents phẳng thì không so được ở đây; chỗ hiển thị tự bỏ giá gốc
+  // khi nó không lớn hơn giá bán thực (xem discountPercent ở apps/web/src/lib/formatPrice.ts).
+  if ("originalPriceCents" in data || "priceCents" in data) {
+    const cur = await db.course.findUniqueOrThrow({
+      where: { id: courseId },
+      select: { priceCents: true, originalPriceCents: true },
+    });
+    const nextPrice = "priceCents" in data ? (data.priceCents as number | null) : cur.priceCents;
+    const nextOriginal = "originalPriceCents" in data ? (data.originalPriceCents as number | null) : cur.originalPriceCents;
+    if (nextOriginal !== null && nextOriginal !== undefined && nextPrice !== null && nextPrice !== undefined && nextPrice > 0 && nextOriginal <= nextPrice) {
+      throw new CourseError("validation_failed", { originalPriceCents: "Giá gốc phải lớn hơn giá bán." });
     }
   }
 
@@ -596,6 +616,7 @@ export async function listPublishedCourses(
       coverUrl: true,
       publishedAt: true,
       priceCents: true,
+      originalPriceCents: true,
       currency: true,
       personalizationEnabled: true,
       publicAccess: true,

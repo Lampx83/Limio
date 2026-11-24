@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import { discountPercent } from "@/lib/formatPrice";
 import { plainToRichHtml } from "@/lib/richText";
 import SafeHtml from "@/components/SafeHtml";
 import { toast } from "@/lib/toast";
@@ -22,6 +23,8 @@ interface Initial {
   language: string;
   category: string;
   priceCents: number | null;
+  /** Giá gốc hiển thị gạch ngang (khuyến mãi). */
+  originalPriceCents?: number | null;
   currency: string;
   personalizationEnabled: boolean;
   languageMode: boolean;
@@ -82,6 +85,11 @@ export default function CourseMetaForm({
   const [priceCents, setPriceCents] = useState<string>(
     initial.priceCents !== null && initial.priceCents !== undefined
       ? String(initial.priceCents)
+      : "",
+  );
+  const [originalPriceCents, setOriginalPriceCents] = useState<string>(
+    initial.originalPriceCents !== null && initial.originalPriceCents !== undefined
+      ? String(initial.originalPriceCents)
       : "",
   );
   const [currency, setCurrency] = useState(initial.currency || "VND");
@@ -188,6 +196,7 @@ export default function CourseMetaForm({
     e.preventDefault();
     setBusy(true);
     const parsedPrice = priceCents.trim() === "" ? null : parseInt(priceCents, 10);
+    const parsedOriginal = originalPriceCents.trim() === "" ? null : parseInt(originalPriceCents, 10);
     const res = await fetch(apiUrl(`/api/instructor/courses/${courseId}`), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -198,6 +207,7 @@ export default function CourseMetaForm({
         language,
         category: category.trim() || null,
         priceCents: parsedPrice,
+        originalPriceCents: parsedOriginal,
         currency,
         personalizationEnabled,
         languageMode,
@@ -406,8 +416,29 @@ export default function CourseMetaForm({
                   </select>
                 </span>
               )}
+              {enrollMode === "open" && priceCents.trim() !== "" && (
+                <span className="mt-2 flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    step={1000}
+                    value={originalPriceCents}
+                    onChange={(e) => setOriginalPriceCents(e.target.value)}
+                    placeholder="Giá gốc (gạch ngang), để trống = không khuyến mãi"
+                    className="input flex-1"
+                    aria-label="Giá gốc"
+                  />
+                  {(() => {
+                    const pct = discountPercent(parseInt(originalPriceCents, 10), parseInt(priceCents, 10));
+                    return pct === null ? null : (
+                      <span className="whitespace-nowrap text-xs font-bold text-red-600">Giảm {pct}%</span>
+                    );
+                  })()}
+                </span>
+              )}
               {enrollMode === "open" && (
                 <span className="mt-1 block text-xs text-faint">
+                  Ô trên là giá bán (khuyến mãi); ô giá gốc chỉ để hiện gạch ngang và tính % giảm, không đổi số tiền thu.{" "}
                   {currency === "VND"
                     ? "Nhập số nguyên (đồng). Ví dụ: 299000."
                     : "Nhập số cents. Ví dụ: 999 = $9.99."}{" "}
@@ -429,6 +460,7 @@ export default function CourseMetaForm({
                   );
                   if (!ok) return;
                   setPriceCents("");
+                  setOriginalPriceCents("");
                 }
                 setEnrollMode("invite_only");
               }}

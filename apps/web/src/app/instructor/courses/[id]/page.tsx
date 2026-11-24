@@ -360,6 +360,7 @@ export default async function InstructorCourseEditPage({
                 language: course.language,
                 category: course.category ?? "",
                 priceCents: course.priceCents,
+                originalPriceCents: course.originalPriceCents,
                 currency: course.currency ?? "VND",
                 personalizationEnabled: course.personalizationEnabled,
                 languageMode: course.languageMode,

@@ -15,6 +15,7 @@ import { htmlToPlainText, plainToRichHtml } from "@/lib/richText";
 import JsonLd from "@/components/JsonLd";
 import { SITE_NAME, breadcrumbJsonLd, courseJsonLd, pageMetadata } from "@/lib/seo";
 import { isFree, formatPrice } from "@/lib/formatPrice";
+import { DiscountBadge, PriceBlock, PriceStrike } from "@/components/PriceTag";
 import { getPaymentEnabled } from "@/lib/site-settings";
 import { getConfiguredPaymentProviders } from "@/lib/paymentProviders";
 import { LessonVideoBadge, StickyMobileCTA } from "@/components/ui";
@@ -151,6 +152,10 @@ export default async function CourseDetailPage({
         ? formatPrice(course.priceCents!, course.currency)
         : t("catalog.free");
 
+  // Giá bán hiệu lực (gói rẻ nhất, hoặc giá phẳng) — để so với giá gốc khi hiện khuyến mãi.
+  const saleCents = cheapestPlan?.priceCents ?? (isFree(course.priceCents) ? null : course.priceCents);
+  const saleCurrency = cheapestPlan?.currency ?? course.currency;
+
   // Banner "chưa đăng ký" trong section Nội dung khóa học đã có đủ message +
   // action (Đăng ký ngay / liên hệ giáo viên) — sidebar không lặp lại nút nữa.
   const showEnrollNudge = !enrolled && !publiclyReadable && course.modules.length > 0;
@@ -284,7 +289,11 @@ export default async function CourseDetailPage({
             {paymentEnabled && (
               <div className="rounded-xl bg-white/15 px-4 py-2 backdrop-blur">
                 <div className="text-xs uppercase tracking-wide opacity-70">{t("catalog.detail.tuition")}</div>
-                <div className="text-lg font-bold tabular-nums">{priceLabel}</div>
+                <div className="flex flex-wrap items-baseline gap-x-2 text-lg font-bold tabular-nums">
+                  <PriceStrike originalCents={course.originalPriceCents} saleCents={saleCents} currency={saleCurrency} className="text-sm" />
+                  {priceLabel}
+                  <DiscountBadge originalCents={course.originalPriceCents} saleCents={saleCents} />
+                </div>
               </div>
             )}
           </div>
@@ -327,6 +336,7 @@ export default async function CourseDetailPage({
                 slug={params.slug}
                 alreadyEnrolled={enrolled}
                 priceCents={course.priceCents}
+                originalPriceCents={course.originalPriceCents}
                 currency={course.currency}
                 paymentEnabled={paymentEnabled}
                 accessPlans={accessPlans}
@@ -381,6 +391,7 @@ export default async function CourseDetailPage({
                   courseId={course.id}
                   slug={params.slug}
                   priceCents={course.priceCents}
+                  originalPriceCents={course.originalPriceCents}
                   currency={course.currency}
                   paymentEnabled={paymentEnabled}
                   accessPlans={accessPlans}
@@ -514,9 +525,7 @@ export default async function CourseDetailPage({
                       <div className="text-xs uppercase tracking-wide text-faint">
                         {t("catalog.detail.tuition")}
                       </div>
-                      <div className="text-2xl font-bold tabular-nums">
-                        {formatPrice(course.priceCents!, course.currency)}
-                      </div>
+                      <PriceBlock align="left" originalCents={course.originalPriceCents} saleCents={course.priceCents!} currency={course.currency} />
                     </div>
                   )}
                   {!showEnrollNudge && (
@@ -525,6 +534,7 @@ export default async function CourseDetailPage({
                       slug={params.slug}
                       alreadyEnrolled={enrolled}
                       priceCents={course.priceCents}
+                originalPriceCents={course.originalPriceCents}
                       currency={course.currency}
                       paymentEnabled={paymentEnabled}
                       accessPlans={accessPlans}

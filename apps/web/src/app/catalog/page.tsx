@@ -5,6 +5,7 @@ import { listPublishedCourses, listCatalogSectionsForDisplay } from "@feedbackme
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import { isFree, formatPrice } from "@/lib/formatPrice";
+import { DiscountBadge, PriceStrike } from "@/components/PriceTag";
 import { htmlToPlainText } from "@/lib/richText";
 import { getPaymentEnabled } from "@/lib/site-settings";
 import { EmptyState } from "@/components/ui";
@@ -328,6 +329,7 @@ interface CourseCardData {
   language: string;
   personalizationEnabled: boolean;
   priceCents: number | null;
+  originalPriceCents?: number | null;
   currency: string;
   cheapestAccessPlan: { priceCents: number; currency: string } | null;
 }
@@ -410,14 +412,18 @@ function CourseGrid({
               {enrolled ? (
                 <span className="font-semibold text-success-600">{t("catalog.list.enrolled")}</span>
               ) : paymentEnabled && c.cheapestAccessPlan ? (
-                <span className="font-semibold text-accent-600">
+                <span className="flex flex-wrap items-baseline gap-x-1.5 font-semibold text-accent-600">
+                  <PriceStrike originalCents={c.originalPriceCents} saleCents={c.cheapestAccessPlan.priceCents} currency={c.cheapestAccessPlan.currency} />
                   {t("catalog.from", {
                     price: formatPrice(c.cheapestAccessPlan.priceCents, c.cheapestAccessPlan.currency),
                   })}
+                  <DiscountBadge originalCents={c.originalPriceCents} saleCents={c.cheapestAccessPlan.priceCents} />
                 </span>
               ) : paymentEnabled && !isFree(c.priceCents) ? (
-                <span className="font-semibold text-accent-600">
+                <span className="flex flex-wrap items-baseline gap-x-1.5 font-semibold text-accent-600">
+                  <PriceStrike originalCents={c.originalPriceCents} saleCents={c.priceCents} currency={c.currency} />
                   {formatPrice(c.priceCents!, c.currency)}
+                  <DiscountBadge originalCents={c.originalPriceCents} saleCents={c.priceCents} />
                 </span>
               ) : (
                 <span className="font-semibold text-success-600">{t("catalog.free")}</span>
