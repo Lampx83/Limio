@@ -1,4 +1,4 @@
-import { builtinMicro4Asia } from "./builtin";
+import { builtinHsk, builtinMicro4Asia } from "./builtin";
 import type { SpaceStored } from "./settings";
 import type { SpaceConfig, SpaceLang } from "./types";
 
@@ -42,4 +42,5 @@ export function storedFromConfig(cfg: SpaceConfig): SpaceStored {
 
 export const SPACE_TEMPLATES: Array<{ id: string; label: string; build: () => SpaceStored }> = [
   { id: "micro4asia", label: "MICRO4ASIA (NEU) — 6 vi tín chỉ", build: () => storedFromConfig(builtinMicro4Asia()) },
+  { id: "hsk", label: "HSK 3.0 (Limio) — 9 cấp tiếng Trung", build: () => storedFromConfig(builtinHsk()) },
 ];

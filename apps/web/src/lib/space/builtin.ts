@@ -1,3 +1,4 @@
+import { HSK_COPY, HSK_LEVELS } from "../hsk";
 import { M4A_COPY, M4A_COURSES, M4A_SITE_URL, type M4aIcon, type M4aLang } from "../micro4asia";
 import { derivePalette } from "./theme";
 import type { SpaceConfig, SpaceCopy, SpaceLang } from "./types";
@@ -100,5 +101,60 @@ export function builtinMicro4Asia(): SpaceConfig {
  */
 export function builtinMicro4AsiaEnabled(): boolean {
   const v = (process.env.SPACE_BUILTIN_MICRO4ASIA ?? "").trim().toLowerCase();
+  return v === "1" || v === "true";
+}
+
+export const HSK_SLUG = "hsk";
+
+/**
+ * Space HSK (/hsk): chín cấp tiếng Trung theo chuẩn HSK 3.0 của Limio. Dùng nhận diện mặc định của Limio
+ * (màu lime của thương hiệu, biểu tượng lát chanh + chữ Limio), không mang thương hiệu trường nào.
+ */
+export function builtinHsk(): SpaceConfig {
+  const langs: SpaceLang[] = ["vi", "en"];
+  return {
+    slug: HSK_SLUG,
+    source: "builtin",
+    name: "HSK 3.0",
+    titleSuffix: "Limio",
+    // lime-800 làm nền, lime-400 làm màu nhấn, hồng của chữ "io" trong logo Limio làm nhấn thứ hai.
+    palette: derivePalette("#3F6212", "#A3E635", { dark: "#365314", soft: "#ECFCCB", accent2: "#DB2777" }),
+    logoUrl: "/favicon.svg",
+    logoAlt: "Limio",
+    partnerLogoUrl: null,
+    partnerLogoAlt: "",
+    heroVisualUrl: "/brand/hsk/hero.svg",
+    siteUrl: null,
+    siteLabel: null,
+    limioBrand: true,
+    langs,
+    defaultLang: "vi",
+    stats: {
+      vi: [
+        { n: "9", label: "cấp độ" },
+        { n: "3.0", label: "chuẩn HSK" },
+      ],
+      en: [
+        { n: "9", label: "levels" },
+        { n: "3.0", label: "HSK standard" },
+      ],
+    },
+    copy: { vi: HSK_COPY.vi, en: HSK_COPY.en },
+    courses: HSK_LEVELS.map((l) => ({
+      slug: l.slug,
+      title: l.title,
+      iconUrl: null,
+      topic: l.topic,
+      outcome: l.outcome,
+    })),
+  };
+}
+
+/**
+ * Space dựng sẵn HSK chỉ phục vụ khi môi trường bật `SPACE_BUILTIN_HSK=1` (cùng lý do với MICRO4ASIA: mỗi máy chủ
+ * Limio có dữ liệu riêng). Máy không bật thì /hsk là 404, trừ khi một tổ chức bật space "hsk" trong DB.
+ */
+export function builtinHskEnabled(): boolean {
+  const v = (process.env.SPACE_BUILTIN_HSK ?? "").trim().toLowerCase();
   return v === "1" || v === "true";
 }

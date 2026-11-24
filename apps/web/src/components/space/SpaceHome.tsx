@@ -5,6 +5,7 @@ import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import { getRegisterEnabled } from "@/lib/site-settings";
 import JsonLd from "@/components/JsonLd";
+import HskLanding from "@/components/space/HskLanding";
 import SpaceRegisterDialog from "@/components/space/SpaceRegisterDialog";
 import { absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import { spaceHomePath } from "@/lib/space/resolve";
@@ -71,26 +72,8 @@ export default async function SpaceHome({ cfg, searchParams }: { cfg: SpaceConfi
   const home = spaceHomePath(cfg);
   const p = cfg.palette;
 
-  return (
-    <div
-      lang={lang}
-      className="min-h-screen bg-white text-[#1B2733]"
-      style={
-        {
-          fontFamily: "var(--font-inter), system-ui, sans-serif",
-          colorScheme: "light",
-          "--sp": p.primary,
-          "--sp-dark": p.dark,
-          "--sp-soft": p.soft,
-          "--sp-accent": p.accent,
-          "--sp-accent2": p.accent2,
-          "--sp-soft-rgb": hexRgb(p.soft),
-        } as React.CSSProperties
-      }
-    >
-      {/* Trang đứng riêng với nhận diện của space: ẩn thanh đầu/chân trang của Limio (cách đã dùng cho phòng thi). */}
-      <style>{"[data-app-chrome]{display:none !important}"}</style>
-      <JsonLd
+  const jsonLd = (
+    <JsonLd
         data={[
           breadcrumbJsonLd([
             { name: c.breadcrumbHome, path: "/" },
@@ -112,6 +95,37 @@ export default async function SpaceHome({ cfg, searchParams }: { cfg: SpaceConfi
           },
         ]}
       />
+  );
+
+  // Space dùng nhận diện Limio (/hsk) có trang chủ thiết kế riêng.
+  if (cfg.limioBrand) {
+    return (
+      <HskLanding cfg={cfg} lang={lang} live={live} showRegister={showRegister}>
+        {jsonLd}
+      </HskLanding>
+    );
+  }
+
+  return (
+    <div
+      lang={lang}
+      className="min-h-screen bg-white text-[#1B2733]"
+      style={
+        {
+          fontFamily: "var(--font-inter), system-ui, sans-serif",
+          colorScheme: "light",
+          "--sp": p.primary,
+          "--sp-dark": p.dark,
+          "--sp-soft": p.soft,
+          "--sp-accent": p.accent,
+          "--sp-accent2": p.accent2,
+          "--sp-soft-rgb": hexRgb(p.soft),
+        } as React.CSSProperties
+      }
+    >
+      {/* Trang đứng riêng với nhận diện của space: ẩn thanh đầu/chân trang của Limio (cách đã dùng cho phòng thi). */}
+      <style>{"[data-app-chrome]{display:none !important}"}</style>
+      {jsonLd}
 
       <SiteHeader cfg={cfg} lang={lang} />
       <Hero cfg={cfg} lang={lang} openCount={openCount} />

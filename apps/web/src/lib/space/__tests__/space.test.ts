@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { builtinMicro4Asia } from "../builtin";
+import { builtinHsk, builtinHskEnabled, builtinMicro4Asia } from "../builtin";
+import { spaceBasePath } from "../aliases";
 import { buildSpaceConfig, isValidSpaceSlug, normalizeStored, safeUrl } from "../settings";
 import { derivePalette, isHexColor, mixHex, spaceThemeCss } from "../theme";
 import { resolveSpaceLang } from "../lang";
@@ -146,5 +147,65 @@ describe("space: ranh giới khoá và mẫu", () => {
     expect(s.dark).toBe("#445566");
     expect(s.soft).toBeUndefined();
     expect(s.accent2).toBe("#AABBCC");
+  });
+});
+
+describe("space HSK dựng sẵn", () => {
+  const cfg = builtinHsk();
+
+  it("chín cấp, slug hsk-<cấp>-goc, không trùng", () => {
+    expect(cfg.courses.map((c) => c.slug)).toEqual(Array.from({ length: 9 }, (_, i) => `hsk-${i + 1}-goc`));
+    expect(new Set(cfg.courses.map((c) => c.slug)).size).toBe(9);
+    for (const c of cfg.courses) {
+      for (const l of ["vi", "en"] as const) {
+        expect(c.topic[l], `${c.slug} topic ${l}`).not.toBe("");
+        expect(c.outcome[l], `${c.slug} outcome ${l}`).not.toBe("");
+      }
+    }
+  });
+
+  it("dùng nhận diện mặc định của Limio, không mang thương hiệu NEU/MICRO4ASIA", () => {
+    expect(cfg.limioBrand).toBe(true);
+    expect(cfg.partnerLogoUrl).toBeNull();
+    const blob = JSON.stringify(cfg);
+    expect(blob).not.toMatch(/neu|micro4asia/i);
+    expect(isHexColor(cfg.palette.primary)).toBe(true);
+    expect(cfg.defaultLang).toBe("vi");
+    expect(cfg.langs).toEqual(["vi", "en"]);
+  });
+
+  it("đủ chữ cho cả hai ngôn ngữ", () => {
+    for (const l of ["vi", "en"] as const) {
+      const c = cfg.copy[l];
+      for (const [k, v] of Object.entries(c)) {
+        if (typeof v === "string") expect(v.trim(), `${l}.${k}`).not.toBe("");
+      }
+      expect(c.statsOpen).toContain("{n}");
+      expect(c.principles).toHaveLength(3);
+      expect(c.steps).toHaveLength(3);
+    }
+  });
+
+  it("URL ngắn /hsk và /micro4asia; space khác vẫn đi qua /s/<slug>", () => {
+    expect(spaceBasePath("hsk")).toBe("/hsk");
+    expect(spaceBasePath("micro4asia")).toBe("/micro4asia");
+    expect(spaceBasePath("dh-a")).toBe("/s/dh-a");
+  });
+
+  it("chỉ bật khi SPACE_BUILTIN_HSK=1/true", () => {
+    const prev = process.env.SPACE_BUILTIN_HSK;
+    try {
+      delete process.env.SPACE_BUILTIN_HSK;
+      expect(builtinHskEnabled()).toBe(false);
+      process.env.SPACE_BUILTIN_HSK = "1";
+      expect(builtinHskEnabled()).toBe(true);
+      process.env.SPACE_BUILTIN_HSK = "TRUE";
+      expect(builtinHskEnabled()).toBe(true);
+      process.env.SPACE_BUILTIN_HSK = "0";
+      expect(builtinHskEnabled()).toBe(false);
+    } finally {
+      if (prev === undefined) delete process.env.SPACE_BUILTIN_HSK;
+      else process.env.SPACE_BUILTIN_HSK = prev;
+    }
   });
 });

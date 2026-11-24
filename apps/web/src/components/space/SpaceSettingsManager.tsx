@@ -6,6 +6,7 @@ import { ArrowDown, ArrowUp, ExternalLink, Plus, Trash2, Upload } from "lucide-r
 import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
 import { derivePalette, isHexColor } from "@/lib/space/theme";
+import { spaceBasePath } from "@/lib/space/aliases";
 import { SPACE_EDITABLE_COPY, SPACE_TEMPLATES } from "@/lib/space/templates";
 import type { SpaceStored } from "@/lib/space/settings";
 import type { SpaceLang } from "@/lib/space/types";
@@ -97,7 +98,7 @@ export default function SpaceSettingsManager({
     soft: tones.soft,
     accent2: tones.accent2,
   });
-  const homePath = slug === "micro4asia" ? "/micro4asia" : `/s/${slug}`;
+  const homePath = spaceBasePath(slug);
   const inSpace = new Set(courses.map((c) => c.slug));
   const addable = orgCourses.filter((c) => !inSpace.has(c.slug));
   const statusOf = (s: string) => orgCourses.find((c) => c.slug === s)?.status ?? null;

@@ -53,7 +53,7 @@ const PRIVATE_PREFIXES = [
 const PUBLIC_LESSON_RE = /^\/learn\/[^/]+\/lessons\/[^/]+\/?$/;
 
 /** Nhánh có thể thuộc một space: trang chủ space, catalog và khu học của khoá. */
-const SPACE_PATH_RE = /^\/(?:s\/|micro4asia(?:\/|$)|catalog\/|learn\/)/;
+const SPACE_PATH_RE = /^\/(?:s\/|micro4asia(?:\/|$)|hsk(?:\/|$)|catalog\/|learn\/)/;
 
 const COURSE_SLUG_RE = /^\/(?:catalog|learn)\/([^/]+)/;
 

@@ -82,6 +82,11 @@ export interface SpaceConfig {
   heroVisualUrl: string | null;
   siteUrl: string | null;
   siteLabel: string | null;
+  /**
+   * Dùng nhận diện mặc định của Limio (biểu tượng lát chanh + chữ Limio) thay cho logo trường/đối tác.
+   * Space kiểu này chỉ có trang chủ riêng; các trang khoá học thuộc nó vẫn giữ giao diện Limio nguyên bản.
+   */
+  limioBrand?: boolean;
   langs: SpaceLang[];
   defaultLang: SpaceLang;
   stats: Record<SpaceLang, SpaceStat[]>;

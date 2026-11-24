@@ -74,6 +74,11 @@ export async function renderSpaceOg(cfg: SpaceConfig): Promise<ImageResponse> {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={logo} height={80} style={{ height: 80, width: "auto", maxWidth: 520 }} alt="" />
           )}
+          {cfg.limioBrand && (
+            <div style={{ display: "flex", marginLeft: 20, fontSize: 64, fontWeight: 600, color: "#1B2733" }}>
+              Lim<span style={{ color: "#EC4899" }}>io</span>
+            </div>
+          )}
           {logo && partner && <div style={{ width: 2, height: 80, background: "#B2B2B2", margin: "0 40px", display: "flex" }} />}
           {partner && (
             // eslint-disable-next-line @next/next/no-img-element

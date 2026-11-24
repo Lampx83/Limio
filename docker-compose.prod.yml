@@ -59,6 +59,8 @@ x-web-env: &web-env
   NARRATION_LECTURER_VIDEO: ${NARRATION_LECTURER_VIDEO:-}
   # Space dựng sẵn MICRO4ASIA (/micro4asia): chỉ bật trên máy có dữ liệu đó (limio.vn). Trống = tắt, /micro4asia là 404.
   SPACE_BUILTIN_MICRO4ASIA: ${SPACE_BUILTIN_MICRO4ASIA:-}
+  # Space dựng sẵn HSK (/hsk): chỉ bật trên máy có các khoá hsk-<cấp>-goc (limio.vn). Trống = tắt, /hsk là 404.
+  SPACE_BUILTIN_HSK: ${SPACE_BUILTIN_HSK:-}
   SENTRY_DSN: ${SENTRY_DSN:-}
   # Đọc bằng getEnv() ở server runtime (root layout), KHÔNG cần build-arg —
   # khác NEXT_PUBLIC_BASE_PATH ở dưới, đổi ID không cần rebuild image, chỉ

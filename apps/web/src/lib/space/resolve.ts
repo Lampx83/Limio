@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@feedbackme/db";
-import { builtinMicro4Asia, builtinMicro4AsiaEnabled, MICRO4ASIA_SLUG } from "./builtin";
+import { builtinHsk, builtinHskEnabled, builtinMicro4Asia, builtinMicro4AsiaEnabled, HSK_SLUG, MICRO4ASIA_SLUG } from "./builtin";
+import { spaceBasePath } from "./aliases";
 import { buildSpaceConfig, dropForeignCourses, isValidSpaceSlug, normalizeStored } from "./settings";
 import type { SpaceBrand, SpaceConfig, SpaceLang } from "./types";
 
@@ -36,6 +37,7 @@ async function loadSpaces(): Promise<SpaceConfig[]> {
     // DB chập chờn: vẫn phục vụ cấu hình dựng sẵn thay vì làm hỏng mọi trang.
   }
   if (builtinMicro4AsiaEnabled() && !out.some((s) => s.slug === MICRO4ASIA_SLUG)) out.push(builtinMicro4Asia());
+  if (builtinHskEnabled() && !out.some((s) => s.slug === HSK_SLUG)) out.push(builtinHsk());
   return out;
 }
 
@@ -52,7 +54,8 @@ export async function getSpaceBySlug(slug: string): Promise<SpaceConfig | null> 
 
 /** Space chứa khoá có slug này (khoá đầu tiên khớp). */
 export async function getSpaceForCourseSlug(courseSlug: string): Promise<SpaceConfig | null> {
-  return (await listSpaces()).find((s) => s.courses.some((c) => c.slug === courseSlug)) ?? null;
+  // Space kiểu "limioBrand" chỉ có trang chủ riêng: trang khoá học của nó giữ giao diện Limio nguyên bản.
+  return (await listSpaces()).find((s) => !s.limioBrand && s.courses.some((c) => c.slug === courseSlug)) ?? null;
 }
 
 /**
@@ -66,6 +69,7 @@ export async function getSpaceForPath(pathname: string): Promise<SpaceConfig | n
     const first = seg[0]!;
     if (first === "s" && seg[1]) return await getSpaceBySlug(decodeURIComponent(seg[1]));
     if (first === MICRO4ASIA_SLUG) return await getSpaceBySlug(MICRO4ASIA_SLUG);
+    if (first === HSK_SLUG) return await getSpaceBySlug(HSK_SLUG);
     if ((first === "catalog" || first === "learn") && seg[1]) {
       return await getSpaceForCourseSlug(decodeURIComponent(seg[1]));
     }
@@ -75,9 +79,9 @@ export async function getSpaceForPath(pathname: string): Promise<SpaceConfig | n
   return null;
 }
 
-/** Đường dẫn trang chủ của space. Space dựng sẵn giữ URL ngắn /micro4asia. */
+/** Đường dẫn trang chủ của space. Space dựng sẵn giữ URL ngắn (/micro4asia, /hsk). */
 export function spaceHomePath(cfg: Pick<SpaceConfig, "slug">, lang?: SpaceLang, defaultLang: SpaceLang = "en"): string {
-  const base = cfg.slug === MICRO4ASIA_SLUG ? "/micro4asia" : `/s/${cfg.slug}`;
+  const base = spaceBasePath(cfg.slug);
   return lang && lang !== defaultLang ? `${base}?lang=${lang}` : base;
 }
 
