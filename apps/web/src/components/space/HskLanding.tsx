@@ -369,7 +369,7 @@ function LevelCard({
   const body = (
     <>
       <span
-        className={`pointer-events-none absolute -right-3 -top-6 select-none text-[9rem] font-extrabold leading-none ${live ? tone.numeral : "text-slate-300/70"}`}
+        className={`pointer-events-none absolute right-5 top-14 select-none text-[6.5rem] font-extrabold leading-none ${live ? tone.numeral : "text-slate-300/70"}`}
         style={{ fontFamily: HAN_FONT }}
         aria-hidden
       >
