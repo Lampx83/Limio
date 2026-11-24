@@ -8,7 +8,7 @@ import { buildVocabCards, buildVocabRuby } from "@/lib/lessonVocabRuby";
 import { hskGoalsHtml, hskPairHtml } from "@/lib/hskWarmup";
 import { hskGrammarHtml, type HskGrammarPoint } from "@/lib/hskGrammar";
 import { hskActivityHtml, hskBriefHtml, hskScenarioHtml } from "@/lib/hskActivity";
-import { hskAuthoredHtml } from "@/lib/hskAuthoredDom";
+import { hskAuthoredHtml, rubyTokensOnlyHtml } from "@/lib/hskAuthoredDom";
 import { hskDropPageRef, hskDropVocabLabel, hskIntroHtml, hskRecolor, type HskKind } from "@/lib/hskLesson";
 import { useCallback } from "react";
 import { useT, useUiLang } from "@/lib/i18n/client";
@@ -45,7 +45,7 @@ export default function LessonRichText({
   // giao diện; SafeHtml không theo dõi transform, nên `key={lang}` dựng lại khung khi đổi EN/VI.
   const dress = useCallback(
     (h0: string) => {
-      const h = hskKind ? prepareHsk(h0, hskKind, hskGrammar) : h0;
+      const h = hskKind ? prepareHsk(h0, hskKind, hskGrammar) : rubyTokensOnlyHtml(h0);
       return buildStepReveal(buildFaqDetails(hskKind === "vocab" ? h : buildVocabRuby(h)), {
         next: t("reader.steps.next"),
         all: t("reader.steps.all"),

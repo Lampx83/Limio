@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 import { PINYIN_TOKEN, parseAuthoredHeading, stripPinyinTokens } from "./hskAuthored";
-import { hskAuthoredHtml } from "./hskAuthoredDom";
+import { hskAuthoredHtml, rubyTokensOnlyHtml } from "./hskAuthoredDom";
 
 /** Importer bọc cụm chữ Hán trong span phóng to rồi mới tới dấu ^ và pinyin. */
 const tok = (han: string, py: string) => `{{<span style="font-size:1.3em">${han}</span>^${py}}}`;
@@ -96,5 +96,22 @@ describe("ngắt dòng", () => {
     const wraps = host.querySelectorAll(".hz-rb");
     expect(wraps[0]!.classList.contains("hz-rb-nw")).toBe(true);
     expect(wraps[1]!.classList.contains("hz-rb-nw")).toBe(false);
+  });
+});
+
+describe("bài chưa vào giao diện HSK (khách xem thử): token vẫn thành ruby", () => {
+  it("đổi token thành ruby, không dựng lại bố cục, không để lộ dấu {{ }}", () => {
+    const html = `<section aria-label="Mục tiêu bài học"><ul><li>Nói ${tok("红包", "hóng bāo")} và ${tok("过年的热闹", "guò nián de rè nao")}</li></ul></section>`;
+    const host = document.createElement("div");
+    host.innerHTML = rubyTokensOnlyHtml(html);
+    expect(host.textContent).not.toContain("{{");
+    expect(host.querySelector("section")?.getAttribute("aria-label")).toBe("Mục tiêu bài học");
+    expect(host.querySelector(".hsk-note")).toBeNull();
+    expect(rubies(host).slice(0, 2)).toEqual([["红", "hóng"], ["包", "bāo"]]);
+  });
+
+  it("HTML không có token đi qua nguyên vẹn", () => {
+    const html = "<p>Chào <b>bạn</b></p>";
+    expect(rubyTokensOnlyHtml(html)).toBe(html);
   });
 });

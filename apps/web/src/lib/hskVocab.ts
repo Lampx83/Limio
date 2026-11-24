@@ -5,6 +5,7 @@
  */
 
 import { alignReading, hanTokens } from "./rolePlayView";
+import { stripPinyinTokens } from "./hskAuthored";
 
 /** Từ loại viết tắt kết thúc bằng dấu chấm ("đg.", "d.", "lg.", "tt.", "đg./d."). Đoạn đầu không đúng khuôn này (vd. pinyin "zū") không phải từ loại. */
 const POS_RE = /^[\p{L}]{1,6}\.(?:\s?[/,]\s?[\p{L}]{1,6}\.)*$/u;
@@ -20,7 +21,8 @@ export function splitVocabMeaning(meaning: string): { pos: string | null; meanin
 }
 
 export function splitVocabNote(note: string | undefined): { tag: string | null; active: boolean; note: string | null } {
-  const raw = (note ?? "").trim();
+  // Ghi chú là chữ thuần: token pinyin `{{汉字^pīnyīn}}` (do công cụ thêm pinyin của bài tác giả để lại) chỉ giữ chữ Hán.
+  const raw = stripPinyinTokens(note ?? "").trim();
   if (!raw) return { tag: null, active: false, note: null };
   const m = TAG_RE.exec(raw);
   if (!m) return { tag: null, active: false, note: raw };

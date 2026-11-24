@@ -11,6 +11,8 @@ describe("hskVocab — tách từ loại / nghĩa", () => {
   it("tách nhãn chủ động / nhận biết khỏi ghi chú", () => {
     expect(splitVocabNote("Từ chủ động. Không nói 借房.")).toEqual({ tag: "Từ chủ động", active: true, note: "Không nói 借房." });
     expect(splitVocabNote("Từ nhận biết.")).toEqual({ tag: "Từ nhận biết", active: false, note: null });
+    // token pinyin còn sót trong ghi chú chỉ giữ chữ Hán (không để lộ dấu {{ }})
+    expect(splitVocabNote("Từ chủ động. Nói {{理个发^lǐ ge fà}}, chữ {{发^fà}} đọc fà.")).toEqual({ tag: "Từ chủ động", active: true, note: "Nói 理个发, chữ 发 đọc fà." });
     expect(splitVocabNote(undefined)).toEqual({ tag: null, active: false, note: null });
     expect(shortVocabTag("Từ chủ động")).toBe("Chủ động");
     expect(shortVocabTag("Từ nhận biết")).toBe("Nhận biết");

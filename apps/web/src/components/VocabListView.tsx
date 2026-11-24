@@ -5,6 +5,7 @@ import HanFontLoader from "./HanFontLoader";
 import { useEffect, useState } from "react";
 import { Eye, Layers, List, Pause, Volume2 } from "lucide-react";
 import { SOURCE_TEXT_COLOR } from "@/lib/langText";
+import { stripPinyinTokens } from "@/lib/hskAuthored";
 import { useExclusiveAudio } from "./useExclusiveAudio";
 import VocabFlashcards from "./VocabFlashcards";
 import { useT } from "@/lib/i18n/client";
@@ -218,7 +219,7 @@ export default function VocabListView({
                 <p data-masked={mask(!showMeaning)} className={`text-body font-medium text-[rgb(var(--text))] ${blur(!showMeaning)}`}>
                   {it.meaning}
                 </p>
-                {it.note && <p className="text-caption italic">{it.note}</p>}
+                {it.note && <p className="text-caption italic">{stripPinyinTokens(it.note)}</p>}
               </div>
               {it.example && (
                 // Ví dụ: câu gốc + phiên âm trên một dòng, bản dịch dòng dưới, vạch lime bên trái.

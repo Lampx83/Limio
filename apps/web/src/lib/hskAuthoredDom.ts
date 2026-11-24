@@ -181,6 +181,18 @@ function rubyTokens(doc: Document, root: HTMLElement): void {
   }
 }
 
+/**
+ * Chỉ đổi token `{{汉字^pīnyīn}}` thành ruby, không dựng lại bố cục. Dùng cho bài chưa vào giao diện HSK (khách xem thử, chưa ghi danh, giao diện cũ):
+ * HTML lưu trong bài mang sẵn token, nên không đổi thì người xem thấy nguyên dấu `{{ }}`. Không có DOMParser (máy chủ) thì bỏ token, giữ chữ Hán.
+ */
+export function rubyTokensOnlyHtml(html: string): string {
+  if (!html.includes("{{")) return html;
+  if (typeof DOMParser === "undefined") return html.replace(PINYIN_TOKEN, "$1");
+  const doc = new DOMParser().parseFromString(`<body>${markPinyinTokens(html)}</body>`, "text/html");
+  rubyTokens(doc, doc.body);
+  return doc.body.innerHTML;
+}
+
 export function hskAuthoredHtml(html: string, _kind?: AuthoredKind): string {
   if (typeof DOMParser === "undefined") return html;
   const doc = new DOMParser().parseFromString(`<body>${markPinyinTokens(html)}</body>`, "text/html");
