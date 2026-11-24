@@ -3103,6 +3103,300 @@ textarea.fc-input {
   background: rgb(var(--surface));
 }
 
+/*
+ * Bài đọc dạng "giấy tờ" (Đoạn văn có `look`: diary, note, chat, invite, notice; PassageView): nhật ký, mẩu ghi chú, tin nhắn, thiệp mời, thông báo.
+ * Cùng một ý với kiểu trang báo: nền giấy/thẻ có màu riêng, chữ mực đặt tường minh (không đổi theo chế độ tối vì nền giấy luôn sáng), chữ ≥ 17px.
+ * Chữ Hán rơi sang LXGW WenKai/Kaiti (Noto Serif không có chữ Hán) nên có nét viết tay cho nhật ký và ghi chú. Chỉ dùng thẻ <p>/<strong> sẵn có của thân bài.
+ */
+.pv-diary,
+.pv-note,
+.pv-chat,
+.pv-invite,
+.pv-notice,
+.pv-letter,
+.pv-email,
+.pv-menu {
+  --pp-ink: #2a2118;
+  font-family: Georgia, "Noto Serif", "LXGW WenKai", "Kaiti SC", "STKaiti", serif;
+}
+.pv-diary > header,
+.pv-note > header,
+.pv-chat > header,
+.pv-invite > header,
+.pv-notice > header,
+.pv-letter > header,
+.pv-email > header,
+.pv-menu > header {
+  display: none;
+}
+.pv-diary .prose,
+.pv-note .prose,
+.pv-invite .prose,
+.pv-notice .prose,
+.pv-letter .prose,
+.pv-email .prose,
+.pv-menu .prose {
+  color: var(--pp-ink);
+  font-family: inherit;
+}
+.pv-diary .prose p,
+.pv-note .prose p,
+.pv-invite .prose p,
+.pv-notice .prose p,
+.pv-letter .prose p,
+.pv-email .prose p,
+.pv-menu .prose p {
+  color: var(--pp-ink);
+}
+
+/* Nhật ký: trang sổ có dòng kẻ ngang, lề đỏ bên trái và hàng lỗ gáy; dòng đầu in đậm (ngày, thời tiết) nghiêng về bên phải. */
+.pv-diary .prose {
+  position: relative;
+  padding: 1.1rem 1.25rem 1.2rem 3.4rem;
+  background-color: #fffdf4;
+  background-image: repeating-linear-gradient(to bottom, transparent 0 1.95rem, #c9d8ea 1.95rem 2rem);
+  background-position: 0 0.9rem;
+  border: 1px solid #e2dccb;
+  border-left: 0;
+  border-radius: 0.15rem 0.5rem 0.5rem 0.15rem;
+  box-shadow: 0 8px 18px -14px rgb(60 40 10 / 0.5);
+  line-height: 2rem;
+}
+.pv-diary .prose::before {
+  content: "";
+  position: absolute;
+  left: 2.35rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #e8a6a0;
+}
+.pv-diary .prose::after {
+  content: "";
+  position: absolute;
+  left: 0.6rem;
+  top: 1.2rem;
+  bottom: 1.2rem;
+  width: 0.7rem;
+  background: radial-gradient(circle at 50% 50%, #d9d3c3 0 0.3rem, transparent 0.32rem) 0 0 / 0.7rem 3.4rem repeat-y;
+}
+.pv-diary .prose p {
+  margin: 0;
+  line-height: 2rem;
+}
+.pv-diary .prose p:has(> strong:only-child) {
+  text-align: right;
+  font-size: 0.95em;
+  color: #7a5c3a;
+}
+
+/* Mẩu ghi chú / danh sách việc cần làm: giấy nhớ vàng, góc gập, dòng đầu là tiêu đề. */
+.pv-note .prose {
+  position: relative;
+  max-width: 38rem;
+  padding: 1.2rem 1.4rem 1.3rem;
+  background: linear-gradient(135deg, #fff6a8 0%, #ffef8a 100%);
+  border-radius: 0.15rem 0.15rem 0.15rem 1.4rem;
+  box-shadow: 0 10px 20px -12px rgb(90 70 0 / 0.55), 0 1px 0 rgb(0 0 0 / 0.05);
+}
+.pv-note .prose::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -0.7rem;
+  width: 5.5rem;
+  height: 1.4rem;
+  transform: translateX(-50%) rotate(-2deg);
+  background: rgb(255 255 255 / 0.55);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+}
+.pv-note .prose p {
+  margin: 0.35rem 0;
+  line-height: 1.8;
+}
+.pv-note .prose p:nth-child(2) {
+  margin-top: 0;
+  font-size: 1.12em;
+  font-weight: 700;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px dashed rgb(120 90 0 / 0.35);
+}
+
+/* Tin nhắn: mỗi đoạn là một bong bóng (lượt chẵn nằm bên phải, nền xanh nhạt); đoạn chỉ có chữ đậm là tên nhóm/người (thanh tiêu đề), đoạn đầu không phải chữ đậm là câu dẫn (chữ nhỏ, không bong bóng). */
+.pv-chat .prose {
+  padding: 0.9rem 0.9rem;
+  background: #ecf0f4;
+  border-radius: 1rem;
+  color: #1c2530;
+}
+.pv-chat .prose p {
+  position: relative;
+  width: fit-content;
+  max-width: min(92%, 36rem);
+  margin: 0.55rem auto 0.55rem 0;
+  padding: 0.55rem 0.85rem 0.6rem;
+  background: #fff;
+  color: #1c2530;
+  border-radius: 0.2rem 1rem 1rem 1rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+}
+.pv-chat .prose p:nth-of-type(even) {
+  margin: 0.55rem 0 0.55rem auto;
+  background: #cfeab0;
+  border-radius: 1rem 0.2rem 1rem 1rem;
+}
+.pv-chat .prose p:has(> strong:only-child) {
+  width: auto;
+  max-width: none;
+  margin: 0 0 0.6rem;
+  padding: 0.4rem 0.2rem;
+  background: transparent;
+  box-shadow: none;
+  text-align: center;
+  font-size: 0.95em;
+  color: #2f5d12;
+  border-bottom: 1px solid #cdd5de;
+  border-radius: 0;
+}
+.pv-chat .prose p:first-child:not(:has(> strong)) {
+  width: auto;
+  max-width: none;
+  margin: 0 0 0.6rem;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.92em;
+  color: #4a5563;
+}
+
+/* Thiệp mời: thiệp đỏ viền đôi vàng đồng; dòng chữ đậm là tiêu đề căn giữa, dòng cuối (người mời) căn phải. */
+.pv-invite .prose {
+  padding: 1.5rem 1.6rem 1.6rem;
+  background: #fff4ec;
+  border: 3px double #b3261e;
+  outline: 1px solid #d9a441;
+  outline-offset: -9px;
+  border-radius: 0.3rem;
+  box-shadow: 0 10px 22px -14px rgb(120 20 10 / 0.5);
+}
+.pv-invite .prose p {
+  margin: 0.45rem 0;
+}
+.pv-invite .prose p:has(> strong:only-child) {
+  text-align: center;
+  font-size: 1.25em;
+  color: #b3261e;
+  letter-spacing: 0.04em;
+}
+.pv-invite .prose p:last-child {
+  text-align: right;
+  font-weight: 600;
+}
+
+/* Thông báo dán cửa: tờ giấy trắng có vạch đỏ phía trên và ghim; dòng đầu (chữ đậm) là tiêu đề căn giữa. */
+.pv-notice .prose {
+  position: relative;
+  padding: 1.6rem 1.5rem 1.4rem;
+  background: #fff;
+  border: 1px solid #d8d4cb;
+  border-top: 0.5rem solid #c0392b;
+  box-shadow: 0 10px 20px -14px rgb(0 0 0 / 0.5);
+}
+.pv-notice .prose::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -0.2rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 35%, #ff8a80, #b3261e);
+  box-shadow: 0 2px 3px rgb(0 0 0 / 0.35);
+}
+.pv-notice .prose p:has(> strong:only-child) {
+  text-align: center;
+  font-size: 1.35em;
+  letter-spacing: 0.3em;
+}
+.pv-notice .prose p:last-child {
+  text-align: right;
+  font-weight: 600;
+}
+
+/* Thư tay: giấy thư kem có viền chỉ mảnh, lời chào đầu thư, các đoạn thụt dòng đầu, chữ ký và ngày ở cuối căn phải. */
+.pv-letter .prose {
+  padding: 1.6rem 1.8rem 1.5rem;
+  background: #fbf6e9;
+  border: 1px solid #e4d9bd;
+  outline: 1px solid #efe6cd;
+  outline-offset: -8px;
+  box-shadow: 0 10px 22px -14px rgb(80 55 10 / 0.5);
+  line-height: 1.95;
+}
+.pv-letter .prose p {
+  margin: 0.4rem 0;
+  text-indent: 2em;
+}
+.pv-letter .prose p:has(> strong:only-child) {
+  text-indent: 0;
+  text-align: center;
+  font-size: 1.1em;
+  letter-spacing: 0.15em;
+  color: #7a5c3a;
+}
+.pv-letter .prose p:last-child {
+  text-indent: 0;
+  text-align: right;
+  font-weight: 600;
+}
+
+/* Thư điện tử: khung thư trắng, thanh tiêu đề xám phía trên (dòng chữ đậm đầu tiên), thân thư chữ không thụt dòng. */
+.pv-email .prose {
+  padding: 0 1.2rem 1.1rem;
+  background: #fff;
+  border: 1px solid #cfd6de;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 8px 18px -14px rgb(20 40 70 / 0.5);
+}
+.pv-email .prose p {
+  margin: 0.55rem 0;
+}
+.pv-email .prose p:has(> strong:only-child) {
+  margin: 0 -1.2rem 0.8rem;
+  padding: 0.6rem 1.2rem;
+  background: #eef2f7;
+  border-bottom: 1px solid #cfd6de;
+  font-size: 0.95em;
+  color: #2b4a6b;
+}
+.pv-email .prose p:last-child {
+  text-align: right;
+  font-weight: 600;
+}
+
+/* Thực đơn: thẻ viền đỏ sẫm, tên quán căn giữa (chữ đậm), mỗi dòng món có đường chấm bên dưới. */
+.pv-menu .prose {
+  padding: 1.3rem 1.5rem 1.2rem;
+  background: #fffaf0;
+  border: 2px solid #8a2a1c;
+  outline: 1px solid #c9a24a;
+  outline-offset: -7px;
+}
+.pv-menu .prose p {
+  margin: 0;
+  padding: 0.35rem 0;
+  border-bottom: 1px dotted rgb(138 42 28 / 0.45);
+}
+.pv-menu .prose p:has(> strong:only-child) {
+  text-align: center;
+  font-size: 1.3em;
+  letter-spacing: 0.25em;
+  color: #8a2a1c;
+  border-bottom: 2px double #8a2a1c;
+}
+
 /* Ô gõ ngay tại chỗ trống của câu tự luận trong phiếu bài tập (components/exam/ExamQuestion InlineBlankPrompt). */
 .exam-inline-blank {
   margin: 0 0.2rem;

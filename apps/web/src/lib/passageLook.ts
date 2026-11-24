@@ -5,7 +5,7 @@
  * Danh sách này được lặp ở importer (`packages/core-lms/scripts/practice-spec.ts`, `PASSAGE_LOOKS`) vì core-lms không import apps/web;
  * thêm kiểu mới thì sửa cả hai chỗ và thêm khối CSS (test `passageLook.test.ts` nhắc phần CSS).
  */
-export const PASSAGE_LOOKS = ["newspaper", "factfile", "posts"] as const;
+export const PASSAGE_LOOKS = ["newspaper", "factfile", "posts", "diary", "note", "chat", "invite", "notice", "letter", "email", "menu"] as const;
 
 export type PassageLook = (typeof PASSAGE_LOOKS)[number];
 

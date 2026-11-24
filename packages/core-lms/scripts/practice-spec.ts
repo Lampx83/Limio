@@ -109,7 +109,7 @@ export const PassageBlock = z.union([
 export type PassageBlockT = z.infer<typeof PassageBlock>;
 
 /** Các kiểu trình bày của bài đọc; lặp ở apps/web/src/lib/passageLook.ts (core-lms không import apps/web). */
-export const PASSAGE_LOOKS = ["newspaper", "factfile", "posts"] as const;
+export const PASSAGE_LOOKS = ["newspaper", "factfile", "posts", "diary", "note", "chat", "invite", "notice", "letter", "email", "menu"] as const;
 export type PassageLookT = (typeof PASSAGE_LOOKS)[number];
 
 export const PassageSpec = z.object({
@@ -118,7 +118,10 @@ export const PassageSpec = z.object({
    * Kiểu trình bày của bài đọc theo thể loại. Bỏ trống = hiện như cũ.
    * "newspaper" = trang báo (giấy kem, tít serif, sapo, thân bài hai cột khi đủ rộng);
    * "factfile" = bảng thông tin (bảng hai cột nhãn/giá trị thành thẻ có nhãn nhỏ viết hoa);
-   * "posts" = các bài đăng ngắn (mỗi đoạn một thẻ, chữ cái A/B/C đầu đoạn thành nhãn tròn).
+   * "posts" = các bài đăng ngắn (mỗi đoạn một thẻ, chữ cái A/B/C đầu đoạn thành nhãn tròn);
+   * "diary" = trang nhật ký (giấy kẻ dòng, lề đỏ, lỗ gáy); "note" = giấy nhớ vàng (danh sách việc, ghi chú);
+   * "chat" = tin nhắn (mỗi đoạn là một bong bóng); "invite" = thiệp mời; "notice" = thông báo dán cửa;
+   * "letter" = thư tay (giấy thư, lời chào, chữ ký); "email" = thư điện tử (thanh tiêu đề, khung thư); "menu" = thực đơn.
    * Danh sách lặp ở apps/web/src/lib/passageLook.ts (PASSAGE_LOOKS).
    */
   look: z.enum(PASSAGE_LOOKS).optional(),
