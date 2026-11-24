@@ -1,0 +1,1565 @@
+{
+  "module": {
+    "title": "Module 1 — AI Chatbots and Task Definition",
+    "description": "Use chatbot inputs and tools, recognise strengths, limits and common errors, and define the problem, the data and the success criteria before you write a prompt. Includes the Module 1 lecture notes and slides.",
+    "lessons": [
+      {
+        "title": "Module 1 materials: lecture notes, slides and the retail CSV",
+        "durationMin": 6,
+        "description": "What is attached to Module 1, which pages of the lecture notes and slides belong to Periods 1 to 3, and how to study with them.",
+        "look": {
+          "palette": "limio",
+          "font": "modern"
+        },
+        "body": "Module 1 comes with five kinds of attachment. Most of them cover the **whole course**, not only this module, so you will keep coming back to them.\n\n- **Lecture notes (PDF, whole course).** Every period has the same layout: an objective, numbered sections (1.1, 1.2, ...), one illustrated prompt, a verification table, key concepts, a summary and four review questions. Use the notes for the full explanation and for the review questions at the end of each period.\n- **Slides, 150 pages (PDF).** The full deck. One idea per slide, a checkpoint question at the end of each period and a \"Key takeaways\" slide.\n- **Slides, 81 pages (PDF).** A shorter version of the same deck for a quick preview or revision. Its page numbers are different from the 150-page deck.\n- **Activity sheets (PDF, three Student versions).** Guided practice cases. They begin in Module 3, so you do not need them yet, but it helps to know where the course is heading.\n- **Retail CSV.** `Slidescope_Retail_Store_Sales_Enhanced_2025.csv`: 200 retail transactions in 13 columns. The examples in Module 1 refer to it, and you will open it in a spreadsheet to check what the lessons say.\n\nTo follow along you need an institution-approved AI chatbot (with file analysis and charts if it has them) and a spreadsheet or calculator for independent checks. No programming is required.\n\n## Where each period is\n\n| Period | Lecture notes | Slides (150 pages) | Slides (81 pages) |\n|---|---|---|---|\n| 1 · AI Chatbots: Interfaces and Basic Use | sections 1.1 to 1.3 (about pp. 6 to 10) | 14 to 20 | 10 to 12 |\n| 2 · Capabilities, Limitations and Common Errors | sections 2.1 to 2.3 (about pp. 11 to 15) | 21 to 27 | 13 to 15 |\n| 3 · Define: Problems, Context and Success Criteria | sections 3.1 to 3.4 (about pp. 16 to 18) | 28 to 34 | 16 to 19 |\n\nThe course introduction (slides 1 to 12 of the long deck, and the first slides of the short deck) is also part of Period 1: it covers why a polished AI report can hide limited learning, who owns which responsibility, and the five-step cycle.\n\n## How to use them\n\n1. **Before a period:** skim its slides to see the shape of the lesson.\n2. **In the lesson:** try every \"Predict before you read\" and \"Find the error\" box yourself before you open the answer, then take the quiz and rate your confidence for each question.\n3. **After the quiz:** read the matching sections of the lecture notes and answer its four review questions in your own words.\n4. **Check with the CSV:** every lesson ends with a \"Check it yourself\" task. Do it in a spreadsheet, not in a chatbot.\n5. **For revision:** use the flashcards at the end of each lesson, then go back to the slides.\n\n> [!meo] The prompts and AI answers in the notes and slides are **illustrative**: invented examples written to teach, not transcripts of a real AI session. Your chatbot will answer differently, which is exactly why you check what it gives you.\n\n> [!ghi-nho] The course follows one cycle: **Define, Design, Execute, Evaluate, Refine**. Module 1 prepares the first two steps and the habit that runs through all of them: checking an AI result against evidence before you use it.",
+        "summary": [
+          "Five attachments support the course: lecture notes, two slide decks (150 and 81 pages), three activity sheets and the retail CSV.",
+          "The table shows which sections and slide pages belong to Periods 1 to 3; the activity sheets start in Module 3.",
+          "Study in this order: slides, lesson and quiz, lecture notes, CSV check, flashcards."
+        ]
+      },
+      {
+        "title": "Period 1 · AI Chatbots: Interfaces and Basic Use",
+        "durationMin": 45,
+        "description": "Choose an input a chatbot can really use, pick an output that fits the question, tell language help from data analysis, and see why you stay responsible for checking the result.",
+        "look": {
+          "palette": "limio",
+          "font": "modern"
+        },
+        "objectivesLead": "By the end of this period you can:",
+        "objectives": [
+          "Choose the input that actually contains the task evidence and explain why a filename alone is not enough",
+          "Choose an output format (text, table or chart) that fits a given question and reader",
+          "Decide what to do when a chatbot cannot open a file or draw a chart",
+          "Tell apart language assistance from data analysis and name the check each one needs",
+          "Place a request in the correct stage of the Define, Design, Execute, Evaluate, Refine cycle",
+          "Explain why a polished AI report is not evidence that you understand the work"
+        ],
+        "body": "A regional manager sends you a spreadsheet of 200 retail transactions and one line: *\"Can you tell me how the regions are doing? Use the AI tool.\"* You open a chatbot. What do you type, what do you attach, what do you expect back, and what will you check before you pass anything on?\n\nThis period gives you the basic moves: choose an **input** the chatbot can really use, choose an **output** that suits the question, tell language help from data analysis, and keep your own responsibility for checking.\n\n> [!ghi-nho] A chatbot works only with what it actually receives. Name the input, name the output, and keep the checking for yourself.\n\n:::Predict before you read\nA classmate types: *\"Analyse Slidescope_Retail_Store_Sales_Enhanced_2025.csv and tell me which region is best.\"* The chatbot answers at once with a confident table. Write down **two things that may be wrong** before you read on. You will come back to your list in the first worked example.\n:::",
+        "sections": [
+          {
+            "layout": "cards",
+            "title": "Choose the input",
+            "intro": "A chatbot can only work with what it actually receives. The input must contain the **evidence for the task**: the typed request, an attached document, an image, or a CSV where your product supports it. Availability depends on the chosen product, your account, your organisation and your permissions, so inspect what is enabled before you start.",
+            "parts": [
+              {
+                "title": "Text",
+                "md": "The task and its context, typed in your own words. Always needed, whatever else you attach."
+              },
+              {
+                "title": "Documents",
+                "md": "A PDF or Word file, when the tool can open it. Right for \"summarise this policy\" or \"check this report\"."
+              },
+              {
+                "title": "Tables",
+                "md": "A CSV or Excel file, when file analysis is enabled. Right for questions about numbers such as regional totals."
+              },
+              {
+                "title": "Images and voice",
+                "md": "A screenshot of a chart, or a spoken prompt, where the product accepts them. A screenshot shows a picture of numbers, not the data behind them."
+              }
+            ],
+            "outro": "Some products also offer ways to reuse instructions (skills), find sources (research), group chats and files (projects) and create slides or PDFs. Treat these as optional extras that depend on your tool and account.\n\n> [!canh-bao] A filename mentioned in chat is not the file. \"Analyse Slidescope_Retail_Store_Sales_Enhanced_2025.csv\" gives the model a name, not 200 transactions."
+          },
+          {
+            "layout": "compare",
+            "title": "When the tool cannot open your file",
+            "intro": "Sometimes the chatbot you are allowed to use cannot read a CSV. This is normal, and it has a clean fallback.",
+            "parts": [
+              {
+                "title": "Do not",
+                "md": "- Assume the file was uploaded because you mentioned it.\n- Ask for a calculation on a file the tool has never seen.\n- Accept a regional total that appeared from nowhere."
+              },
+              {
+                "title": "Do",
+                "md": "- Check for the attach control, or ask the tool what it can read.\n- Calculate the numbers in a spreadsheet, then give the chatbot a small, verified extract or summary and say where it came from.\n- Record the limitation, so that nobody thinks the chatbot analysed the file."
+              }
+            ],
+            "outro": "> [!ghi-nho] An imagined analysis can look exactly like a real one. If the tool cannot access the attachment, fix the access or supply a verified summary. Never accept an analysis of data it did not receive."
+          },
+          {
+            "layout": "cards",
+            "title": "Choose the output",
+            "intro": "Ask for a result the system can produce and your reader can use. Choose it by the question, not by what looks impressive.",
+            "parts": [
+              {
+                "title": "Text",
+                "md": "For definitions, explanations and short summaries. *Example: \"Explain what each column of the dataset holds.\"*"
+              },
+              {
+                "title": "Table",
+                "md": "For exact values and rankings. *Example: a four-row table of regional net sales.*"
+              },
+              {
+                "title": "Chart",
+                "md": "For seeing a comparison across categories at a glance. *Example: a bar chart of regions.*"
+              }
+            ],
+            "outro": "Charting depends on the tools enabled in your interface. If there is none, a clear **chart specification** (what goes on each axis, which labels, which values) is a valid fallback, and you can draw the chart in a spreadsheet."
+          },
+          {
+            "layout": "text",
+            "title": "Language help or data analysis?",
+            "parts": [
+              {
+                "md": "One chat window supports very different jobs, and each job has its own evidence and its own quality check.\n\n**Language and structure.** Explain, translate, summarise or organise information; draft and compare ideas; critique a response; extract named fields, classify descriptions or turn text into a table. You can read the answer and judge it against a source.\n\n**Data work with enabled tools.** Inspect uploaded columns, summarise by category, draft a chart and follow-up questions. A claim about sales must be checked against the data that produced it, so you check file access, measure definitions and grouping, and reconcile the numbers to the source.\n\n| Need | Suitable input | Useful output | Your check |\n|---|---|---|---|\n| Understand an unfamiliar idea | A question and a reliable excerpt | Plain-language explanation | Compare it with the excerpt |\n| Summarise a document | The actual document or permitted text | Short summary with source pointers | Check key claims and omissions |\n| Compare regional sales | The retail CSV or verified aggregated data | Four-row table, then a bar chart | Recalculate totals and labels |\n| Prepare a management brief | Verified results and a defined decision | Findings, limitations and options | Review every claim and approval step |\n\n> [!ghi-nho] The same chatbot can do all four jobs, but accuracy depends on the task, the context and the tools enabled. A common failure is to send a complex request before the input and the success criteria are clear. **Start small, so that you can check the result.**"
+              }
+            ]
+          },
+          {
+            "layout": "steps",
+            "title": "Worked example: a first conversation with the retail CSV",
+            "intro": "A manager wants a reliable overview of net sales by region. The input is the retail CSV. The first output should be a four-row table, **not** a business strategy. This is an illustrative exchange, not a transcript of a real session.",
+            "parts": [
+              {
+                "title": "Turn 1: inspect before you analyse",
+                "md": "```prompt Prompt (turn 1)\nI have attached a retail transaction CSV. First list the column names and the number of records. Then explain which column represents net sales and which column identifies the region. Do not calculate profits or invent dates or currency. Ask me to confirm the task before making a chart.\n```\n\n**Why it works.** It names the input, asks for one small thing you can check, forbids the usual inventions (profit, dates, currency) and ends with a confirmation step so you stay in control."
+              },
+              {
+                "title": "Read the reply against the file",
+                "md": "A good reply identifies `Store_Region` and `Net_Sales_Amount`, confirms **200 records**, and names what is missing: no transaction date, currency, store identifier, cost or profit. It does not claim that the chain is profitable.\n\nIf the tool reports a different row count, find out why: was the header row counted, or were records filtered during import? If it cannot access the attachment, attach it again or supply a verified summary. Do not accept an imagined analysis."
+              },
+              {
+                "title": "Turn 2: ask for the table",
+                "md": "```prompt Prompt (turn 2)\nNow make a table with three columns: Store_Region, number of transactions and total Net_Sales_Amount. State the method you used. Then check that the four regional totals add up to the overall total of Net_Sales_Amount.\n```\n\n**Why it works.** Every step can be verified independently in a spreadsheet, and the last sentence builds in a reconciliation check."
+              },
+              {
+                "title": "Compare with a weak request",
+                "md": "```prompt Prompt B (weak)\nAnalyse my sales file and tell me everything important.\n```\n\n**Why it is weak.** It does not say what the input is, which columns matter, what output you want or how you will judge the result. Whatever comes back, you would have no way to tell whether it is right."
+              }
+            ],
+            "outro": "> [!vi-du] The conversation has two small turns instead of one big request. After turn 1 you know what the tool really sees. After turn 2 you have numbers you can recalculate.\n\n**Back to your prediction.** The classmate's request had at least three weak points: the file may never have reached the chatbot (a name is not a file), the word \"best\" does not say which measure to use, and nothing in the request makes the answer checkable. You will fix the second one in Period 3."
+          },
+          {
+            "layout": "compare",
+            "title": "Who owns what",
+            "intro": "Imagine a student who asks AI to finish a whole data project. The model may return a polished document with headings and charts. Appearance cannot show whether the student understands the measures, whether the chart values are correct, or whether a recommendation follows from the numbers.",
+            "parts": [
+              {
+                "title": "AI can assist",
+                "md": "- Suggest a plan\n- Explain methods\n- Draft tables and charts\n- Challenge a claim"
+              },
+              {
+                "title": "You own",
+                "md": "- Define the task and what success means\n- Verify the numbers\n- Interpret the limitations\n- Approve the decision"
+              }
+            ],
+            "outro": "A better way to work is to ask for guidance in small steps, repeat one important calculation yourself, explain a chart in your own words and record how it was checked.\n\n```prompt Learn-with-AI prompt\nGuide me through a regional sales analysis. First ask what I need to learn. Explain how to calculate one metric with the attached data. Ask me to check it before creating the chart. Explain each step so I can repeat it.\n```\n\n**Why it works.** It asks the AI to teach, not to hand over a finished report, and it puts a check by you between the AI's step and the next one.\n\n> [!canh-bao] A polished report is not evidence that you understand the work. The test is whether you can explain the method and repeat the calculation without the tool."
+          },
+          {
+            "layout": "steps",
+            "title": "The five-step cycle",
+            "intro": "The whole course uses one cycle. You may repeat it several times; a prompt is useful only when the result satisfies the real task. Here it is on one small task: *a manager can review one region this week.*",
+            "parts": [
+              {
+                "title": "Define",
+                "md": "Set the task and the success criteria. *Find the region with the lowest total net sales.*"
+              },
+              {
+                "title": "Design",
+                "md": "Write a clear request. *Ask for net sales totals and a ranking of all four regions.*"
+              },
+              {
+                "title": "Execute",
+                "md": "Run it in a suitable tool. *Run with the CSV; read the table and the method.*"
+              },
+              {
+                "title": "Evaluate",
+                "md": "Check the response against the task and the evidence. *Check the totals. Is it fewer purchases or lower sales per purchase?*"
+              },
+              {
+                "title": "Refine",
+                "md": "Change the request or workflow based on what failed or what you learned. *Ask for transaction counts and net sales per purchase, rerun and check again.*"
+              }
+            ],
+            "outro": "> [!ghi-nho] Asking for counts **after** you have checked a ranking is Refine, not Execute: the request changes because of what the check showed."
+          },
+          {
+            "layout": "text",
+            "title": "Check it yourself",
+            "parts": [
+              {
+                "md": "Open the retail CSV in a spreadsheet and confirm what this lesson told you about it. Do not ask a chatbot to do these checks.\n\n1. Count the rows of data (without the header) and the columns. Do you get **200** and **13**?\n2. Is `Transaction_ID` different in every row?\n3. Which columns could identify a region, a product category, a payment method and a customer type?\n4. Look for a date, a currency, a store identifier, a cost and a profit column. Which of them exist?\n5. Build a pivot table: `Store_Region` as rows, count of `Transaction_ID` and sum of `Net_Sales_Amount` as values. Do the four regional sums add up to the sum of the whole column?\n\n:::Open after you have tried\nThe file has 200 transactions and 13 columns, and `Transaction_ID` is unique. The region column is `Store_Region` and the sales measure is `Net_Sales_Amount`. There is no date, currency, store, cost or profit column, so the year in the filename does not give any transaction a date. The four regional sums must add up to the grand total, since each transaction belongs to exactly one region.\n:::"
+              }
+            ]
+          },
+          {
+            "layout": "faq",
+            "title": "Common questions",
+            "parts": [
+              {
+                "title": "My chatbot has no chart feature. Is the exercise ruined?",
+                "md": "No. Ask it for a chart specification, or build the chart in your spreadsheet from a table you have verified. Say clearly which tool did what."
+              },
+              {
+                "title": "The chatbot explained its method clearly. Does that show it ran the calculation?",
+                "md": "No. Fluent text is not evidence that a calculation or a file check took place. Ask for the method, then reproduce one result yourself."
+              },
+              {
+                "title": "If the AI got the numbers right, did I learn anything?",
+                "md": "Only if you can explain how the numbers were obtained and repeat the work with new inputs. Ask for steps you can follow, and try them."
+              },
+              {
+                "title": "Who approves a recommendation that AI helped to draft?",
+                "md": "The responsible person: you or the manager. A chatbot, a template or a chart tool can produce the draft, but none of them is accountable for the decision."
+              }
+            ]
+          }
+        ],
+        "flashcards": {
+          "title": "Flashcards · Period 1",
+          "items": [
+            {
+              "term": "Chatbot",
+              "meaning": "A conversational system that responds to the inputs you supply.",
+              "example": "You type a question and attach a CSV; it returns a table."
+            },
+            {
+              "term": "Prompt",
+              "meaning": "The instruction or material that directs the response.",
+              "example": "\"List the column names and the number of records.\""
+            },
+            {
+              "term": "Input",
+              "meaning": "The source information made available to the tool for the task. It must contain the evidence the task needs.",
+              "example": "The attached CSV, or a verified four-row summary."
+            },
+            {
+              "term": "Output",
+              "meaning": "The text, table, chart or other result returned. Choose it by the question and the reader.",
+              "example": "A four-row table to rank four regions."
+            },
+            {
+              "term": "Verification",
+              "meaning": "An independent check against trusted evidence, not against the chatbot's own explanation.",
+              "example": "Recalculating a regional total in a spreadsheet."
+            },
+            {
+              "term": "Filename versus file",
+              "meaning": "A name mentioned in chat is not the file. The tool needs the file or its contents.",
+              "example": "Typing the CSV's name does not give the model any transactions."
+            },
+            {
+              "term": "Fallback",
+              "meaning": "What you do when the tool lacks a feature: supply a verified summary, or ask for a chart specification.",
+              "example": "Pivot table in a spreadsheet, then paste the four rows."
+            },
+            {
+              "term": "Define, Design, Execute, Evaluate, Refine",
+              "meaning": "The five-step cycle used throughout the course. Repeat it until the result satisfies the real task.",
+              "example": "Asking for transaction counts after checking a ranking is Refine."
+            }
+          ]
+        },
+        "summary": [
+          "Give the chatbot the actual evidence (file, extract or verified summary) and the output you want; a filename is not the file.",
+          "Choose text, table or chart by the question: tables for exact values, charts for comparisons, text for explanations.",
+          "Language help is judged against a source; a data claim is checked against the data that produced it.",
+          "The learner or manager owns the decision; a polished report does not show understanding, so explain and repeat the work."
+        ],
+        "quiz": {
+          "title": "Quiz · Period 1",
+          "passThresholdPct": 70,
+          "requireConfidence": true,
+          "questions": [
+            {
+              "key": "pe.p01.pe001",
+              "type": "mcq",
+              "prompt": "A student wants a chatbot to review a spreadsheet. Which input is most useful?",
+              "explanation": "The task depends on the values in the cells, so the chatbot needs the actual spreadsheet. A filename, a cover image or a timetable file does not contain those values. The filename is the tempting wrong answer: it identifies the file but is not the file.",
+              "options": [
+                {
+                  "label": "The actual spreadsheet file",
+                  "isCorrect": true
+                },
+                {
+                  "label": "The spreadsheet's filename",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.wrong-input"
+                },
+                {
+                  "label": "The report cover image",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.wrong-input"
+                },
+                {
+                  "label": "The class timetable file",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.wrong-input"
+                }
+              ]
+            },
+            {
+              "key": "pe.p01.pe002",
+              "type": "mcq",
+              "prompt": "A manager needs a quick ranking of four regions. Which output suits the request?",
+              "explanation": "A ranking of four regions compares four values, so a four-row table shows it directly. An essay buries the ranking in prose, and spoken introductions or stock images contain no comparable values. A narrative suits an explanation; this request asks for a comparison.",
+              "options": [
+                {
+                  "label": "A full-page narrative essay",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.format-mismatch"
+                },
+                {
+                  "label": "A four-row ranking table",
+                  "isCorrect": true
+                },
+                {
+                  "label": "A spoken personal introduction",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.format-mismatch"
+                },
+                {
+                  "label": "A collection of stock images",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.format-mismatch"
+                }
+              ]
+            },
+            {
+              "key": "pe.p01.pe003",
+              "type": "mcq",
+              "prompt": "An AI assistant can read text but has no enabled file tool. What should the student do?",
+              "explanation": "Without a file tool the model cannot read your file, so the workable fallback is to paste a small, relevant extract (or a verified summary) and say that is what it is. Assuming an upload, asking for a calculation on an unseen file or accepting an invented total all depend on data the model never received.",
+              "options": [
+                {
+                  "label": "Assume the file was uploaded",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.assumes-access"
+                },
+                {
+                  "label": "Provide a small relevant data extract",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Request an unseen file calculation",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.assumes-access"
+                },
+                {
+                  "label": "Accept an invented regional total",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.assumes-access"
+                }
+              ]
+            },
+            {
+              "key": "pe.p01.pe004",
+              "type": "mcq",
+              "prompt": "Who should approve a business recommendation drafted with AI?",
+              "explanation": "The responsible person stays accountable for decisions and evidence. The chatbot that wrote the draft is the tempting answer, but drafting, templating or rendering a recommendation does not give anyone or anything decision authority.",
+              "options": [
+                {
+                  "label": "The chatbot that drafted it",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.ai-owns-decision"
+                },
+                {
+                  "label": "The prompt template author",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.ai-owns-decision"
+                },
+                {
+                  "label": "The automated chart renderer",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.ai-owns-decision"
+                },
+                {
+                  "label": "The responsible human decision-maker",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p01.pe005",
+              "type": "mcq",
+              "prompt": "Two students produce polished reports. What best tests their understanding?",
+              "explanation": "Reproducing a calculation tests whether the student knows the method. Cover design, paragraph counts and fluent headings measure presentation, which AI can make strong without any understanding behind it.",
+              "options": [
+                {
+                  "label": "Compare the report cover designs",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.polish-as-proof"
+                },
+                {
+                  "label": "Ask them to reproduce a calculation",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Count the paragraphs in each report",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.polish-as-proof"
+                },
+                {
+                  "label": "Rate the fluency of the headings",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.polish-as-proof"
+                }
+              ]
+            },
+            {
+              "key": "pe.p01.pe006",
+              "type": "mcq",
+              "prompt": "After checking an AI-produced regional ranking, the manager asks for transaction counts. Which cycle stage is this?",
+              "explanation": "The ranking has already been run and checked, so the manager is changing the request because of what the check showed. That is Refine. Execute is tempting because a new request is run again, but the stage is decided by why you ask, not by the fact that you run it.",
+              "options": [
+                {
+                  "label": "Execute",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.cycle-mixup"
+                },
+                {
+                  "label": "Define",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.cycle-mixup"
+                },
+                {
+                  "label": "Design",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.cycle-mixup"
+                },
+                {
+                  "label": "Refine",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p01.x1",
+              "type": "ordering",
+              "prompt": "Put the five stages of the course cycle in the correct order.",
+              "explanation": "You define the task and its success criteria first, then design the request, run it, evaluate the result against the task and the evidence, and refine what failed. The cycle can repeat several times.",
+              "sequence": [
+                "Define: set the task and the success criteria",
+                "Design: write a clear request",
+                "Execute: run it in a suitable tool",
+                "Evaluate: check the response against the task and the evidence",
+                "Refine: change the request or workflow based on what failed"
+              ]
+            },
+            {
+              "key": "pe.p01.x2",
+              "type": "true_false",
+              "prompt": "If you mention the filename of a CSV in your message, the chatbot can analyse that file.",
+              "explanation": "False. A filename mentioned in chat is not the file. The file has to be attached (where your tool supports it) or its contents supplied, for example as a verified summary. Otherwise any numbers in the reply are invented.",
+              "options": [
+                {
+                  "label": "True",
+                  "isCorrect": false,
+                  "misconception": "pe.p01.assumes-access"
+                },
+                {
+                  "label": "False",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p01.x3",
+              "type": "fill_in",
+              "prompt": "Which column of the retail CSV holds the net sales value of each transaction? Type the exact column name.",
+              "explanation": "The column is Net_Sales_Amount. Store_Region identifies the region of the sale; it does not hold an amount. Using exact field names in a prompt helps you check that the tool used the right column.",
+              "answers": [
+                "net_sales_amount",
+                "net sales amount",
+                "net_sales_amount column"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "title": "Period 2 · Capabilities, Limitations and Common Errors",
+        "durationMin": 45,
+        "description": "Understand in simple terms how a language model builds an answer, decide what to delegate and what to keep, recognise unsupported or misleading output, and choose the right check or correction.",
+        "look": {
+          "palette": "limio",
+          "font": "modern"
+        },
+        "objectivesLead": "By the end of this period you can:",
+        "objectives": [
+          "Explain in simple terms how a language model builds an answer from tokens, and why fluent text does not prove that an answer is true",
+          "Decide which parts of a task to delegate to AI and which to keep (source verification, reconciliation, decisions)",
+          "Recognise invented facts or citations, wrong quantities or labels, overinterpretation and task drift in a response",
+          "Test an AI statement against the retail CSV and decide whether to correct, qualify or remove each claim",
+          "Choose the check that suits each type of error",
+          "Rewrite a claim with the level of certainty that the evidence supports"
+        ],
+        "body": "A colleague pastes this line from an AI tool into the team chat:\n\n> *\"East performed badly in October because demand fell. The region lost money and needs an immediate promotion.\"*\n\nIt reads like analysis: confident, specific and well put. This period teaches you to look at a sentence like that and ask a different question: **which parts of it can the data actually support?** You also learn, in simple terms, why an AI answer can be fluent and wrong at the same time.\n\n> [!ghi-nho] An AI response can be useful without being fully reliable. Find the kind of error, run the check that fits it, and rewrite the claim with the level of certainty the evidence supports.\n\n:::Predict before you read\nCount the separate claims in the sentence above. For each claim, name the column you would need in the retail CSV to check it. Which claims have no matching column? Write your answer down, then compare it with the worked example below.\n:::",
+        "sections": [
+          {
+            "layout": "compare",
+            "title": "What to delegate and what to keep",
+            "intro": "Delegate the work where a draft is useful and a mistake is easy to spot. Keep the work where a mistake would go unnoticed and cost you.",
+            "parts": [
+              {
+                "title": "Useful to delegate",
+                "md": "- Explaining a concept\n- Drafting, outlining and rewriting\n- Categorising and comparing alternatives\n- Organising steps\n- Exploratory suggestions"
+              },
+              {
+                "title": "Keep for yourself",
+                "md": "- Verifying sources\n- Reconciling numbers\n- Accepting a claim\n- Approving a policy or deciding an intervention"
+              }
+            ],
+            "outro": "Some systems can also run calculations or inspect files when the right tools are enabled. A real data-analysis tool changes what the chatbot can calculate, but a text-only answer should **not** be presented as a computed result unless there is a recorded computation or a trusted source. Inspect your chosen interface instead of assuming that every chatbot behaves in the same way."
+          },
+          {
+            "layout": "text",
+            "title": "How an AI answer is built",
+            "parts": [
+              {
+                "md": "In simplified terms, a language model reads your prompt as **tokens**, which are pieces of text, and generates a response from patterns learned in training and from the information supplied in the conversation. Tokens are units of processed text. They are not facts, and they do not carry a guarantee of truth.\n\nThat is why natural, persuasive language does not prove anything. An answer can be consistent, convincing and wrong. It also explains two habits you will practise all course: **give the model the source information** it needs, and **check important results independently**.\n\n> [!ghi-nho] Fluent text is not evidence that a calculation, a source check or an external action actually took place."
+              }
+            ]
+          },
+          {
+            "layout": "cards",
+            "title": "Four common problems, four different checks",
+            "intro": "These are different problems and each calls for a different action. Poor formatting usually needs a targeted follow-up, not a redesign of the whole task.",
+            "parts": [
+              {
+                "title": "Invented facts or citations",
+                "md": "A plausible reference, or a confident statement your source does not support.\n\n**Check:** open the source, verify the title and the passage, and remove what you cannot verify."
+              },
+              {
+                "title": "Wrong quantities or labels",
+                "md": "A regional total is miscalculated, or a chart shows net sales but labels the axis \"profit\".\n\n**Check:** recalculate with a formula and compare with the source column."
+              },
+              {
+                "title": "Overinterpretation",
+                "md": "A low recorded total is called \"weak demand\" although store coverage and time period are unknown.\n\n**Check:** write it as a hypothesis and ask for the missing evidence."
+              },
+              {
+                "title": "Task drift",
+                "md": "The answer wanders from the requested four-row table into a long strategy discussion.\n\n**Check:** compare the output with your success criteria and tighten the output instruction."
+              }
+            ],
+            "outro": "The slides add two more problems to keep in mind. **Bias:** the model may repeat stereotypes or judge a whole group unfairly. **Context limits:** it may miss relevant context, misread the request or rely on outdated information, for example an old policy applied to a current question."
+          },
+          {
+            "layout": "steps",
+            "title": "Worked example: check the East statement",
+            "intro": "The statement is an *illustrative faulty claim*, not an observed model response. The retail CSV records net sales by region and has no dates, no costs and no demand study.",
+            "parts": [
+              {
+                "title": "Split the sentence into claims",
+                "md": "1. East performed badly.\n2. ... in October.\n3. ... because demand fell.\n4. The region lost money.\n5. It needs an immediate promotion."
+              },
+              {
+                "title": "Test each claim against the file",
+                "md": "| Claim | Supported by the CSV? | Reason and what is missing |\n|---|---|---|\n| East performed badly | Not as stated | The CSV gives recorded net sales per region. \"Badly\" needs a comparison standard such as a target or a past period, and the file has neither |\n| In October | No | There are no transaction dates |\n| Because demand fell | No | No demand measure and no time series; a comparison is not a cause |\n| Lost money | No | There are no costs, so profit cannot be computed |\n| Needs an immediate promotion | No | An action proposal without a trade-off analysis |"
+              },
+              {
+                "title": "Send a correction prompt",
+                "md": "```prompt Correction prompt\nReview the statement using only the attached CSV. Make a table with four columns: claim, supported by the CSV (yes/no), reason, and information needed. Use the exact field names. Do not infer profit, dates, demand or causal effects. Rewrite the conclusion using verified observations only.\n```\n\n**Why it works.** It limits the evidence to the file, fixes the table layout, names the things the model must not infer, and asks for a rewrite, so you get a corrected sentence and not another lecture."
+              },
+              {
+                "title": "Accept only what you can verify",
+                "md": "An acceptable rewrite: *\"East has the lowest recorded regional net sales in this file.\"* Even that must be checked against the four totals, and it describes the data only. It says nothing about a time trend or the reason for the difference."
+              }
+            ],
+            "outro": "> [!vi-du] The first response to a faulty claim is not to argue with the tool. It is to **separate the measurable observation from the rest of the sentence**.\n\n> [!canh-bao] Words such as \"profit\", \"declined\", \"caused\" and \"because\" each ask for evidence. Check that the file has it before you let them stay."
+          },
+          {
+            "layout": "text",
+            "title": "Find the error in this AI response",
+            "parts": [
+              {
+                "md": "Here is another illustrative AI answer. Check it against the retail CSV and decide, claim by claim, whether to **correct**, **qualify** (state the limits) or **remove** it. Try before you open the answer.\n\n> [!ghi-nho] *\"West has net sales of 260,026.33, making it the most profitable region. Discounts caused its strong performance, as confirmed by a recent market report.\"*\n\nAsk yourself: Does the figure belong to the stated region? Can net sales say which region earns the most profit? What evidence would support the story about discounts? Can you find and open the cited report?\n\n:::Open after you have tried\n**The figure.** 260,026.33 is the total for North, not West. Sum `Net_Sales_Amount` for each `Store_Region` and see for yourself. *Correct* the label.\n\n**\"Most profitable\".** Net sales is not profit, and the file has no cost data. *Remove* the profit claim, or say that profit cannot be computed.\n\n**\"Discounts caused its strong performance\".** The file has discount fields, but a comparison of totals does not show a cause. *Qualify* it as an untested hypothesis, and say what you would need to test it.\n\n**\"Confirmed by a recent market report\".** No report is named, so nobody can open it. *Remove* it unless you can find the real source and check that it says this.\n:::"
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Match the problem to the response",
+            "parts": [
+              {
+                "md": "| Output problem | Example | Appropriate response |\n|---|---|---|\n| Unsupported source | An article title is invented | Find an authentic source or remove the assertion |\n| Arithmetic mismatch | Regional sums do not reconcile | Recalculate independently and correct the table |\n| Ambiguous measure | \"Best-performing region\" | Define what \"best\" means: sales, profit, volume ... |\n| Missing data | A profit figure with no cost data | State that profit cannot be computed |\n| Excessive confidence | \"The discount caused the decline\" | Relabel it as an untested hypothesis |\n\n**Check each corrected claim.** For every substantive answer ask:\n\n- Did the tool actually receive the evidence?\n- Are the units, the time period and the measure defined?\n- Can a named source be opened and checked?\n- Does the conclusion match the calculation?\n- Does the wording imply a cause where the data shows only a comparison?\n- Is the answer useful for the decision you need to make?\n\nRecord a correction as a new prompt. If the original question is impossible to answer with the data, revise the task brief instead (you do this in Period 3)."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Check it yourself",
+            "parts": [
+              {
+                "md": "Use the retail CSV in a spreadsheet, not a chatbot.\n\n1. Make a pivot table of the sum of `Net_Sales_Amount` by `Store_Region`. Which region is lowest? Is the figure 260,026.33 in the table, and for which region?\n2. Look for a column that could confirm the word \"October\", the word \"profit\" or the word \"demand\". Which of them does the file have?\n3. Write one question that the CSV **can** answer and one that it **cannot**, in your own words.\n\n:::Open after you have tried\nEast should come out lowest, and 260,026.33 belongs to North. The file has no date, cost or demand column. A question it can answer: *Which region has the highest total net sales?* One it cannot: *Which region lost money in October?*\n:::"
+              }
+            ]
+          },
+          {
+            "layout": "faq",
+            "title": "Common questions",
+            "parts": [
+              {
+                "title": "Does a citation make a claim trustworthy?",
+                "md": "No. A neat reference can be invented. Open the source and check that it exists and says what the answer claims."
+              },
+              {
+                "title": "Should I stop using AI for anything with numbers?",
+                "md": "No. That would swap one mistake for another. Use a tool that really computes, keep a record of how, and recalculate the results that matter in a spreadsheet."
+              },
+              {
+                "title": "When do I qualify a claim and when do I remove it?",
+                "md": "Qualify it when part of it is supported but the cause or the scope is not. Remove it when it is unsupported and you cannot verify it, such as a source nobody can open."
+              },
+              {
+                "title": "Can I ask the AI whether its own answer is correct?",
+                "md": "You can ask it to list assumptions or to recheck a step, but its reassurance is not evidence. The check has to come from the source, a recalculation or a human review."
+              }
+            ]
+          }
+        ],
+        "flashcards": {
+          "title": "Flashcards · Period 2",
+          "items": [
+            {
+              "term": "Language model",
+              "meaning": "A model that generates language from patterns it learned and from the information supplied in the conversation.",
+              "example": "It continues text in a plausible way; it is not a database of verified facts."
+            },
+            {
+              "term": "Token",
+              "meaning": "A unit of text that the model processes. A token is a piece of text, not a guaranteed fact.",
+              "example": "A word, or part of a word."
+            },
+            {
+              "term": "Hallucination",
+              "meaning": "Unsupported or fabricated content presented as if it were fact.",
+              "example": "A citation to an article that does not exist."
+            },
+            {
+              "term": "Task drift",
+              "meaning": "A response that moves away from the agreed task.",
+              "example": "A four-row table request that turns into a strategy essay."
+            },
+            {
+              "term": "Causal claim",
+              "meaning": "A claim that one factor produced another. It needs suitable evidence, not just a comparison.",
+              "example": "\"The discount caused the decline.\""
+            },
+            {
+              "term": "Overinterpretation",
+              "meaning": "Reading more into the data than it shows. Fix it by labelling a hypothesis and asking for the missing evidence.",
+              "example": "Low recorded sales described as weak demand."
+            },
+            {
+              "term": "Correct, qualify or remove",
+              "meaning": "The three ways to handle a claim: fix a wrong fact, state the limits of a partly supported one, or delete an unsupported one.",
+              "example": "Correct the region label; qualify the cause; remove the unnamed report."
+            },
+            {
+              "term": "Independent check",
+              "meaning": "A check that does not depend on the AI's own explanation: open the source, recalculate, or review as a human.",
+              "example": "Summing Net_Sales_Amount per region in a spreadsheet."
+            }
+          ]
+        },
+        "summary": [
+          "A language model builds an answer from tokens and learned patterns; fluent wording is not evidence that anything was verified or computed.",
+          "Delegate drafting, explaining and organising; keep source checking, reconciliation and decisions.",
+          "Name the problem first (invented source, wrong number, overinterpretation, task drift), then run the check that fits it.",
+          "Rewrite claims with the certainty the evidence supports: correct, qualify or remove."
+        ],
+        "quiz": {
+          "title": "Quiz · Period 2",
+          "passThresholdPct": 70,
+          "requireConfidence": true,
+          "questions": [
+            {
+              "key": "pe.p02.pe007",
+              "type": "mcq",
+              "prompt": "In the course explanation, what is a token?",
+              "explanation": "The model processes text in token units, which are pieces of text. A token is not a chart axis, an approval or a stored transaction record, even though all of these appear in analysis work.",
+              "options": [
+                {
+                  "label": "A unit of processed text",
+                  "isCorrect": true
+                },
+                {
+                  "label": "A numerical chart axis",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.token-confusion"
+                },
+                {
+                  "label": "A signed human approval",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.token-confusion"
+                },
+                {
+                  "label": "A stored sales record",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.token-confusion"
+                }
+              ]
+            },
+            {
+              "key": "pe.p02.pe008",
+              "type": "mcq",
+              "prompt": "An AI answer invents a publication that cannot be found. What problem is illustrated?",
+              "explanation": "Inventing a source is a hallucination, a fabricated citation. The other options describe display or ordering problems, which are real but concern how correct information is shown, not whether the evidence exists.",
+              "options": [
+                {
+                  "label": "A missing chart label",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.error-type-mixup"
+                },
+                {
+                  "label": "An outdated page layout",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.error-type-mixup"
+                },
+                {
+                  "label": "An incorrect sorting order",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.error-type-mixup"
+                },
+                {
+                  "label": "A fabricated citation",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p02.pe009",
+              "type": "mcq",
+              "prompt": "The chatbot asserts that East's low sales prove weak demand. What is the best response?",
+              "explanation": "The CSV cannot establish causes, store coverage or profit, so the cause must stay a hypothesis until more evidence supports it. Saying East had fewer stores or low profit just swaps one unsupported explanation for another, and reporting demand as fact is the original mistake.",
+              "options": [
+                {
+                  "label": "Mark the cause as unverified",
+                  "isCorrect": true
+                },
+                {
+                  "label": "State that East had fewer stores",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.invented-gap-filling"
+                },
+                {
+                  "label": "Report demand as a measured fact",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.cause-from-comparison"
+                },
+                {
+                  "label": "Replace demand with low profit",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.invented-gap-filling"
+                }
+              ]
+            },
+            {
+              "key": "pe.p02.pe010",
+              "type": "mcq",
+              "prompt": "A learner asks AI to provide a regional explanation. Which task should the learner retain?",
+              "explanation": "Human review is essential because a fluent explanation can go beyond the evidence. Asking the AI to certify itself or to approve the conclusion hands the check to the party being checked, and inventing missing dates adds new claims instead of testing the old ones.",
+              "options": [
+                {
+                  "label": "Ask AI to certify its own accuracy",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.delegates-checking"
+                },
+                {
+                  "label": "Judge whether the evidence supports it",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Let AI invent missing dates",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.invented-gap-filling"
+                },
+                {
+                  "label": "Let AI approve the conclusion",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.delegates-checking"
+                }
+              ]
+            },
+            {
+              "key": "pe.p02.pe011",
+              "type": "mcq",
+              "prompt": "Why should a plausible AI-generated number be checked?",
+              "explanation": "Language quality and factual accuracy are separate. Any number, however plausible, needs a check. The other options invent blanket rules about length or format: long answers and tables can be accurate, and charts can represent data.",
+              "options": [
+                {
+                  "label": "Long answers are inherently inaccurate",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.blanket-distrust"
+                },
+                {
+                  "label": "Tables are always less trustworthy",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.blanket-distrust"
+                },
+                {
+                  "label": "Fluency does not establish accuracy",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Charts cannot represent any data",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.blanket-distrust"
+                }
+              ]
+            },
+            {
+              "key": "pe.p02.pe012",
+              "type": "mcq",
+              "prompt": "A response contains a correct region total and an invented explanation for it. What is the best edit?",
+              "explanation": "The evidence supports the verified total but not the story about it, so keep the number and qualify the explanation. Replacing the story with a guess keeps the problem, keeping both treats speculation as a finding, and deleting both without checking throws away good evidence.",
+              "options": [
+                {
+                  "label": "Replace the explanation with a guess",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.invented-gap-filling"
+                },
+                {
+                  "label": "Keep the total; qualify the explanation",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Remove both claims without checking",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.blanket-distrust"
+                },
+                {
+                  "label": "Keep both as established findings",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.cause-from-comparison"
+                }
+              ]
+            },
+            {
+              "key": "pe.p02.pe013",
+              "type": "mcq",
+              "prompt": "AI provides three sources for a claim; one link does not exist. What should be done first?",
+              "explanation": "Sources need independent checking, so verify each one. A citation that looks tidy, a link that probably moved or a claim that the AI repeats does not make a missing source exist.",
+              "options": [
+                {
+                  "label": "Verify each source independently",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Treat citations as quality proof",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.unchecked-trust"
+                },
+                {
+                  "label": "Assume the missing link moved",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.unchecked-trust"
+                },
+                {
+                  "label": "Count how often AI repeats it",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.unchecked-trust"
+                }
+              ]
+            },
+            {
+              "key": "pe.p02.x1",
+              "type": "true_false",
+              "prompt": "If an AI answer explains a calculation fluently and in detail, that proves the calculation was actually run.",
+              "explanation": "False. Fluent text is not evidence that a calculation, a source check or an external action took place. Ask for a recorded computation or a trusted source, and recalculate one result yourself.",
+              "options": [
+                {
+                  "label": "True",
+                  "isCorrect": false,
+                  "misconception": "pe.p02.unchecked-trust"
+                },
+                {
+                  "label": "False",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p02.x2",
+              "type": "matching",
+              "prompt": "Match each output problem to the appropriate response.",
+              "explanation": "Each problem needs its own action. A source problem needs a source check, a sum needs arithmetic, an ambiguous word needs a definition, missing data needs an honest statement of the limit, and excessive confidence needs a relabelled hypothesis.",
+              "pairs": [
+                {
+                  "left": "An article title that does not exist",
+                  "right": "Find an authentic source or remove the assertion"
+                },
+                {
+                  "left": "Regional sums that do not reconcile",
+                  "right": "Recalculate independently and correct the table"
+                },
+                {
+                  "left": "A request for the \"best-performing region\"",
+                  "right": "Define what \"best\" means: sales, profit, volume ..."
+                },
+                {
+                  "left": "A profit figure when the file has no costs",
+                  "right": "State that profit cannot be computed"
+                },
+                {
+                  "left": "\"The discount caused the decline\"",
+                  "right": "Relabel it as an untested hypothesis"
+                }
+              ]
+            },
+            {
+              "key": "pe.p02.x3",
+              "type": "fill_in",
+              "prompt": "A response moves away from the requested four-row table into a long strategy discussion. This problem is called task ______ (one word).",
+              "explanation": "Task drift: the answer leaves the agreed task. Compare the output with your success criteria and refine the output instruction, for example by repeating the required table layout and asking for nothing else.",
+              "answers": [
+                "drift",
+                "task drift"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "title": "Period 3 · Define: Problems, Context and Success Criteria",
+        "durationMin": 45,
+        "description": "Turn a vague business concern into an answerable question, identify the audience and the evidence, describe the output and set testable success criteria before you write any prompt.",
+        "look": {
+          "palette": "limio",
+          "font": "modern"
+        },
+        "objectivesLead": "By the end of this period you can:",
+        "objectives": [
+          "Turn a vague business concern into a narrow, answerable question",
+          "Name the audience, the decision and the available evidence, and say what is still missing",
+          "Tell whether a question can be answered with a given dataset",
+          "Write an expected output and success criteria that are observable and testable",
+          "Assemble a four-part task brief: question, context, expected result and success criteria",
+          "Decide what to do when a stakeholder asks for a measure the data does not contain"
+        ],
+        "body": "The manager says: *\"Our sales performance is disappointing.\"* A tempting reply is to type into a chatbot: *\"Explain why my stores are doing badly and fix the problem.\"* It feels efficient. It is also a request that no data file can answer: it names no measure, it asks for a cause the data cannot show, and it demands an action nobody can justify yet.\n\nThis period is the first step of the cycle, **Define**. Before you write any prompt, you turn a vague concern into an answerable question, name the audience and the evidence, describe the output you want, and set success criteria you can test. The result is a four-part **task brief** that you carry into Period 4.\n\n> [!ghi-nho] Define the decision and the available evidence first. A narrow, verifiable task is more useful than an instruction to \"analyse everything\".\n\n:::Predict before you read\nImagine you may ask the manager three questions before you do any analysis. Which three would change your work the most? Write them down. Compare them with the three checks in the first section below.\n:::",
+        "sections": [
+          {
+            "layout": "steps",
+            "title": "From a vague concern to a first question",
+            "intro": "\"Sales performance is disappointing\" is a concern, not yet a task. Defining it stops the chatbot from filling the gaps with guesses. The brief should make sense to a fellow student who has not seen the conversation.",
+            "parts": [
+              {
+                "title": "Clarify the concern",
+                "md": "Compared with what: a target, a past period or another region? Does \"sales\" mean gross or net sales? What decision does the manager have to make?"
+              },
+              {
+                "title": "Check what the data can answer",
+                "md": "The CSV supports regional sales comparisons. It has no dates, targets or cost data, so it cannot establish a decline, a missed target or low profit."
+              },
+              {
+                "title": "Agree on a first question",
+                "md": "*Which regions have the highest and the lowest total net sales?* Confirm with the manager that this comparison helps. Whether to change staffing or promotions is a **later** question that needs more evidence."
+              }
+            ]
+          },
+          {
+            "layout": "cards",
+            "title": "Establish the context",
+            "intro": "Context is the audience, the decision and the evidence. For the regional task it comes out like this.",
+            "parts": [
+              {
+                "title": "Who needs the result?",
+                "md": "A retail manager preparing a short regional review."
+              },
+              {
+                "title": "What decision needs support?",
+                "md": "Which regions deserve a closer look first."
+              },
+              {
+                "title": "What data do we have?",
+                "md": "The retail transaction CSV, with `Store_Region` and `Net_Sales_Amount`: 200 transactions."
+              },
+              {
+                "title": "What is still unknown?",
+                "md": "Targets, past sales trends, costs and the causes of any difference between regions. There are also no dates, store identifiers or currency."
+              }
+            ],
+            "outro": "These four answers lead to one **answerable question**: *Which region has the highest and which the lowest sum of net sales?*\n\n| Part of the brief | Question to ask | Retail example |\n|---|---|---|\n| Problem and question | What exactly are we answering? | Which region has the highest recorded total net sales? |\n| Context and audience | Who needs this, and why? | A manager preparing a short regional review |\n| Evidence and limits | What can we use and what is missing? | 200 transactions; no dates, costs, stores or currency |\n| Output and success | What would a satisfactory answer contain? | A ranked four-row table with totals, a check and one caution |"
+          },
+          {
+            "layout": "text",
+            "title": "Define the output and the success criteria",
+            "parts": [
+              {
+                "md": "**Expected result.** A table that ranks all four regions by total net sales, followed by two short observations.\n\n| Rank | Region | Net sales |\n|---|---|---|\n| 1 | Region A | ... |\n| 2 | Region B | ... |\n| 3 | Region C | ... |\n| 4 | Region D | ... |\n\n**Success criteria.**\n\n- All four regions appear exactly once.\n- The regional totals match the sums in the original CSV.\n- The ranking and the labels are clear, and no currency is invented.\n- Every observation is supported by the data.\n\n> [!ghi-nho] An **output format** specifies the deliverable. **Success criteria** specify how to judge it. A useful criterion is observable, so you can see what to fix when it fails. Criteria can also cover readability and responsible claims.\n\n> [!canh-bao] \"Be useful\", \"sound confident\" and \"act as an expert\" are not success criteria. You cannot check any of them against the file."
+              }
+            ]
+          },
+          {
+            "layout": "compare",
+            "title": "Weak request or clarified brief?",
+            "intro": "The same manager, the same file, two very different starting points.",
+            "parts": [
+              {
+                "title": "Initial request",
+                "md": "```prompt Weak request\nExplain why my stores are doing badly and fix the problem.\n```\n\n**Problems.** The measure is unspecified, the diagnosis (\"badly\") is unsupported and the action (\"fix\") cannot be justified from this CSV."
+              },
+              {
+                "title": "Clarified brief",
+                "md": "```prompt Clarified brief\nThe manager needs to compare the four regions in the provided transaction file. Calculate total net sales and recorded transaction counts by region. Show a table sorted by net sales. Verify the totals against the file. Do not infer dates, profit or causes.\n```\n\n**Why it works.** It names the decision-maker, the measure, the grouping and the output, builds in a check, and keeps the result descriptive. Further diagnosis waits for more information."
+              }
+            ]
+          },
+          {
+            "layout": "cards",
+            "title": "Assemble the four-part task brief",
+            "intro": "Write the brief once, in four parts, and keep it. In Period 4 you turn it into a prompt with the same question and the same expected result.",
+            "parts": [
+              {
+                "title": "1. Problem and question",
+                "md": "Management needs a regional review. Which regions have the highest and the lowest total net sales?"
+              },
+              {
+                "title": "2. Context",
+                "md": "A retail manager will use the result. Group by `Store_Region`; measure `Net_Sales_Amount`."
+              },
+              {
+                "title": "3. Expected result",
+                "md": "A ranked four-row table with two observations."
+              },
+              {
+                "title": "4. Success criteria",
+                "md": "Include every region; verify the sums; label clearly; avoid unsupported explanations."
+              }
+            ],
+            "outro": "Read the brief like a contract:\n\n- Can the task be answered with the specified source?\n- Is the question precise?\n- Are potentially misleading comparisons identified?\n- Does a success test say how the check is done?\n\n> [!canh-bao] If the manager later asks which region is most **profitable**, the scope has changed and the source is no longer adequate. Change the brief or obtain cost data. Do not ask the AI to estimate the missing measure."
+          },
+          {
+            "layout": "text",
+            "title": "Let the chatbot help you define",
+            "parts": [
+              {
+                "md": "You can complete the brief by hand before opening a chatbot, or you can ask the chatbot to question you first.\n\n```prompt Clarification prompt (illustrative)\nAct as a task-planning assistant. Before analysing the retail CSV, ask up to four questions covering: the manager's decision, the target metric, the comparison groups, and the desired output. After I answer, produce a four-part task brief. Flag requirements that the file cannot support.\n```\n\n**Why it works.** It caps the number of questions, names what they must cover, asks for a defined result and tells the tool to point out what the file cannot support.\n\n**When to use it.** Use clarification when a missing detail would materially change the answer. If the task is already well defined, a long questionnaire only wastes time. The aim is to reduce uncertainty efficiently."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Your turn: a brief for product categories",
+            "parts": [
+              {
+                "md": "The manager now wants a one-page overview of retail net sales by **product category**. Write the four-part brief. Use the exact column names from the CSV.\n\n:::Open the solution after you have tried\n**1. Problem and question.** Which product category has the highest and which the lowest total net sales?\n\n**2. Context.** A retail manager reviewing the product mix. Group by `Product_Category` (the file has four categories: Apparel, Electronics, Furniture, Grocery); measure `Net_Sales_Amount`. No dates, costs or currency are available.\n\n**3. Expected result.** A ranked four-row table of total net sales by category, with two short observations.\n\n**4. Success criteria.** Each category appears once; the four totals add up to the total of the whole file; the measure is named and no currency is invented; observations make no claim about profit, trend or cause.\n:::\n\n**Check it yourself.** In a spreadsheet, sum `Net_Sales_Amount` for the whole file, then by `Store_Region`. The regional sums must add up to the grand total, because every transaction has exactly one region.\n\n:::Open after you have tried\nThe grand total of `Net_Sales_Amount` is **892,252.11**, with the currency unspecified. Use it only as your check. Do not paste it into a prompt that is meant to make the tool calculate it.\n:::"
+              }
+            ]
+          },
+          {
+            "layout": "faq",
+            "title": "Common questions",
+            "parts": [
+              {
+                "title": "What if a stakeholder asks for profit and there is no cost data?",
+                "md": "Say that the file cannot support it. Change the question to one the data can answer, or obtain cost data. Never ask AI to estimate the missing measure."
+              },
+              {
+                "title": "Two managers use the same dataset but need different decisions. Do they need different briefs?",
+                "md": "Yes. The data may be the same, but the success criteria must follow each decision."
+              },
+              {
+                "title": "Should I always ask the chatbot to question me first?",
+                "md": "No, only when a missing detail would materially change the answer. A well-defined task does not need a questionnaire."
+              },
+              {
+                "title": "Who is the brief written for?",
+                "md": "For anyone who has not seen your conversation, including you next week. If a classmate could not do the task from it, it is not finished."
+              }
+            ]
+          }
+        ],
+        "flashcards": {
+          "title": "Flashcards · Period 3",
+          "items": [
+            {
+              "term": "Task brief",
+              "meaning": "A concise agreed description of the problem, audience, evidence and success, in four parts.",
+              "example": "Question, context, expected result, success criteria."
+            },
+            {
+              "term": "Answerable question",
+              "meaning": "A question the available data can actually answer.",
+              "example": "Which region has the lowest total net sales?"
+            },
+            {
+              "term": "Metric",
+              "meaning": "A defined quantity used for comparison. \"Best\" is not a metric until you say which one.",
+              "example": "Sum of Net_Sales_Amount per Store_Region."
+            },
+            {
+              "term": "Constraint",
+              "meaning": "A limit on scope or on what may be inferred.",
+              "example": "Do not infer dates, profit or causes."
+            },
+            {
+              "term": "Output format",
+              "meaning": "The shape of the deliverable.",
+              "example": "A ranked four-row table with two observations."
+            },
+            {
+              "term": "Success criterion",
+              "meaning": "An observable condition that shows whether the result meets the task. It tells you what to fix when it fails.",
+              "example": "All four regions appear exactly once."
+            },
+            {
+              "term": "Evidence and limits",
+              "meaning": "What the data contains and what it lacks. Naming the gaps stops the AI from filling them with guesses.",
+              "example": "200 transactions; no dates, costs, stores or currency."
+            },
+            {
+              "term": "Scope change",
+              "meaning": "A new question the original brief and data cannot support. Change the brief or get more data.",
+              "example": "\"Which region is most profitable?\" when no costs exist."
+            }
+          ]
+        },
+        "summary": [
+          "Define the decision first: ask what the manager must decide, which measure matters and which comparison is fair.",
+          "Context means the audience, the decision and the evidence, including what is missing from the data.",
+          "The output format names the deliverable; success criteria are observable checks that say how to judge it.",
+          "A four-part brief is a contract: if the stakeholder asks for something the data cannot support, change the brief or the data, not the facts."
+        ],
+        "quiz": {
+          "title": "Quiz · Period 3",
+          "passThresholdPct": 70,
+          "requireConfidence": true,
+          "questions": [
+            {
+              "key": "pe.p03.pe014",
+              "type": "mcq",
+              "prompt": "A retailer says, “Sales need attention.” What should be clarified first?",
+              "explanation": "A defined management decision tells you what to analyse. Chart colours, headings and the chatbot's persona are output choices that come after the problem is clear. The most tempting wrong answer is the chart colour because it feels concrete.",
+              "options": [
+                {
+                  "label": "The color of the final chart",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.decoration-first"
+                },
+                {
+                  "label": "The number of report headings",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.decoration-first"
+                },
+                {
+                  "label": "The chatbot's preferred persona",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.decoration-first"
+                },
+                {
+                  "label": "The decision the manager faces",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p03.pe015",
+              "type": "mcq",
+              "prompt": "The data include net sales by region but no sales targets. Which question is answerable?",
+              "explanation": "Regional net totals are in the file, so \"which region has the lowest total\" is answerable. Growth next month needs future data, a missed target needs targets, and the lowest profit needs costs. None of those is in the file.",
+              "options": [
+                {
+                  "label": "Which region will grow next month?",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.asks-beyond-data"
+                },
+                {
+                  "label": "Which region has the lowest profit?",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.asks-beyond-data"
+                },
+                {
+                  "label": "Which region missed its target?",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.asks-beyond-data"
+                },
+                {
+                  "label": "Which region has the lowest total?",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p03.pe016",
+              "type": "mcq",
+              "prompt": "Which criterion makes a task brief testable?",
+              "explanation": "A measurable output lets you check the result against the brief. Impressive personas, \"be useful\" and \"sound confident\" give you no pass or fail test.",
+              "options": [
+                {
+                  "label": "An impressive expert persona",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.vague-success"
+                },
+                {
+                  "label": "A specified measurable output",
+                  "isCorrect": true
+                },
+                {
+                  "label": "A broad instruction to be useful",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.vague-success"
+                },
+                {
+                  "label": "A request to sound confident",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.vague-success"
+                }
+              ]
+            },
+            {
+              "key": "pe.p03.pe017",
+              "type": "mcq",
+              "prompt": "A team drafts a retail brief without naming its audience. What revision helps most?",
+              "explanation": "The audience decides how much detail the result needs and what format suits it, so the missing audience is the requirement to add. A longer request, unrelated history or more synonyms add words but not the missing information.",
+              "options": [
+                {
+                  "label": "Increase the requested word count",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.adds-words-not-info"
+                },
+                {
+                  "label": "Add unrelated company history",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.adds-words-not-info"
+                },
+                {
+                  "label": "Add more synonyms for sales",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.adds-words-not-info"
+                },
+                {
+                  "label": "State who will use the result",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p03.pe018",
+              "type": "mcq",
+              "prompt": "A prompt asks for “the best region” from net sales alone. What is the central flaw?",
+              "explanation": "\"Best\" might mean the highest sales, the highest margin or the fastest growth, and each needs different evidence. The use of a comparison, the number of regions and the length of column names are not the source of the ambiguity.",
+              "options": [
+                {
+                  "label": "The decision criterion is undefined",
+                  "isCorrect": true
+                },
+                {
+                  "label": "The request uses a comparison",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.ambiguous-metric"
+                },
+                {
+                  "label": "The data contain four regions",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.ambiguous-metric"
+                },
+                {
+                  "label": "The column names are too long",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.ambiguous-metric"
+                }
+              ]
+            },
+            {
+              "key": "pe.p03.pe019",
+              "type": "mcq",
+              "prompt": "Two managers share the same dataset but need different decisions. How should the prompts differ?",
+              "explanation": "Success criteria must follow the decision each manager faces. A shared dataset does not mean shared information needs. Removing context, letting the tool choose the objective or reusing one criterion all lose the link between the decision and the check.",
+              "options": [
+                {
+                  "label": "Remove business context from both",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.one-size-criteria"
+                },
+                {
+                  "label": "Let the tool choose each objective",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.one-size-criteria"
+                },
+                {
+                  "label": "Match success criteria to each decision",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Reuse the identical criterion for both",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.one-size-criteria"
+                }
+              ]
+            },
+            {
+              "key": "pe.p03.pe020",
+              "type": "mcq",
+              "prompt": "A request for monthly sales trends uses the provided retail CSV. What missing input matters most?",
+              "explanation": "Monthly trends need a date on every record, and this file has none. A more detailed role, a shorter title or an example chart improve presentation but cannot supply missing data.",
+              "options": [
+                {
+                  "label": "A more detailed chatbot role",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.adds-words-not-info"
+                },
+                {
+                  "label": "Transaction dates for each record",
+                  "isCorrect": true
+                },
+                {
+                  "label": "A shorter chart title",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.adds-words-not-info"
+                },
+                {
+                  "label": "An example of a bar chart",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.adds-words-not-info"
+                }
+              ]
+            },
+            {
+              "key": "pe.p03.x1",
+              "type": "matching",
+              "prompt": "Match each part of the four-part task brief to its content in the regional example.",
+              "explanation": "The brief has four parts: the question, the context, the expected result and the success criteria. The question says what is being asked, the context says who and which data, the result is the deliverable, and the criteria are the checks.",
+              "pairs": [
+                {
+                  "left": "Problem and question",
+                  "right": "Which regions have the highest and the lowest total net sales?"
+                },
+                {
+                  "left": "Context",
+                  "right": "A retail manager will use it; group by Store_Region, measure Net_Sales_Amount"
+                },
+                {
+                  "left": "Expected result",
+                  "right": "A ranked four-row table with two observations"
+                },
+                {
+                  "left": "Success criteria",
+                  "right": "Include every region, verify the sums, label clearly, avoid unsupported explanations"
+                }
+              ]
+            },
+            {
+              "key": "pe.p03.x2",
+              "type": "true_false",
+              "prompt": "A stakeholder asks which region is the most profitable. The file has no cost data. The best next step is to ask the chatbot to estimate costs so the brief can stay the same.",
+              "explanation": "False. The scope has changed and the source cannot support it. Change the brief to a question the data can answer, or obtain cost data. Asking AI to estimate a missing measure invents evidence.",
+              "options": [
+                {
+                  "label": "True",
+                  "isCorrect": false,
+                  "misconception": "pe.p03.asks-beyond-data"
+                },
+                {
+                  "label": "False",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p03.x3",
+              "type": "ordering",
+              "prompt": "Put the steps of defining a task in a sensible order.",
+              "explanation": "You start from the concern, clarify what it means, check what the data can answer, agree on a first answerable question, and only then write the expected result and the success criteria that make up the brief.",
+              "sequence": [
+                "Hear the manager's concern",
+                "Clarify the decision, the measure and the comparison",
+                "Check what the available data can and cannot answer",
+                "Agree on a first answerable question",
+                "Write the expected result and the success criteria in a four-part brief"
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "misconceptions": [
+    {
+      "code": "pe.p01.wrong-input",
+      "name": "Supplies something other than the actual task evidence",
+      "description": "Offers a filename, a cover image or an unrelated file when the task needs the values themselves. A name or a picture identifies a thing without containing its data, so the chatbot has nothing to analyse. Typical sign: \"I mentioned the file, so it knows what is in it.\""
+    },
+    {
+      "code": "pe.p01.assumes-access",
+      "name": "Assumes the chatbot can see or compute on a file it has not received",
+      "description": "Believes the tool has read a file because it was mentioned, or that it can run a calculation on data it never got. Without file access, any regional total it gives is invented. Typical sign: accepting a table of numbers without checking that the file was attached and opened."
+    },
+    {
+      "code": "pe.p01.format-mismatch",
+      "name": "Chooses an output format that does not fit the question",
+      "description": "Picks a narrative, a spoken or a decorative format for a task that asks for exact values or a comparison. The reader then cannot see or check the answer easily. Typical sign: asking for an essay when four numbers need ranking."
+    },
+    {
+      "code": "pe.p01.ai-owns-decision",
+      "name": "Gives the approval or the accountability to the AI or a tool",
+      "description": "Treats the chatbot, a template or a chart generator as the party that signs off a recommendation. These tools can draft and format but they cannot be accountable for a decision. Typical sign: \"the AI wrote it, so it has been approved.\""
+    },
+    {
+      "code": "pe.p01.polish-as-proof",
+      "name": "Treats a polished or fluent report as proof of understanding",
+      "description": "Judges work by how it looks, such as cover design, headings or paragraph count, instead of by whether the person can explain and repeat it. AI can make presentation strong with no understanding behind it. Typical sign: \"the report looks professional, so they must know the method.\""
+    },
+    {
+      "code": "pe.p01.cycle-mixup",
+      "name": "Confuses the stages of the Define, Design, Execute, Evaluate, Refine cycle",
+      "description": "Labels a step by the action it looks like instead of by its purpose in the cycle. For example, any new request looks like \"execute\". The stage is decided by why you do it: setting the task, writing the request, running it, checking it, or changing it after a check."
+    },
+    {
+      "code": "pe.p02.token-confusion",
+      "name": "Misunderstands what a token is",
+      "description": "Takes a token to be a data value, an axis, an approval or a record, instead of a piece of text that the model processes. This hides the point that the model works with text patterns, not guaranteed facts. Typical sign: connecting \"token\" with something in the data."
+    },
+    {
+      "code": "pe.p02.error-type-mixup",
+      "name": "Mixes up the kind of AI error that has occurred",
+      "description": "Files an invented source under display, layout or ordering problems. A fabricated citation is missing evidence, not poor presentation, so a layout fix cannot repair it. Typical sign: reaching for a formatting fix when a fact or source is the problem."
+    },
+    {
+      "code": "pe.p02.cause-from-comparison",
+      "name": "Reads a cause or a fact into a plain comparison of totals",
+      "description": "Takes a low or high recorded total as proof of a reason such as weak demand, or keeps an explanation as a finding because it sounds sensible. A table of totals shows a comparison, not what caused it. Typical sign: the words \"because\", \"caused\" or \"proves\" next to a total."
+    },
+    {
+      "code": "pe.p02.invented-gap-filling",
+      "name": "Fills a gap in the data with a guess",
+      "description": "Replaces a missing fact with something that sounds likely, such as fewer stores, low profit, a date or a guessed explanation. The file does not hold that information, so the new claim is as unsupported as the old one. Typical sign: swapping one unsupported explanation for another."
+    },
+    {
+      "code": "pe.p02.delegates-checking",
+      "name": "Lets the AI certify or approve its own answer",
+      "description": "Asks the system that produced an answer to confirm it is correct, or to approve the conclusion. Its confirmation comes from the same patterns that produced the answer, so it is not independent evidence. Typical sign: \"I asked the AI and it says it is right.\""
+    },
+    {
+      "code": "pe.p02.blanket-distrust",
+      "name": "Rejects a whole length or format or a whole answer instead of checking the claim",
+      "description": "Overcorrects by deciding that long answers, tables or charts cannot be trusted, or by throwing out everything without checking. This wastes good evidence and still does not tell you what is true. Typical sign: a blanket rule about output type or about \"never using AI\"."
+    },
+    {
+      "code": "pe.p02.unchecked-trust",
+      "name": "Accepts a source, a number or an explanation because it sounds or looks credible",
+      "description": "Treats fluent wording, a tidy citation, a plausible figure or repetition as proof. None of these shows that a source exists or a calculation was done. Typical sign: not opening the link, not recalculating, \"it sounds right\"."
+    },
+    {
+      "code": "pe.p03.decoration-first",
+      "name": "Starts with presentation details before the decision is clear",
+      "description": "Chooses colours, headings or a persona before knowing what decision the analysis supports. The presentation then drives the work instead of the problem. Typical sign: \"first let me decide how the report will look.\""
+    },
+    {
+      "code": "pe.p03.asks-beyond-data",
+      "name": "Asks a question the available data cannot answer",
+      "description": "Poses a question about profit, targets, growth or dates when the file holds only net sales by region and transaction. The result is a guess presented as an analysis. Typical sign: a good question that no column can support."
+    },
+    {
+      "code": "pe.p03.vague-success",
+      "name": "Uses a vague or tone-based goal instead of a checkable criterion",
+      "description": "Writes \"be useful\", \"sound confident\" or \"act as an expert\" as if they defined success. None of them tells you whether the result passes. Typical sign: a brief with no observable condition that someone else could test."
+    },
+    {
+      "code": "pe.p03.adds-words-not-info",
+      "name": "Adds wording or polish instead of the missing information",
+      "description": "Reacts to a weak brief by lengthening it, adding background or improving the format, when the real gap is a missing audience, a missing input or a missing column. More words do not supply what is absent. Typical sign: revising the style while the requirement stays unstated."
+    },
+    {
+      "code": "pe.p03.ambiguous-metric",
+      "name": "Misses that a word such as \"best\" hides a choice of metric",
+      "description": "Treats \"best\", \"top\" or \"performing\" as if it named one measure, or blames some other feature of the request. In fact it could mean sales, margin, growth or volume, and each needs different evidence. Typical sign: a ranking with no stated measure."
+    },
+    {
+      "code": "pe.p03.one-size-criteria",
+      "name": "Reuses the same criteria for different decisions, or strips the context away",
+      "description": "Assumes that a shared dataset means shared requirements, so the same success test is reused, the context is removed, or the tool picks the objective. The criteria should follow the actual decision. Typical sign: one standard brief for every manager."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "pe.p01.wrong-input",
+      "body": "Look at what you actually gave the tool. A filename, a cover image or an unrelated document does not contain the values the task depends on. Ask what the answer will be built from, then provide that: the real file, a data extract or a verified summary. If the evidence is not in the chat, the reply cannot be based on it.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p01.assumes-access",
+      "body": "A file you have not attached, or a tool that cannot open it, gives you no analysis, only text that sounds like one. Check for the attach control or ask the tool what it can read. If it cannot read the file, calculate in a spreadsheet and paste a small verified extract, saying where it came from. Never accept a total you cannot trace back to the data.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p01.format-mismatch",
+      "body": "Start from the question and the reader. A comparison of exact values is shown best in a table; a pattern across categories in a chart; an idea in text. Ask which format lets the reader see the answer at once and lets you check it. Then request that format, and a chart specification if the tool cannot draw one.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p01.ai-owns-decision",
+      "body": "Ask who will answer for this decision if it goes wrong. A chatbot, a template or a chart tool cannot. It is the responsible manager or learner who defines the task, verifies the numbers, interprets the limits and approves. Use AI for drafts and keep the sign-off, with your own check, for a person.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p01.polish-as-proof",
+      "body": "Appearance can be generated; understanding has to be shown. The best test is whether someone can reproduce a calculation, explain a chart in their own words and say how a result was checked. When you judge your own AI-assisted work, do that test before you trust how it looks.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p01.cycle-mixup",
+      "body": "Ask what the step is for, not what it looks like. Setting the task and success criteria is Define; writing the request is Design; running it is Execute; checking the result against the task and evidence is Evaluate; changing the request because of what the check showed is Refine. Put the step after the check or before the run to see where it belongs.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p02.token-confusion",
+      "body": "In this course a token is a unit of text that the model processes. It is not a number in your table, an axis on a chart, an approval, or a stored record. That is why the model can produce text that looks right without having checked a fact. Keep the idea simple: text in, text out, and your job is to check what it says.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p02.error-type-mixup",
+      "body": "First decide what kind of problem you have. Layout and ordering problems are about how real information is shown. An invented citation, number or fact is a problem with the evidence itself. Use the match: invented source, check the source; wrong sum, recalculate; wrong label, check the column; unsupported cause, qualify it.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p02.cause-from-comparison",
+      "body": "Look at the verbs. A comparison can show that one region is lower than another; it cannot show why. Keep the verified number, and relabel the reason as an untested hypothesis. Then say what evidence would test it, such as targets, a time series, store coverage or a demand measure.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p02.invented-gap-filling",
+      "body": "When the file lacks something, the honest move is to say so. Do not substitute a different guess (stores, profit, dates), and do not ask the AI to invent the gap. List what is missing, state that the claim cannot be made from this file, and ask for the extra evidence or change the question.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p02.delegates-checking",
+      "body": "A check is only a check if it does not depend on the thing being checked. Use something else: open the source, recalculate in a spreadsheet, or have a person review the evidence. The AI can help to list assumptions or find what to check, but the judgement about whether the evidence supports the claim stays with you.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p02.blanket-distrust",
+      "body": "Distrust a claim, not a format. A long answer or a table can be right, and a chart can show data well. Check each claim against its evidence, keep what is verified, qualify what is only partly supported and remove what is unsupported. A rule that rejects everything is as unhelpful as one that accepts everything.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p02.unchecked-trust",
+      "body": "Credibility cues are cheap to produce and easy to fake. Open the source and check the title and the passage; recalculate the number from the data; and ask whether the evidence actually reached the tool. If you cannot verify a source, remove the claim that depends on it.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p03.decoration-first",
+      "body": "Ask first: what decision does the manager face? The question and the evidence follow from that, and the format follows from the reader. Presentation choices are easy to change later, but an unclear problem will make every later step weak. Write the decision down before you open the chatbot.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p03.asks-beyond-data",
+      "body": "List what the file contains and what it lacks, then compare it with the question. Profit needs costs, a missed target needs targets, and a trend needs dates. If a column is missing, change the question to one the data can answer, or obtain the data. Do not ask AI to estimate it.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p03.vague-success",
+      "body": "A success criterion must be something you can check against the result: every region appears once, the totals match the source, the measure is named, no currency is invented. Rewrite each vague wish as an observable test. If you cannot say how you would check it, it is not yet a criterion.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p03.adds-words-not-info",
+      "body": "Ask what the task cannot be done without. Is it the audience, the decision, the input data or a column such as dates? Supply that item directly. Extra length, background or synonyms may make the request longer, but the missing requirement is still missing.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p03.ambiguous-metric",
+      "body": "Whenever a word like \"best\" appears, ask: best by which measure? Name the metric (for example the sum of Net_Sales_Amount per region) and check that the data contains it. If two metrics matter, write two separate questions.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p03.one-size-criteria",
+      "body": "Start from the decision, not the dataset. Two managers can use the same file and still need different questions, outputs and checks. Write the context and the success criteria separately for each decision, and do not let the tool decide the objective for you.",
+      "priority": 10
+    }
+  ]
+}
