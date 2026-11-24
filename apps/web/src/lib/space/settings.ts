@@ -27,6 +27,10 @@ export interface SpaceStored {
   heroVisualUrl?: string;
   siteUrl?: string;
   siteLabel?: string;
+  /** Dùng nhận diện mặc định của Limio (lát chanh + chữ Limio) và trang chủ kiểu Limio — dành cho space như /hsk. */
+  limioBrand?: boolean;
+  /** Dải số liệu ở đầu trang; thiếu thì chỉ hiện số khoá học. */
+  stats?: Partial<Record<SpaceLang, SpaceStat[]>>;
   langs?: SpaceLang[];
   defaultLang?: SpaceLang;
   courses?: Array<{
@@ -101,7 +105,7 @@ function normalizeCopy(v: unknown): Partial<SpaceCopy> | undefined {
   const src = v as Record<string, unknown>;
   const out: Partial<SpaceCopy> = {};
   for (const k of COPY_STRING_KEYS) {
-    const s = str(src[k], k === "intro" || k === "metaDescription" || k === "footnote" ? 600 : 200);
+    const s = str(src[k], k === "intro" || k === "metaDescription" || k === "footnote" || k === "coursesSub" ? 600 : 200);
     if (s) (out as Record<string, string>)[k] = s;
   }
   if (Array.isArray(src.principles)) {
@@ -146,6 +150,20 @@ export function normalizeStored(raw: unknown): SpaceStored {
   if (pa) out.partnerLogoAlt = pa;
   const sl = str(r.siteLabel, 80);
   if (sl) out.siteLabel = sl;
+  if (r.limioBrand === true) out.limioBrand = true;
+  if (r.stats && typeof r.stats === "object") {
+    const stats: NonNullable<SpaceStored["stats"]> = {};
+    for (const l of SPACE_LANGS) {
+      const arr = (r.stats as Record<string, unknown>)[l];
+      if (!Array.isArray(arr)) continue;
+      const items = arr
+        .slice(0, 4)
+        .map((x) => ({ n: str(x?.n, 12), label: str(x?.label, 40) }))
+        .filter((x): x is SpaceStat => !!x.n && !!x.label);
+      if (items.length) stats[l] = items;
+    }
+    if (Object.keys(stats).length) out.stats = stats;
+  }
   if (Array.isArray(r.langs)) {
     const langs = r.langs.filter((l): l is SpaceLang => l === "en" || l === "vi");
     if (langs.length) out.langs = Array.from(new Set(langs));
@@ -202,7 +220,7 @@ export function buildSpaceConfig(input: {
   const stats = {} as Record<SpaceLang, SpaceStat[]>;
   for (const l of SPACE_LANGS) {
     copy[l] = { ...defaultSpaceCopy(l, name, orgName), ...(stored.copy?.[l] ?? {}) };
-    stats[l] = [{ n: String(courses.length), label: l === "vi" ? "khoá học" : "courses" }];
+    stats[l] = stored.stats?.[l] ?? [{ n: String(courses.length), label: l === "vi" ? "khoá học" : "courses" }];
   }
   return {
     slug,
@@ -221,6 +239,7 @@ export function buildSpaceConfig(input: {
     heroVisualUrl: stored.heroVisualUrl ?? null,
     siteUrl: stored.siteUrl ?? null,
     siteLabel: stored.siteLabel ?? null,
+    ...(stored.limioBrand ? { limioBrand: true } : {}),
     langs,
     defaultLang,
     stats,

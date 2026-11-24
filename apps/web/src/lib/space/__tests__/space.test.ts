@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { builtinHsk, builtinHskEnabled, builtinMicro4Asia } from "../builtin";
+import { builtinMicro4Asia } from "../builtin";
+import { hskTemplate } from "../templates";
 import { spaceBasePath } from "../aliases";
 import { buildSpaceConfig, isValidSpaceSlug, normalizeStored, safeUrl } from "../settings";
 import { derivePalette, isHexColor, mixHex, spaceThemeCss } from "../theme";
@@ -150,8 +151,9 @@ describe("space: ranh giới khoá và mẫu", () => {
   });
 });
 
-describe("space HSK dựng sẵn", () => {
-  const cfg = builtinHsk();
+describe("space HSK (cấu hình trong DB)", () => {
+  const stored = hskTemplate();
+  const cfg = buildSpaceConfig({ slug: "hsk", orgName: "Limio", orgLogoUrl: null, stored: normalizeStored(stored) });
 
   it("chín cấp, slug hsk-<cấp>-goc, không trùng", () => {
     expect(cfg.courses.map((c) => c.slug)).toEqual(Array.from({ length: 9 }, (_, i) => `hsk-${i + 1}-goc`));
@@ -164,48 +166,34 @@ describe("space HSK dựng sẵn", () => {
     }
   });
 
-  it("dùng nhận diện mặc định của Limio, không mang thương hiệu NEU/MICRO4ASIA", () => {
+  it("lưu qua DB giữ nguyên cờ limioBrand, dải số liệu và toàn bộ chữ (không bị cắt)", () => {
     expect(cfg.limioBrand).toBe(true);
+    expect(cfg.stats.vi).toEqual(stored.stats!.vi);
+    for (const l of ["vi", "en"] as const) {
+      const src = stored.copy![l]!;
+      for (const k of Object.keys(src) as Array<keyof typeof src>) {
+        if (k === "breadcrumbHome" || k === "switchTo" || k === "switchLabel") continue; // không có trong form/DB
+        expect(cfg.copy[l][k], `${l}.${String(k)}`).toEqual(src[k]);
+      }
+    }
+  });
+
+  it("dùng nhận diện mặc định của Limio, không mang thương hiệu NEU/MICRO4ASIA", () => {
     expect(cfg.partnerLogoUrl).toBeNull();
-    const blob = JSON.stringify(cfg);
-    expect(blob).not.toMatch(/neu|micro4asia/i);
+    expect(JSON.stringify(normalizeStored(stored))).not.toMatch(/neu|micro4asia/i);
     expect(isHexColor(cfg.palette.primary)).toBe(true);
     expect(cfg.defaultLang).toBe("vi");
     expect(cfg.langs).toEqual(["vi", "en"]);
   });
 
-  it("đủ chữ cho cả hai ngôn ngữ", () => {
-    for (const l of ["vi", "en"] as const) {
-      const c = cfg.copy[l];
-      for (const [k, v] of Object.entries(c)) {
-        if (typeof v === "string") expect(v.trim(), `${l}.${k}`).not.toBe("");
-      }
-      expect(c.statsOpen).toContain("{n}");
-      expect(c.principles).toHaveLength(3);
-      expect(c.steps).toHaveLength(3);
-    }
+  it("space khác không có limioBrand thì không bật cờ", () => {
+    const other = buildSpaceConfig({ slug: "dh-a", orgName: "ĐH A", orgLogoUrl: null, stored: normalizeStored({ name: "A" }) });
+    expect(other.limioBrand).toBeUndefined();
   });
 
   it("URL ngắn /hsk và /micro4asia; space khác vẫn đi qua /s/<slug>", () => {
     expect(spaceBasePath("hsk")).toBe("/hsk");
     expect(spaceBasePath("micro4asia")).toBe("/micro4asia");
     expect(spaceBasePath("dh-a")).toBe("/s/dh-a");
-  });
-
-  it("chỉ bật khi SPACE_BUILTIN_HSK=1/true", () => {
-    const prev = process.env.SPACE_BUILTIN_HSK;
-    try {
-      delete process.env.SPACE_BUILTIN_HSK;
-      expect(builtinHskEnabled()).toBe(false);
-      process.env.SPACE_BUILTIN_HSK = "1";
-      expect(builtinHskEnabled()).toBe(true);
-      process.env.SPACE_BUILTIN_HSK = "TRUE";
-      expect(builtinHskEnabled()).toBe(true);
-      process.env.SPACE_BUILTIN_HSK = "0";
-      expect(builtinHskEnabled()).toBe(false);
-    } finally {
-      if (prev === undefined) delete process.env.SPACE_BUILTIN_HSK;
-      else process.env.SPACE_BUILTIN_HSK = prev;
-    }
   });
 });
