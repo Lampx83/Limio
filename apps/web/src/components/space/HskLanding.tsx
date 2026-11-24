@@ -368,13 +368,6 @@ function LevelCard({
 
   const body = (
     <>
-      <span
-        className={`pointer-events-none absolute right-5 top-14 select-none text-[6.5rem] font-extrabold leading-none ${live ? tone.numeral : "text-slate-300/70"}`}
-        style={{ fontFamily: HAN_FONT }}
-        aria-hidden
-      >
-        {numeral}
-      </span>
 
       <div className="relative flex h-full flex-col">
         {live ? (
@@ -389,10 +382,19 @@ function LevelCard({
           </span>
         )}
 
-        <p className={`mt-5 flex items-baseline gap-2 ${live ? "text-slate-900" : "text-slate-500"}`}>
-          <span className="text-sm font-extrabold uppercase tracking-[0.2em]">{ui.level}</span>
-          <span className="text-6xl font-extrabold leading-none tracking-tighter">{index + 1}</span>
-        </p>
+        <div className="mt-5 flex items-end justify-between gap-3">
+          <p className={`flex items-baseline gap-2 ${live ? "text-slate-900" : "text-slate-500"}`}>
+            <span className="text-sm font-extrabold uppercase tracking-[0.2em]">{ui.level}</span>
+            <span className="text-6xl font-extrabold leading-none tracking-tighter">{index + 1}</span>
+          </p>
+          <span
+            className={`select-none text-6xl font-extrabold leading-none ${live ? tone.numeral : "text-slate-300/70"}`}
+            style={{ fontFamily: HAN_FONT }}
+            aria-hidden
+          >
+            {numeral}
+          </span>
+        </div>
 
         <h4 className={`mt-4 text-lg font-bold leading-snug ${live ? "text-slate-900" : "text-slate-600"}`}>{course.topic[lang]}</h4>
 
