@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Headphones, Lock, Route, Sparkles } from "lucide-react";
+import type { BundleView } from "@feedbackme/core-lms";
 import { LimeSliceIcon } from "@/components/BrandIcons";
+import SpaceBundles from "@/components/space/SpaceBundles";
+import HskLevelPopup from "@/components/space/HskLevelPopup";
+import type { HskBook } from "@/lib/space/hskBundles";
 import SpaceRegisterDialog from "@/components/space/SpaceRegisterDialog";
 import { HSK_NUMERALS, HSK_PINYIN, HSK_UI } from "@/lib/hsk";
 import { spaceHomePath } from "@/lib/space/resolve";
@@ -20,6 +24,12 @@ interface Props {
   lang: SpaceLang;
   live: Map<string, HskLiveCourse>;
   showRegister: boolean;
+  /** Combo đã xuất bản gồm toàn khoá HSK (lib/space/hskBundles.ts); rỗng thì không hiện khối "Trọn bộ". */
+  bundles?: BundleView[];
+  /** Quyển của từng cấp (cấp → danh sách); cấp có quyển thì khối cấp mở danh sách quyển thay vì dẫn vào một khoá. */
+  levelBooks?: Map<number, HskBook[]>;
+  /** Cấp đang mở danh sách quyển (/hsk?level=4). */
+  selectedLevel?: number | null;
   /** JSON-LD và các phần không nhìn thấy do SpaceHome dựng. */
   children?: React.ReactNode;
 }
@@ -75,7 +85,7 @@ function toneOf(i: number, total: number) {
   return toneAt(total === 9 ? Math.floor(i / 3) : 0);
 }
 
-export default function HskLanding({ cfg, lang, live, showRegister, children }: Props) {
+export default function HskLanding({ cfg, lang, live, showRegister, bundles = [], levelBooks = new Map(), selectedLevel = null, children }: Props) {
   const c = cfg.copy[lang];
   const ui = HSK_UI[lang];
   const home = spaceHomePath(cfg);
@@ -182,8 +192,11 @@ export default function HskLanding({ cfg, lang, live, showRegister, children }: 
               lang={lang}
               cfg={cfg}
               course={m}
-              live={live.has(m.slug)}
+              live={live.has(m.slug) || (levelBooks.get(i + 1)?.length ?? 0) > 0}
               ai={live.get(m.slug)?.personalizationEnabled ?? false}
+              books={levelBooks.get(i + 1)}
+              selected={selectedLevel === i + 1}
+              hasCombo={bundles.length > 0}
             />
           ))}
         </ul>
@@ -244,6 +257,9 @@ export default function HskLanding({ cfg, lang, live, showRegister, children }: 
           </div>
         )}
       </section>
+
+      {/* Combo trọn bộ: cuối trang, như gợi ý "mua cùng nhau" */}
+      <SpaceBundles bundles={bundles} lang={lang} />
 
       {/* Chân trang */}
       <footer className="border-t-4 border-[color:var(--sp)]">
@@ -352,6 +368,9 @@ function LevelCard({
   course,
   live,
   ai,
+  books,
+  selected,
+  hasCombo,
 }: {
   index: number;
   total: number;
@@ -360,10 +379,16 @@ function LevelCard({
   course: SpaceCourseEntry;
   live: boolean;
   ai: boolean;
+  /** Cấp có nhiều quyển: bấm vào mở popup danh sách quyển thay vì vào một khoá. */
+  books: HskBook[] | undefined;
+  /** Mở popup ngay khi tải trang (/hsk?level=N). */
+  selected: boolean;
+  hasCombo: boolean;
 }) {
   const c = cfg.copy[lang];
   const ui = HSK_UI[lang];
   const tone = toneOf(index, total);
+  const hasBooks = (books?.length ?? 0) > 0;
   const numeral = HSK_NUMERALS[index] ?? "";
 
   const body = (
@@ -414,7 +439,7 @@ function LevelCard({
             <span
               className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-transform group-hover:translate-x-0.5 ${tone.btn}`}
             >
-              {c.viewCourse}
+              {hasBooks ? (lang === "vi" ? `Xem ${books!.length} quyển` : `View ${books!.length} books`) : c.viewCourse}
               <ArrowUpRight className="h-4 w-4" aria-hidden />
             </span>
           </div>
@@ -425,7 +450,19 @@ function LevelCard({
 
   return (
     <li id={`hsk-${index + 1}`} className="scroll-mt-6 rounded-3xl transition-shadow target:[&>*]:ring-4 target:[&>*]:ring-lime-300">
-      {live ? (
+      {live && hasBooks ? (
+        <HskLevelPopup
+          level={index + 1}
+          books={books!}
+          lang={lang}
+          initialOpen={selected}
+          hasCombo={hasCombo}
+          className={`group relative block h-full overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover ${tone.ring}`}
+        >
+          <span className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${tone.bar}`} aria-hidden />
+          {body}
+        </HskLevelPopup>
+      ) : live ? (
         <Link
           href={`/catalog/${course.slug}`}
           prefetch={false}

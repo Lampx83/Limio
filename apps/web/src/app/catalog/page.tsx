@@ -10,6 +10,8 @@ import { htmlToPlainText } from "@/lib/richText";
 import { getPaymentEnabled } from "@/lib/site-settings";
 import { EmptyState } from "@/components/ui";
 import JsonLd from "@/components/JsonLd";
+import CatalogSpaces from "@/components/space/CatalogSpaces";
+import { getCatalogSpaces } from "@/lib/space/catalogSpaces";
 import { courseLanguageLabel, courseLevelLabel } from "@/lib/courseLabels";
 import { getT, getUiLang } from "@/lib/i18n/server";
 import type { UiLang } from "@/lib/i18n/core";
@@ -72,7 +74,7 @@ export default async function CatalogPage({
   const session = await auth();
   const isInstructor = (session?.user?.roles ?? []).includes("instructor");
 
-  const [{ items }, categories, paymentEnabled, sections] = await Promise.all([
+  const [{ items }, categories, paymentEnabled, sections, catalogSpaces] = await Promise.all([
     listPublishedCourses({
       category: searchParams.category,
       level: searchParams.level,
@@ -84,6 +86,7 @@ export default async function CatalogPage({
     // Section curated chỉ có ý nghĩa trên trang catalog mặc định — có filter/search
     // thì chuyển về list phẳng kết quả tìm kiếm như trước, nên bỏ qua query này.
     hasFilter ? Promise.resolve([]) : listCatalogSectionsForDisplay(),
+    hasFilter ? Promise.resolve([]) : getCatalogSpaces(),
   ]);
 
   // Học viên đã ghi danh bấm vào khoá của mình từ Catalog thì phải rơi đúng
@@ -175,6 +178,16 @@ export default async function CatalogPage({
           </p>
         </div>
       </div>
+
+      {/* Dẫn sang trang chủ của từng space (ẩn khi đang lọc/tìm kiếm để kết quả không bị đẩy xuống) */}
+      {!hasFilter && (
+        <CatalogSpaces
+          spaces={catalogSpaces}
+          title={t("catalog.spaces.title")}
+          sub={t("catalog.spaces.sub")}
+          openLabel={(n) => t("catalog.spaces.open", { n })}
+        />
+      )}
 
       {/* Filters — collapsible on mobile via <details>, inline on lg+ */}
       <details

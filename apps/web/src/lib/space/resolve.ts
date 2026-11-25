@@ -2,7 +2,7 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@feedbackme/db";
 import { builtinMicro4Asia, builtinMicro4AsiaEnabled, HSK_SLUG, MICRO4ASIA_SLUG } from "./builtin";
 import { spaceBasePath } from "./aliases";
-import { buildSpaceConfig, dropForeignCourses, isValidSpaceSlug, normalizeStored } from "./settings";
+import { buildSpaceConfig, bundleAllowedForOrg, dropForeignCourses, isValidSpaceSlug, normalizeStored } from "./settings";
 import type { SpaceBrand, SpaceConfig, SpaceLang } from "./types";
 
 async function loadSpaces(): Promise<SpaceConfig[]> {
@@ -32,7 +32,25 @@ async function loadSpaces(): Promise<SpaceConfig[]> {
           ).map((c) => [c.slug, c.organizationId] as [string, string | null])
         : [],
     );
-    out = built.map(({ orgId, cfg }) => ({ ...cfg, courses: dropForeignCourses(cfg.courses, owners, orgId) }));
+    // Combo chọn tay: chỉ giữ combo mà mọi khoá thuộc trường này (hoặc chưa có chủ).
+    const bundleSlugs = Array.from(new Set(built.flatMap((b) => b.cfg.bundles ?? [])));
+    const bundleOrgs = new Map<string, Array<string | null>>(
+      bundleSlugs.length
+        ? (
+            await prisma.courseBundle.findMany({
+              where: { slug: { in: bundleSlugs } },
+              select: { slug: true, items: { select: { course: { select: { organizationId: true } } } } },
+            })
+          ).map((b) => [b.slug, b.items.map((i) => i.course.organizationId)] as [string, Array<string | null>])
+        : [],
+    );
+    out = built.map(({ orgId, cfg }) => ({
+      ...cfg,
+      courses: dropForeignCourses(cfg.courses, owners, orgId),
+      ...(cfg.bundles
+        ? { bundles: cfg.bundles.filter((s) => { const o = bundleOrgs.get(s); return o === undefined || bundleAllowedForOrg(o, orgId); }) }
+        : {}),
+    }));
   } catch {
     // DB chập chờn: vẫn phục vụ cấu hình dựng sẵn thay vì làm hỏng mọi trang.
   }

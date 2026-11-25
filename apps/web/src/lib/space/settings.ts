@@ -41,6 +41,8 @@ export interface SpaceStored {
     outcome?: Partial<Record<SpaceLang, string>>;
   }>;
   copy?: Partial<Record<SpaceLang, Partial<SpaceCopy>>>;
+  /** Slug combo hiển thị theo thứ tự; vắng = tự động (xem SpaceConfig.bundles). */
+  bundles?: string[];
 }
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/; // slug khoá học (khác slug space)
@@ -187,6 +189,17 @@ export function normalizeStored(raw: unknown): SpaceStored {
     }
     out.courses = courses;
   }
+  if (Array.isArray(r.bundles)) {
+    const seen = new Set<string>();
+    const bundles: string[] = [];
+    for (const b of r.bundles.slice(0, 24)) {
+      const slug = typeof b === "string" ? b.trim() : "";
+      if (!slug || !SLUG_RE.test(slug) || slug.length > 80 || seen.has(slug)) continue;
+      seen.add(slug);
+      bundles.push(slug);
+    }
+    out.bundles = bundles;
+  }
   if (r.copy && typeof r.copy === "object") {
     const copy: NonNullable<SpaceStored["copy"]> = {};
     for (const l of SPACE_LANGS) {
@@ -245,6 +258,7 @@ export function buildSpaceConfig(input: {
     stats,
     copy,
     courses,
+    ...(stored.bundles ? { bundles: stored.bundles } : {}),
   };
 }
 
@@ -261,4 +275,12 @@ export function dropForeignCourses<T extends { slug: string }>(
     const owner = ownerOf.get(c.slug);
     return owner === undefined || owner === null || owner === orgId;
   });
+}
+
+/**
+ * Combo chỉ được hiện ở space của trường khi MỌI khoá trong combo thuộc trường đó hoặc chưa có chủ (cùng quy tắc với
+ * `dropForeignCourses`): trường không được quảng bá sản phẩm của trường khác.
+ */
+export function bundleAllowedForOrg(courseOrgIds: Array<string | null>, orgId: string): boolean {
+  return courseOrgIds.every((o) => o === null || o === orgId);
 }

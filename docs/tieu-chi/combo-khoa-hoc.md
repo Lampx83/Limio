@@ -90,3 +90,38 @@ Bổ sung 25/11/2026 (chưa đăng ký pháp nhân nên chưa có VNPay).
 - **Chặn ghi danh miễn phí vào khoá chỉ có gói truy cập.** **Given** khoá có gói đang bán nhưng không có `priceCents`, thanh toán bật, **When** gọi thẳng API ghi danh không qua mã/đơn, **Then** `payment_required` (trước đây ghi danh được miễn phí vì chỉ kiểm `priceCents`).
 - Mã khoá lẻ sinh **theo lô** mới mang thời hạn truy cập (mã lẻ cấp vĩnh viễn); mã combo luôn theo thời hạn của combo.
 
+
+## AC9 — Combo trên trang chủ space (/hsk và các space khác)
+
+Bổ sung 25/11/2026.
+
+- **Khối "Trọn bộ"** nằm **ở cuối trang chủ space** (trên chân trang, như gợi ý "mua cùng nhau"; đã chuyển từ đầu lưới khoá theo yêu cầu 25/11/2026): bìa các khoá, khối giá (giá gốc gạch ngang, `-%`, giá combo, thời hạn), "Tiết kiệm … so với mua lẻ", nút sang `/combo/<slug>`; hai ngôn ngữ vi/en; dùng chung một thành phần (`components/space/SpaceBundles.tsx`) cho giao diện Limio và giao diện space thường, màu theo biến `--sp*` của space.
+- **Cấu hình tay** (Admin trường → Space → "Combo trọn bộ trên trang chủ", lưu trong `Organization.space.bundles`): hai chế độ. **Tự động** (mặc định, không có khoá `bundles`): space kiểu Limio (`limioBrand`) hiện mọi combo đã xuất bản có **toàn khoá HSK** (`hsk-<cấp>-…`), space khác không hiện combo. **Chọn tay**: đúng các combo trong danh sách, theo thứ tự đó; danh sách rỗng = chủ động không hiện.
+- **Chỉ hiện thứ bán được**: combo chưa xuất bản hoặc còn khoá chưa xuất bản bị bỏ qua dù có trong danh sách (không bán thứ không giao được). Slug lạ trong danh sách bị bỏ im lặng.
+- **Không quảng bá sản phẩm của trường khác**: combo chỉ hiện (và chỉ được chọn trong form) khi mọi khoá trong combo thuộc trường đó hoặc chưa có chủ — cùng quy tắc `dropForeignCourses` của danh sách khoá (`bundleAllowedForOrg`).
+- Không đổi quyền: chỉ admin nền tảng tạo/sửa/xuất bản combo; admin trường chỉ **chọn** combo nào hiện ở space của mình.
+- Giới hạn: tối đa 24 combo mỗi space; chuẩn hoá bỏ trùng và slug sai (`normalizeStored`).
+- Test: `lib/space/__tests__/bundles.test.ts`, `hskBundles.test.ts`.
+
+## AC10 — /catalog dẫn sang mọi space
+
+Bổ sung 25/11/2026 (không riêng combo, ghi ở đây vì cùng đợt với AC9).
+
+- **Dải "Không gian học liệu"** ở đầu `/catalog` (trên bộ lọc): mỗi space đang bật là một thẻ gồm logo (space kiểu Limio dùng lát chanh), tên, "N khoá đang mở" và dẫn tới trang chủ của space (`/hsk`, `/micro4asia`, `/s/<slug>`).
+- **Tự động, không cấu hình thêm**: space nào được bật (`Organization.spaceEnabled` với slug hợp lệ, hoặc space dựng sẵn) tự có mặt; tắt space thì thẻ biến mất. Xếp theo tên.
+- **Ẩn khi đang lọc/tìm kiếm** để kết quả không bị đẩy xuống. Không có space nào hoặc lỗi DB thì không vẽ gì, danh mục không bị hỏng.
+- Hai ngôn ngữ giao diện (vi/en); đếm khoá chỉ tính khoá đã xuất bản.
+- Test: `lib/space/__tests__/catalogSpaces.test.ts`.
+
+## AC11 — Bấm khối cấp HSK mở popup danh sách quyển
+
+Bổ sung 25/11/2026, trang `/hsk` (space kiểu Limio). Đổi từ khung mở rộng trong trang sang **popup** theo yêu cầu cùng ngày.
+
+- **Given** cấp N có khoá `hsk-N-quyen-<k>` đã xuất bản, **Then** khối cấp N ở lưới hiện "Xem n quyển" và, khi bấm (hoặc Enter/Space), mở **popup** ngay tại chỗ (không tải lại trang), không còn dẫn thẳng vào khoá `hsk-N-goc`; khối ở trạng thái "Đang mở" dù khoá gốc chưa xuất bản.
+- **Popup "HSK N: n quyển"**: mỗi quyển một thẻ (bìa, "Quyển k", số bài, giá gốc gạch ngang + `-%` + giá bán, nút vào khoá `/catalog/<slug>`); có liên kết "Xem gói trọn bộ, tiết kiệm hơn" nhảy tới khối combo cuối trang khi trang có combo.
+- **Hành vi hộp thoại**: `role="dialog"` `aria-modal`; đóng bằng Esc, bấm nền tối hoặc nút ×; khoá cuộn nền khi mở; giữ tiêu điểm trong hộp (Tab xoay vòng); đóng xong trả tiêu điểm về khối cấp; trên điện thoại popup bám đáy màn hình, cuộn được.
+- **Địa chỉ**: mở popup đặt `?level=N` (replaceState, không thêm mục lịch sử), đóng thì bỏ; mở thẳng `/hsk?level=N` thì popup tự mở khi tải trang (chia sẻ được).
+- Quyển xếp theo số quyển; chỉ khoá đã xuất bản; `level` ngoài 1–9 hoặc cấp không có quyển thì không mở gì.
+- Cấp không có quyển giữ cách cũ (dẫn vào khoá `hsk-N-goc`).
+- Khoá gốc `hsk-4-goc` vẫn tồn tại và vào được bằng đường dẫn trực tiếp; chỉ không còn lối vào từ landing khi cấp đó đã có quyển.
+- Test: `parseHskBookSlug` ở `lib/space/__tests__/hskBundles.test.ts`; hành vi popup xem bằng mắt (chưa có test giao diện).

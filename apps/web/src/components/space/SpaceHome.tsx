@@ -7,12 +7,14 @@ import { getRegisterEnabled } from "@/lib/site-settings";
 import JsonLd from "@/components/JsonLd";
 import HskLanding from "@/components/space/HskLanding";
 import SpaceRegisterDialog from "@/components/space/SpaceRegisterDialog";
+import SpaceBundles from "@/components/space/SpaceBundles";
+import { getHskBooksByLevel, getSpaceBundles } from "@/lib/space/hskBundles";
 import { absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import { spaceHomePath } from "@/lib/space/resolve";
 import { resolveSpaceLang } from "@/lib/space/lang";
 import type { SpaceConfig, SpaceCourseEntry, SpaceLang } from "@/lib/space/types";
 
-export type SpaceSearchParams = { lang?: string | string[] };
+export type SpaceSearchParams = { lang?: string | string[]; level?: string | string[] };
 
 /** Metadata cho trang chủ space: link gửi đi mang nhận diện của space, không phải của Limio. */
 export function spaceMetadata(cfg: SpaceConfig, searchParams: SpaceSearchParams): Metadata {
@@ -65,7 +67,15 @@ function hexRgb(hex: string): string {
 export default async function SpaceHome({ cfg, searchParams }: { cfg: SpaceConfig; searchParams: SpaceSearchParams }) {
   const lang = resolveSpaceLang(searchParams.lang, cfg);
   const c = cfg.copy[lang];
-  const [live, session, registerEnabled] = await Promise.all([getLiveCourses(cfg.courses), auth(), getRegisterEnabled()]);
+  const [live, session, registerEnabled, bundles, levelBooks] = await Promise.all([
+    getLiveCourses(cfg.courses),
+    auth(),
+    getRegisterEnabled(),
+    getSpaceBundles(cfg),
+    cfg.limioBrand ? getHskBooksByLevel() : Promise.resolve(new Map()),
+  ]);
+  const levelParam = Number(Array.isArray(searchParams.level) ? searchParams.level[0] : searchParams.level);
+  const selectedLevel = Number.isInteger(levelParam) && levelParam >= 1 && levelParam <= 9 ? levelParam : null;
   const openCount = live.size;
   const loggedIn = !!session?.user?.id;
   const showRegister = !loggedIn && registerEnabled;
@@ -100,7 +110,7 @@ export default async function SpaceHome({ cfg, searchParams }: { cfg: SpaceConfi
   // Space dùng nhận diện Limio (/hsk) có trang chủ thiết kế riêng.
   if (cfg.limioBrand) {
     return (
-      <HskLanding cfg={cfg} lang={lang} live={live} showRegister={showRegister}>
+      <HskLanding cfg={cfg} lang={lang} live={live} showRegister={showRegister} bundles={bundles} levelBooks={levelBooks} selectedLevel={selectedLevel}>
         {jsonLd}
       </HskLanding>
     );
@@ -187,6 +197,8 @@ export default async function SpaceHome({ cfg, searchParams }: { cfg: SpaceConfi
           </div>
         )}
       </section>
+
+      <SpaceBundles bundles={bundles} lang={lang} rounded="rounded-xl" />
 
       <footer className="border-t-4 border-[color:var(--sp)]">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-[#4B5B6B] lg:px-6">

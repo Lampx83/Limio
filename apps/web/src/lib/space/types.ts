@@ -92,6 +92,11 @@ export interface SpaceConfig {
   stats: Record<SpaceLang, SpaceStat[]>;
   copy: Record<SpaceLang, SpaceCopy>;
   courses: SpaceCourseEntry[];
+  /**
+   * Slug combo hiển thị trên trang chủ space, theo thứ tự. `undefined` = chưa chọn tay: space kiểu Limio (`limioBrand`)
+   * tự hiện combo gồm toàn khoá HSK, space khác không hiện combo. Mảng rỗng = chủ động không hiện combo.
+   */
+  bundles?: string[];
 }
 
 /** Phần thương hiệu tối thiểu cần ở header/footer — truyền được qua ranh giới server→client. */

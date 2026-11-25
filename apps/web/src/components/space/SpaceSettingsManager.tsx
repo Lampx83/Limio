@@ -54,6 +54,7 @@ export default function SpaceSettingsManager({
   organizationId,
   orgName,
   orgCourses,
+  orgBundles,
   initial,
   initialEnabled,
   initialSlug,
@@ -62,6 +63,7 @@ export default function SpaceSettingsManager({
   organizationId: string;
   orgName: string;
   orgCourses: Array<{ slug: string; title: string; status: string }>;
+  orgBundles: Array<{ slug: string; title: string; status: string }>;
   initial: SpaceStored;
   initialEnabled: boolean;
   initialSlug: string | null;
@@ -93,6 +95,9 @@ export default function SpaceSettingsManager({
   // Giao diện kiểu Limio (như /hsk) và dải số liệu: không có ô riêng trong form, nhưng phải mang theo khi lưu để không mất.
   const [limioBrand, setLimioBrand] = useState<boolean>(initial.limioBrand === true);
   const [stats, setStats] = useState<SpaceStored["stats"]>(initial.stats);
+  // Combo hiển thị: "auto" = chưa chọn tay (space kiểu Limio tự hiện combo HSK, space khác không hiện); "manual" = đúng danh sách.
+  const [bundleMode, setBundleMode] = useState<"auto" | "manual">(initial.bundles ? "manual" : "auto");
+  const [bundleSlugs, setBundleSlugs] = useState<string[]>(initial.bundles ?? []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -160,6 +165,16 @@ export default function SpaceSettingsManager({
       return next;
     });
   }
+  const moveBundle = (i: number, d: -1 | 1) =>
+    setBundleSlugs((bs) => {
+      const j = i + d;
+      if (j < 0 || j >= bs.length) return bs;
+      const next = [...bs];
+      [next[i], next[j]] = [next[j]!, next[i]!];
+      return next;
+    });
+  const bundleInfo = (slug: string) => orgBundles.find((b) => b.slug === slug) ?? null;
+  const addableBundles = orgBundles.filter((b) => !bundleSlugs.includes(b.slug));
   const patchCourse = (i: number, p: Partial<CourseRow>) => setCourses((cs) => cs.map((c, k) => (k === i ? { ...c, ...p } : c)));
 
   async function save() {
@@ -190,6 +205,7 @@ export default function SpaceSettingsManager({
         outcome: c.outcome,
       })),
       copy: { en: copy.en, vi: copy.vi },
+      ...(bundleMode === "manual" ? { bundles: bundleSlugs } : {}),
     };
     try {
       const res = await fetch(apiUrl(`/api/orgs/${organizationId}/space`), {
@@ -433,6 +449,71 @@ export default function SpaceSettingsManager({
           <Plus className="h-4 w-4" aria-hidden /> Thêm khoá giữ chỗ
         </button>
       </div>
+
+      <h3 className="mt-8 text-sm font-semibold">Combo trọn bộ trên trang chủ</h3>
+      <p className="help">
+        Combo là một mức giá cho nhiều khoá (xem trang <span className="font-mono">/combo/&lt;slug&gt;</span>); chỉ quản trị nền tảng tạo combo.
+        Combo chưa xuất bản, hoặc còn khoá chưa xuất bản, sẽ không hiện cho người học dù có trong danh sách.
+      </p>
+      <fieldset className="mt-3 grid gap-2">
+        <legend className="sr-only">Cách chọn combo</legend>
+        <label className="flex items-start gap-2 text-sm">
+          <input type="radio" name="bundle-mode" className="mt-1" checked={bundleMode === "auto"} onChange={() => setBundleMode("auto")} />
+          <span>
+            <b>Tự động</b> — {limioBrand ? "hiện mọi combo đã xuất bản gồm toàn khoá HSK" : "không hiện combo nào"}.
+          </span>
+        </label>
+        <label className="flex items-start gap-2 text-sm">
+          <input type="radio" name="bundle-mode" className="mt-1" checked={bundleMode === "manual"} onChange={() => setBundleMode("manual")} />
+          <span>
+            <b>Chọn tay</b> — chỉ hiện các combo trong danh sách dưới đây, theo thứ tự đó (danh sách rỗng = không hiện combo).
+          </span>
+        </label>
+      </fieldset>
+      {bundleMode === "manual" && (
+        <>
+          <ol className="mt-3 grid gap-2">
+            {bundleSlugs.map((slugB, i) => {
+              const info = bundleInfo(slugB);
+              return (
+                <li key={slugB} className="flex flex-wrap items-center gap-2 rounded-lg border border-token p-3">
+                  <span className="w-6 text-sm font-bold text-faint">{i + 1}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold">{info?.title ?? slugB}</span>
+                    <span className="block font-mono text-xs text-muted">{slugB}</span>
+                  </span>
+                  <span className={`chip ${info?.status === "published" ? "chip-brand" : ""}`}>
+                    {info ? (info.status === "published" ? "Đã xuất bản" : "Nháp") : "Không có trong trường"}
+                  </span>
+                  <span className="flex items-center">
+                    <button type="button" className="btn-ghost btn-sm" onClick={() => moveBundle(i, -1)} disabled={i === 0} aria-label="Lên"><ArrowUp className="h-4 w-4" /></button>
+                    <button type="button" className="btn-ghost btn-sm" onClick={() => moveBundle(i, 1)} disabled={i === bundleSlugs.length - 1} aria-label="Xuống"><ArrowDown className="h-4 w-4" /></button>
+                    <button type="button" className="btn-ghost btn-sm" onClick={() => setBundleSlugs((bs) => bs.filter((_, k) => k !== i))} aria-label="Bỏ combo khỏi space"><Trash2 className="h-4 w-4" /></button>
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+          {addableBundles.length > 0 ? (
+            <select
+              className="select mt-3 w-full sm:w-auto sm:max-w-xs"
+              value=""
+              aria-label="Thêm combo"
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v) setBundleSlugs((bs) => (bs.includes(v) ? bs : [...bs, v]));
+              }}
+            >
+              <option value="">Thêm combo…</option>
+              {addableBundles.map((b) => (
+                <option key={b.slug} value={b.slug}>{b.title} ({b.status === "published" ? "đã xuất bản" : "nháp"})</option>
+              ))}
+            </select>
+          ) : (
+            orgBundles.length === 0 && <p className="help mt-3">Chưa có combo nào dùng được cho trường này.</p>
+          )}
+        </>
+      )}
 
       {error && (
         <div role="alert" className="mt-4 rounded-lg border border-danger-100 bg-danger-50 px-3 py-2 text-sm text-danger-700">{error}</div>
