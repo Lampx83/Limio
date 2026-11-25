@@ -7,29 +7,39 @@ export type TextSize = "m" | "l" | "xl";
 
 export interface ReaderPrefs {
   pinyin: PinyinMode;
-  /** Bản dịch (lời thoại…): cùng ba mức với pinyin, nhưng MẶC ĐỊNH ẨN. */
+  /** Bản dịch (lời thoại…): cùng ba mức với pinyin, nhưng MẶC ĐỊNH ẨN (trừ khoá nhập môn, xem `defaultReaderPrefsFor`). */
   translation: PinyinMode;
   size: TextSize;
 }
 
 export const DEFAULT_READER_PREFS: ReaderPrefs = { pinyin: "show", translation: "off", size: "m" };
+
+/**
+ * Khoá nhập môn cho người chưa biết tiếng Trung: bản dịch hiện sẵn, học viên tự ẩn khi đã quen. Người mới đọc pinyin chưa thạo
+ * nên bản dịch ẩn nghĩa là không có điểm tựa nào. Giá trị người học đã chọn (lưu trong localStorage) vẫn thắng mặc định này.
+ */
+export const TRANSLATION_SHOWN_BY_DEFAULT_SLUGS: ReadonlySet<string> = new Set(["hsk-1-goc"]);
+
+export function defaultReaderPrefsFor(slug: string | undefined): ReaderPrefs {
+  return slug && TRANSLATION_SHOWN_BY_DEFAULT_SLUGS.has(slug) ? { ...DEFAULT_READER_PREFS, translation: "show" } : DEFAULT_READER_PREFS;
+}
 export const PINYIN_MODES: readonly PinyinMode[] = ["show", "tap", "off"];
 export const TEXT_SIZES: readonly TextSize[] = ["m", "l", "xl"];
 
 export const readerPrefsKey = (slug: string) => `limio:reader:${slug}`;
 
 /** Đọc giá trị đã lưu; mọi thứ sai dạng về mặc định, từng trường sai thì chỉ trường đó về mặc định. */
-export function parseReaderPrefs(raw: string | null | undefined): ReaderPrefs {
-  if (!raw) return DEFAULT_READER_PREFS;
+export function parseReaderPrefs(raw: string | null | undefined, defaults: ReaderPrefs = DEFAULT_READER_PREFS): ReaderPrefs {
+  if (!raw) return defaults;
   try {
     const v = JSON.parse(raw) as Partial<Record<keyof ReaderPrefs, unknown>> | null;
     return {
-      pinyin: PINYIN_MODES.includes(v?.pinyin as PinyinMode) ? (v!.pinyin as PinyinMode) : DEFAULT_READER_PREFS.pinyin,
-      translation: PINYIN_MODES.includes(v?.translation as PinyinMode) ? (v!.translation as PinyinMode) : DEFAULT_READER_PREFS.translation,
-      size: TEXT_SIZES.includes(v?.size as TextSize) ? (v!.size as TextSize) : DEFAULT_READER_PREFS.size,
+      pinyin: PINYIN_MODES.includes(v?.pinyin as PinyinMode) ? (v!.pinyin as PinyinMode) : defaults.pinyin,
+      translation: PINYIN_MODES.includes(v?.translation as PinyinMode) ? (v!.translation as PinyinMode) : defaults.translation,
+      size: TEXT_SIZES.includes(v?.size as TextSize) ? (v!.size as TextSize) : defaults.size,
     };
   } catch {
-    return DEFAULT_READER_PREFS;
+    return defaults;
   }
 }
 
