@@ -1,3 +1,4 @@
+import { SITE_URL } from "@/lib/seo";
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
 import { settleGatewayPayment } from "@feedbackme/core-lms";
@@ -72,7 +73,7 @@ export async function POST(req: Request) {
       paidAmountCents: paidAmount,
       success: true,
       gatewayTxnRef: transactionId || null,
-    });
+    }, undefined, { baseUrl: SITE_URL });
     return NextResponse.json({ success: true, result: outcome.result });
   } catch {
     return NextResponse.json({ success: false, error: "processing_failed" }, { status: 500 });

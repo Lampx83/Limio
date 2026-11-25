@@ -37,6 +37,8 @@ export type TemplateKey =
   | "instructor.application_approved"
   | "instructor.application_rejected"
   | "course.access_expiring"
+  | "order.confirmation"
+  | "course.activated"
   | "exam.grade_published"
   | "exam.deadline_reminder"
   | "gamification.level_up"
@@ -201,6 +203,38 @@ const FALLBACKS: Record<string, { subject: string; bodyHtml: string; bodyText: s
     subject: "Khóa \"{{courseTitle}}\" của bạn sắp hết hạn truy cập",
     bodyHtml: `<p>Xin chào {{learnerName}},</p><p>Quyền truy cập khóa <strong>{{courseTitle}}</strong> của bạn sẽ hết hạn vào <strong>{{expiresAtDate}}</strong>. Gia hạn sớm để không bị gián đoạn việc học.</p>`,
     bodyText: `Xin chào {{learnerName}},\n\nQuyền truy cập khóa {{courseTitle}} của bạn sẽ hết hạn vào {{expiresAtDate}}. Gia hạn sớm để không bị gián đoạn việc học.`,
+  },
+  "order.confirmation": {
+    subject: "Limio xác nhận đơn hàng {{orderCode}}",
+    bodyHtml: `<h1>Cảm ơn bạn đã mua khoá học!</h1>
+<p>Xin chào <strong>{{learnerName}}</strong>,</p>
+<p>Limio đã nhận được thanh toán của bạn và mở quyền học ngay. Cảm ơn bạn đã tin tưởng Limio.</p>
+<table class="facts">
+  <tr><td>Mã đơn hàng</td><td>{{orderCode}}</td></tr>
+  <tr><td>Nội dung</td><td>{{itemTitle}}</td></tr>
+  <tr><td>Số tiền</td><td>{{amountText}}</td></tr>
+  <tr><td>Hình thức</td><td>{{methodLabel}}</td></tr>
+  <tr><td>Thời điểm</td><td>{{paidAtText}}</td></tr>
+  <tr><td>Quyền truy cập</td><td>{{accessText}}</td></tr>
+</table>
+<a class="button" href="{{actionUrl}}">{{actionLabel}}</a>
+<div class="linkbox">{{actionUrl}}</div>
+<p class="small">Hãy giữ email này làm biên nhận. Cần hỗ trợ về đơn hàng, bạn chỉ cần trả lời thư này và nêu mã đơn hàng.</p>`,
+    bodyText: `Xin chào {{learnerName}},\n\nLimio đã nhận được thanh toán của bạn và mở quyền học ngay. Cảm ơn bạn!\n\nMã đơn hàng: {{orderCode}}\nNội dung: {{itemTitle}}\nSố tiền: {{amountText}}\nHình thức: {{methodLabel}}\nThời điểm: {{paidAtText}}\nQuyền truy cập: {{accessText}}\n\n{{actionLabel}}: {{actionUrl}}\n\nHãy giữ email này làm biên nhận. Cần hỗ trợ, bạn chỉ cần trả lời thư này và nêu mã đơn hàng.`,
+  },
+  "course.activated": {
+    subject: "Đã kích hoạt: {{itemTitle}}",
+    bodyHtml: `<h1>Kích hoạt thành công!</h1>
+<p>Xin chào <strong>{{learnerName}}</strong>,</p>
+<p>Mã kích hoạt của bạn đã được áp dụng. Quyền học đã sẵn sàng.</p>
+<table class="facts">
+  <tr><td>Nội dung</td><td>{{itemTitle}}</td></tr>
+  <tr><td>Quyền truy cập</td><td>{{accessText}}</td></tr>
+</table>
+<a class="button" href="{{actionUrl}}">{{actionLabel}}</a>
+<div class="linkbox">{{actionUrl}}</div>
+<p class="small">Vì lý do an toàn, email này không in lại mã kích hoạt.</p>`,
+    bodyText: `Xin chào {{learnerName}},\n\nMã kích hoạt của bạn đã được áp dụng. Quyền học đã sẵn sàng.\n\nNội dung: {{itemTitle}}\nQuyền truy cập: {{accessText}}\n\n{{actionLabel}}: {{actionUrl}}\n\nVì lý do an toàn, email này không in lại mã kích hoạt.`,
   },
   "course.welcome": {
     subject: "Chào mừng bạn đến với {{courseTitle}}!",

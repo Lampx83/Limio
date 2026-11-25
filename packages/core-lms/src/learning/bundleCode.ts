@@ -1,3 +1,4 @@
+import { sendCodeActivatedEmail } from "./purchaseEmail";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { isAdmin } from "../auth/roles";
 import { logAudit } from "../auth/audit";
@@ -147,6 +148,22 @@ export async function redeemAnyCode(
 ): Promise<RedeemAccessCodeResult | RedeemBundleCodeResult> {
   const code = normalizeAccessCode(rawCode);
   const isCourseCode = await db.courseAccessCode.findUnique({ where: { code }, select: { id: true } });
-  if (isCourseCode) return redeemAccessCode(userId, rawCode, db, opts);
-  return redeemBundleCode(userId, rawCode, db);
+  // Có baseUrl thì gửi MỘT email "đã kích hoạt" (không in lại mã); không để redeemAccessCode gửi thêm email chào mừng.
+  const result = isCourseCode
+    ? await redeemAccessCode(userId, rawCode, db, { ...opts, baseUrl: undefined })
+    : await redeemBundleCode(userId, rawCode, db);
+  if (opts?.baseUrl && result.codeConsumed) {
+    const isBundle = "bundleSlug" in result;
+    await sendCodeActivatedEmail(
+      userId,
+      {
+        itemTitle: isBundle ? `${result.courseTitle} (${(result as RedeemBundleCodeResult).courseCount} khoá)` : result.courseTitle,
+        courseSlug: isBundle ? null : result.courseSlug,
+        accessExpiresAt: result.accessExpiresAt ?? null,
+      },
+      opts.baseUrl,
+      db,
+    );
+  }
+  return result;
 }

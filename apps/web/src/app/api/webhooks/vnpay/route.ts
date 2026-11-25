@@ -1,3 +1,4 @@
+import { SITE_URL } from "@/lib/seo";
 import { NextResponse } from "next/server";
 import { settleGatewayPayment } from "@feedbackme/core-lms";
 import { getVnpayConfig, verifyVnpayParams } from "@/lib/vnpay";
@@ -37,7 +38,7 @@ export async function GET(req: Request) {
       paidAmountCents: rawAmount / 100,
       success: q.get("vnp_ResponseCode") === "00" && q.get("vnp_TransactionStatus") === "00",
       gatewayTxnRef: q.get("vnp_TransactionNo"),
-    });
+    }, undefined, { baseUrl: SITE_URL });
     switch (r.result) {
       case "order_not_found":
         return rsp("01", "Order not found");

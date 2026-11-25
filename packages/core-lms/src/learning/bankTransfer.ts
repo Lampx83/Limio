@@ -68,7 +68,7 @@ function parseTransactionDate(v: string | null | undefined): Date | null {
  */
 export async function processBankTransaction(
   input: BankTransactionInput,
-  opts: { expectedAccountNumber?: string | null } = {},
+  opts: { expectedAccountNumber?: string | null; /** Có thì gửi email xác nhận đơn sau khi cấp quyền. */ baseUrl?: string } = {},
   db: PrismaClient = prisma,
 ): Promise<BankTransactionOutcome> {
   const externalId = String(input.id);
@@ -138,6 +138,7 @@ export async function processBankTransaction(
         gatewayTxnRef: input.referenceCode || externalId,
       },
       db,
+      { baseUrl: opts.baseUrl },
     );
     if (outcome.result === "paid") {
       const overpaidAmount = base.amount > order.amountCents ? base.amount - order.amountCents : null;

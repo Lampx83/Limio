@@ -1,3 +1,4 @@
+import { SITE_URL } from "@/lib/seo";
 import { NextResponse } from "next/server";
 import { processBankTransaction } from "@feedbackme/core-lms";
 import { getSepayConfig, verifySepayAuth } from "@/lib/sepay";
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
         referenceCode: str(body.referenceCode),
         transactionDate: str(body.transactionDate),
       },
-      { expectedAccountNumber: cfg.accountNumber },
+      { expectedAccountNumber: cfg.accountNumber, baseUrl: SITE_URL },
     );
   } catch {
     // Lỗi tạm thời (DB…): không lộ chi tiết; 500 để SePay gửi lại.

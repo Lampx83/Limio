@@ -1,6 +1,7 @@
 import { prisma, type PaymentProvider, type PrismaClient } from "@feedbackme/db";
 import { extendEnrollmentAccess } from "./courseAccess";
 import { grantBundleAccess } from "./bundleAccess";
+import { sendOrderConfirmationEmail } from "./purchaseEmail";
 
 /**
  * Cấp quyền học khi cổng thanh toán nội địa (VNPay…) báo kết quả server-to-server (docs/tieu-chi/thanh-toan-vnpay.md,
@@ -34,7 +35,16 @@ export type GatewayPaymentOutcome =
 export async function settleGatewayPayment(
   input: GatewayPaymentResult,
   db: PrismaClient = prisma,
+  /** `baseUrl` có thì gửi email xác nhận đơn hàng SAU khi đã cấp quyền (best-effort, không throw). */
+  opts?: { baseUrl?: string },
 ): Promise<GatewayPaymentOutcome> {
+  const outcome = await settleInTransaction(input, db);
+  // Chỉ lần chuyển pending/failed → paid mới trả "paid": IPN gửi lại không gửi thêm email.
+  if (outcome.result === "paid" && opts?.baseUrl) await sendOrderConfirmationEmail(outcome.orderId, opts.baseUrl, db);
+  return outcome;
+}
+
+async function settleInTransaction(input: GatewayPaymentResult, db: PrismaClient): Promise<GatewayPaymentOutcome> {
   return db.$transaction(async (tx) => {
     const order = await tx.order.findFirst({ where: { provider: input.provider, providerRef: input.txnRef } });
     if (!order) return { result: "order_not_found" };

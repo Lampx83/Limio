@@ -12,7 +12,7 @@ const ALL_KEYS: TemplateKey[] = [
   "exam.proctor_invite_bulk", "exam.instructor_invite_bulk", "cohort.instructor_invite",
   "course.co_instructor_invite", "course.welcome", "course.access_expiring",
   "exam.grade_published", "exam.deadline_reminder", "gamification.level_up",
-  "gamification.badge_earned", "notification.weekly_digest",
+  "gamification.badge_earned", "notification.weekly_digest", "order.confirmation", "course.activated",
 ];
 
 beforeEach(() => {

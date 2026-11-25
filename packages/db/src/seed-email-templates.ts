@@ -439,6 +439,91 @@ Quyền truy cập khoá {{courseTitle}} của bạn sẽ hết hạn vào {{exp
     ],
   },
 
+  {
+    key: "order.confirmation",
+    name: "Xác nhận đơn hàng (đã thanh toán)",
+    description: "Gửi một lần ngay khi thanh toán thành công (VNPay, SePay…) và quyền học đã mở: cảm ơn + biên nhận.",
+    category: "course",
+    subject: "Limio xác nhận đơn hàng {{orderCode}}",
+    bodyHtml: [
+      h.title("Cảm ơn bạn đã mua khoá học!"),
+      hello("learnerName"),
+      h.p("Limio đã nhận được thanh toán của bạn và mở quyền học ngay. Cảm ơn bạn đã tin tưởng Limio."),
+      h.facts([
+        ["Mã đơn hàng", "{{orderCode}}"],
+        ["Nội dung", "{{itemTitle}}"],
+        ["Số tiền", "{{amountText}}"],
+        ["Hình thức", "{{methodLabel}}"],
+        ["Thời điểm", "{{paidAtText}}"],
+        ["Quyền truy cập", "{{accessText}}"],
+      ]),
+      h.button("actionUrl", "{{actionLabel}}"),
+      h.linkFallback("actionUrl"),
+      h.small("Hãy giữ email này làm biên nhận. Cần hỗ trợ về đơn hàng, bạn chỉ cần trả lời thư này và nêu mã đơn hàng."),
+    ].join("\n"),
+    bodyText: `Xin chào {{learnerName}},
+
+Limio đã nhận được thanh toán của bạn và mở quyền học ngay. Cảm ơn bạn!
+
+Mã đơn hàng: {{orderCode}}
+Nội dung: {{itemTitle}}
+Số tiền: {{amountText}}
+Hình thức: {{methodLabel}}
+Thời điểm: {{paidAtText}}
+Quyền truy cập: {{accessText}}
+
+{{actionLabel}}: {{actionUrl}}
+
+Hãy giữ email này làm biên nhận. Cần hỗ trợ, bạn chỉ cần trả lời thư này và nêu mã đơn hàng.`,
+    variables: [
+      V.learnerName,
+      { name: "orderCode", label: "Mã đơn hàng", example: "LMK3F9X2QW7A", required: true },
+      { name: "itemTitle", label: "Nội dung đã mua", example: "Limio HSK4 (3.0) - Quyển 1", required: true },
+      { name: "amountText", label: "Số tiền", example: "199.000 ₫", required: true },
+      { name: "methodLabel", label: "Hình thức thanh toán", example: "SePay (QR, thẻ)", required: true },
+      { name: "paidAtText", label: "Thời điểm thanh toán", example: "25/11/2026 16:01", required: true },
+      { name: "accessText", label: "Quyền truy cập", example: "Đến hết ngày 25/11/2027", required: true },
+      { name: "actionUrl", label: "Link vào học", example: "https://limio.vn/learn/hsk-4-quyen-1", required: true },
+      { name: "actionLabel", label: "Chữ trên nút", example: "Vào học", required: true },
+    ],
+  },
+  {
+    key: "course.activated",
+    name: "Đã kích hoạt bằng mã",
+    description: "Gửi khi người học đổi mã kích hoạt thành công (khoá hoặc combo). Không in lại mã, không có số tiền.",
+    category: "course",
+    subject: "Đã kích hoạt: {{itemTitle}}",
+    bodyHtml: [
+      h.title("Kích hoạt thành công!"),
+      hello("learnerName"),
+      h.p("Mã kích hoạt của bạn đã được áp dụng. Quyền học đã sẵn sàng."),
+      h.facts([
+        ["Nội dung", "{{itemTitle}}"],
+        ["Quyền truy cập", "{{accessText}}"],
+      ]),
+      h.button("actionUrl", "{{actionLabel}}"),
+      h.linkFallback("actionUrl"),
+      h.small("Vì lý do an toàn, email này không in lại mã kích hoạt."),
+    ].join("\n"),
+    bodyText: `Xin chào {{learnerName}},
+
+Mã kích hoạt của bạn đã được áp dụng. Quyền học đã sẵn sàng.
+
+Nội dung: {{itemTitle}}
+Quyền truy cập: {{accessText}}
+
+{{actionLabel}}: {{actionUrl}}
+
+Vì lý do an toàn, email này không in lại mã kích hoạt.`,
+    variables: [
+      V.learnerName,
+      { name: "itemTitle", label: "Nội dung đã kích hoạt", example: "Limio HSK4 (3.0) - Trọn bộ 5 quyển (5 khoá)", required: true },
+      { name: "accessText", label: "Quyền truy cập", example: "Đến hết ngày 25/11/2027", required: true },
+      { name: "actionUrl", label: "Link vào học", example: "https://limio.vn/me", required: true },
+      { name: "actionLabel", label: "Chữ trên nút", example: "Vào học", required: true },
+    ],
+  },
+
   // ============ GAMIFICATION ============
   {
     key: "gamification.level_up",

@@ -83,7 +83,10 @@ describe("GET /api/webhooks/vnpay", () => {
       paidAmountCents: 199_000,
       success: true,
       gatewayTxnRef: "14012345",
-    });
+    },
+    // Tham số 3: có địa chỉ site để gửi email xác nhận đơn hàng (docs/tieu-chi/email-xac-nhan-don-hang.md).
+    undefined,
+    { baseUrl: expect.stringMatching(/^https?:\/\//) });
   });
 
   it("chỉ thành công khi CẢ vnp_ResponseCode và vnp_TransactionStatus đều 00", async () => {
