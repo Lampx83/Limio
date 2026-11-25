@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { absoluteUrl } from "@/lib/seo";
 import { prisma } from "@feedbackme/db";
 
 export const runtime = "nodejs";
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const to = (path: string) => NextResponse.redirect(new URL(path, url.origin));
+  const to = (path: string) => NextResponse.redirect(absoluteUrl(path));
   const orderId = url.searchParams.get("order") ?? "";
   const status = url.searchParams.get("status");
   if (!/^[0-9a-f-]{36}$/i.test(orderId)) return to("/");

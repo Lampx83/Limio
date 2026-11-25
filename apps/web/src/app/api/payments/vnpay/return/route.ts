@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { absoluteUrl } from "@/lib/seo";
 import { prisma } from "@feedbackme/db";
 import { getVnpayConfig, verifyVnpayParams } from "@/lib/vnpay";
 
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const to = (path: string) => NextResponse.redirect(new URL(path, url.origin));
+  const to = (path: string) => NextResponse.redirect(absoluteUrl(path));
 
   const cfg = await getVnpayConfig();
   if (!cfg || !verifyVnpayParams(url.searchParams, cfg.hashSecret)) return to("/");

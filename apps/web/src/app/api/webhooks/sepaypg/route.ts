@@ -22,11 +22,11 @@ export async function POST(req: Request) {
   const cfg = await getSepayPgConfig();
   if (!cfg) return NextResponse.json({ success: false, error: "sepay_pg_not_configured" }, { status: 503 });
 
-  const useSecret = cfg.ipnSecret !== "";
-  if (useSecret && !verifySepayPgIpnSecret(req.headers.get("x-secret-key"), cfg.ipnSecret)) {
-    return NextResponse.json({ success: false, error: "unauthorized" }, { status: 401 });
-  }
-  if (!useSecret) {
+  // Tin thẳng thân IPN chỉ khi header khớp khoá đã cấu hình. Header thiếu hoặc lệch KHÔNG bị từ chối ngay (SePay có thể
+  // không gửi, hoặc khoá hai bên lệch): cuộc gọi chỉ là tín hiệu và phải được API của SePay xác nhận như khi không có khoá.
+  const trusted = cfg.ipnSecret !== "" && verifySepayPgIpnSecret(req.headers.get("x-secret-key"), cfg.ipnSecret);
+  const useSecret = trusted;
+  if (!trusted) {
     const ip = clientIp(req);
     const limit = await allow("sepaypg-ipn:ip", ip === "unknown" ? "unknown" : ip, 120, 60_000);
     if (!limit.ok) return NextResponse.json({ success: false, error: "rate_limited" }, { status: 429 });
@@ -39,6 +39,8 @@ export async function POST(req: Request) {
     body = null;
   }
   const ipn = parseSepayPgIpn(body);
+  // Dấu vết chẩn đoán, không mang dữ liệu cá nhân: loại cuộc gọi và có tin bằng khoá hay không.
+  console.info("[sepaypg-ipn]", { kind: ipn.kind, trusted });
   if (ipn.kind === "invalid") return NextResponse.json({ success: false, error: "validation_failed" }, { status: 400 });
   if (ipn.kind === "ignored") return NextResponse.json({ success: true, ignored: ipn.reason });
 
@@ -56,6 +58,7 @@ export async function POST(req: Request) {
 
       const info = await fetchSepayPgOrder(cfg, ipn.invoiceNumber);
       if (!info || info.status !== "CAPTURED" || (info.invoiceNumber && info.invoiceNumber !== ipn.invoiceNumber)) {
+        console.info("[sepaypg-ipn] not_confirmed", { fetched: !!info, status: info?.status ?? null });
         return NextResponse.json({ success: true, result: "not_confirmed" });
       }
       // Tin số tiền SePay xác nhận qua API, không tin số tiền trong thân IPN.

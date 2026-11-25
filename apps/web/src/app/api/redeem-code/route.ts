@@ -1,3 +1,4 @@
+import { SITE_URL } from "@/lib/seo";
 import { NextResponse } from "next/server";
 import { redeemAnyCode } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "validation_failed" }, { status: 400 });
   }
 
-  const origin = new URL(req.url).origin;
+  const origin = SITE_URL;
   try {
     const result = await redeemAnyCode(userId, body.code, undefined, {
       baseUrl: origin,

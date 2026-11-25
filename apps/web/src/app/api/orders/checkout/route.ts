@@ -1,3 +1,4 @@
+import { SITE_URL } from "@/lib/seo";
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
         courseId: body.bundleId ? undefined : body.courseId,
         accessPlanId: body.accessPlanId,
         bundleId: body.bundleId,
-        origin: new URL(req.url).origin,
+        origin: SITE_URL,
       });
       return NextResponse.json({ checkout: r });
     } catch (e) {
@@ -65,7 +66,7 @@ export async function POST(req: Request) {
 
   if (body?.bundleId) {
     if (body.provider !== "vnpay") return NextResponse.json({ error: "bundle_requires_gateway" }, { status: 400 });
-    const origin = new URL(req.url).origin;
+    const origin = SITE_URL;
     try {
       const r = await createVnpayBundlePayment({
         userId,
@@ -88,7 +89,7 @@ export async function POST(req: Request) {
   }
 
   if (body.provider === "vnpay") {
-    const origin = new URL(req.url).origin;
+    const origin = SITE_URL;
     try {
       const r = await createVnpayPayment({
         userId,
@@ -119,7 +120,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "course_is_free" }, { status: 400 });
   }
 
-  const origin = new URL(req.url).origin;
+  const origin = SITE_URL;
   try {
     const r = await createCheckoutSession({
       userId,
