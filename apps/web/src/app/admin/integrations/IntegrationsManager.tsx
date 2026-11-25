@@ -75,9 +75,9 @@ const LABELS: Record<
     help: "SePay chỉ hiện một lần khi tạo; sao chép ngay vào đây. Không gửi cho ai, không dán vào chat.",
   },
   "sepaypg.ipn_secret": {
-    name: "Khoá xác thực IPN",
+    name: "Khoá xác thực IPN (tuỳ chọn)",
     placeholder: "Chuỗi tự đặt, khai cùng ở SePay",
-    help: "Ở SePay: Cấu hình IPN → kiểu xác thực SECRET_KEY, nhập đúng chuỗi này. SePay gửi nó trong header X-Secret-Key.",
+    help: "Chỉ điền nếu trang Cấu hình IPN ở SePay có ô chọn kiểu xác thực SECRET_KEY: nhập đúng chuỗi này ở cả hai nơi (SePay gửi nó trong header X-Secret-Key). Để TRỐNG nếu SePay không có ô đó: Limio sẽ hỏi lại API của SePay để xác nhận đơn đã thu tiền trước khi cấp quyền.",
   },
   "sepaypg.env": {
     name: "Môi trường",
@@ -181,7 +181,7 @@ const GROUPS: Record<
   },
   sepaypg: {
     name: "SePay — cổng thanh toán (VietQR, QR NAPAS, thẻ)",
-    help: "Cần Merchant ID, Secret Key và khoá IPN thì nút \"Thanh toán qua SePay\" mới hiện ở trang khoá và trang combo. Địa chỉ IPN khai ở my.sepay.vn: https://<tên miền>/api/webhooks/sepaypg, xác thực SECRET_KEY. Xem docs/tieu-chi/thanh-toan-sepay-pg.md.",
+    help: "Cần Merchant ID và Secret Key thì nút \"Thanh toán qua SePay\" mới hiện ở trang khoá và trang combo. Địa chỉ IPN khai ở my.sepay.vn: https://<tên miền>/api/webhooks/sepaypg, xác thực SECRET_KEY. Xem docs/tieu-chi/thanh-toan-sepay-pg.md.",
     keys: ["sepaypg.merchant_id", "sepaypg.secret_key", "sepaypg.ipn_secret", "sepaypg.env"],
   },
   sepay: {

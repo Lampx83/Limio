@@ -11,8 +11,8 @@
 
 ## AC1 — Cấu hình
 
-- Khoá tích hợp: `sepaypg.merchant_id`, `sepaypg.secret_key` (SePay chỉ hiện một lần), `sepaypg.ipn_secret` (tự đặt, khai cùng ở my.sepay.vn → Cấu hình IPN → xác thực SECRET_KEY), `sepaypg.env` (`sandbox` | `production`; **trống = sandbox**).
-- **Given** đủ ba khoá đầu, **Then** "sepay_pg" nằm trong cổng đã cấu hình và nút thanh toán hiện. Thiếu một → không hiện, không báo lỗi.
+- Khoá tích hợp: `sepaypg.merchant_id`, `sepaypg.secret_key` (SePay chỉ hiện một lần), `sepaypg.env` (`sandbox` | `production`; **trống = sandbox**) và **tuỳ chọn** `sepaypg.ipn_secret` (tự đặt, khai cùng ở my.sepay.vn nếu trang Cấu hình IPN có ô xác thực SECRET_KEY).
+- **Given** có Merchant ID và Secret Key, **Then** "sepay_pg" nằm trong cổng đã cấu hình và nút thanh toán hiện. Thiếu một → không hiện, không báo lỗi.
 - Sandbox và production có hai bộ Merchant ID/Secret Key riêng; địa chỉ khởi tạo: `https://pay-sandbox.sepay.vn/v1/checkout/init` và `https://pay.sepay.vn/v1/checkout/init`.
 - Secret Key và khoá IPN không bao giờ xuất hiện trong URL, log, phản hồi hay trang người mua.
 
@@ -26,7 +26,8 @@
 
 SePay POST JSON tới `/api/webhooks/sepaypg`; header `X-Secret-Key` mang khoá IPN; chờ HTTP 200. IPN là đường **duy nhất** cấp quyền.
 
-- **Given** thiếu/sai `X-Secret-Key` (so sánh thời gian không đổi) → 401, không đụng DB. Chưa cấu hình → 503. Thân không đọc được hoặc thiếu trường → 400.
+- **Hai cách tin cuộc gọi IPN.** (1) **Có khoá IPN**: thiếu/sai `X-Secret-Key` (so sánh thời gian không đổi) → 401, không đụng DB. (2) **Không có khoá IPN** (trang cấu hình IPN của SePay sandbox chỉ có ô địa chỉ): IPN chỉ là **tín hiệu**; hệ thống hỏi lại API của SePay `GET /v1/order/detail/<mã hoá đơn>` (Basic Auth Merchant ID : Secret Key; sandbox `pgapi-sandbox.sepay.vn`, production `pgapi.sepay.vn`) và **chỉ cấp quyền khi SePay xác nhận** `order_status = CAPTURED`; số tiền lấy từ phản hồi của API (không tin số tiền trong thân IPN) rồi đối chiếu với đơn. Chỉ mã hoá đơn của một đơn `sepay_pg` đang có mới tốn một lần gọi API; có giới hạn tần suất theo IP. API lỗi/không phản hồi → 500 để SePay gửi lại; không xác nhận được → không cấp. Phản hồi của API **không có mẫu trong tài liệu**, nên cách đọc phản hồi được viết tổng quát (tìm `order_status`) và cần kiểm khi thử sandbox.
+- Chưa cấu hình → 503. Thân không đọc được hoặc thiếu trường → 400.
 - **Given** `notification_type = ORDER_PAID`, `order.order_status = CAPTURED` (và `transaction_status = APPROVED` nếu có), mã hoá đơn khớp một đơn `sepay_pg` `pending/failed`, số tiền (`order_amount`, chuỗi như `"199000.00"`) bằng số tiền đơn → đơn `paid` + `paidAt`, mã giao dịch lưu `gatewayTxnRef`, cấp quyền đúng đường cũ (`extendEnrollmentAccess` / `grantBundleAccess`). Trả 200.
 - **Given** số tiền lệch, đơn lạ, đơn đã `paid`/`refunded` → không đổi gì, vẫn trả 200 (không để SePay gửi lại vô ích). Gửi lại cùng IPN chỉ cấp một lần.
 - **Given** `TRANSACTION_VOID`, hoặc trạng thái khác `CAPTURED`/`APPROVED` → bỏ qua, 200, không cấp quyền.

@@ -1,7 +1,9 @@
 import { createHmac } from "node:crypto";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildSepayPgCheckout,
+  extractSepayPgOrder,
+  fetchSepayPgOrder,
   parseSepayPgIpn,
   sepayPgCanonical,
   signSepayPgFields,
@@ -96,5 +98,45 @@ describe("IPN", () => {
     expect(verifySepayPgIpnSecret("sai", cfg.ipnSecret)).toBe(false);
     expect(verifySepayPgIpnSecret(null, cfg.ipnSecret)).toBe(false);
     expect(verifySepayPgIpnSecret("x", "")).toBe(false);
+  });
+});
+
+describe("xác nhận đơn bằng API của SePay", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("extractSepayPgOrder: tìm order_status ở nhiều dạng phản hồi", () => {
+    const want = { status: "CAPTURED", amount: 199000, invoiceNumber: "LMK7P3Q9XA2R" };
+    const o = { order_status: "CAPTURED", order_amount: "199000.00", order_invoice_number: "LMK7P3Q9XA2R" };
+    expect(extractSepayPgOrder(o)).toEqual(want);
+    expect(extractSepayPgOrder({ data: o })).toEqual(want);
+    expect(extractSepayPgOrder({ success: true, data: { order: o } })).toEqual(want);
+    expect(extractSepayPgOrder({ data: { ...o, order_amount: 199000 } })).toEqual(want);
+  });
+  it("extractSepayPgOrder: thiếu trạng thái hoặc số tiền → null", () => {
+    expect(extractSepayPgOrder(null)).toBeNull();
+    expect(extractSepayPgOrder({ data: { foo: 1 } })).toBeNull();
+    expect(extractSepayPgOrder({ order_status: "CAPTURED" })).toBeNull();
+    expect(extractSepayPgOrder({ order_status: "CAPTURED", order_amount: "abc" })).toBeNull();
+  });
+
+  it("fetchSepayPgOrder: gọi đúng địa chỉ sandbox với Basic Auth Merchant ID:Secret Key; 404 → null; lỗi khác → ném", async () => {
+    const calls: Array<{ url: string; auth: string }> = [];
+    const fake = (status: number, body: unknown) =>
+      vi.fn(async (url: string, init: { headers: Record<string, string> }) => {
+        calls.push({ url, auth: init.headers.Authorization! });
+        return new Response(JSON.stringify(body), { status });
+      });
+    vi.stubGlobal("fetch", fake(200, { data: { order_status: "CAPTURED", order_amount: "199000.00", order_invoice_number: "LMABC" } }));
+    expect(await fetchSepayPgOrder(cfg, "LMABC")).toEqual({ status: "CAPTURED", amount: 199000, invoiceNumber: "LMABC" });
+    expect(calls[0]!.url).toBe("https://pgapi-sandbox.sepay.vn/v1/order/detail/LMABC");
+    expect(calls[0]!.auth).toBe(`Basic ${Buffer.from("SP-TEST-ABC:bi-mat-test-123").toString("base64")}`);
+
+    vi.stubGlobal("fetch", fake(404, {}));
+    expect(await fetchSepayPgOrder(cfg, "LMABC")).toBeNull();
+    vi.stubGlobal("fetch", fake(500, {}));
+    await expect(fetchSepayPgOrder(cfg, "LMABC")).rejects.toThrow("sepay_pg_api_500");
+    vi.stubGlobal("fetch", fake(200, { data: { foo: 1 } }));
+    expect(await fetchSepayPgOrder({ ...cfg, env: "production" }, "LMABC")).toBeNull();
+    expect(calls[calls.length - 1]!.url).toBe("https://pgapi.sepay.vn/v1/order/detail/LMABC");
   });
 });

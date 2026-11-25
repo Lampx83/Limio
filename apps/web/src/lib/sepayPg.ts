@@ -15,10 +15,18 @@ export const SEPAY_PG_CHECKOUT_URLS = {
   production: "https://pay.sepay.vn/v1/checkout/init",
 } as const;
 
+export const SEPAY_PG_API_URLS = {
+  sandbox: "https://pgapi-sandbox.sepay.vn/v1",
+  production: "https://pgapi.sepay.vn/v1",
+} as const;
+
 export interface SepayPgConfig {
   merchantId: string;
   secretKey: string;
-  /** Khoá xác thực IPN (header `X-Secret-Key`), do mình tự đặt khi cấu hình IPN ở my.sepay.vn. */
+  /**
+   * Khoá xác thực IPN (header `X-Secret-Key`), do mình tự đặt khi cấu hình IPN ở my.sepay.vn. TUỲ CHỌN: trang cấu hình IPN
+   * của sandbox có thể không có ô này; thiếu thì IPN chỉ là tín hiệu và đơn được xác nhận bằng API của SePay (AC3).
+   */
   ipnSecret: string;
   env: "sandbox" | "production";
 }
@@ -31,7 +39,7 @@ async function optionalSecret(key: string): Promise<string> {
   }
 }
 
-/** null khi thiếu Merchant ID, Secret Key hoặc khoá IPN — khi đó coi như chưa cấu hình, không hiện lựa chọn. */
+/** null khi thiếu Merchant ID hoặc Secret Key — khi đó coi như chưa cấu hình, không hiện lựa chọn. Khoá IPN là tuỳ chọn. */
 export async function getSepayPgConfig(): Promise<SepayPgConfig | null> {
   const [merchantId, secretKey, ipnSecret, env] = await Promise.all([
     optionalSecret("sepaypg.merchant_id"),
@@ -39,7 +47,7 @@ export async function getSepayPgConfig(): Promise<SepayPgConfig | null> {
     optionalSecret("sepaypg.ipn_secret"),
     optionalSecret("sepaypg.env"),
   ]);
-  if (!merchantId || !secretKey || !ipnSecret) return null;
+  if (!merchantId || !secretKey) return null;
   // Mặc định sandbox: quên đặt thì không thu tiền thật.
   return { merchantId, secretKey, ipnSecret, env: env.toLowerCase() === "production" ? "production" : "sandbox" };
 }
@@ -155,4 +163,54 @@ export function parseSepayPgIpn(body: unknown): SepayPgIpn {
         ? order.order_id
         : "";
   return { kind: "paid", invoiceNumber: invoice, amount: Math.round(amount), transactionId };
+}
+
+// ── Xác nhận đơn bằng API của SePay (khi không có khoá IPN) ────────────────────────────────────────────────────────
+
+export interface SepayPgOrderInfo {
+  status: string;
+  amount: number;
+  invoiceNumber: string;
+}
+
+/**
+ * Lấy thông tin đơn từ phản hồi của `GET /order/detail/<mã hoá đơn>`. Tài liệu không công bố mẫu phản hồi, nên tìm đối tượng
+ * đầu tiên có `order_status` (sâu tối đa 4 cấp) thay vì đoán đường dẫn cố định. Thiếu trạng thái hoặc số tiền → null.
+ */
+export function extractSepayPgOrder(json: unknown): SepayPgOrderInfo | null {
+  const find = (v: unknown, depth: number): Record<string, unknown> | null => {
+    if (!v || typeof v !== "object" || depth > 4) return null;
+    const o = v as Record<string, unknown>;
+    if (typeof o.order_status === "string") return o;
+    for (const child of Object.values(o)) {
+      const r = find(child, depth + 1);
+      if (r) return r;
+    }
+    return null;
+  };
+  const o = find(json, 0);
+  if (!o) return null;
+  const amount = typeof o.order_amount === "string" || typeof o.order_amount === "number" ? Number(o.order_amount) : NaN;
+  if (!Number.isFinite(amount)) return null;
+  return {
+    status: String(o.order_status),
+    amount: Math.round(amount),
+    invoiceNumber: typeof o.order_invoice_number === "string" ? o.order_invoice_number : "",
+  };
+}
+
+/** Hỏi SePay trạng thái đơn bằng Basic Auth (Merchant ID : Secret Key). Lỗi mạng hoặc phản hồi lạ → ném lỗi (IPN trả 500 để SePay gửi lại). */
+export async function fetchSepayPgOrder(cfg: SepayPgConfig, invoiceNumber: string): Promise<SepayPgOrderInfo | null> {
+  const res = await fetch(`${SEPAY_PG_API_URLS[cfg.env]}/order/detail/${encodeURIComponent(invoiceNumber)}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Basic ${Buffer.from(`${cfg.merchantId}:${cfg.secretKey}`).toString("base64")}`,
+    },
+    signal: AbortSignal.timeout(10_000),
+    cache: "no-store",
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`sepay_pg_api_${res.status}`);
+  return extractSepayPgOrder(await res.json());
 }
