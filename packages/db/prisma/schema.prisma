@@ -2907,10 +2907,10 @@ enum PaymentProvider {
   momo
   /// Chuyển khoản ngân hàng tự động đối soát qua SePay (docs/tieu-chi/thanh-toan-sepay.md).
   sepay
-}
-
   /// Cổng thanh toán SePay (Merchant ID + Secret Key + IPN; VietQR, QR NAPAS, thẻ): docs/tieu-chi/thanh-toan-sepay-pg.md.
   sepay_pg
+}
+
 model Order {
   id           String          @id @default(uuid())
   userId       String
