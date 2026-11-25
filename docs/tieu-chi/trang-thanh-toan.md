@@ -34,8 +34,8 @@
 
 ## AC5 — Học viên xem được hạn truy cập
 
-- **Khoá học của tôi** (`/me/enrollments`): mỗi thẻ khoá có dòng "Truy cập: Đến hết ngày dd/mm/yyyy (còn n ngày)" hoặc "Không giới hạn thời gian". Còn **30 ngày trở xuống** (cùng ngưỡng nhắc qua email) thì đổi màu cảnh báo; hạn trong ngày ghi "hết hạn hôm nay".
-- **Trang khoá của người học** (`/learn/<slug>`): cùng dòng đó trong banner; khi quyền **có hạn**, thanh toán bật và khoá **có gói đang bán** thì có nút **Gia hạn** → `/checkout/<slug>`. Quyền vô thời hạn không có nút.
+- **Khoá học của tôi** (`/me/enrollments`): mỗi thẻ khoá **có đặt hạn sử dụng** có dòng "Còn n ngày · Đến hết ngày dd/mm/yyyy"; khoá **không giới hạn thời gian thì không hiện gì** (không có gì để nhắc). Còn **30 ngày trở xuống** (cùng ngưỡng nhắc qua email) thì đổi màu cảnh báo; hạn trong ngày ghi "hết hạn hôm nay".
+- **Trang khoá của người học** (`/learn/<slug>`): cùng khối đó trong banner, chỉ khi quyền có hạn; khi quyền **có hạn**, thanh toán bật và khoá **có gói đang bán** thì có nút **Gia hạn** → `/checkout/<slug>`. Quyền vô thời hạn không có khối hạn và không có nút.
 - Chỉ đọc dữ liệu ghi danh đã có; không đổi cách tính hạn hay cấp quyền. Hạn tính theo giờ Việt Nam.
 - Test: `lib/accessExpiry.test.ts` (ngưỡng, làm tròn, hạn đã qua), `lib/checkoutGate.test.ts` (quyền có hạn được gia hạn, vô thời hạn thì không).
 

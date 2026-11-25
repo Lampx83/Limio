@@ -1,26 +1,22 @@
 import Link from "next/link";
-import { CalendarClock, CalendarX2, Infinity as InfinityIcon, TriangleAlert } from "lucide-react";
+import { CalendarClock, CalendarX2, TriangleAlert } from "lucide-react";
 import { accessExpiryInfo } from "@/lib/accessExpiry";
 import type { UiLang } from "@/lib/i18n/core";
 
 const T = {
   vi: {
-    lifetime: "Không giới hạn",
-    lifetimeSub: "Học bao lâu tuỳ bạn",
     days: (n: number) => (n === 0 ? "Hết hạn hôm nay" : `Còn ${n} ngày`),
     until: (d: string) => `Đến hết ngày ${d}`,
     renew: "Gia hạn",
   },
   en: {
-    lifetime: "No time limit",
-    lifetimeSub: "Learn at your own pace",
     days: (n: number) => (n === 0 ? "Expires today" : `${n} days left`),
     until: (d: string) => `Until ${d}`,
     renew: "Renew",
   },
 } as const;
 
-type Tone = "ok" | "soon" | "last" | "lifetime";
+type Tone = "ok" | "soon" | "last";
 
 // Class viết đủ để Tailwind quét được. `chip`: dùng trong thẻ nền sáng; `dark`: dùng trên banner màu.
 const TONE: Record<Tone, { chip: string; icon: string; dark: string; darkIcon: string }> = {
@@ -42,18 +38,12 @@ const TONE: Record<Tone, { chip: string; icon: string; dark: string; darkIcon: s
     dark: "bg-danger-500/30 text-white",
     darkIcon: "bg-white text-danger-600",
   },
-  lifetime: {
-    chip: "bg-slate-100 text-slate-600 ring-slate-200",
-    icon: "text-slate-400",
-    dark: "bg-white/15 text-white",
-    darkIcon: "bg-white/20 text-white",
-  },
 };
 
 /**
  * Hạn truy cập của học viên ở trang Khoá học của tôi và trang khoá (docs/tieu-chi/trang-thanh-toan.md, AC5).
  *  - Thẻ nền sáng: một viên thuốc có biểu tượng, "Còn 300 ngày" nổi bật + ngày hết hạn nhạt bên cạnh. Màu theo mức:
- *    còn lâu (xanh thương hiệu), sắp hết ≤ 30 ngày (hổ phách), hết hạn hôm nay (đỏ), không giới hạn (xám).
+ *    còn lâu (xanh thương hiệu), sắp hết ≤ 30 ngày (hổ phách), hết hạn hôm nay (đỏ). Quyền không giới hạn thì không hiện gì.
  *  - Banner nền màu (`onDark`): khối kính mờ có biểu tượng, hai dòng, nút Gia hạn nổi bật bên phải.
  * `renewHref` có thì hiện nút Gia hạn (chỉ truyền khi khoá có gói đang bán và quyền có hạn).
  */
@@ -70,12 +60,14 @@ export default function AccessExpiryNote({
 }) {
   const t = T[lang];
   const info = accessExpiryInfo(expiresAt);
-  const tone: Tone = info.kind === "lifetime" ? "lifetime" : info.daysLeft === 0 ? "last" : info.soon ? "soon" : "ok";
+  // Quyền không giới hạn thời gian: không có gì để nhắc, không hiện gì.
+  if (info.kind === "lifetime") return null;
+  const tone: Tone = info.daysLeft === 0 ? "last" : info.soon ? "soon" : "ok";
   const c = TONE[tone];
-  const Icon = tone === "lifetime" ? InfinityIcon : tone === "last" ? CalendarX2 : tone === "soon" ? TriangleAlert : CalendarClock;
-  const main = info.kind === "lifetime" ? t.lifetime : t.days(info.daysLeft);
-  const sub = info.kind === "lifetime" ? t.lifetimeSub : t.until(info.dateText);
-  const renew = renewHref && info.kind === "until" ? renewHref : null;
+  const Icon = tone === "last" ? CalendarX2 : tone === "soon" ? TriangleAlert : CalendarClock;
+  const main = t.days(info.daysLeft);
+  const sub = t.until(info.dateText);
+  const renew = renewHref ?? null;
 
   if (onDark) {
     return (

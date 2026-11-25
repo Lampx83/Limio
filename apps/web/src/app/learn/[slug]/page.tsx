@@ -317,9 +317,11 @@ export default async function LearnCoursePage({
           </div>
 
           {/* Hạn truy cập (docs/tieu-chi/trang-thanh-toan.md, AC5): luôn thấy; nút Gia hạn khi có gói đang bán. */}
-          <div className="mt-4">
-            <AccessExpiryNote expiresAt={enrollment.accessExpiresAt} lang={lang} onDark renewHref={canRenew ? `/checkout/${params.slug}` : undefined} />
-          </div>
+          {enrollment.accessExpiresAt && (
+            <div className="mt-4">
+              <AccessExpiryNote expiresAt={enrollment.accessExpiresAt} lang={lang} onDark renewHref={canRenew ? `/checkout/${params.slug}` : undefined} />
+            </div>
+          )}
 
           {/* Action buttons */}
           <div className="mt-5 flex flex-wrap gap-2">

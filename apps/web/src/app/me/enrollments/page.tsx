@@ -131,9 +131,11 @@ export default async function MyEnrollmentsPage() {
                     </div>
                   </div>
 
-                  <div className="mt-4">
-                    <AccessExpiryNote expiresAt={e.accessExpiresAt} />
-                  </div>
+                  {e.accessExpiresAt && (
+                    <div className="mt-4">
+                      <AccessExpiryNote expiresAt={e.accessExpiresAt} />
+                    </div>
+                  )}
 
                   <div className="mt-3 flex items-center justify-between border-t border-token pt-3 text-xs">
                     <span className="text-faint">
