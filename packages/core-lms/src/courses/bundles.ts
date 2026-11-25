@@ -170,6 +170,8 @@ export interface BundleCourseView {
   /** Giá bán lẻ hiện hành (gói rẻ nhất, hoặc giá phẳng); 0 = miễn phí / không có giá. */
   retailCents: number;
   retailCurrency: string;
+  /** Giá gốc của khoá (gạch ngang cạnh giá lẻ khi lớn hơn giá lẻ hiện hành); null = không khuyến mãi. */
+  originalPriceCents: number | null;
 }
 
 export interface BundleView {
@@ -219,6 +221,7 @@ export async function getBundleBySlug(
               coverUrl: true,
               status: true,
               priceCents: true,
+              originalPriceCents: true,
               currency: true,
               accessPlans: { where: { isActive: true }, orderBy: { priceCents: "asc" }, take: 1, select: { priceCents: true, currency: true } },
               modules: { select: { _count: { select: { lessons: true } } } },
@@ -243,6 +246,7 @@ export async function getBundleBySlug(
       published: i.course.status === "published",
       retailCents,
       retailCurrency: plan ? plan.currency : i.course.currency,
+      originalPriceCents: i.course.originalPriceCents,
     };
   });
   const comparable = courses.every((c) => c.retailCents > 0 && c.retailCurrency === b.currency);

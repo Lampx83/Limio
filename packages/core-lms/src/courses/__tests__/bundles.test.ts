@@ -103,7 +103,10 @@ describe("publishBundle + getBundleBySlug", () => {
     const b = await createBundle(admin, base(ids, { slug: "combo-4", priceCents: 599_000, originalPriceCents: null }));
     await publishBundle(admin, b.id);
 
+    await prisma.course.update({ where: { id: ids[0]! }, data: { originalPriceCents: 599_000 } });
     let view = (await getBundleBySlug("combo-4"))!;
+    expect(view.courses[0]!.originalPriceCents).toBe(599_000); // giá gốc từng khoá để hiện gạch ngang
+    expect(view.courses[1]!.originalPriceCents).toBeNull();
     expect(view.retailTotalCents).toBe(798_000);
     expect(view.savingsCents).toBe(199_000);
 

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getBundleBySlug, isAdmin, ownedCourseIdsInBundle } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import SafeHtml from "@/components/SafeHtml";
-import { PriceBlock } from "@/components/PriceTag";
+import { DiscountBadge, PriceBlock, PriceStrike } from "@/components/PriceTag";
 import { formatPrice } from "@/lib/formatPrice";
 import { getConfiguredPaymentProviders } from "@/lib/paymentProviders";
 import BundleBuyButton from "./BundleBuyButton";
@@ -103,7 +103,11 @@ export default async function BundlePage({ params }: { params: { slug: string } 
               </div>
               <div className="mt-auto flex items-center justify-between text-sm">
                 {c.retailCents > 0 && c.retailCurrency === bundle.currency ? (
-                  <span className="text-faint">Mua lẻ {formatPrice(c.retailCents, c.retailCurrency)}</span>
+                  <span className="flex flex-wrap items-baseline gap-x-1.5 text-faint" data-testid="bundle-course-price">
+                    <PriceStrike originalCents={c.originalPriceCents} saleCents={c.retailCents} currency={c.retailCurrency} />
+                    <span>Mua lẻ {formatPrice(c.retailCents, c.retailCurrency)}</span>
+                    <DiscountBadge originalCents={c.originalPriceCents} saleCents={c.retailCents} />
+                  </span>
                 ) : (
                   <span />
                 )}
