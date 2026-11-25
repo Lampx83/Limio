@@ -4,14 +4,14 @@
 
 ## AC1 — Xác nhận đơn hàng (đã thanh toán)
 
-- **Given** đơn chuyển `pending/failed → paid` qua `settleGatewayPayment` (VNPay IPN, SePay cổng thanh toán, SePay chuyển khoản) và caller truyền `baseUrl`, **Then** sau khi cấp quyền xong, gửi **một** email `order.confirmation` tới email người mua gồm: lời cảm ơn; mã đơn hàng (`providerRef`); nội dung (tên khoá, hoặc "tên combo (n khoá)"); số tiền; hình thức thanh toán; thời điểm (giờ Việt Nam); quyền truy cập ("Đến hết ngày dd/mm/yyyy" theo hạn SỚM nhất của các khoá, hoặc "Không giới hạn thời gian"); nút **Vào học** (khoá lẻ → `/learn/<slug>`; combo → `/me`).
+- **Given** đơn chuyển `pending/failed → paid` qua `settleGatewayPayment` (VNPay IPN, SePay cổng thanh toán, SePay chuyển khoản) và caller truyền `baseUrl`, **Then** sau khi cấp quyền xong, gửi **một** email `order.confirmation` tới email người mua gồm: lời cảm ơn; mã đơn hàng (`providerRef`); nội dung (tên khoá, hoặc "tên combo (n khoá)"); số tiền; hình thức thanh toán; thời điểm (giờ Việt Nam); **Hạn sử dụng** ("dd/mm/yyyy" theo hạn SỚM nhất của các khoá, hoặc "Không giới hạn thời gian"); nút **Vào học** (khoá lẻ → `/learn/<slug>`; combo → `/me`).
 - **Given** IPN gửi lại (đơn đã `paid`), số tiền lệch, thanh toán thất bại, hoặc đơn không tồn tại, **Then** không gửi thêm email.
 - **Given** gửi email lỗi (nhà cung cấp, mạng) hoặc đơn thiếu email người dùng, **Then** việc cấp quyền và phản hồi cho cổng thanh toán **không bị ảnh hưởng** (lỗi ghi log `[purchase-email]`, không throw, không bắt cổng gửi lại).
 - Email không chứa dữ liệu thẻ hay tài khoản ngân hàng.
 
 ## AC2 — Kích hoạt bằng mã
 
-- **Given** người học đổi mã khoá hoặc mã combo thành công và mã bị tiêu (`codeConsumed`), **Then** gửi **một** email `course.activated`: "Kích hoạt thành công", nội dung đã kích hoạt, quyền truy cập, nút **Vào học**. **Không** in lại mã, **không** có số tiền.
+- **Given** người học đổi mã khoá hoặc mã combo thành công và mã bị tiêu (`codeConsumed`), **Then** gửi **một** email `course.activated`: "Kích hoạt thành công", nội dung đã kích hoạt, hạn sử dụng, nút **Vào học**. **Không** in lại mã, **không** có số tiền.
 - Đổi mã khoá không còn gửi thêm email chào mừng (`course.welcome`) để người học không nhận hai thư cho một việc.
 - Bấm lại mã đã đổi của chính mình (không tiêu thêm), mã sai/đã dùng/thu hồi → không gửi.
 

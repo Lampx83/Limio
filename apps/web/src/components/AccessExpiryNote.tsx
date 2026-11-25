@@ -6,12 +6,12 @@ import type { UiLang } from "@/lib/i18n/core";
 const T = {
   vi: {
     days: (n: number) => (n === 0 ? "Hết hạn hôm nay" : `Còn ${n} ngày`),
-    until: (d: string) => `Đến hết ngày ${d}`,
+    expiry: (d: string) => `Hạn sử dụng: ${d}`,
     renew: "Gia hạn",
   },
   en: {
     days: (n: number) => (n === 0 ? "Expires today" : `${n} days left`),
-    until: (d: string) => `Until ${d}`,
+    expiry: (d: string) => `Expiry date: ${d}`,
     renew: "Renew",
   },
 } as const;
@@ -66,7 +66,7 @@ export default function AccessExpiryNote({
   const c = TONE[tone];
   const Icon = tone === "last" ? CalendarX2 : tone === "soon" ? TriangleAlert : CalendarClock;
   const main = t.days(info.daysLeft);
-  const sub = t.until(info.dateText);
+  const expiry = t.expiry(info.dateText);
   const renew = renewHref ?? null;
 
   if (onDark) {
@@ -80,8 +80,8 @@ export default function AccessExpiryNote({
           <Icon className="h-[18px] w-[18px]" aria-hidden />
         </span>
         <span className="min-w-0 flex-1 leading-tight">
-          <span className="block text-sm font-bold">{main}</span>
-          <span className="block text-xs text-white/80">{sub}</span>
+          <span className="block text-sm font-bold">{expiry}</span>
+          <span className="block text-xs text-white/80">{main}</span>
         </span>
         {renew && (
           <Link
@@ -102,7 +102,7 @@ export default function AccessExpiryNote({
         <Icon className={`h-3.5 w-3.5 ${c.icon}`} aria-hidden />
         {main}
       </span>
-      <span className="text-xs text-muted">{sub}</span>
+      <span className="text-xs font-medium text-muted">{expiry}</span>
       {renew && (
         <Link href={renew} prefetch={false} className="text-xs font-semibold text-brand-700 underline-offset-2 hover:underline">
           {t.renew} →

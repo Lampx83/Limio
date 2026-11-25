@@ -26,14 +26,14 @@ export function formatOrderAmount(amountCents: number, currency: string): string
   return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 2 }).format(amountCents / 100);
 }
 
-/** Câu mô tả quyền truy cập từ các hạn của (các) ghi danh: lấy hạn SỚM nhất; không hạn nào → không giới hạn thời gian. */
+/** Hạn sử dụng (dd/mm/yyyy) từ các hạn của (các) ghi danh: lấy hạn SỚM nhất; không hạn nào → không giới hạn thời gian. */
 export function accessText(expiries: Array<Date | null>): string {
   const dated = expiries.filter((d): d is Date => d !== null);
   if (expiries.length > 0 && dated.length === 0) return "Không giới hạn thời gian";
   if (dated.length === 0) return "Đã mở";
   const earliest = new Date(Math.min(...dated.map((d) => d.getTime())));
   const day = new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Asia/Ho_Chi_Minh" }).format(earliest);
-  return `Đến hết ngày ${day}`;
+  return day;
 }
 
 function dateTimeVn(d: Date): string {

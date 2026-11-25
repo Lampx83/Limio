@@ -455,7 +455,7 @@ Quyền truy cập khoá {{courseTitle}} của bạn sẽ hết hạn vào {{exp
         ["Số tiền", "{{amountText}}"],
         ["Hình thức", "{{methodLabel}}"],
         ["Thời điểm", "{{paidAtText}}"],
-        ["Quyền truy cập", "{{accessText}}"],
+        ["Hạn sử dụng", "{{accessText}}"],
       ]),
       h.button("actionUrl", "{{actionLabel}}"),
       h.linkFallback("actionUrl"),
@@ -470,7 +470,7 @@ Nội dung: {{itemTitle}}
 Số tiền: {{amountText}}
 Hình thức: {{methodLabel}}
 Thời điểm: {{paidAtText}}
-Quyền truy cập: {{accessText}}
+Hạn sử dụng: {{accessText}}
 
 {{actionLabel}}: {{actionUrl}}
 
@@ -482,7 +482,7 @@ Hãy giữ email này làm biên nhận. Cần hỗ trợ, bạn chỉ cần tr�
       { name: "amountText", label: "Số tiền", example: "199.000 ₫", required: true },
       { name: "methodLabel", label: "Hình thức thanh toán", example: "SePay (QR, thẻ)", required: true },
       { name: "paidAtText", label: "Thời điểm thanh toán", example: "25/11/2026 16:01", required: true },
-      { name: "accessText", label: "Quyền truy cập", example: "Đến hết ngày 25/11/2027", required: true },
+      { name: "accessText", label: "Hạn sử dụng", example: "25/11/2027", required: true },
       { name: "actionUrl", label: "Link vào học", example: "https://limio.vn/learn/hsk-4-quyen-1", required: true },
       { name: "actionLabel", label: "Chữ trên nút", example: "Vào học", required: true },
     ],
@@ -499,7 +499,7 @@ Hãy giữ email này làm biên nhận. Cần hỗ trợ, bạn chỉ cần tr�
       h.p("Mã kích hoạt của bạn đã được áp dụng. Quyền học đã sẵn sàng."),
       h.facts([
         ["Nội dung", "{{itemTitle}}"],
-        ["Quyền truy cập", "{{accessText}}"],
+        ["Hạn sử dụng", "{{accessText}}"],
       ]),
       h.button("actionUrl", "{{actionLabel}}"),
       h.linkFallback("actionUrl"),
@@ -510,7 +510,7 @@ Hãy giữ email này làm biên nhận. Cần hỗ trợ, bạn chỉ cần tr�
 Mã kích hoạt của bạn đã được áp dụng. Quyền học đã sẵn sàng.
 
 Nội dung: {{itemTitle}}
-Quyền truy cập: {{accessText}}
+Hạn sử dụng: {{accessText}}
 
 {{actionLabel}}: {{actionUrl}}
 
@@ -518,7 +518,7 @@ Vì lý do an toàn, email này không in lại mã kích hoạt.`,
     variables: [
       V.learnerName,
       { name: "itemTitle", label: "Nội dung đã kích hoạt", example: "Limio HSK4 (3.0) - Trọn bộ 5 quyển (5 khoá)", required: true },
-      { name: "accessText", label: "Quyền truy cập", example: "Đến hết ngày 25/11/2027", required: true },
+      { name: "accessText", label: "Hạn sử dụng", example: "25/11/2027", required: true },
       { name: "actionUrl", label: "Link vào học", example: "https://limio.vn/me", required: true },
       { name: "actionLabel", label: "Chữ trên nút", example: "Vào học", required: true },
     ],

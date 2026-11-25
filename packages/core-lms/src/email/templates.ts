@@ -215,12 +215,12 @@ const FALLBACKS: Record<string, { subject: string; bodyHtml: string; bodyText: s
   <tr><td>Số tiền</td><td>{{amountText}}</td></tr>
   <tr><td>Hình thức</td><td>{{methodLabel}}</td></tr>
   <tr><td>Thời điểm</td><td>{{paidAtText}}</td></tr>
-  <tr><td>Quyền truy cập</td><td>{{accessText}}</td></tr>
+  <tr><td>Hạn sử dụng</td><td>{{accessText}}</td></tr>
 </table>
 <a class="button" href="{{actionUrl}}">{{actionLabel}}</a>
 <div class="linkbox">{{actionUrl}}</div>
 <p class="small">Hãy giữ email này làm biên nhận. Cần hỗ trợ về đơn hàng, bạn chỉ cần trả lời thư này và nêu mã đơn hàng.</p>`,
-    bodyText: `Xin chào {{learnerName}},\n\nLimio đã nhận được thanh toán của bạn và mở quyền học ngay. Cảm ơn bạn!\n\nMã đơn hàng: {{orderCode}}\nNội dung: {{itemTitle}}\nSố tiền: {{amountText}}\nHình thức: {{methodLabel}}\nThời điểm: {{paidAtText}}\nQuyền truy cập: {{accessText}}\n\n{{actionLabel}}: {{actionUrl}}\n\nHãy giữ email này làm biên nhận. Cần hỗ trợ, bạn chỉ cần trả lời thư này và nêu mã đơn hàng.`,
+    bodyText: `Xin chào {{learnerName}},\n\nLimio đã nhận được thanh toán của bạn và mở quyền học ngay. Cảm ơn bạn!\n\nMã đơn hàng: {{orderCode}}\nNội dung: {{itemTitle}}\nSố tiền: {{amountText}}\nHình thức: {{methodLabel}}\nThời điểm: {{paidAtText}}\nHạn sử dụng: {{accessText}}\n\n{{actionLabel}}: {{actionUrl}}\n\nHãy giữ email này làm biên nhận. Cần hỗ trợ, bạn chỉ cần trả lời thư này và nêu mã đơn hàng.`,
   },
   "course.activated": {
     subject: "Đã kích hoạt: {{itemTitle}}",
@@ -229,12 +229,12 @@ const FALLBACKS: Record<string, { subject: string; bodyHtml: string; bodyText: s
 <p>Mã kích hoạt của bạn đã được áp dụng. Quyền học đã sẵn sàng.</p>
 <table class="facts">
   <tr><td>Nội dung</td><td>{{itemTitle}}</td></tr>
-  <tr><td>Quyền truy cập</td><td>{{accessText}}</td></tr>
+  <tr><td>Hạn sử dụng</td><td>{{accessText}}</td></tr>
 </table>
 <a class="button" href="{{actionUrl}}">{{actionLabel}}</a>
 <div class="linkbox">{{actionUrl}}</div>
 <p class="small">Vì lý do an toàn, email này không in lại mã kích hoạt.</p>`,
-    bodyText: `Xin chào {{learnerName}},\n\nMã kích hoạt của bạn đã được áp dụng. Quyền học đã sẵn sàng.\n\nNội dung: {{itemTitle}}\nQuyền truy cập: {{accessText}}\n\n{{actionLabel}}: {{actionUrl}}\n\nVì lý do an toàn, email này không in lại mã kích hoạt.`,
+    bodyText: `Xin chào {{learnerName}},\n\nMã kích hoạt của bạn đã được áp dụng. Quyền học đã sẵn sàng.\n\nNội dung: {{itemTitle}}\nHạn sử dụng: {{accessText}}\n\n{{actionLabel}}: {{actionUrl}}\n\nVì lý do an toàn, email này không in lại mã kích hoạt.`,
   },
   "course.welcome": {
     subject: "Chào mừng bạn đến với {{courseTitle}}!",

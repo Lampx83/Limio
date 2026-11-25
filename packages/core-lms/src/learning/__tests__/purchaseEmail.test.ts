@@ -44,7 +44,7 @@ describe("email xác nhận đơn hàng", () => {
     expect(call.to).toBe("pe-learner-a1@e.com");
     expect(call.variables).toMatchObject({ orderCode: "LMPEa1", itemTitle: "Khoá thử email", methodLabel: "SePay (QR, thẻ)", actionUrl: `${SITE}/learn/pe-a1` });
     expect(call.variables.amountText).toContain("199.000");
-    expect(call.variables.accessText).toMatch(/^Đến hết ngày \d{2}\/\d{2}\/\d{4}$/);
+    expect(call.variables.accessText).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
     expect(order.id).toBeTruthy();
 
     expect((await settleGatewayPayment(ipn, prisma, { baseUrl: SITE })).result).toBe("already_confirmed");
@@ -96,7 +96,7 @@ describe("định dạng", () => {
   it("số tiền VND và hạn truy cập", () => {
     expect(formatOrderAmount(199_000, "VND")).toContain("199.000");
     expect(accessText([null])).toBe("Không giới hạn thời gian");
-    expect(accessText([new Date("2027-11-25T10:00:00Z"), null])).toBe("Đến hết ngày 25/11/2027");
+    expect(accessText([new Date("2027-11-25T10:00:00Z"), null])).toBe("25/11/2027");
     expect(accessText([])).toBe("Đã mở");
   });
 });
