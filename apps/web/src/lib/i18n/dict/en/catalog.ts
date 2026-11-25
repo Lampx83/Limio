@@ -83,6 +83,8 @@ export const enCatalog: PartialDict<typeof viCatalog> = {
   "catalog.enroll.payIntl": "Pay with an international card",
   "catalog.enroll.payCard": "Pay by card",
   "catalog.enroll.haveCode": "Have an activation code?",
+  "catalog.enroll.buyNow": "Buy now",
+  "catalog.enroll.fromPrice": "From {price}",
   "catalog.enroll.codePlaceholder": "Enter activation code",
   "catalog.enroll.activating": "Activating…",
   "catalog.enroll.activate": "Activate",

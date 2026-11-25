@@ -6,11 +6,6 @@ import { auth } from "@/lib/auth";
 import SafeHtml from "@/components/SafeHtml";
 import { DiscountBadge, PriceBlock, PriceStrike } from "@/components/PriceTag";
 import { formatPrice } from "@/lib/formatPrice";
-import { getConfiguredPaymentProviders } from "@/lib/paymentProviders";
-import BundleBuyButton from "./BundleBuyButton";
-import BundleRedeemBox from "./BundleRedeemBox";
-import TransferInstructions from "@/components/TransferInstructions";
-import { getSiteSetting } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -34,25 +29,10 @@ export default async function BundlePage({ params }: { params: { slug: string } 
   const bundle = await getBundleBySlug(params.slug, { allowDraft: admin });
   if (!bundle) notFound();
 
-  const [owned, providers] = await Promise.all([
-    userId ? ownedCourseIdsInBundle(userId, bundle.id) : Promise.resolve([] as string[]),
-    getConfiguredPaymentProviders().catch((): Awaited<ReturnType<typeof getConfiguredPaymentProviders>> => []),
-  ]);
+  const owned = userId ? await ownedCourseIdsInBundle(userId, bundle.id) : [];
   const ownedSet = new Set(owned);
-  const vnpay = providers.includes("vnpay");
-  const sepay = providers.includes("sepay");
-  const sepayPg = providers.includes("sepay_pg");
-  const gateways = [
-    ...(vnpay ? (["vnpay"] as const) : []),
-    ...(sepayPg ? (["sepay_pg"] as const) : []),
-    ...(sepay ? (["sepay"] as const) : []),
-  ];
-  const hasGateway = gateways.length > 0;
   const isDraft = bundle.status !== "published";
-  const canBuy = bundle.purchasable && hasGateway && bundle.currency === "VND";
   const reason = !bundle.purchasable ? "Combo chưa mở bán: còn khoá chưa xuất bản." : undefined;
-  // Chưa có VNPay: bán bằng chuyển khoản + mã kích hoạt, hướng dẫn do admin đặt (payment.transfer_instructions).
-  const transferInstructions = hasGateway ? null : await getSiteSetting("payment.transfer_instructions");
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 lg:px-6">
@@ -80,13 +60,19 @@ export default async function BundlePage({ params }: { params: { slug: string } 
               Tiết kiệm {formatPrice(bundle.savingsCents, bundle.currency)} so với mua lẻ từng quyển
             </p>
           )}
-          <div className="mt-4 space-y-4">
-            {hasGateway ? (
-              <BundleBuyButton bundleId={bundle.id} slug={bundle.slug} disabled={!canBuy} disabledReason={reason} providers={gateways} />
+          <div className="mt-4 space-y-2">
+            {bundle.purchasable && bundle.currency === "VND" ? (
+              <>
+                <Link href={`/checkout/combo/${bundle.slug}`} prefetch={false} className="btn btn-primary w-full text-center" id="bundle-buy">
+                  Mua trọn bộ
+                </Link>
+                <Link href={`/checkout/combo/${bundle.slug}#ma-kich-hoat`} prefetch={false} className="block text-xs text-muted underline-offset-2 hover:underline">
+                  Đã có mã kích hoạt?
+                </Link>
+              </>
             ) : (
-              <TransferInstructions text={transferInstructions} />
+              <p className="text-xs text-muted">{reason ?? "Combo tạm thời chưa mua được."}</p>
             )}
-            {bundle.purchasable && <BundleRedeemBox slug={bundle.slug} />}
           </div>
           {owned.length > 0 && (
             <p className="mt-3 text-xs text-muted">

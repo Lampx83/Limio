@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import { isFree } from "@/lib/formatPrice";
 import { useT } from "@/lib/i18n/client";
 import EnrollButton, { type AccessPlanOption, type PaymentProviderChoice } from "./EnrollButton";
@@ -42,7 +42,6 @@ export default function EnrollNudgeAction({
   transferInstructions?: string | null;
 }) {
   const t = useT();
-  const [revealed, setRevealed] = useState(false);
   const free = !paymentEnabled || (accessPlans.length === 0 && isFree(priceCents));
 
   // Khoá miễn phí: button gọn, nằm cùng dòng với câu nhắc.
@@ -61,36 +60,10 @@ export default function EnrollNudgeAction({
     );
   }
 
-  // Khoá có phí, đã bấm mở: EnrollButton bản trả phí là cả một khối (giá +
-  // input mã + nút) — cho nó xuống hẳn dòng riêng, rộng hết cỡ, thay vì ép
-  // vào phần còn lại của dòng banner.
-  if (revealed) {
-    return (
-      <div className="mt-1 w-full sm:w-80">
-        <EnrollButton
-          courseId={courseId}
-          slug={slug}
-          alreadyEnrolled={false}
-          priceCents={priceCents}
-          originalPriceCents={originalPriceCents}
-          currency={currency}
-          paymentEnabled={paymentEnabled}
-          accessPlans={accessPlans}
-          paymentProviders={paymentProviders}
-          noGateway={noGateway}
-          transferInstructions={transferInstructions}
-        />
-      </div>
-    );
-  }
-
+  // Khoá có phí: dẫn sang trang thanh toán riêng (docs/tieu-chi/trang-thanh-toan.md), không mở khối thanh toán tại banner.
   return (
-    <button
-      type="button"
-      onClick={() => setRevealed(true)}
-      className="btn-primary btn-sm shrink-0"
-    >
+    <Link href={`/checkout/${slug}`} prefetch={false} className="btn-primary btn-sm shrink-0">
       {t("catalog.enroll.now")}
-    </button>
+    </Link>
   );
 }

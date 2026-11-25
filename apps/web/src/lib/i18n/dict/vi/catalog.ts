@@ -84,6 +84,8 @@ export const viCatalog = {
   "catalog.enroll.payIntl": "Thanh toán bằng thẻ quốc tế",
   "catalog.enroll.payCard": "Thanh toán qua thẻ",
   "catalog.enroll.haveCode": "Đã có mã kích hoạt?",
+  "catalog.enroll.buyNow": "Mua ngay",
+  "catalog.enroll.fromPrice": "Từ {price}",
   "catalog.enroll.codePlaceholder": "Nhập mã kích hoạt",
   "catalog.enroll.activating": "Đang kích hoạt…",
   "catalog.enroll.activate": "Kích hoạt",

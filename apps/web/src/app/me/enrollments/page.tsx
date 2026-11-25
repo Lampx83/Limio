@@ -5,6 +5,7 @@ import {
   listEnrollmentsForUser,
 } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import AccessExpiryNote from "@/components/AccessExpiryNote";
 
 export const dynamic = "force-dynamic";
 
@@ -130,7 +131,11 @@ export default async function MyEnrollmentsPage() {
                     </div>
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between border-t border-token pt-3 text-xs">
+                  <div className="mt-4">
+                    <AccessExpiryNote expiresAt={e.accessExpiresAt} />
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between border-t border-token pt-3 text-xs">
                     <span className="text-faint">
                       {isDone ? "Đã hoàn thành" : "Tiếp tục học"}
                     </span>

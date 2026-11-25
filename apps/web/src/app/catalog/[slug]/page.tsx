@@ -347,6 +347,7 @@ export default async function CourseDetailPage({
                 paymentProviders={paymentProviders}
                 noGateway={noGateway}
                 transferInstructions={transferInstructions}
+                hidePrice
               />
             )
           }

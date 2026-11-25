@@ -13,7 +13,7 @@ const MESSAGES: Record<string, string> = {
 };
 
 /** Ô "Tôi có mã" của combo (docs/tieu-chi/combo-khoa-hoc.md, AC8): đổi mã combo lấy quyền vào cả bộ. */
-export default function BundleRedeemBox({ slug }: { slug: string }) {
+export default function BundleRedeemBox({ slug, returnPath }: { slug: string; returnPath?: string }) {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +29,7 @@ export default function BundleRedeemBox({ slug }: { slug: string }) {
         body: JSON.stringify({ code }),
       });
       if (res.status === 401) {
-        window.location.href = `/signin?callbackUrl=/combo/${slug}`;
+        window.location.href = `/signin?callbackUrl=${returnPath ?? `/combo/${slug}`}`;
         return;
       }
       const data = (await res.json().catch(() => ({}))) as { error?: string; courseSlug?: string };

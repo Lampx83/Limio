@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "@/lib/toast";
-import { isFree } from "@/lib/formatPrice";
+import { formatPrice, isFree } from "@/lib/formatPrice";
 import { PriceBlock } from "@/components/PriceTag";
 import TransferInstructions from "@/components/TransferInstructions";
 import BankTransferPanel, { type BankTransferInfo } from "@/components/BankTransferPanel";
@@ -70,6 +70,8 @@ export default function EnrollButton({
   // bên cạnh (banner "chưa đăng ký" trên trang khoá) thì truyền nhãn trung
   // tính hơn như "Đăng ký ngay" — nút vẫn làm đúng một việc, chỉ đổi chữ.
   freeLabel,
+  checkoutMode = false,
+  hidePrice = false,
 }: {
   courseId: string;
   slug: string;
@@ -88,6 +90,13 @@ export default function EnrollButton({
   /** Nội dung hướng dẫn chuyển khoản (cài đặt `payment.transfer_instructions`). */
   transferInstructions?: string | null;
   freeLabel?: string;
+  /**
+   * Chế độ trang thanh toán (/checkout/<slug>): hiện đủ gói, cổng, ô mã. Mặc định (false): khoá có phí chỉ còn nút "Mua ngay"
+   * dẫn sang trang thanh toán (docs/tieu-chi/trang-thanh-toan.md, AC3); khoá miễn phí và "Vào học" giữ nguyên.
+   */
+  checkoutMode?: boolean;
+  /** Chế độ gọn không vẽ khối giá (nơi gọi đã hiện giá, vd thanh dưới cùng trên điện thoại). */
+  hidePrice?: boolean;
 }) {
   const t = useT();
   const lang = useUiLang();
@@ -99,6 +108,11 @@ export default function EnrollButton({
   const [showRedeem, setShowRedeem] = useState(noGateway);
   const [bank, setBank] = useState<BankTransferInfo | null>(null);
   const [enrollError, setEnrollError] = useState<string | null>(null);
+  // Đăng nhập lại (401) quay về đúng trang đang đứng: trang thanh toán ở chế độ thanh toán, trang khoá ở chế độ gọn.
+  const returnPath = checkoutMode ? `/checkout/${slug}` : `/catalog/${slug}`;
+  useEffect(() => {
+    if (checkoutMode && window.location.hash === "#ma-kich-hoat") setShowRedeem(true);
+  }, [checkoutMode]);
   // When payment is globally disabled, treat every course as free for UI purposes.
   const free = !paymentEnabled || (accessPlans.length === 0 && isFree(priceCents));
 
@@ -110,6 +124,31 @@ export default function EnrollButton({
       >
         {t("catalog.enroll.continue")}
       </Link>
+    );
+  }
+
+  // Khoá có phí ở trang khoá: chỉ nút "Mua ngay" (+ liên kết mã) dẫn sang trang thanh toán riêng.
+  if (!free && !checkoutMode) {
+    const cheapest = accessPlans[0];
+    const sale = cheapest ? cheapest.priceCents : priceCents!;
+    const cur = cheapest ? cheapest.currency : currency;
+    return (
+      <div className="space-y-2">
+        {!hidePrice && (
+          <div>
+            {cheapest && accessPlans.length > 1 && (
+              <p className="text-xs font-medium uppercase tracking-wide text-faint">{t("catalog.enroll.fromPrice", { price: formatPrice(sale, cur) })}</p>
+            )}
+            <PriceBlock align="left" originalCents={originalPriceCents} saleCents={sale} currency={cur} />
+          </div>
+        )}
+        <Link href={`/checkout/${slug}`} className="btn-primary w-full text-center" prefetch={false}>
+          {t("catalog.enroll.buyNow")}
+        </Link>
+        <Link href={`/checkout/${slug}#ma-kich-hoat`} className="block text-xs text-muted underline-offset-2 hover:underline" prefetch={false}>
+          {t("catalog.enroll.haveCode")}
+        </Link>
+      </div>
     );
   }
 
@@ -125,7 +164,7 @@ export default function EnrollButton({
       return;
     }
     if (res.status === 401) {
-      window.location.href = `/signin?callbackUrl=/catalog/${slug}`;
+      window.location.href = `/signin?callbackUrl=${returnPath}`;
       return;
     }
     if (!res.ok) {
@@ -151,7 +190,7 @@ export default function EnrollButton({
       body: JSON.stringify({ code }),
     });
     if (res.status === 401) {
-      window.location.href = `/signin?callbackUrl=/catalog/${slug}`;
+      window.location.href = `/signin?callbackUrl=${returnPath}`;
       return;
     }
     const data = await res.json().catch(() => ({}));
@@ -184,7 +223,7 @@ export default function EnrollButton({
       }),
     });
     if (res.status === 401) {
-      window.location.href = `/signin?callbackUrl=/catalog/${slug}`;
+      window.location.href = `/signin?callbackUrl=${returnPath}`;
       return;
     }
     const data = await res.json().catch(() => ({}));
@@ -316,7 +355,7 @@ export default function EnrollButton({
             {t("catalog.enroll.haveCode")}
           </button>
         ) : (
-          <div className="flex flex-wrap gap-2">
+          <div id="ma-kich-hoat" className="flex flex-wrap gap-2 scroll-mt-24">
             <input
               value={code}
               onChange={(e) => setCode(e.target.value)}
@@ -345,7 +384,7 @@ export default function EnrollButton({
           <p className="text-xs font-medium uppercase tracking-wide text-faint">{t("catalog.enroll.tuition")}</p>
           <PriceBlock align="left" originalCents={originalPriceCents} saleCents={priceCents!} currency={currency} />
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div id="ma-kich-hoat" className="flex flex-wrap gap-2 scroll-mt-24">
           <input
             value={code}
             onChange={(e) => setCode(e.target.value)}

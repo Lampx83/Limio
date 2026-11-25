@@ -1,3 +1,5 @@
+import AccessExpiryNote from "@/components/AccessExpiryNote";
+import { getPaymentEnabled } from "@/lib/site-settings";
 import BadgeIcon from "@/components/ui/BadgeIcon";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -211,6 +213,11 @@ export default async function LearnCoursePage({
     progress.modules.flatMap((m) => m.lessons),
   );
   const continueLessonId = continuePick?.id;
+  // Gia hạn chỉ khi quyền có hạn, thanh toán bật và khoá có gói đang bán.
+  const canRenew =
+    enrollment.accessExpiresAt !== null &&
+    (await getPaymentEnabled()) &&
+    (await prisma.courseAccessPlan.count({ where: { courseId: course.id, isActive: true } })) > 0;
   const continueLabel = continuePick ? (enrollment.lastLessonId ? t("learn.home.ctaContinue") : t("learn.home.ctaStart")) : null;
   const lessonTitleById = new Map(
     course.modules.flatMap((m) => m.lessons.map((l) => [l.id, l.title] as const)),
@@ -307,6 +314,11 @@ export default async function LearnCoursePage({
                 </Link>
               }
             />
+          </div>
+
+          {/* Hạn truy cập (docs/tieu-chi/trang-thanh-toan.md, AC5): luôn thấy; nút Gia hạn khi có gói đang bán. */}
+          <div className="mt-4">
+            <AccessExpiryNote expiresAt={enrollment.accessExpiresAt} lang={lang} onDark renewHref={canRenew ? `/checkout/${params.slug}` : undefined} />
           </div>
 
           {/* Action buttons */}

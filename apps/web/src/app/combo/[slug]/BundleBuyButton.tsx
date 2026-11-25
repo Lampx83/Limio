@@ -15,6 +15,7 @@ export default function BundleBuyButton({
   disabled,
   disabledReason,
   providers,
+  returnPath,
 }: {
   bundleId: string;
   slug: string;
@@ -22,6 +23,8 @@ export default function BundleBuyButton({
   disabledReason?: string;
   /** Cổng đã cấu hình dùng được cho combo (không có Stripe). */
   providers: Array<"vnpay" | "sepay" | "sepay_pg">;
+  /** Trang quay lại sau khi đăng nhập (mặc định trang combo). */
+  returnPath?: string;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +40,7 @@ export default function BundleBuyButton({
         body: JSON.stringify({ bundleId, provider }),
       });
       if (res.status === 401) {
-        window.location.href = `/signin?callbackUrl=/combo/${slug}`;
+        window.location.href = `/signin?callbackUrl=${returnPath ?? `/combo/${slug}`}`;
         return;
       }
       const data = (await res.json().catch(() => null)) as {
