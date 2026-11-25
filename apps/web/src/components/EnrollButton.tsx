@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "@/lib/toast";
 import { isFree } from "@/lib/formatPrice";
 import { PriceBlock } from "@/components/PriceTag";
+import TransferInstructions from "@/components/TransferInstructions";
 import { apiUrl } from "@/lib/apiUrl";
 import { enrollErrorMessage } from "@/lib/enrollErrors";
 import { accessSummary } from "@/lib/accessSummary";
@@ -60,6 +61,8 @@ export default function EnrollButton({
   paymentEnabled = false,
   accessPlans = [],
   paymentProviders = [],
+  noGateway = false,
+  transferInstructions,
   // Chữ trên nút ở nhánh miễn phí. Mặc định "Đăng ký miễn phí" đứng cạnh ô
   // giá/thẻ "Miễn phí" nên hợp ngữ cảnh; nơi nào không có gì để so sánh giá
   // bên cạnh (banner "chưa đăng ký" trên trang khoá) thì truyền nhãn trung
@@ -78,6 +81,10 @@ export default function EnrollButton({
   accessPlans?: AccessPlanOption[];
   /** Cổng đã cấu hình (lib/paymentProviders). Có "vnpay" thì hiện lựa chọn; không có thì giữ nút thẻ như trước. */
   paymentProviders?: PaymentProviderChoice[];
+  /** Thanh toán đã bật nhưng chưa có cổng nào cấu hình: không hiện nút thanh toán, chỉ hướng dẫn chuyển khoản + ô nhập mã. */
+  noGateway?: boolean;
+  /** Nội dung hướng dẫn chuyển khoản (cài đặt `payment.transfer_instructions`). */
+  transferInstructions?: string | null;
   freeLabel?: string;
 }) {
   const t = useT();
@@ -87,7 +94,7 @@ export default function EnrollButton({
   const [redeeming, setRedeeming] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(accessPlans[0]?.id ?? "");
   const [checkingOut, setCheckingOut] = useState(false);
-  const [showRedeem, setShowRedeem] = useState(false);
+  const [showRedeem, setShowRedeem] = useState(noGateway);
   const [enrollError, setEnrollError] = useState<string | null>(null);
   // When payment is globally disabled, treat every course as free for UI purposes.
   const free = !paymentEnabled || (accessPlans.length === 0 && isFree(priceCents));
@@ -229,7 +236,9 @@ export default function EnrollButton({
             </label>
           ))}
         </div>
-        {paymentProviders.includes("vnpay") ? (
+        {noGateway ? (
+          <TransferInstructions text={transferInstructions} />
+        ) : paymentProviders.includes("vnpay") ? (
           <div className="space-y-2">
             <button
               type="button"

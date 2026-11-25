@@ -27,6 +27,8 @@
     "split:course": "node --env-file=../db/.env --import tsx scripts/split-course.ts",
     "create:bundle": "node --env-file=../db/.env --import tsx scripts/create-bundle.ts",
     "create:bundle:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/create-bundle.ts",
+    "generate:bundle-codes": "node --env-file=../db/.env --import tsx scripts/generate-bundle-codes.ts",
+    "generate:bundle-codes:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/generate-bundle-codes.ts",
     "split:course:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/split-course.ts",
     "publish:courses": "node --env-file=../db/.env --import tsx scripts/publish-courses.ts",
     "publish:courses:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/publish-courses.ts",

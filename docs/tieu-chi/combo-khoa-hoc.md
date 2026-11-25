@@ -79,3 +79,14 @@ IPN vẫn là đường **duy nhất** cấp quyền học; mọi mã phản h�
 - Test core-lms (DB thử): tạo/xuất bản combo (quyền, slug, giá gốc, khoá chưa xuất bản), IPN combo (đủ khoá, cộng dồn, idempotent, sai số tiền, thất bại), mua lẻ không đổi.
 - Test web: hàm tính tiết kiệm; khối giá combo.
 - Chạy thật trên sandbox VNPay: chưa (như mua lẻ).
+
+## AC8 — Bán khi chưa có cổng thanh toán: chuyển khoản + mã kích hoạt
+
+Bổ sung 25/11/2026 (chưa đăng ký pháp nhân nên chưa có VNPay).
+
+- **Mã combo.** Admin sinh mã (`generateBundleCodes`, tối đa 200 mỗi lần, định dạng như mã khoá: 12 ký tự, bỏ 0/O/1/I). **Given** mã chưa dùng, combo `published`, mọi khoá `published`, **When** người học đổi mã, **Then** ghi danh/gia hạn **mọi khoá** của combo trong một giao dịch, thời hạn = `durationMonths` của combo, mã chuyển `redeemed`. Mã nằm ở bảng riêng `BundleAccessCode`, **không bao giờ** có trong `AuditLog`.
+- **Một đường đổi mã.** `/api/redeem-code` (`redeemAnyCode`) thử mã khoá trước, không có thì thử mã combo; rate-limit giữ nguyên. Mã sai → `code_not_found`; đã dùng bởi người khác → `code_already_used`; thu hồi → `code_revoked`; combo nháp hoặc còn khoá chưa xuất bản → `course_not_enrollable` và **mã không bị tiêu**. Chính chủ bấm lại mã đã đổi: trả trạng thái hiện tại, không tiêu thêm.
+- **Trang khoá/combo khi chưa có cổng nào cấu hình** (thanh toán đã bật): không hiện nút thanh toán (trước đây hiện nút thẻ bị lỗi); hiện khối "Cách mua" lấy từ cài đặt `payment.transfer_instructions` (thiếu thì lời nhắn chung, không bịa thông tin ngân hàng) và ô "Tôi có mã kích hoạt" mở sẵn.
+- **Chặn ghi danh miễn phí vào khoá chỉ có gói truy cập.** **Given** khoá có gói đang bán nhưng không có `priceCents`, thanh toán bật, **When** gọi thẳng API ghi danh không qua mã/đơn, **Then** `payment_required` (trước đây ghi danh được miễn phí vì chỉ kiểm `priceCents`).
+- Mã khoá lẻ sinh **theo lô** mới mang thời hạn truy cập (mã lẻ cấp vĩnh viễn); mã combo luôn theo thời hạn của combo.
+

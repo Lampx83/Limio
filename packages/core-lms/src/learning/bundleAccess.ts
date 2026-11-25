@@ -12,6 +12,7 @@ export async function grantBundleAccess(
   userId: string,
   bundleId: string,
   tx: PrismaClient,
+  via: "order" | "access_code" = "order",
 ): Promise<{ courseIds: string[] }> {
   const bundle = await tx.courseBundle.findUniqueOrThrow({
     where: { id: bundleId },
@@ -22,7 +23,7 @@ export async function grantBundleAccess(
   });
   const plan = { id: null, durationMonths: bundle.durationMonths };
   for (const it of bundle.items) {
-    await extendEnrollmentAccess(userId, it.course, plan, tx, { via: "order" });
+    await extendEnrollmentAccess(userId, it.course, plan, tx, { via });
   }
   return { courseIds: bundle.items.map((i) => i.course.id) };
 }

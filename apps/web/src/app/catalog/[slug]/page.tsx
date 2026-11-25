@@ -16,7 +16,7 @@ import JsonLd from "@/components/JsonLd";
 import { SITE_NAME, breadcrumbJsonLd, courseJsonLd, pageMetadata } from "@/lib/seo";
 import { isFree, formatPrice } from "@/lib/formatPrice";
 import { DiscountBadge, PriceBlock, PriceStrike } from "@/components/PriceTag";
-import { getPaymentEnabled } from "@/lib/site-settings";
+import { getPaymentEnabled, getSiteSetting } from "@/lib/site-settings";
 import { getConfiguredPaymentProviders } from "@/lib/paymentProviders";
 import { LessonVideoBadge, StickyMobileCTA } from "@/components/ui";
 import { Lock } from "lucide-react";
@@ -144,6 +144,10 @@ export default async function CourseDetailPage({
   ]);
 
   const cheapestPlan = accessPlans[0];
+  // Thanh toán đã bật nhưng chưa cổng nào cấu hình (chưa có pháp nhân để đăng ký VNPay…): bán bằng chuyển khoản + mã
+  // kích hoạt, nên không hiện nút thanh toán lỗi mà hiện hướng dẫn do admin đặt (payment.transfer_instructions).
+  const noGateway = paymentEnabled && paymentProviders.length === 0;
+  const transferInstructions = noGateway ? await getSiteSetting("payment.transfer_instructions") : null;
   const priceLabel = !paymentEnabled
     ? t("catalog.free")
     : cheapestPlan
@@ -341,6 +345,8 @@ export default async function CourseDetailPage({
                 paymentEnabled={paymentEnabled}
                 accessPlans={accessPlans}
                 paymentProviders={paymentProviders}
+                noGateway={noGateway}
+                transferInstructions={transferInstructions}
               />
             )
           }
@@ -396,6 +402,8 @@ export default async function CourseDetailPage({
                   paymentEnabled={paymentEnabled}
                   accessPlans={accessPlans}
                   paymentProviders={paymentProviders}
+                  noGateway={noGateway}
+                  transferInstructions={transferInstructions}
                 />
               )}
             </div>
@@ -539,6 +547,8 @@ export default async function CourseDetailPage({
                       paymentEnabled={paymentEnabled}
                       accessPlans={accessPlans}
                       paymentProviders={paymentProviders}
+                      noGateway={noGateway}
+                      transferInstructions={transferInstructions}
                     />
                   )}
                 </div>

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { redeemAccessCode } from "@feedbackme/core-lms";
+import { redeemAnyCode } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 import { allow, clientIp } from "@/lib/rate-limit";
@@ -7,7 +7,7 @@ import { allow, clientIp } from "@/lib/rate-limit";
 export const runtime = "nodejs";
 
 /**
- * Đổi mã kích hoạt lấy một chỗ trong khoá. Body: { code }.
+ * Đổi mã kích hoạt lấy một chỗ trong khoá — hoặc cả combo (mã combo mở mọi khoá của combo). Body: { code }.
  *
  * Mã tự nó cấp quyền vào khoá (không ai xác minh lại như AiTokenOrder), nên
  * đây là bề mặt duy nhất có thể bị dò mã hàng loạt — rate-limit theo cả IP
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
 
   const origin = new URL(req.url).origin;
   try {
-    const result = await redeemAccessCode(userId, body.code, undefined, {
+    const result = await redeemAnyCode(userId, body.code, undefined, {
       baseUrl: origin,
     });
     return NextResponse.json(result);

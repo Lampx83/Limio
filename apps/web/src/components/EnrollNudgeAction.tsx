@@ -27,6 +27,8 @@ export default function EnrollNudgeAction({
   paymentEnabled,
   accessPlans = [],
   paymentProviders = [],
+  noGateway = false,
+  transferInstructions,
 }: {
   courseId: string;
   slug: string;
@@ -36,6 +38,8 @@ export default function EnrollNudgeAction({
   paymentEnabled?: boolean;
   accessPlans?: AccessPlanOption[];
   paymentProviders?: PaymentProviderChoice[];
+  noGateway?: boolean;
+  transferInstructions?: string | null;
 }) {
   const t = useT();
   const [revealed, setRevealed] = useState(false);
@@ -73,6 +77,8 @@ export default function EnrollNudgeAction({
           paymentEnabled={paymentEnabled}
           accessPlans={accessPlans}
           paymentProviders={paymentProviders}
+          noGateway={noGateway}
+          transferInstructions={transferInstructions}
         />
       </div>
     );

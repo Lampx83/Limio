@@ -3,6 +3,7 @@ export * from "./accessCodeBatch";
 export * from "./orderRefund";
 export * from "./orderPayment";
 export * from "./bundleAccess";
+export * from "./bundleCode";
 export * from "./events";
 export * from "./enroll";
 export * from "./courseAccess";

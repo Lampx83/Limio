@@ -3011,6 +3011,7 @@ model CourseBundle {
 
   items  CourseBundleItem[]
   orders Order[]
+  codes  BundleAccessCode[]
 
   @@index([status])
 }
@@ -3026,6 +3027,25 @@ model CourseBundleItem {
 
   @@unique([bundleId, courseId])
   @@index([courseId])
+}
+
+/// Mã kích hoạt COMBO: một mã mở mọi khoá của combo trong thời hạn của combo (docs/tieu-chi/combo-khoa-hoc.md, AC8).
+/// Học viên trả tiền ngoài hệ thống (chuyển khoản), admin gửi mã. Cùng định dạng mã và cùng endpoint đổi mã với
+/// CourseAccessCode; mã tự nó cấp quyền nên dài 12 ký tự và không bao giờ nằm trong AuditLog.
+model BundleAccessCode {
+  id               String                 @id @default(uuid())
+  bundleId         String
+  code             String                 @unique
+  status           CourseAccessCodeStatus @default(unused)
+  redeemedByUserId String?
+  redeemedAt       DateTime?
+  createdBy        String
+  note             String?
+  createdAt        DateTime               @default(now())
+
+  bundle CourseBundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+
+  @@index([bundleId, status])
 }
 
 //

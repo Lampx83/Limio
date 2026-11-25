@@ -149,7 +149,12 @@ async function enrollUserInResolvedCourse(
   // Paid course gating: must have a paid Order to enroll. Webhook auto-enrolls
   // on payment, so this branch fires only when self-enroll is attempted via UI.
   // Skip when payment is globally disabled (admin toggle).
-  if (!opts?.skipPaymentCheck && course.priceCents !== null && course.priceCents > 0) {
+  // Khoá bán theo GÓI TRUY CẬP (CourseAccessPlan) thường không có priceCents phẳng; nếu chỉ nhìn priceCents thì
+  // khoá chỉ-có-gói ghi danh miễn phí được qua API dù giao diện đã ẩn nút. Có gói đang bán cũng là khoá có phí.
+  const hasActivePlan =
+    !opts?.skipPaymentCheck &&
+    (await db.courseAccessPlan.count({ where: { courseId: course.id, isActive: true } })) > 0;
+  if (!opts?.skipPaymentCheck && ((course.priceCents !== null && course.priceCents > 0) || hasActivePlan)) {
     const paidOrder = await db.order.findFirst({
       where: { userId, courseId: course.id, status: "paid" },
     });

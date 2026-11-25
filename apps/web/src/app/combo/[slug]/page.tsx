@@ -8,6 +8,9 @@ import { DiscountBadge, PriceBlock, PriceStrike } from "@/components/PriceTag";
 import { formatPrice } from "@/lib/formatPrice";
 import { getConfiguredPaymentProviders } from "@/lib/paymentProviders";
 import BundleBuyButton from "./BundleBuyButton";
+import BundleRedeemBox from "./BundleRedeemBox";
+import TransferInstructions from "@/components/TransferInstructions";
+import { getSiteSetting } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -39,11 +42,9 @@ export default async function BundlePage({ params }: { params: { slug: string } 
   const vnpay = providers.includes("vnpay");
   const isDraft = bundle.status !== "published";
   const canBuy = bundle.purchasable && vnpay && bundle.currency === "VND";
-  const reason = !bundle.purchasable
-    ? "Combo chưa mở bán: còn khoá chưa xuất bản."
-    : !vnpay
-      ? "Thanh toán VNPay chưa được bật."
-      : undefined;
+  const reason = !bundle.purchasable ? "Combo chưa mở bán: còn khoá chưa xuất bản." : undefined;
+  // Chưa có VNPay: bán bằng chuyển khoản + mã kích hoạt, hướng dẫn do admin đặt (payment.transfer_instructions).
+  const transferInstructions = vnpay ? null : await getSiteSetting("payment.transfer_instructions");
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 lg:px-6">
@@ -71,8 +72,13 @@ export default async function BundlePage({ params }: { params: { slug: string } 
               Tiết kiệm {formatPrice(bundle.savingsCents, bundle.currency)} so với mua lẻ từng quyển
             </p>
           )}
-          <div className="mt-4">
-            <BundleBuyButton bundleId={bundle.id} slug={bundle.slug} disabled={!canBuy} disabledReason={reason} />
+          <div className="mt-4 space-y-4">
+            {vnpay ? (
+              <BundleBuyButton bundleId={bundle.id} slug={bundle.slug} disabled={!canBuy} disabledReason={reason} />
+            ) : (
+              <TransferInstructions text={transferInstructions} />
+            )}
+            {bundle.purchasable && <BundleRedeemBox slug={bundle.slug} />}
           </div>
           {owned.length > 0 && (
             <p className="mt-3 text-xs text-muted">
