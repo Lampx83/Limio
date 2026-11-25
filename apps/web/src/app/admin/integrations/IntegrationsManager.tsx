@@ -64,6 +64,26 @@ const LABELS: Record<
     placeholder: "VD: NGUYEN VAN A",
     help: "Hiện cho người mua để họ đối chiếu trước khi chuyển.",
   },
+  "sepaypg.merchant_id": {
+    name: "Merchant ID",
+    placeholder: "VD: SP-TEST-XXXXXXXX (sandbox) / SP-LIVE-…",
+    help: "Mã merchant ở my.sepay.vn → Cổng thanh toán. Sandbox và thật có hai bộ riêng.",
+  },
+  "sepaypg.secret_key": {
+    name: "Secret Key",
+    placeholder: "Khoá bí mật do SePay cấp",
+    help: "SePay chỉ hiện một lần khi tạo; sao chép ngay vào đây. Không gửi cho ai, không dán vào chat.",
+  },
+  "sepaypg.ipn_secret": {
+    name: "Khoá xác thực IPN",
+    placeholder: "Chuỗi tự đặt, khai cùng ở SePay",
+    help: "Ở SePay: Cấu hình IPN → kiểu xác thực SECRET_KEY, nhập đúng chuỗi này. SePay gửi nó trong header X-Secret-Key.",
+  },
+  "sepaypg.env": {
+    name: "Môi trường",
+    placeholder: "sandbox hoặc production",
+    help: "Để trống = sandbox (không thu tiền thật). Chỉ gõ production khi dùng Merchant ID và Secret Key thật.",
+  },
   "sepay.qr_base_url": {
     name: "Địa chỉ dịch vụ ảnh QR (tuỳ chọn)",
     placeholder: "https://qr.sepay.vn/img",
@@ -158,6 +178,11 @@ const GROUPS: Record<
     name: "VNPay — thanh toán ATM / QR / thẻ",
     help: "Cần cả mã website và khoá bí mật thì nút thanh toán VNPay mới hiện ở trang khoá. Địa chỉ nhận kết quả (IPN) khai ở cổng quản trị VNPay: https://<tên miền>/api/webhooks/vnpay. Xem docs/van-hanh/cong-thanh-toan.md.",
     keys: ["vnpay.tmn_code", "vnpay.secret", "vnpay.payment_url"],
+  },
+  sepaypg: {
+    name: "SePay — cổng thanh toán (VietQR, QR NAPAS, thẻ)",
+    help: "Cần Merchant ID, Secret Key và khoá IPN thì nút \"Thanh toán qua SePay\" mới hiện ở trang khoá và trang combo. Địa chỉ IPN khai ở my.sepay.vn: https://<tên miền>/api/webhooks/sepaypg, xác thực SECRET_KEY. Xem docs/tieu-chi/thanh-toan-sepay-pg.md.",
+    keys: ["sepaypg.merchant_id", "sepaypg.secret_key", "sepaypg.ipn_secret", "sepaypg.env"],
   },
   sepay: {
     name: "SePay — chuyển khoản ngân hàng tự động (không cần pháp nhân)",

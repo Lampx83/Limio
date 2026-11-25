@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import BankTransferPanel, { type BankTransferInfo } from "@/components/BankTransferPanel";
+import { submitCheckoutForm } from "@/lib/submitCheckoutForm";
 
 /**
  * Nút "Mua trọn bộ" (docs/tieu-chi/combo-khoa-hoc.md, AC3–AC4): tạo đơn combo qua VNPay rồi chuyển người mua sang
@@ -20,13 +21,13 @@ export default function BundleBuyButton({
   disabled?: boolean;
   disabledReason?: string;
   /** Cổng đã cấu hình dùng được cho combo (không có Stripe). */
-  providers: Array<"vnpay" | "sepay">;
+  providers: Array<"vnpay" | "sepay" | "sepay_pg">;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bank, setBank] = useState<BankTransferInfo | null>(null);
 
-  async function buy(provider: "vnpay" | "sepay") {
+  async function buy(provider: "vnpay" | "sepay" | "sepay_pg") {
     setBusy(true);
     setError(null);
     try {
@@ -39,7 +40,16 @@ export default function BundleBuyButton({
         window.location.href = `/signin?callbackUrl=/combo/${slug}`;
         return;
       }
-      const data = (await res.json().catch(() => null)) as { url?: string; sepay?: BankTransferInfo; error?: string } | null;
+      const data = (await res.json().catch(() => null)) as {
+        url?: string;
+        sepay?: BankTransferInfo;
+        checkout?: { url: string; fields: Array<[string, string]> };
+        error?: string;
+      } | null;
+      if (res.ok && provider === "sepay_pg" && data?.checkout) {
+        submitCheckoutForm(data.checkout.url, data.checkout.fields);
+        return;
+      }
       if (res.ok && provider === "sepay" && data?.sepay) {
         setBank(data.sepay);
         return;
@@ -49,7 +59,7 @@ export default function BundleBuyButton({
         return;
       }
       setError(
-        data?.error === "vnpay_not_configured" || data?.error === "sepay_not_configured"
+        data?.error === "vnpay_not_configured" || data?.error === "sepay_not_configured" || data?.error === "sepay_pg_not_configured"
           ? "Cổng thanh toán chưa được bật. Vui lòng liên hệ Limio."
           : data?.error === "bundle_not_purchasable"
             ? "Combo tạm thời chưa mua được. Vui lòng thử lại sau."
@@ -73,6 +83,17 @@ export default function BundleBuyButton({
           className="btn btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
         >
           {busy ? "Đang chuyển tới VNPay…" : "Mua trọn bộ"}
+        </button>
+      )}
+      {providers.includes("sepay_pg") && (
+        <button
+          type="button"
+          id="bundle-buy-sepaypg"
+          onClick={() => void buy("sepay_pg")}
+          disabled={busy || disabled}
+          className={`btn ${providers.includes("vnpay") ? "btn-secondary" : "btn-primary"} w-full disabled:cursor-not-allowed disabled:opacity-60`}
+        >
+          {busy ? "Đang chuyển tới SePay…" : providers.includes("vnpay") ? "Thanh toán qua SePay (QR, thẻ)" : "Mua trọn bộ (SePay: QR, thẻ)"}
         </button>
       )}
       {providers.includes("sepay") && (

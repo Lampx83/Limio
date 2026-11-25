@@ -2909,6 +2909,8 @@ enum PaymentProvider {
   sepay
 }
 
+  /// Cổng thanh toán SePay (Merchant ID + Secret Key + IPN; VietQR, QR NAPAS, thẻ): docs/tieu-chi/thanh-toan-sepay-pg.md.
+  sepay_pg
 model Order {
   id           String          @id @default(uuid())
   userId       String

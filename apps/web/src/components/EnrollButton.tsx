@@ -7,6 +7,7 @@ import { isFree } from "@/lib/formatPrice";
 import { PriceBlock } from "@/components/PriceTag";
 import TransferInstructions from "@/components/TransferInstructions";
 import BankTransferPanel, { type BankTransferInfo } from "@/components/BankTransferPanel";
+import { submitCheckoutForm } from "@/lib/submitCheckoutForm";
 import { apiUrl } from "@/lib/apiUrl";
 import { enrollErrorMessage } from "@/lib/enrollErrors";
 import { accessSummary } from "@/lib/accessSummary";
@@ -33,7 +34,7 @@ const CHECKOUT_ERROR_CODES = new Set([
   "course_not_enrollable",
 ]);
 
-export type PaymentProviderChoice = "stripe" | "vnpay" | "sepay";
+export type PaymentProviderChoice = "stripe" | "vnpay" | "sepay" | "sepay_pg";
 
 export interface AccessPlanOption {
   id: string;
@@ -179,7 +180,7 @@ export default function EnrollButton({
         courseId,
         accessPlanId: accessPlans.length > 0 ? selectedPlanId : undefined,
         // Chỉ gửi khi chọn VNPay/SePay: đường Stripe giữ nguyên body như trước.
-        ...(provider === "vnpay" || provider === "sepay" ? { provider } : {}),
+        ...(provider === "vnpay" || provider === "sepay" || provider === "sepay_pg" ? { provider } : {}),
       }),
     });
     if (res.status === 401) {
@@ -191,6 +192,11 @@ export default function EnrollButton({
     if (provider === "sepay" && res.ok && data.sepay) {
       setBank(data.sepay as BankTransferInfo);
       setCheckingOut(false);
+      return;
+    }
+    // Cổng thanh toán SePay: trình duyệt POST form (đã ký ở máy chủ) tới trang thanh toán của SePay.
+    if (provider === "sepay_pg" && res.ok && data.checkout?.url && Array.isArray(data.checkout.fields)) {
+      submitCheckoutForm(data.checkout.url, data.checkout.fields);
       return;
     }
     if (!res.ok || !data.url) {
@@ -248,7 +254,7 @@ export default function EnrollButton({
           <BankTransferPanel info={bank} fallbackRedirect={`/learn/${slug}`} onClose={() => setBank(null)} />
         ) : noGateway ? (
           <TransferInstructions text={transferInstructions} />
-        ) : paymentProviders.includes("vnpay") || paymentProviders.includes("sepay") ? (
+        ) : paymentProviders.includes("vnpay") || paymentProviders.includes("sepay") || paymentProviders.includes("sepay_pg") ? (
           <div className="space-y-2">
             {paymentProviders.includes("vnpay") && (
               <button
@@ -258,6 +264,16 @@ export default function EnrollButton({
                 className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {checkingOut ? t("catalog.enroll.opening") : t("catalog.enroll.payVnpay")}
+              </button>
+            )}
+            {paymentProviders.includes("sepay_pg") && (
+              <button
+                type="button"
+                onClick={() => void onCheckout("sepay_pg")}
+                disabled={checkingOut || !selectedPlanId}
+                className={`${paymentProviders.includes("vnpay") ? "btn-secondary" : "btn-primary"} w-full disabled:cursor-not-allowed disabled:opacity-50`}
+              >
+                {checkingOut ? t("catalog.enroll.opening") : "Thanh toán qua SePay (QR, thẻ)"}
               </button>
             )}
             {paymentProviders.includes("sepay") && (

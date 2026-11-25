@@ -41,7 +41,12 @@ export default async function BundlePage({ params }: { params: { slug: string } 
   const ownedSet = new Set(owned);
   const vnpay = providers.includes("vnpay");
   const sepay = providers.includes("sepay");
-  const gateways = [...(vnpay ? (["vnpay"] as const) : []), ...(sepay ? (["sepay"] as const) : [])];
+  const sepayPg = providers.includes("sepay_pg");
+  const gateways = [
+    ...(vnpay ? (["vnpay"] as const) : []),
+    ...(sepayPg ? (["sepay_pg"] as const) : []),
+    ...(sepay ? (["sepay"] as const) : []),
+  ];
   const hasGateway = gateways.length > 0;
   const isDraft = bundle.status !== "published";
   const canBuy = bundle.purchasable && hasGateway && bundle.currency === "VND";

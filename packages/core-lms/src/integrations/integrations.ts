@@ -92,6 +92,12 @@ export const INTEGRATION_KEYS = [
   "sepay.bank",
   "sepay.account_holder",
   "sepay.qr_base_url",
+  // Cổng thanh toán SePay (docs/tieu-chi/thanh-toan-sepay-pg.md): Merchant ID + Secret Key do SePay cấp (lấy ở my.sepay.vn;
+  // Secret Key chỉ hiện một lần), khoá IPN tự đặt khi cấu hình IPN, và môi trường (sandbox | production; trống = sandbox).
+  "sepaypg.merchant_id",
+  "sepaypg.secret_key",
+  "sepaypg.ipn_secret",
+  "sepaypg.env",
   // A6.6 — Vấn đáp bằng giọng nói. Vbee cần 2 secret (App-Id + Token, lấy ở
   // studio.vbee.vn/apps), khác OpenAI chỉ 1 key — theo đúng quy ước
   // "provider.secretName" đã dùng cho stripe/vnpay/momo ở trên.

@@ -5,6 +5,7 @@ import { readJson } from "@/lib/apiHelpers";
 import { createCheckoutSession } from "@/lib/payments";
 import { VnpayPaymentError, createVnpayBundlePayment, createVnpayPayment } from "@/lib/vnpayPayment";
 import { SepayPaymentError, createSepayPayment } from "@/lib/sepayPayment";
+import { SepayPgPaymentError, createSepayPgPayment } from "@/lib/sepayPgPayment";
 import { clientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -13,6 +14,8 @@ export const runtime = "nodejs";
  * Tạo thanh toán cho khoá có phí.
  * Body: { courseId, accessPlanId?, provider?: "stripe" | "vnpay" } — bỏ trống provider = Stripe (như trước).
  * Combo (docs/tieu-chi/combo-khoa-hoc.md): { bundleId, provider: "vnpay" | "sepay" } — không có Stripe.
+ * Cổng thanh toán SePay (docs/tieu-chi/thanh-toan-sepay-pg.md): { courseId, accessPlanId? | bundleId, provider: "sepay_pg" } →
+ * { checkout: { orderId, url, fields } } (trình duyệt POST form tới url, giữ đúng thứ tự fields); quyền học chỉ do IPN cấp.
  * Chuyển khoản SePay (docs/tieu-chi/thanh-toan-sepay.md): { courseId, accessPlanId? | bundleId, provider: "sepay" } →
  * { sepay: <thông tin QR và nội dung chuyển khoản> }; quyền học chỉ do webhook cấp.
  */
@@ -20,6 +23,26 @@ export async function POST(req: Request) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const body = (await readJson(req)) as { courseId?: string; bundleId?: string; accessPlanId?: string; provider?: string } | null;
+
+  if (body?.provider === "sepay_pg") {
+    if (!body.courseId && !body.bundleId) return NextResponse.json({ error: "validation_failed" }, { status: 400 });
+    try {
+      const r = await createSepayPgPayment({
+        userId,
+        courseId: body.bundleId ? undefined : body.courseId,
+        accessPlanId: body.accessPlanId,
+        bundleId: body.bundleId,
+        origin: new URL(req.url).origin,
+      });
+      return NextResponse.json({ checkout: r });
+    } catch (e) {
+      if (e instanceof SepayPgPaymentError) {
+        const status = e.code === "sepay_pg_not_configured" ? 503 : e.code === "bundle_not_found" ? 404 : 400;
+        return NextResponse.json({ error: e.code }, { status });
+      }
+      return NextResponse.json({ error: "checkout_failed" }, { status: 500 });
+    }
+  }
 
   if (body?.provider === "sepay") {
     if (!body.courseId && !body.bundleId) return NextResponse.json({ error: "validation_failed" }, { status: 400 });
@@ -60,7 +83,7 @@ export async function POST(req: Request) {
     }
   }
 
-  if (!body?.courseId || (body.provider !== undefined && body.provider !== "stripe" && body.provider !== "vnpay" && body.provider !== "sepay")) {
+  if (!body?.courseId || (body.provider !== undefined && body.provider !== "stripe" && body.provider !== "vnpay" && body.provider !== "sepay" && body.provider !== "sepay_pg")) {
     return NextResponse.json({ error: "validation_failed" }, { status: 400 });
   }
 
