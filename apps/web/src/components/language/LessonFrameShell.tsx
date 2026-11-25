@@ -173,7 +173,7 @@ export default function LessonFrameShell({
 
   return (
     <LessonFrameActionsProvider value={{ openPanel: () => openPanel() }}>
-    <ReaderPrefsProvider value={{ prefs: reader.prefs, setPrefs: reader.setPrefs, pinyinAvailable: readerPinyin }}>
+    <ReaderPrefsProvider value={{ prefs: reader.prefs, setPrefs: reader.setPrefs, pinyinAvailable: readerPinyin, defaults: reader.defaults }}>
     <div
       ref={rootRef}
       data-rd-pinyin={reader.prefs.pinyin}

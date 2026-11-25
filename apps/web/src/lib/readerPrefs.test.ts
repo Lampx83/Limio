@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { DEFAULT_READER_PREFS, courseHasPinyin, parseReaderPrefs, readerPrefsKey, serializeReaderPrefs, tapBlockOf } from "./readerPrefs";
+import { DEFAULT_READER_PREFS, courseHasPinyin, defaultReaderPrefsFor, parseReaderPrefs, readerPrefsKey, serializeReaderPrefs, tapBlockOf } from "./readerPrefs";
 
 describe("parseReaderPrefs", () => {
   it("thiếu hoặc hỏng thì về mặc định", () => {
@@ -23,6 +23,21 @@ describe("parseReaderPrefs", () => {
   });
   it("khoá lưu theo slug khoá", () => {
     expect(readerPrefsKey("hsk-4-goc")).toBe("limio:reader:hsk-4-goc");
+  });
+});
+
+describe("defaultReaderPrefsFor", () => {
+  it("khoá nhập môn (HSK 1) hiện sẵn bản dịch, khoá khác giữ mặc định chung", () => {
+    expect(defaultReaderPrefsFor("hsk-1-goc")).toEqual({ pinyin: "show", translation: "show", size: "m" });
+    expect(defaultReaderPrefsFor("hsk-4-goc")).toEqual(DEFAULT_READER_PREFS);
+    expect(defaultReaderPrefsFor(undefined)).toEqual(DEFAULT_READER_PREFS);
+  });
+  it("giá trị học viên đã lưu thắng mặc định của khoá; thiếu trường thì lấy mặc định của khoá", () => {
+    const d = defaultReaderPrefsFor("hsk-1-goc");
+    expect(parseReaderPrefs('{"translation":"off","size":"l"}', d)).toEqual({ pinyin: "show", translation: "off", size: "l" });
+    expect(parseReaderPrefs('{"pinyin":"tap"}', d)).toEqual({ pinyin: "tap", translation: "show", size: "m" });
+    expect(parseReaderPrefs(null, d)).toEqual(d);
+    expect(parseReaderPrefs("hỏng", d)).toEqual(d);
   });
 });
 

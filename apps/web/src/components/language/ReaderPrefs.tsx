@@ -11,6 +11,7 @@ import {
   PINYIN_SELECTOR,
   TEXT_SIZES,
   TRANSLATION_SELECTOR,
+  defaultReaderPrefsFor,
   parseReaderPrefs,
   readerPrefsKey,
   serializeReaderPrefs,
@@ -29,6 +30,8 @@ interface Ctx {
   setPrefs: (next: Partial<ReaderPrefs>) => void;
   /** Khoá có pinyin thì mới hiện nhóm "Pinyin". */
   pinyinAvailable: boolean;
+  /** Mặc định của khoá này (khoá nhập môn hiện sẵn bản dịch); bỏ trống = mặc định chung. Dùng cho dấu "đã đổi" và nút "Về mặc định". */
+  defaults?: ReaderPrefs;
 }
 
 const ReaderPrefsContext = createContext<Ctx | null>(null);
@@ -37,11 +40,12 @@ export const useReaderPrefs = () => useContext(ReaderPrefsContext);
 
 /** Trạng thái + lưu trữ. Lần dựng đầu luôn là mặc định (kể cả trên máy chủ) rồi mới đọc localStorage, để không lệch hydration. */
 export function useReaderPrefsState(slug: string | undefined) {
-  const [prefs, setPrefsState] = useState<ReaderPrefs>(DEFAULT_READER_PREFS);
+  const defaults = defaultReaderPrefsFor(slug);
+  const [prefs, setPrefsState] = useState<ReaderPrefs>(defaults);
   useEffect(() => {
     if (!slug) return;
     try {
-      setPrefsState(parseReaderPrefs(window.localStorage.getItem(readerPrefsKey(slug))));
+      setPrefsState(parseReaderPrefs(window.localStorage.getItem(readerPrefsKey(slug)), defaultReaderPrefsFor(slug)));
     } catch {
       /* chặn lưu trữ (cửa sổ riêng tư…): giữ mặc định */
     }
@@ -62,7 +66,7 @@ export function useReaderPrefsState(slug: string | undefined) {
     },
     [slug],
   );
-  return { prefs, setPrefs };
+  return { prefs, setPrefs, defaults };
 }
 
 /** "Chạm để xem": chạm vào một khối thì hiện/ẩn pinyin của khối đó (đặt `data-rd-shown` lên từng phần tử pinyin; CSS ẩn phần tử chưa có dấu). */
@@ -215,7 +219,8 @@ export function ReaderPrefsMenu({ className = "", showLabel = false }: { classNa
     }
     setOpen((v) => !v);
   };
-  const changed = ctx.prefs.pinyin !== DEFAULT_READER_PREFS.pinyin || ctx.prefs.translation !== DEFAULT_READER_PREFS.translation || ctx.prefs.size !== DEFAULT_READER_PREFS.size;
+  const base = ctx.defaults ?? DEFAULT_READER_PREFS;
+  const changed = ctx.prefs.pinyin !== base.pinyin || ctx.prefs.translation !== base.translation || ctx.prefs.size !== base.size;
   const pinyinOpts: Array<{ v: PinyinMode; text: string; icon: React.ReactNode }> = [
     { v: "show", text: t("reader.prefs.pinyin.show"), icon: <Eye size={22} /> },
     { v: "tap", text: t("reader.prefs.pinyin.tap"), icon: <MousePointerClick size={22} /> },
@@ -241,7 +246,7 @@ export function ReaderPrefsMenu({ className = "", showLabel = false }: { classNa
           <p className="text-sm font-bold uppercase tracking-wider text-brand-700">{t("reader.prefs.title")}</p>
           <div className="flex items-center gap-2">
             {changed && (
-              <button type="button" onClick={() => ctx.setPrefs(DEFAULT_READER_PREFS)} className="text-xs font-semibold text-brand-700 underline underline-offset-2">
+              <button type="button" onClick={() => ctx.setPrefs(base)} className="text-xs font-semibold text-brand-700 underline underline-offset-2">
                 {t("reader.prefs.reset")}
               </button>
             )}
