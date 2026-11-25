@@ -44,6 +44,31 @@ const LABELS: Record<
     help: "Để trống = sandbox (https://sandbox.vnpayment.vn/paymentv2/vpcpay.html). Khi chạy thật phải đặt địa chỉ production mà VNPay cấp.",
   },
   "momo.secret": { name: "Momo secret", placeholder: "MOMO_SECRET_KEY", emoji: "" },
+  "sepay.api_key": {
+    name: "Khoá API webhook",
+    placeholder: "Chuỗi bất kỳ, khai cùng ở SePay",
+    help: "Tự đặt một chuỗi dài, khó đoán; khai đúng chuỗi này ở SePay (Webhooks → Kiểu xác thực API Key). SePay gửi nó trong header Authorization: Apikey …. Không gửi cho ai, không dán vào chat.",
+  },
+  "sepay.account_number": {
+    name: "Số tài khoản nhận tiền",
+    placeholder: "VD: 0123456789",
+    help: "Tài khoản ngân hàng đã gắn vào SePay. Giao dịch vào tài khoản khác bị bỏ qua.",
+  },
+  "sepay.bank": {
+    name: "Ngân hàng (cho ảnh QR)",
+    placeholder: "VD: Vietcombank, MBBank, VCB",
+    help: "Tên hoặc mã ngân hàng đúng như SePay/VietQR dùng; sai thì ảnh QR không dựng được (thông tin chuyển khoản dạng chữ vẫn hiện).",
+  },
+  "sepay.account_holder": {
+    name: "Tên chủ tài khoản (tuỳ chọn)",
+    placeholder: "VD: NGUYEN VAN A",
+    help: "Hiện cho người mua để họ đối chiếu trước khi chuyển.",
+  },
+  "sepay.qr_base_url": {
+    name: "Địa chỉ dịch vụ ảnh QR (tuỳ chọn)",
+    placeholder: "https://qr.sepay.vn/img",
+    help: "Để trống = https://qr.sepay.vn/img. Chỉ đổi nếu tài liệu SePay hiện hành ghi địa chỉ khác.",
+  },
   "vbee.app_id": { name: "App-Id", placeholder: "App-Id" },
   "vbee.token": { name: "Token", placeholder: "Token" },
   "speech_analysis.base_url": {
@@ -133,6 +158,11 @@ const GROUPS: Record<
     name: "VNPay — thanh toán ATM / QR / thẻ",
     help: "Cần cả mã website và khoá bí mật thì nút thanh toán VNPay mới hiện ở trang khoá. Địa chỉ nhận kết quả (IPN) khai ở cổng quản trị VNPay: https://<tên miền>/api/webhooks/vnpay. Xem docs/van-hanh/cong-thanh-toan.md.",
     keys: ["vnpay.tmn_code", "vnpay.secret", "vnpay.payment_url"],
+  },
+  sepay: {
+    name: "SePay — chuyển khoản ngân hàng tự động (không cần pháp nhân)",
+    help: "Cần cả khoá API, số tài khoản và ngân hàng thì nút \"Chuyển khoản VietQR\" mới hiện ở trang khoá và trang combo. Địa chỉ webhook khai ở SePay: https://<tên miền>/api/webhooks/sepay, kiểu xác thực API Key. Xem docs/tieu-chi/thanh-toan-sepay.md.",
+    keys: ["sepay.api_key", "sepay.account_number", "sepay.bank", "sepay.account_holder", "sepay.qr_base_url"],
   },
   ga4: {
     name: "Google Analytics 4 — traffic & acquisition",

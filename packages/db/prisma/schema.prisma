@@ -2905,6 +2905,8 @@ enum PaymentProvider {
   stripe
   vnpay
   momo
+  /// Chuyển khoản ngân hàng tự động đối soát qua SePay (docs/tieu-chi/thanh-toan-sepay.md).
+  sepay
 }
 
 model Order {
@@ -2982,6 +2984,38 @@ model CourseAccessPlan {
 
 // =====================================================================
 // Mã kích hoạt khoá học có phí (thay cho luồng "liên hệ giảng viên" đã bỏ).
+/// Kết quả khớp của một giao dịch ngân hàng với đơn hàng.
+enum BankTransactionStatus {
+  matched
+  unmatched
+  amount_mismatch
+  duplicate_payment
+  ignored
+}
+
+/// Nhật ký giao dịch ngân hàng nhận từ SePay (docs/tieu-chi/thanh-toan-sepay.md, AC3/AC5): chống trùng theo id giao
+/// dịch phía SePay và để admin đối soát tay các giao dịch không tự khớp. KHÔNG lưu tên người chuyển và không lưu nguyên
+/// thân webhook.
+model BankTransaction {
+  id             String                @id @default(uuid())
+  provider       String
+  externalId     String
+  amount         Int
+  content        String
+  gateway        String?
+  accountNumber  String?
+  referenceCode  String?
+  transactedAt   DateTime?
+  status         BankTransactionStatus
+  orderId        String?
+  /// Phần chuyển thừa so với đơn (đồng); null = không thừa.
+  overpaidAmount Int?
+  receivedAt     DateTime              @default(now())
+
+  @@unique([provider, externalId])
+  @@index([status, receivedAt])
+}
+
 // =====================================================================
 // Combo khoá học (docs/tieu-chi/combo-khoa-hoc.md): bán trọn bộ nhiều khoá (vd 5 quyển HSK 4) bằng một lần
 // thanh toán. Mỗi combo một giá và một thời hạn; khi đơn paid, mọi khoá của combo được ghi danh/gia hạn cùng

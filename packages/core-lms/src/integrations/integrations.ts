@@ -85,6 +85,13 @@ export const INTEGRATION_KEYS = [
   "vnpay.tmn_code",
   "vnpay.payment_url",
   "momo.secret",
+  // SePay — chuyển khoản ngân hàng tự động đối soát (docs/tieu-chi/thanh-toan-sepay.md): khoá webhook (API Key khai ở
+  // SePay), tài khoản nhận tiền và thông tin để dựng ảnh VietQR. Chỉ khoá API là bí mật thật; cùng cơ chế lưu cho gọn.
+  "sepay.api_key",
+  "sepay.account_number",
+  "sepay.bank",
+  "sepay.account_holder",
+  "sepay.qr_base_url",
   // A6.6 — Vấn đáp bằng giọng nói. Vbee cần 2 secret (App-Id + Token, lấy ở
   // studio.vbee.vn/apps), khác OpenAI chỉ 1 key — theo đúng quy ước
   // "provider.secretName" đã dùng cho stripe/vnpay/momo ở trên.

@@ -6,6 +6,7 @@ import { toast } from "@/lib/toast";
 import { isFree } from "@/lib/formatPrice";
 import { PriceBlock } from "@/components/PriceTag";
 import TransferInstructions from "@/components/TransferInstructions";
+import BankTransferPanel, { type BankTransferInfo } from "@/components/BankTransferPanel";
 import { apiUrl } from "@/lib/apiUrl";
 import { enrollErrorMessage } from "@/lib/enrollErrors";
 import { accessSummary } from "@/lib/accessSummary";
@@ -32,7 +33,7 @@ const CHECKOUT_ERROR_CODES = new Set([
   "course_not_enrollable",
 ]);
 
-export type PaymentProviderChoice = "stripe" | "vnpay";
+export type PaymentProviderChoice = "stripe" | "vnpay" | "sepay";
 
 export interface AccessPlanOption {
   id: string;
@@ -95,6 +96,7 @@ export default function EnrollButton({
   const [selectedPlanId, setSelectedPlanId] = useState(accessPlans[0]?.id ?? "");
   const [checkingOut, setCheckingOut] = useState(false);
   const [showRedeem, setShowRedeem] = useState(noGateway);
+  const [bank, setBank] = useState<BankTransferInfo | null>(null);
   const [enrollError, setEnrollError] = useState<string | null>(null);
   // When payment is globally disabled, treat every course as free for UI purposes.
   const free = !paymentEnabled || (accessPlans.length === 0 && isFree(priceCents));
@@ -176,8 +178,8 @@ export default function EnrollButton({
       body: JSON.stringify({
         courseId,
         accessPlanId: accessPlans.length > 0 ? selectedPlanId : undefined,
-        // Chỉ gửi khi chọn VNPay: đường Stripe giữ nguyên body như trước.
-        ...(provider === "vnpay" ? { provider } : {}),
+        // Chỉ gửi khi chọn VNPay/SePay: đường Stripe giữ nguyên body như trước.
+        ...(provider === "vnpay" || provider === "sepay" ? { provider } : {}),
       }),
     });
     if (res.status === 401) {
@@ -185,6 +187,12 @@ export default function EnrollButton({
       return;
     }
     const data = await res.json().catch(() => ({}));
+    // Chuyển khoản SePay: không có địa chỉ cổng để chuyển trang, mà hiện khung QR rồi chờ tiền về.
+    if (provider === "sepay" && res.ok && data.sepay) {
+      setBank(data.sepay as BankTransferInfo);
+      setCheckingOut(false);
+      return;
+    }
     if (!res.ok || !data.url) {
       toast.error(t("catalog.enroll.checkoutFailed"), {
         description: CHECKOUT_ERROR_CODES.has(data.error)
@@ -236,18 +244,32 @@ export default function EnrollButton({
             </label>
           ))}
         </div>
-        {noGateway ? (
+        {bank ? (
+          <BankTransferPanel info={bank} fallbackRedirect={`/learn/${slug}`} onClose={() => setBank(null)} />
+        ) : noGateway ? (
           <TransferInstructions text={transferInstructions} />
-        ) : paymentProviders.includes("vnpay") ? (
+        ) : paymentProviders.includes("vnpay") || paymentProviders.includes("sepay") ? (
           <div className="space-y-2">
-            <button
-              type="button"
-              onClick={() => void onCheckout("vnpay")}
-              disabled={checkingOut || !selectedPlanId}
-              className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {checkingOut ? t("catalog.enroll.opening") : t("catalog.enroll.payVnpay")}
-            </button>
+            {paymentProviders.includes("vnpay") && (
+              <button
+                type="button"
+                onClick={() => void onCheckout("vnpay")}
+                disabled={checkingOut || !selectedPlanId}
+                className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {checkingOut ? t("catalog.enroll.opening") : t("catalog.enroll.payVnpay")}
+              </button>
+            )}
+            {paymentProviders.includes("sepay") && (
+              <button
+                type="button"
+                onClick={() => void onCheckout("sepay")}
+                disabled={checkingOut || !selectedPlanId}
+                className={`${paymentProviders.includes("vnpay") ? "btn-secondary" : "btn-primary"} w-full disabled:cursor-not-allowed disabled:opacity-50`}
+              >
+                {checkingOut ? t("catalog.enroll.opening") : "Chuyển khoản VietQR"}
+              </button>
+            )}
             {paymentProviders.includes("stripe") && (
               <button
                 type="button"

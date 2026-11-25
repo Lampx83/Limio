@@ -10,7 +10,7 @@ import { grantBundleAccess } from "./bundleAccess";
  */
 
 export interface GatewayPaymentResult {
-  provider: Extract<PaymentProvider, "vnpay" | "momo">;
+  provider: Extract<PaymentProvider, "vnpay" | "momo" | "sepay">;
   /** Mã giao dịch của Limio gửi cho cổng (`Order.providerRef`). */
   txnRef: string;
   /** Số tiền cổng báo đã thu, đã quy về đơn vị của `Order.amountCents`. */

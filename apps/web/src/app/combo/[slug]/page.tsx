@@ -40,11 +40,14 @@ export default async function BundlePage({ params }: { params: { slug: string } 
   ]);
   const ownedSet = new Set(owned);
   const vnpay = providers.includes("vnpay");
+  const sepay = providers.includes("sepay");
+  const gateways = [...(vnpay ? (["vnpay"] as const) : []), ...(sepay ? (["sepay"] as const) : [])];
+  const hasGateway = gateways.length > 0;
   const isDraft = bundle.status !== "published";
-  const canBuy = bundle.purchasable && vnpay && bundle.currency === "VND";
+  const canBuy = bundle.purchasable && hasGateway && bundle.currency === "VND";
   const reason = !bundle.purchasable ? "Combo chưa mở bán: còn khoá chưa xuất bản." : undefined;
   // Chưa có VNPay: bán bằng chuyển khoản + mã kích hoạt, hướng dẫn do admin đặt (payment.transfer_instructions).
-  const transferInstructions = vnpay ? null : await getSiteSetting("payment.transfer_instructions");
+  const transferInstructions = hasGateway ? null : await getSiteSetting("payment.transfer_instructions");
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 lg:px-6">
@@ -73,8 +76,8 @@ export default async function BundlePage({ params }: { params: { slug: string } 
             </p>
           )}
           <div className="mt-4 space-y-4">
-            {vnpay ? (
-              <BundleBuyButton bundleId={bundle.id} slug={bundle.slug} disabled={!canBuy} disabledReason={reason} />
+            {hasGateway ? (
+              <BundleBuyButton bundleId={bundle.id} slug={bundle.slug} disabled={!canBuy} disabledReason={reason} providers={gateways} />
             ) : (
               <TransferInstructions text={transferInstructions} />
             )}

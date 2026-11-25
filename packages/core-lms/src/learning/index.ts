@@ -4,6 +4,7 @@ export * from "./orderRefund";
 export * from "./orderPayment";
 export * from "./bundleAccess";
 export * from "./bundleCode";
+export * from "./bankTransfer";
 export * from "./events";
 export * from "./enroll";
 export * from "./courseAccess";

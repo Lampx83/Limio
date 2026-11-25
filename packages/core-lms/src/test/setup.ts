@@ -51,6 +51,7 @@ async function cleanDb() {
     // CatalogSectionCourse cascades from either side, but a section with 0
     // courses has no Course FK to cascade from — must clear it explicitly.
     prisma.catalogSection.deleteMany(),
+    prisma.bankTransaction.deleteMany(), // nhật ký giao dịch ngân hàng (không có khoá ngoại nên không bị xoá theo đơn)
     prisma.courseBundle.deleteMany(), // combo (không bị xoá theo khoá: chỉ các dòng khoá-trong-combo đi theo)
     prisma.course.deleteMany(),
     prisma.skillPrerequisite.deleteMany(),
