@@ -49,7 +49,8 @@ export type PlanErrorCode =
   | "plan_inactive"
   | "invalid_subject"
   | "invalid_dates"
-  | "subscription_not_found";
+  | "subscription_not_found"
+  | "subscription_cancelled";
 
 export class PlanError extends Error {
   constructor(

@@ -15,3 +15,14 @@ export {
   type PlanSubjectKind,
   type ActiveSubscription,
 } from "./subscriptions";
+export {
+  updatePlan,
+  upsertPlanPrice,
+  assignSubscription,
+  extendSubscription,
+  cancelSubscription,
+  listPlansForAdmin,
+  listSubscriptions,
+  type PlanPatch,
+  type AssignSubscriptionInput,
+} from "./admin";

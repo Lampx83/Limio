@@ -234,6 +234,14 @@ export const LearningEventType = {
   FeedbackRemediationClicked: "feedback.remediation.clicked",
   AdaptivePathUpdated: "adaptive.path.updated",
 
+  // Gói tài khoản (docs/tieu-chi/goi-tai-khoan.md): admin gán/gia hạn/huỷ thuê bao. Payload chỉ mang id, khoá gói, nguồn,
+  // ngày; KHÔNG số tiền, tên, email. Không tính là hoạt động học (tiền tố "plan." trong NON_LEARNER_ACTIVITY_PREFIXES).
+  // `plan.limit.reached` chỉ khai báo ở mốc 1, phát ở mốc 2.
+  PlanSubscriptionStarted: "plan.subscription.started",
+  PlanSubscriptionExtended: "plan.subscription.extended",
+  PlanSubscriptionCancelled: "plan.subscription.cancelled",
+  PlanLimitReached: "plan.limit.reached",
+
   // Gamification
   XpAwarded: "xp.awarded",
   LevelUp: "level.up",
@@ -380,6 +388,26 @@ export function isLearnerEvent(event: {
   userId: string | null;
 }): event is { userId: string } {
   return event.userId !== null;
+}
+
+/** Payload chỉ id, khoá gói, nguồn, ngày; không số tiền, tên, email. */
+export interface PlanSubscriptionPayload {
+  subscriptionId: string;
+  planKey: string;
+  scope: "individual" | "organization";
+  organizationId?: string;
+  source: string;
+  startsAt: string;
+  endsAt: string;
+}
+
+export interface PlanLimitReachedPayload {
+  metric: string;
+  limit: number;
+  used: number;
+  planKey: string;
+  source: "individual" | "organization";
+  enforced: boolean;
 }
 
 /** Payload shapes for Phase 0 events. Extend per phase. */
