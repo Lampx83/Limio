@@ -1,5 +1,6 @@
 import Link from "next/link";
 import AccessExpiryNote from "@/components/AccessExpiryNote";
+import BookCover from "@/components/BookCover";
 import EnrollButton, { type AccessPlanOption, type PaymentProviderChoice } from "@/components/EnrollButton";
 
 export interface CourseCheckoutData {
@@ -46,10 +47,7 @@ export default function CourseCheckoutView({
         <section className="card" aria-label="Tóm tắt đơn">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-faint">Bạn đang mua</h2>
           <div className="mt-4 flex gap-4">
-            {course.coverUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={course.coverUrl} alt="" className="aspect-[190/260] w-24 shrink-0 rounded-lg object-cover ring-1 ring-slate-200 sm:w-32" />
-            )}
+            {course.coverUrl && <BookCover src={course.coverUrl} alt="" className="w-28 shrink-0 sm:w-36" />}
             <div className="min-w-0">
               <h3 className="text-lg font-bold leading-snug">{course.title}</h3>
               <p className="mt-1 text-sm text-muted">{summaryNote}</p>

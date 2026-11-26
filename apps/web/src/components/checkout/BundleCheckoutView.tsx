@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { BundleView } from "@feedbackme/core-lms";
 import { PriceBlock } from "@/components/PriceTag";
 import { formatPrice } from "@/lib/formatPrice";
+import BookCover from "@/components/BookCover";
 import TransferInstructions from "@/components/TransferInstructions";
 import BundleBuyButton from "@/app/combo/[slug]/BundleBuyButton";
 import BundleRedeemBox from "@/app/combo/[slug]/BundleRedeemBox";
@@ -41,8 +42,7 @@ export default function BundleCheckoutView({
             {bundle.courses.map((c) => (
               <li key={c.id} className="min-w-0">
                 {c.coverUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.coverUrl} alt={c.title} loading="lazy" className="aspect-[190/260] w-full rounded-lg object-cover ring-1 ring-slate-200" />
+                  <BookCover src={c.coverUrl} alt={c.title} />
                 ) : (
                   <span className="block truncate text-xs">{c.title}</span>
                 )}
