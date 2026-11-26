@@ -203,7 +203,13 @@ export async function extendSubscription(
     const sub = await findSubscription(tx, subscriptionId);
     if (sub.cancelledAt) throw new PlanError("subscription_cancelled", { subscriptionId });
     if (newEndsAt.getTime() <= sub.startsAt.getTime()) throw new PlanError("invalid_dates");
-    const updated = await tx.subscription.update({ where: { id: sub.id }, data: { endsAt: newEndsAt } });
+    // Việc ghi chính là chốt chặn: chỉ đổi khi chưa huỷ (tránh đua với huỷ ở READ COMMITTED).
+    const { count } = await tx.subscription.updateMany({
+      where: { id: sub.id, cancelledAt: null },
+      data: { endsAt: newEndsAt },
+    });
+    if (count === 0) throw new PlanError("subscription_cancelled", { subscriptionId });
+    const updated = { ...sub, endsAt: newEndsAt };
     await logAudit(
       {
         action: "plan.subscription.extended",
@@ -233,10 +239,13 @@ export async function cancelSubscription(
   await db.$transaction(async (tx) => {
     const sub = await findSubscription(tx, subscriptionId);
     if (sub.cancelledAt) return;
-    const updated = await tx.subscription.update({
-      where: { id: sub.id },
+    // Chỉ một lệnh huỷ thắng: lệnh đến sau thấy count = 0 và không phát sự kiện/audit.
+    const { count } = await tx.subscription.updateMany({
+      where: { id: sub.id, cancelledAt: null },
       data: { cancelledAt: new Date(), ...(note !== undefined ? { note } : {}) },
     });
+    if (count === 0) return;
+    const updated = (await tx.subscription.findUniqueOrThrow({ where: { id: sub.id } }));
     await logAudit(
       {
         action: "plan.subscription.cancelled",

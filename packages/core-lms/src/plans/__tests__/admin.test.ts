@@ -207,6 +207,26 @@ describe("extend / cancel / list", () => {
     expect(await codeOf(cancelSubscription(admin, "nope"))).toBe("subscription_not_found");
   });
 
+  it("hai lệnh huỷ đồng thời: chỉ một sự kiện, một audit", async () => {
+    const admin = await makeUser("ad");
+    const teacher = await makeTeacher();
+    const id = await pro(admin, teacher);
+    await Promise.all([cancelSubscription(admin, id, "a"), cancelSubscription(admin, id, "b")]);
+    expect(await prisma.learningEvent.count({ where: { eventType: "plan.subscription.cancelled" } })).toBe(1);
+    expect(await prisma.auditLog.count({ where: { action: "plan.subscription.cancelled" } })).toBe(1);
+  });
+
+  it("huỷ rồi gia hạn: bị chặn, endsAt không đổi, không sự kiện extended", async () => {
+    const admin = await makeUser("ad");
+    const teacher = await makeTeacher();
+    const id = await pro(admin, teacher);
+    const before = (await prisma.subscription.findUniqueOrThrow({ where: { id } })).endsAt;
+    await cancelSubscription(admin, id);
+    expect(await codeOf(extendSubscription(admin, id, FAR))).toBe("subscription_cancelled");
+    expect((await prisma.subscription.findUniqueOrThrow({ where: { id } })).endsAt).toEqual(before);
+    expect(await prisma.learningEvent.count({ where: { eventType: "plan.subscription.extended" } })).toBe(0);
+  });
+
   it("listSubscriptions trả cả thuê bao đã hết/huỷ, mới nhất trước, kèm khoá và tên gói; listPlansForAdmin kèm giá", async () => {
     const admin = await makeUser("ad");
     const teacher = await makeTeacher();
