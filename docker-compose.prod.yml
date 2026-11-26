@@ -93,6 +93,8 @@ x-web-env: &web-env
   OPENAI_QUEUE_TIMEOUT_MS: ${OPENAI_QUEUE_TIMEOUT_MS:-}
   # Sổ ghi dung lượng file. "off" = tắt khẩn cấp (mặc định bật).
   STORAGE_LEDGER: ${STORAGE_LEDGER:-}
+  # Gói tài khoản: chỉ bật ở limio.vn (224); máy chủ riêng của trường để trống.
+  PLANS_ENABLED: ${PLANS_ENABLED:-}
   # Dọn file mồ côi (cron chủ nhật 3h30). Để trống = CHỈ BÁO CÁO vào log; đặt "apply"
   # (đúng từng chữ) mới xoá thật. Xem docs trong route storage-orphan-sweep.
   STORAGE_ORPHAN_SWEEP: ${STORAGE_ORPHAN_SWEEP:-}
