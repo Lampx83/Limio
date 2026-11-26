@@ -35,6 +35,18 @@ export async function emitEvent(
   if (!userId && !options.candidateId) {
     throw new Error("emitEvent: userId or candidateId is required");
   }
+  // Tra khoá TRƯỚC khi ghi, đừng chỉ dựa vào bắt P2002: (1) Prisma ở prod in mọi
+  // lỗi truy vấn thành dòng `prisma:error` dù mã bắt được, nên đường trùng bình
+  // thường (bấm hoàn thành bài hai lần...) làm bẩn log; (2) trong $transaction,
+  // INSERT vi phạm unique làm Postgres huỷ cả giao dịch ("current transaction is
+  // aborted"). Nhánh catch dưới chỉ còn cho trường hợp hai yêu cầu chạy đua.
+  if (options.eventKey) {
+    const existing = await db.learningEvent.findUnique({
+      where: { eventKey: options.eventKey },
+      select: { id: true },
+    });
+    if (existing) return { eventId: existing.id, created: false };
+  }
   try {
     const event = await db.learningEvent.create({
       data: {
