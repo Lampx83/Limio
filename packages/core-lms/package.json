@@ -14,6 +14,8 @@
     "backfill:learner-role": "node --env-file=../db/.env --import tsx scripts/backfill-learner-role.ts",
     "backfill:sso-org": "node --env-file=../db/.env --import tsx scripts/backfill-sso-org.ts",
     "backfill:lesson-tags": "node --env-file=../db/.env --import tsx scripts/backfill-lesson-tags.ts",
+    "backfill:plan-trials": "node --env-file=../db/.env --import tsx scripts/grant-plan-trials.ts",
+    "backfill:plan-trials:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/grant-plan-trials.ts",
     "backfill:stored-files": "node --env-file=../db/.env --import tsx scripts/backfill-stored-files.ts",
     "split:auto-rounds": "node --env-file=../db/.env --import tsx scripts/split-auto-rounds.ts",
     "storage:orphans": "node --env-file=../db/.env --import tsx scripts/report-orphan-files.ts",

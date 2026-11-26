@@ -112,7 +112,7 @@ export async function upsertPlanPrice(
   });
 }
 
-function subscriptionPayload(
+export function subscriptionPayload(
   sub: { id: string; source: string; startsAt: Date; endsAt: Date; organizationId: string | null },
   planKey: string,
 ): PlanSubscriptionPayload {
@@ -128,7 +128,7 @@ function subscriptionPayload(
 }
 
 /** Chủ thể của sự kiện: người nhận gói (cá nhân) hoặc người thao tác (tổ chức). */
-function subjectOf(sub: { userId: string | null }, actorUserId: string): string {
+export function subjectOf(sub: { userId: string | null }, actorUserId: string): string {
   return sub.userId ?? actorUserId;
 }
 

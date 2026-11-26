@@ -26,3 +26,4 @@ export {
   type PlanPatch,
   type AssignSubscriptionInput,
 } from "./admin";
+export { grantTrialSubscriptions, type TrialGrantResult } from "./trial";

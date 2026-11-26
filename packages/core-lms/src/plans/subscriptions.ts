@@ -30,7 +30,7 @@ export type ActiveSubscription = {
   referencePlanKey: string | null;
 };
 
-const TEACHING_ROLES: readonly string[] = [RoleName.Instructor, RoleName.CenterTeacher, RoleName.OrgAdmin];
+export const TEACHING_ROLES: readonly string[] = [RoleName.Instructor, RoleName.CenterTeacher, RoleName.OrgAdmin];
 
 /** Một truy vấn: tổ chức + tên các vai trò của người dùng. */
 async function loadSubject(userId: string, db: PrismaClient) {
