@@ -401,8 +401,10 @@ export default async function InstructorCourseEditPage({
           <section>
             <h2 className="text-base font-semibold">Giảng viên</h2>
             <p className="mb-3 mt-0.5 text-xs text-muted">
-              Đồng giảng viên có toàn quyền sửa nội dung như chủ khóa; chỉ chủ
-              khóa mới thêm/gỡ được.
+              Đồng giảng viên có toàn quyền sửa nội dung như chủ khóa; GV không
+              chỉnh sửa và trợ giảng chỉ dạy. Chỉ chủ khóa mới thêm/gỡ được ở trang này
+              (quản trị tổ chức cũng có quyền ở máy chủ). Gỡ ai cũng có bước chuyển lớp
+              và buổi sắp tới cho người khác.
             </p>
             <InstructorsSection courseId={course.id} isOwner={isOwner} />
           </section>

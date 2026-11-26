@@ -70,6 +70,8 @@ export function lessonFrameApplies(i: LessonFrameInput): boolean {
  * | Người dạy chọn vai "học viên", chưa ghi danh     | bất kỳ         | như ?preview=1 ("Xem như học viên")  | trang người đọc chưa ghi danh     |
  * | Bất kỳ                                           | ?stage=1       | màn chiếu cũ (không khung)           | màn chiếu cũ                      |
  * | Bài có bài giảng slide (bố cục riêng)            | bất kỳ         | cũ                                   | cũ                                |
+ * | Người dạy KHÔNG sửa được (GV không chỉnh sửa, trợ giảng), chưa ghi danh | bất kỳ | khung chế độ xem + Slide, không nút soạn | cũ/chuyển đi |
+ * | Người dạy KHÔNG sửa được (GV không chỉnh sửa, trợ giảng), chưa ghi danh | bất kỳ | khung chế độ xem + Slide, không nút soạn | cũ |
  * | Chưa ghi danh, không phải người dạy              | —              | không qua đây (trang xem thử/chuyển) |                                   |
  *
  * Nút "Slide" (mở Chiếu lớp) hiện cho người dạy của khoá ngoại ngữ (`canTeach`: kể cả giảng viên không sửa, trợ giảng đã ghi danh) ở mọi chế độ trừ màn chiếu cũ.
@@ -81,6 +83,8 @@ export interface LessonViewModesInput {
    * không phải trang người đọc chưa ghi danh (bị chuyển đi hoặc chặn thanh toán) trên chính khoá của mình.
    */
   asLearnerStaff?: boolean;
+  /** Đã ghi danh khoá này chưa (người dạy đã ghi danh thì là học viên thật: không vào chế độ xem của người dạy). */
+  enrolled?: boolean;
   /** Người dạy của khoá NGOẠI NGỮ (chủ, đồng giảng viên, không sửa, trợ giảng, quản trị; không đang chọn vai học viên); false nếu không phải khoá ngoại ngữ. */
   canTeach: boolean;
   languageMode: boolean;
@@ -95,6 +99,11 @@ export interface LessonViewModes {
   previewMode: boolean;
   teacherFrame: boolean;
   teachSlide: boolean;
+  /**
+   * Người dạy KHÔNG sửa được khoá (giảng viên không chỉnh sửa, trợ giảng do trung tâm phân giảng) chưa ghi danh vào khoá ngoại ngữ: vào bài ở chế độ xem
+   * (khung bài học, bài luyện bản xem thử, không ghi dữ liệu học tập) và thấy nút Slide, không có nút soạn. Cũng tính là `previewMode`.
+   */
+  teachView: boolean;
 }
 
 export function lessonViewModes(i: LessonViewModesInput): LessonViewModes {
@@ -103,9 +112,10 @@ export function lessonViewModes(i: LessonViewModesInput): LessonViewModes {
   // `?gv=1` (đứng lớp) và `?preview=0` (giao diện giảng viên cũ) bị bỏ qua ở khoá ngoại ngữ: Slide đã gồm ghi chú giảng viên và đồng hồ.
   const teacherMode = i.canEdit && i.gv === "1" && !i.languageMode;
   const asLearnerStaff = !!i.asLearnerStaff && i.languageMode;
-  const previewMode = (i.canEdit && i.preview === "1") || asLearnerStaff;
+  const teachView = i.canTeach && !i.canEdit && i.languageMode && !i.enrolled && !asLearnerStaff && !stageMode;
+  const previewMode = (i.canEdit && i.preview === "1") || asLearnerStaff || teachView;
   const teacherFrame = i.canEdit && i.languageMode && !previewMode && !stageMode;
-  return { stageMode, teacherMode, previewMode, teacherFrame, teachSlide: i.canTeach && !stageMode };
+  return { stageMode, teacherMode, previewMode, teacherFrame, teachSlide: i.canTeach && !stageMode, teachView };
 }
 
 export interface LessonViewInput extends LessonViewModesInput {

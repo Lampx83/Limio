@@ -12,6 +12,7 @@
 import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditCourse, assertCanEditExam } from "../courses/authz";
+import { ensureTeachRoleForAssignment } from "../courses/instructors";
 import { isUserEnrolled } from "../learning/enroll";
 import { ensureDefaultRoomForSession } from "./exam-rooms";
 import type { RevealPolicy } from "./reveal-policy";
@@ -55,6 +56,8 @@ export async function createCohort(
       },
       select: { id: true },
     });
+    // Phân giảng đi kèm quyền dạy (xem ensureTeachRoleForAssignment).
+    if (parsed.data.instructorId) await ensureTeachRoleForAssignment(actorUserId, courseId, parsed.data.instructorId, db);
     return c;
   } catch (e) {
     if ((e as { code?: string }).code === "P2002") {
@@ -268,7 +271,7 @@ export async function updateCohort(
   },
   db: PrismaClient = prisma,
 ): Promise<void> {
-  await assertCanEditCohort(actorUserId, cohortId, db);
+  const cohort = await assertCanEditCohort(actorUserId, cohortId, db);
   const data: {
     name?: string;
     code?: string | null;
@@ -288,6 +291,8 @@ export async function updateCohort(
   if (Object.keys(data).length === 0) return;
   try {
     await db.courseSection.update({ where: { id: cohortId }, data });
+    // Phân giảng đi kèm quyền dạy (xem ensureTeachRoleForAssignment).
+    if (data.instructorId) await ensureTeachRoleForAssignment(actorUserId, cohort.courseId, data.instructorId, db);
   } catch (e) {
     if ((e as { code?: string }).code === "P2002")
       throw new ExamError("cohort_name_taken");

@@ -109,7 +109,7 @@ không sửa** (hệ thống không kiểm tra khoá rỗng) — nên nhắc th�
   để trống = miễn phí; chỉ hiện với khoá "Mở"; khoá có giá sinh mã kích hoạt sau khi lưu), ô chọn
   **"Công khai — xem được không cần đăng nhập"** (chỉ có tác dụng sau khi xuất bản; tiến độ, ghi chú,
   thảo luận, bài kiểm tra và trợ lý AI vẫn đòi đăng nhập), nút "Lưu và tiếp tục", mục "Giảng viên" (Chủ
-  khóa / Đồng giảng viên / GV không chỉnh sửa / Trợ giảng) và "Hành động khóa" (Duplicate, Archive khi đã
+  khóa / Đồng giảng viên / GV không chỉnh sửa / Trợ giảng; nút **"Gỡ"** hiện hộp xác nhận nói rõ người đó đang phụ trách mấy lớp, mấy buổi sắp tới, mấy khung giờ, và cho chọn chuyển các việc đó cho giảng viên khác hoặc để trống) và "Hành động khóa" (Duplicate, Archive khi đã
   xuất bản, Delete chỉ chủ khoá).
 - **Xuất bản**: khoá là nháp cho tới khi bấm Publish; xong nút biến mất. Khi bật
   cá nhân hoá, xuất bản sẽ tự gắn chủ đề cho các bài học.

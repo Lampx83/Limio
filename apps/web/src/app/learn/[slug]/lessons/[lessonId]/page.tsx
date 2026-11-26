@@ -265,9 +265,10 @@ export default async function LessonPage({
   // và chiếu thử nội dung chưa mở cho lớp.
   if (lesson.module.isHidden && !canEdit && !asLearnerStaff) notFound();
   // Mọi quyết định giao diện (giao diện giảng viên cũ / khung bài học / nút Slide) nằm ở lessonViewModes + resolveLessonView (lib/lessonFramePolicy.ts, có bảng quyết định và test).
-  const { teacherMode, stageMode, previewMode, teachSlide } = lessonViewModes({
+  const { teacherMode, stageMode, previewMode, teachSlide, teachView } = lessonViewModes({
     canEdit: !!canEdit,
     asLearnerStaff: !!asLearnerStaff,
+    enrolled: !!enrolled,
     canTeach: !!canTeach,
     languageMode: lesson.module.course.languageMode,
     preview: searchParams?.preview,
@@ -312,7 +313,9 @@ export default async function LessonPage({
   // khoá), nhưng nội dung không được gửi xuống trình duyệt. Chặn ngay ở đây,
   // trước mọi truy vấn nội dung, chứ không giấu bằng CSS: giấu bằng CSS thì
   // toàn bộ bài vẫn nằm trong mã nguồn trang.
-  const lockedForLearner = (lesson.isLocked || lesson.module.isLocked) && !canEdit && !asLearnerStaff;
+  // Người dạy của khoá ngoại ngữ (kể cả không sửa được, do trung tâm phân giảng) vào được bài mà không cần ghi danh để chiếu lớp: bỏ qua khoá bài theo học viên.
+  const staffViewer = asLearnerStaff || !!canTeach;
+  const lockedForLearner = (lesson.isLocked || lesson.module.isLocked) && !canEdit && !staffViewer;
   if (lockedForLearner) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-16 text-center">
@@ -336,7 +339,7 @@ export default async function LessonPage({
       </main>
     );
   }
-  if (!enrolled && !canEdit && !asLearnerStaff) {
+  if (!enrolled && !canEdit && !staffViewer) {
     if (!userId) {
       // Logged out: public courses render as preview, everything else signs in.
       if (!publiclyReadable) {
@@ -397,7 +400,7 @@ export default async function LessonPage({
   // Preview mode: anyone without an enrollment — logged out on a public course, or
   // logged in on a previewable lesson. Skip enrollment-dependent queries and render
   // with a CTA banner.
-  if (!enrolled && !canEdit && !asLearnerStaff) {
+  if (!enrolled && !canEdit && !staffViewer) {
     const anonymous = userId === null;
     // Forum stays behind sign-in: threads carry learner display names, and
     // publishing those to the open internet is not something a course-visibility
@@ -1164,8 +1167,10 @@ export default async function LessonPage({
       {/* "Xem như học viên" của khoá ngoại ngữ: một dải nhắc đang ở chế độ này và đường quay lại. Vai học viên của người dạy (RoleSwitcher) thì đổi vai ở menu tài khoản. */}
       {previewMode && lessonFrame && languageMode && (
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-brand-200 bg-brand-soft px-4 py-2 text-sm text-brand-700" data-testid="view-as-learner-banner">
-          <span className="font-medium">Đang xem như học viên: các nút của giảng viên đã ẩn.</span>
-          {canEdit ? (
+          <span className="font-medium">
+            {teachView ? "Bạn đang xem bài với tư cách người dạy (không ghi dữ liệu học tập). Bấm Slide để chiếu lớp." : "Đang xem như học viên: các nút của giảng viên đã ẩn."}
+          </span>
+          {teachView ? null : canEdit ? (
             <Link href={`/learn/${params.slug}/lessons/${lesson.id}`} className="font-semibold underline decoration-dotted">
               Quay lại giao diện giảng viên
             </Link>

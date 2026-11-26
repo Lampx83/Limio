@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse, findOrInviteUserByEmail } from "@feedbackme/core-lms";
+import { canEditCourse, ensureTeachRoleForAssignment, findOrInviteUserByEmail } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
 
@@ -110,6 +110,8 @@ export async function POST(
         });
         created++;
       }
+      // Phân giảng đi kèm quyền dạy (khoá ngoại ngữ / trung tâm): giáo viên được xếp lớp phải dạy được trên khoá.
+      if (instructorId) await ensureTeachRoleForAssignment(userId, params.id, instructorId);
     } catch (e) {
       skipped.push({
         row: i + 1,

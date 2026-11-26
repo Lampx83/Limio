@@ -141,8 +141,9 @@ Mọi quyết định "giao diện cũ / khung bài học / nút giảng viên" 
 | Bất kỳ | `?stage=1` | màn chiếu cũ, không nút Slide | màn chiếu cũ |
 | Bất kỳ | bài có bài giảng slide (bố cục riêng) | cũ | cũ |
 | **Người dạy đang ở vai "học viên"**, chưa ghi danh | bất kỳ | **như `?preview=1`** (Xem như học viên), không nút giảng viên | trang người đọc chưa ghi danh |
+| **Người dạy KHÔNG sửa được** (GV không chỉnh sửa, trợ giảng do trung tâm phân giảng), chưa ghi danh | bất kỳ | **khung chế độ xem** + nút **Slide**, không nút soạn/xem như học viên, bài luyện bản xem thử, không ghi dữ liệu học tập; bỏ qua khoá bài theo học viên, bài/chương ẩn vẫn ẩn | trang người đọc / chuyển đi |
 | Chưa ghi danh, không phải người dạy | — | trang xem thử (khoá công khai) hoặc chuyển về trang khoá | giống |
 
 Nút "Slide" chỉ có ở khoá ngoại ngữ, cho người dạy của khoá (`canGradeCourse`: gồm giảng viên không sửa và trợ giảng **đã ghi danh**), ở mọi chế độ trừ màn chiếu cũ và vai học viên. Ở trang soạn, "Chế độ đứng lớp" của khoá ngoại ngữ đã đổi thành "Chiếu lớp" và mở thẳng `/day`.
 
-Giới hạn đã biết: giảng viên không sửa / trợ giảng **chưa ghi danh** bị chuyển về trang khoá (quyền xem bài hiện chỉ gồm người sửa được khoá); họ vẫn mở được Chiếu lớp bằng địa chỉ `/day`. Khoá KHÁC ngoại ngữ giữ nguyên mô hình cũ (đợt sau).
+Trung tâm (27/11/2026): giáo viên được **phân giảng** (thêm vào khoá với vai GV không chỉnh sửa/trợ giảng, hoặc xếp làm giáo viên phụ trách lớp: tự thêm vai GV không chỉnh sửa ở khoá ngoại ngữ hoặc tổ chức bật trung tâm) vào được bài mà không cần ghi danh để chiếu lớp. **Gỡ quyền dạy** (chủ khoá, OrgAdmin của tổ chức, Platform Admin; đồng giảng viên không gỡ được) là một thao tác: xoá quyền + dọn lớp phụ trách, buổi sắp tới, khung giờ lặp (chuyển cho người khác hoặc để trống); buổi đã dạy giữ nguyên; có `AuditLog` `course.instructor_removed`. Có hiệu lực ngay ở yêu cầu kế tiếp (trang Slide đang mở chạy tiếp cho tới khi tải lại). Khoá KHÁC ngoại ngữ giữ nguyên mô hình cũ (đợt sau).

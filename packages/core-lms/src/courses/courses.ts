@@ -99,6 +99,7 @@ export class CourseError extends Error {
       | "title_mismatch"
       | "cannot_remove_owner"
       | "instructor_not_found"
+      | "handover_target_invalid"
       | "invalid_email"
       | "invalid_role"
       | "cannot_change_owner_role"

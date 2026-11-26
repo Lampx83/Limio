@@ -223,7 +223,19 @@ describe("resolveLessonView: ma trận người xem × chế độ × loại kho
   });
 
   it("giảng viên không sửa / trợ giảng ĐÃ GHI DANH (canTeach, không canEdit): thấy khung như học viên + nút Slide, bài luyện làm thật", () => {
-    expect(v({ canEdit: false, canTeach: true, enrolled: true })).toMatchObject({ frame: true, teachSlide: true, teacherFrame: false, practiceAsPreview: false });
+    expect(v({ canEdit: false, canTeach: true, enrolled: true })).toMatchObject({ frame: true, teachSlide: true, teacherFrame: false, practiceAsPreview: false, teachView: false });
+  });
+
+  it("giảng viên không sửa / trợ giảng CHƯA ghi danh (trung tâm phân giảng): vào bài ở chế độ xem, có Slide, không nút soạn, bài luyện bản xem thử", () => {
+    expect(v({ canEdit: false, canTeach: true })).toMatchObject({ frame: true, teachView: true, previewMode: true, teachSlide: true, teacherFrame: false, practiceAsPreview: true });
+  });
+
+  it("người dạy không sửa ở màn chiếu cũ (?stage=1): không chế độ xem, không Slide", () => {
+    expect(v({ canEdit: false, canTeach: true, stage: "1" })).toMatchObject({ frame: false, teachView: false, teachSlide: false });
+  });
+
+  it("người dạy không sửa ở khoá KHÔNG phải ngoại ngữ: không có chế độ xem (canTeach chỉ có ở khoá ngoại ngữ)", () => {
+    expect(v({ canEdit: false, canTeach: true, languageMode: false })).toMatchObject({ teachView: false });
   });
 
   it("giảng viên khác vào lớp bằng link mời (không sửa, đã ghi danh, không có quyền dạy): khung học viên, không nút", () => {
@@ -247,14 +259,20 @@ describe("resolveLessonView: ma trận người xem × chế độ × loại kho
           if (d.stageMode || d.teacherMode || hasDeckCover) expect(d.frame, tag).toBe(false);
           // các chế độ của người dạy chỉ có khi người dạy có quyền sửa (riêng "xem như học viên" còn có từ vai học viên của người dạy ở khoá ngoại ngữ)
           if (d.teacherMode || d.teacherFrame) expect(ce, tag).toBe(true);
-          if (d.previewMode) expect(ce || (asLearnerStaff && languageMode), tag).toBe(true);
+          if (d.previewMode) expect(ce || (asLearnerStaff && languageMode) || d.teachView, tag).toBe(true);
+          // chế độ xem của người dạy không sửa: chỉ khoá ngoại ngữ, chưa ghi danh, không phải người sửa được, và luôn có Slide
+          if (d.teachView) {
+            expect(languageMode && !enrolled && !ce, tag).toBe(true);
+            expect(d.teachSlide, tag).toBe(true);
+            if (!hasDeckCover) expect(d.frame && d.practiceAsPreview, tag).toBe(true);
+          }
           // ?gv=1 và ?preview=0 chỉ còn ý nghĩa ở khoá không phải ngoại ngữ
           if (languageMode) expect(d.teacherMode, tag).toBe(false);
           // vai học viên không bao giờ có nút của người dạy
           if (asLearnerStaff) expect(d.teachSlide || d.teacherFrame, tag).toBe(false);
           // khung của người dạy chỉ ở khoá ngoại ngữ; bài luyện bản xem trước chỉ trong khung và chỉ cho người sửa được
           if (d.teacherFrame) expect(languageMode, tag).toBe(true);
-          if (d.practiceAsPreview) expect(d.frame && (ce || asLearnerStaff), tag).toBe(true);
+          if (d.practiceAsPreview) expect(d.frame && (ce || asLearnerStaff || d.teachView), tag).toBe(true);
           // một người dạy có quyền sửa, khoá ngoại ngữ, không ở màn chiếu cũ và không có bài giảng slide thì LUÔN thấy khung (gv và preview=0 không còn đổi được)
           if (ce && languageMode && !preview && !stage && !hasDeckCover) expect(d.frame, tag).toBe(true);
           // nút Slide không hiện ở màn chiếu cũ
