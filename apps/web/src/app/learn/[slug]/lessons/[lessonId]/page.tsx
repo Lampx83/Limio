@@ -1200,14 +1200,25 @@ export default async function LessonPage({
                   <NarrationButton durationSec={narrations.lecture.durationSec} inviteCourseSlug={lecturerChoice?.mode === "HIEN" ? params.slug : undefined} userId={userId ?? null} />
                 )}
                 {narrations.podcast && <PodcastButton durationSec={narrations.podcast.durationSec} title={narrations.podcast.title} />}
-                {slideInfo && (
-                  <LessonSlideButton lessonId={params.lessonId} lessonTitle={lesson.title} courseSlug={params.slug} info={slideInfo} />
-                )}
-                {canTeach && (
-                  <Link href={`/learn/${params.slug}/lessons/${params.lessonId}/day`} className="btn btn-secondary btn-sm inline-flex items-center justify-center gap-1.5" data-testid="teach-mode-link">
-                    <MonitorPlay className="h-4 w-4" aria-hidden />
-                    Chiếu lớp
+                {/* Khoá ngoại ngữ: "Slide" của người dạy chính là Chiếu lớp (slide tự dựng từ nội dung bài, có pinyin và giọng đọc), nên thay nút Slide Limio-Live bằng một nút duy nhất, không để hai nút cùng tên gọi. */}
+                {canTeach ? (
+                  <Link
+                    href={`/learn/${params.slug}/lessons/${params.lessonId}/day`}
+                    className="btn-listen btn-listen-slide"
+                    data-testid="teach-mode-link"
+                    title="Slide của bài: tự dựng từ nội dung bài, có pinyin, giọng đọc, bút laser và bút vẽ"
+                  >
+                    <span className="listen-icon">
+                      <MonitorPlay size={18} aria-hidden />
+                    </span>
+                    <span className="listen-label">
+                      <span>Slide</span>
+                    </span>
                   </Link>
+                ) : (
+                  slideInfo && (
+                    <LessonSlideButton lessonId={params.lessonId} lessonTitle={lesson.title} courseSlug={params.slug} info={slideInfo} />
+                  )
                 )}
               </div>
             )}

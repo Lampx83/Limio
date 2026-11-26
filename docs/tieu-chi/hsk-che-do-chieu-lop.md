@@ -66,7 +66,7 @@ Mỗi bài khoá sinh các màn theo thứ tự sau. Phần nào bài không có
 ## D. Quyền truy cập
 
 - **D1.** Người chưa đăng nhập: chuyển tới đăng nhập. Người không có quyền xem bài: 404 (cùng luật với trang bài học).
-- **D2.** **Đã chốt 26/11:** người dạy của khoá = bốn vai `CourseInstructor` (chủ, đồng giảng viên, giảng viên không sửa, trợ giảng) và admin nền tảng, qua `canGradeCourse`; chỉ khoá `languageMode`. Học viên không có nút và vào thẳng địa chỉ thì 404, vì màn Luyện tập cho xem đáp án. Nút "Chiếu lớp" nằm ở đầu trang bài học, cạnh các nút nghe giảng/slide, không hiện khi đang chọn vai học viên.
+- **D2.** **Đã chốt 26/11:** người dạy của khoá = bốn vai `CourseInstructor` (chủ, đồng giảng viên, giảng viên không sửa, trợ giảng) và admin nền tảng, qua `canGradeCourse`; chỉ khoá `languageMode`. Học viên không có nút và vào thẳng địa chỉ thì 404, vì màn Luyện tập cho xem đáp án. Ở khoá ngoại ngữ, **"Slide" của người dạy chính là Chiếu lớp** (thầy chốt 26/11): nút **"Slide"** ở đầu trang bài học (cạnh Nghe giảng, Podcast) mở thẳng Chiếu lớp và **thay** nút Slide Limio-Live, để không có hai nút cùng tên gọi dễ nhầm. Không hiện khi đang chọn vai học viên.
 - **D3.** Bài thuộc khoá bật học liệu có bản quyền (`protected_media`): chế độ này **không** cho tải âm thanh hay ảnh, đi qua cùng cổng `guardedLessonMedia` như trang bài học, và bị chặn in như `PrintBlock`.
 
 ## E. Dữ liệu và sự kiện

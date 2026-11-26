@@ -461,82 +461,84 @@ export default function TeachingDeck({
           <span className="teach-title-sub">{courseTitle}</span>
         </div>
         <div className="teach-bar-actions">
-          <div className="relative">
-            <button type="button" className="teach-btn" onClick={() => setThemeMenu((v) => !v)} aria-expanded={themeMenu} title="Màu nền" aria-label="Màu nền">
-              <Palette className="h-5 w-5" />
+          {/* Nhóm 1: hiện/ẩn chữ trong lớp (dùng nhiều nhất) */}
+          <div className="teach-group" role="group" aria-label="Hiển thị chữ">
+            <button type="button" className="teach-btn teach-btn-text" data-on={pinyin} aria-pressed={pinyin} onClick={() => setPinyin((v) => !v)} title="Bật/tắt pinyin (P)">
+              Pinyin
             </button>
-            {themeMenu && (
-              <ul className="teach-menu teach-theme-menu" role="menu">
-                {THEMES.map((th) => (
-                  <li key={th.id}>
-                    <button type="button" role="menuitemradio" aria-checked={theme === th.id} onClick={() => chooseTheme(th.id)}>
-                      <span className="teach-theme-chip" style={{ background: th.chip, boxShadow: `inset 0 -0.35rem 0 ${th.ink}` }} />
-                      {th.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <button type="button" className="teach-btn teach-btn-text" data-on={translation} aria-pressed={translation} onClick={() => setTranslation((v) => !v)} title="Bật/tắt bản dịch tiếng Việt (T)">
+              Dịch
+            </button>
           </div>
-          <div className="teach-sizes" role="group" aria-label="Cỡ chữ">
-            {SIZES.map((s, i) => (
-              <button key={s.id} type="button" data-on={size === s.id} aria-pressed={size === s.id} title={s.label} aria-label={s.label} onClick={() => chooseSize(s.id)} style={{ fontSize: `${[0.95, 1.35, 1.85][i]}rem` }}>
-                {i === 0 ? "a" : "A"}
-              </button>
-            ))}
-          </div>
-          <div className="teach-tools" role="group" aria-label="Bút">
+          <span className="teach-sep" aria-hidden />
+          {/* Nhóm 2: bút */}
+          <div className="teach-group" role="group" aria-label="Bút">
             <button type="button" className="teach-btn" data-on={tool === "laser"} aria-pressed={tool === "laser"} onClick={() => setTool((v) => (v === "laser" ? "none" : "laser"))} title="Bút laser (L)" aria-label="Bút laser">
               <Target className="h-5 w-5" />
+              <span className="teach-btn-label">Laser</span>
             </button>
             <button type="button" className="teach-btn" data-on={tool === "pen"} aria-pressed={tool === "pen"} onClick={() => setTool((v) => (v === "pen" ? "none" : "pen"))} title="Bút vẽ (D)" aria-label="Bút vẽ">
               <PenLine className="h-5 w-5" />
+              <span className="teach-btn-label">Vẽ</span>
             </button>
           </div>
-          {tool === "pen" ? (
-            <div className="teach-pen-opts" role="group" aria-label="Tuỳ chọn bút vẽ">
-              {penColors.map((c) => (
-                <button key={c.id} type="button" className="teach-swatch" data-on={(penColors.some((x) => x.id === penColor) ? penColor : penColors[0]!.id) === c.id} aria-pressed={(penColors.some((x) => x.id === penColor) ? penColor : penColors[0]!.id) === c.id} aria-label={c.label} title={c.label} style={{ background: c.id }} onClick={() => setPenColor(c.id)} />
+          <span className="teach-sep" aria-hidden />
+          {/* Nhóm 3: giao diện (ít đổi) */}
+          <div className="teach-group" role="group" aria-label="Giao diện">
+            <div className="teach-sizes" role="group" aria-label="Cỡ chữ">
+              {SIZES.map((s, i) => (
+                <button key={s.id} type="button" data-on={size === s.id} aria-pressed={size === s.id} title={s.label} aria-label={s.label} onClick={() => chooseSize(s.id)} style={{ fontSize: `${[0.95, 1.35, 1.85][i]}rem` }}>
+                  {i === 0 ? "a" : "A"}
+                </button>
               ))}
-              <button type="button" className="teach-btn" onClick={() => inkRef.current?.undo()} title="Hoàn tác nét cuối (U)" aria-label="Hoàn tác">
-                <Undo2 className="h-5 w-5" />
-              </button>
-              <button type="button" className="teach-btn" onClick={() => inkRef.current?.clear()} title="Xoá hết nét vẽ của màn này (C)" aria-label="Xoá nét vẽ">
-                <Eraser className="h-5 w-5" />
-              </button>
             </div>
-          ) : null}
-          <button type="button" className="teach-btn" data-on={pinyin} aria-pressed={pinyin} onClick={() => setPinyin((v) => !v)} title="Bật/tắt pinyin (P)">
-            拼
-          </button>
-          <button type="button" className="teach-btn" data-on={translation} aria-pressed={translation} onClick={() => setTranslation((v) => !v)} title="Bật/tắt bản dịch (T)">
-            VI
-          </button>
-          <button type="button" className="teach-btn" onClick={toggleFull} title="Toàn màn hình (F)" aria-label="Toàn màn hình">
-            {full ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
-          </button>
-          <div className="relative">
-            <button type="button" className="teach-btn" onClick={() => setMenu((v) => !v)} aria-expanded={menu} title="Mục lục" aria-label="Mục lục">
-              <List className="h-5 w-5" />
+            <div className="relative">
+              <button type="button" className="teach-btn" onClick={() => setThemeMenu((v) => !v)} aria-expanded={themeMenu} title="Màu nền" aria-label="Màu nền">
+                <Palette className="h-5 w-5" />
+              </button>
+              {themeMenu && (
+                <ul className="teach-menu teach-theme-menu" role="menu">
+                  {THEMES.map((th) => (
+                    <li key={th.id}>
+                      <button type="button" role="menuitemradio" aria-checked={theme === th.id} onClick={() => chooseTheme(th.id)}>
+                        <span className="teach-theme-chip" style={{ background: th.chip, boxShadow: `inset 0 -0.35rem 0 ${th.ink}` }} />
+                        {th.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+          <span className="teach-sep" aria-hidden />
+          {/* Nhóm 4: xem */}
+          <div className="teach-group" role="group" aria-label="Xem">
+            <button type="button" className="teach-btn" onClick={toggleFull} title="Toàn màn hình (F)" aria-label="Toàn màn hình">
+              {full ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
             </button>
-            {menu && (
-              <ul className="teach-menu" role="menu">
-                {sections.map((s) => (
-                  <li key={`${s.index}-${s.label}`}>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setMenu(false);
-                        go(s.index);
-                      }}
-                    >
-                      {s.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <div className="relative">
+              <button type="button" className="teach-btn" onClick={() => setMenu((v) => !v)} aria-expanded={menu} title="Mục lục" aria-label="Mục lục">
+                <List className="h-5 w-5" />
+              </button>
+              {menu && (
+                <ul className="teach-menu" role="menu">
+                  {sections.map((s) => (
+                    <li key={`${s.index}-${s.label}`}>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setMenu(false);
+                          go(s.index);
+                        }}
+                      >
+                        {s.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -557,6 +559,30 @@ export default function TeachingDeck({
           reveal={reveal}
         />
       </main>
+      {tool !== "none" ? (
+        <div className="teach-toolpanel" role="toolbar" aria-label={tool === "pen" ? "Bút vẽ" : "Bút laser"}>
+          {tool === "pen" ? (
+            <>
+              <span className="teach-toolpanel-name">Bút vẽ</span>
+              {penColors.map((c) => {
+                const cur = penColors.some((x) => x.id === penColor) ? penColor : penColors[0]!.id;
+                return <button key={c.id} type="button" className="teach-swatch" data-on={cur === c.id} aria-pressed={cur === c.id} aria-label={c.label} title={c.label} style={{ background: c.id }} onClick={() => setPenColor(c.id)} />;
+              })}
+              <button type="button" className="teach-btn" onClick={() => inkRef.current?.undo()} title="Hoàn tác nét cuối (U)" aria-label="Hoàn tác">
+                <Undo2 className="h-5 w-5" />
+              </button>
+              <button type="button" className="teach-btn" onClick={() => inkRef.current?.clear()} title="Xoá hết nét vẽ của màn này (C)" aria-label="Xoá nét vẽ">
+                <Eraser className="h-5 w-5" />
+              </button>
+            </>
+          ) : (
+            <span className="teach-toolpanel-name">Bút laser</span>
+          )}
+          <button type="button" className="teach-toolpanel-done" onClick={() => setTool("none")} title="Tắt bút (Esc)">
+            Xong · Esc
+          </button>
+        </div>
+      ) : null}
       <TeachingInk ref={inkRef} tool={tool} color={penColors.some((c) => c.id === penColor) ? penColor : penColors[0]!.id} frameKey={`f${idx}`} onWheel={(dy) => stageRef.current?.scrollBy({ top: dy })} />
       </div>
 

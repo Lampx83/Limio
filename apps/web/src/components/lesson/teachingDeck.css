@@ -1117,3 +1117,69 @@
 .teach-hint + .teach-choices {
   margin-top: 0.6rem;
 }
+
+/* ---------- thanh công cụ: nhóm theo việc, bút có bảng nổi riêng ---------- */
+.teach-group {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.teach-sep {
+  width: 1px;
+  height: 1.7rem;
+  margin: 0 0.35rem;
+  background: rgb(var(--border));
+}
+.teach-btn-text {
+  font-size: 0.9rem;
+  padding: 0 0.8rem;
+}
+.teach-btn-label {
+  display: none;
+  margin-left: 0.4rem;
+  font-size: 0.85rem;
+}
+@media (min-width: 1100px) {
+  .teach-btn-label {
+    display: inline;
+  }
+}
+/* Bảng bút nổi ở góc phải dưới vùng nội dung (nội dung thường dồn trái): không đẩy các nút trên thanh khi bật/tắt bút, và nói rõ đang ở chế độ bút. */
+.teach-toolpanel {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface));
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+.teach-toolpanel-name {
+  padding: 0 0.4rem 0 0.5rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.teach-toolpanel-done {
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  background: var(--chrome);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.teach-root[data-theme="board"] .teach-toolpanel-done {
+  color: #14261f;
+}
+
+/* Dấu câu thẳng hàng với chữ Hán: ruby của bài học xếp "vertical-align: top" nên khi pinyin ẩn (hoặc trong câu có dấu , 。 đứng ngoài ruby) dấu câu nằm ở đường cơ sở
+   thấp hơn chữ. Trong màn chiếu cho cả ruby về đường cơ sở: chữ Hán và dấu câu cùng một hàng, pinyin (nếu hiện) kéo dài xuống dưới. */
+.teach-root ruby.ruby-han {
+  vertical-align: baseline;
+  margin-block: 0;
+}
