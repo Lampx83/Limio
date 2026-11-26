@@ -45,6 +45,7 @@ export * from "./mock-templates";
 export * from "./section-results";
 export * from "./mock-results";
 export * from "./practice";
+export { answerKeyText, type AnswerKeyText } from "./answerKey";
 export * from "./clone";
 export * from "./analytics";
 export * from "./reliability";

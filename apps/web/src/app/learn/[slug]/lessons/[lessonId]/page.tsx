@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import {
   canEditCourse,
+  canGradeCourse,
   effectiveAssignmentDues,
   findVirtualLecturer,
   getCourseProgress,
@@ -95,7 +96,7 @@ import { loadDeck } from "@/lib/slideDeck/decks";
 import LessonSlideButton, { type LessonSlideInfo } from "@/components/lesson/LessonSlideButton";
 import TeacherBar, { StageListener } from "@/components/lesson/TeacherBar";
 import { isNativeVideoUrl } from "@/lib/videoUrl";
-import { Download, Lock, PenLine } from "lucide-react";
+import { Download, Lock, MonitorPlay, PenLine } from "lucide-react";
 import JsonLd from "@/components/JsonLd";
 import { SITE_NAME, absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
@@ -252,6 +253,8 @@ export default async function LessonPage({
   // không vào bài khi chưa ghi danh — dù tài khoản này có quyền sửa khoá.
   const viewingAsLearner = getActiveRole(session?.user?.roles ?? []) === "learner";
   const canEdit = userId && !viewingAsLearner ? await canEditCourse(userId, lesson.module.course.id) : false;
+  // "Chiếu lớp" (docs/tieu-chi/hsk-che-do-chieu-lop.md, D2): người dạy của khoá (kể cả giảng viên không sửa, trợ giảng), chỉ khoá ngoại ngữ.
+  const canTeach = lesson.module.course.languageMode && userId && !viewingAsLearner ? await canGradeCourse(userId, lesson.module.course.id) : false;
   // Ẩn cả module thì bài bên trong cũng phải khoá lại, không thì học viên biết
   // đường dẫn vẫn vào thẳng được. Người dạy khoá này thì vẫn vào — họ cần soạn
   // và chiếu thử nội dung chưa mở cho lớp.
@@ -1191,7 +1194,7 @@ export default async function LessonPage({
           <div className={`${lessonFrame ? "" : "mt-3 "}flex flex-wrap items-center gap-2`}>
             {/* Các nút nghe nổi bật (Nghe giảng, Podcast, Slide) đứng bên trái; nút công cụ (in) dồn sang phải cùng hàng để đỡ tốn thêm một hàng. */}
             {/* Màn hẹp: các nút nghe chia đều cột, nằm riêng một hàng; từ sm: xếp ngang theo bề rộng cố định của nút. */}
-            {(narrations.lecture || narrations.podcast || slideInfo) && (
+            {(narrations.lecture || narrations.podcast || slideInfo || canTeach) && (
               <div className="grid w-full auto-cols-fr grid-flow-col gap-2 sm:flex sm:w-auto">
                 {narrations.lecture && !deckCover && (
                   <NarrationButton durationSec={narrations.lecture.durationSec} inviteCourseSlug={lecturerChoice?.mode === "HIEN" ? params.slug : undefined} userId={userId ?? null} />
@@ -1199,6 +1202,12 @@ export default async function LessonPage({
                 {narrations.podcast && <PodcastButton durationSec={narrations.podcast.durationSec} title={narrations.podcast.title} />}
                 {slideInfo && (
                   <LessonSlideButton lessonId={params.lessonId} lessonTitle={lesson.title} courseSlug={params.slug} info={slideInfo} />
+                )}
+                {canTeach && (
+                  <Link href={`/learn/${params.slug}/lessons/${params.lessonId}/day`} className="btn btn-secondary btn-sm inline-flex items-center justify-center gap-1.5" data-testid="teach-mode-link">
+                    <MonitorPlay className="h-4 w-4" aria-hidden />
+                    Chiếu lớp
+                  </Link>
                 )}
               </div>
             )}

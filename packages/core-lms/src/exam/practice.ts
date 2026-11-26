@@ -1,5 +1,6 @@
 import { getAudioTranscriptsForPassages, transcriptKeysInDoc } from "./passageAssets";
-import { assertCanEditCourse } from "../courses/authz";
+import { assertCanEditCourse, assertCanGradeCourse } from "../courses/authz";
+import { answerKeyText, type AnswerKeyText } from "./answerKey";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
@@ -914,4 +915,27 @@ export async function getPracticeSkillSummary(
     lastAt: completed[0]!.completedAt,
     skills: [...agg.entries()].map(([skill, a]) => ({ skill, correct: a.correct, total: a.total, pct: Math.round((a.correct / a.total) * 100) })),
   };
+}
+
+/**
+ * Chiếu lớp (docs/tieu-chi/hsk-che-do-chieu-lop.md, A6): bài luyện cho NGƯỜI DẠY của khoá (chủ, đồng giảng viên, giảng viên không sửa, trợ giảng).
+ * Dữ liệu y như bản nhúng của học viên (cấu hình công khai, KHÔNG đáp án); đáp án chỉ ra qua `getPracticeAnswerKeyForTeaching` khi giáo viên bấm.
+ * Không tạo buổi luyện, không ghi gì. Chỉ đề CÓ CHỦ (Bài luyện nhúng trong bài học).
+ */
+export async function getPracticeForTeaching(actorUserId: string, examId: string, db: PrismaClient = prisma): Promise<PracticeEmbed> {
+  const exam = await db.exam.findUnique({ where: { id: examId }, select: { id: true, title: true, courseId: true, ownerContentItemId: true } });
+  if (!exam || !exam.ownerContentItemId || !exam.courseId) throw new ExamError("exam_not_found");
+  await assertCanGradeCourse(actorUserId, exam.courseId, db);
+  return buildFreshEmbed(examId, exam.title, actorUserId, db);
+}
+
+/** Đáp án của một câu của Bài luyện nhúng, cho người dạy của khoá; chỉ trả chữ đã rút gọn, không trả `config` thô. */
+export async function getPracticeAnswerKeyForTeaching(actorUserId: string, questionId: string, db: PrismaClient = prisma): Promise<AnswerKeyText> {
+  const q = await db.examQuestion.findUnique({
+    where: { id: questionId },
+    select: { type: true, config: true, exam: { select: { courseId: true, ownerContentItemId: true } } },
+  });
+  if (!q || !q.exam.ownerContentItemId || !q.exam.courseId) throw new ExamError("exam_not_found");
+  await assertCanGradeCourse(actorUserId, q.exam.courseId, db);
+  return answerKeyText(q.type, q.config);
 }
