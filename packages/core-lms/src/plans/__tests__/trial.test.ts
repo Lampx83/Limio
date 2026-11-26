@@ -3,7 +3,8 @@ import { prisma } from "@feedbackme/db";
 import { RoleName } from "@feedbackme/shared-types";
 import { grantTrialSubscriptions } from "../trial";
 import { TRIAL_ENDS_AT } from "../config";
-import { resolveFeature } from "../../auth/permissions";
+import { isFeatureEnabled, resolveFeature } from "../../auth/permissions";
+import { isCenterEnabledForUser } from "../../org/centerAccess";
 import { grantRole } from "../../auth/roles";
 import { makeOrg, makeTeacher, makeUser, seedFlagsAndPlans } from "./planFixtures";
 
@@ -92,6 +93,34 @@ describe("grantTrialSubscriptions", () => {
       featureKey: "ai_oral.monthly_attempts",
       value: 5,
     });
+  });
+
+  it("dryRun ném plan_not_found khi thiếu gói dùng thử trong danh mục", async () => {
+    const actor = await makeUser("ad");
+    await prisma.plan.deleteMany({ where: { key: "org_trial" } });
+    await expect(grantTrialSubscriptions({ dryRun: true, actorUserId: actor })).rejects.toMatchObject({
+      code: "plan_not_found",
+      details: { planKey: "org_trial" },
+    });
+  });
+
+  it("giảng viên dùng thử không bật tính năng trung tâm; limio_live.access từ gói thì bật", async () => {
+    const actor = await makeUser("ad");
+    const teacher = await makeTeacher();
+    const before = await resolveFeature(teacher, "center.access");
+    delete process.env.PLANS_ENABLED;
+    const off = await resolveFeature(teacher, "center.access");
+    process.env.PLANS_ENABLED = "1";
+    expect(before).toBe(off);
+    await grantTrialSubscriptions({ dryRun: false, actorUserId: actor });
+    expect(await resolveFeature(teacher, "center.access")).toBe(off);
+    expect(await isFeatureEnabled(teacher, "limio_live.access")).toBe(true);
+    // Giảng viên thuộc trường tắt tính năng trung tâm, không vai trò trung tâm, chưa có lớp đặt lịch.
+    const org = await prisma.organization.create({
+      data: { code: `CT-${Date.now()}`, name: "t", centerEnabled: false },
+    });
+    await prisma.user.update({ where: { id: teacher }, data: { organizationId: org.id } });
+    expect(await isCenterEnabledForUser(teacher)).toBe(false);
   });
 
   it("PLANS_ENABLED tắt → ném plans_disabled", async () => {

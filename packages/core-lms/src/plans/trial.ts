@@ -46,6 +46,14 @@ export async function grantTrialSubscriptions(
     }),
   ]);
 
+  // Kiểm gói dùng thử có trong danh mục TRƯỚC dry-run, để chạy thử trên prod báo thiếu ngay.
+  const [userPlan, orgPlan] = await Promise.all([
+    db.plan.findUnique({ where: { key: "trial_individual" } }),
+    db.plan.findUnique({ where: { key: "org_trial" } }),
+  ]);
+  if (!userPlan) throw new PlanError("plan_not_found", { planKey: "trial_individual" });
+  if (!orgPlan) throw new PlanError("plan_not_found", { planKey: "org_trial" });
+
   const adminIds = new Set(admins.map((a) => a.userId));
   const hasTrialUser = new Set(trialUsers.map((s) => s.userId));
   const hasTrialOrg = new Set(trialOrgs.map((s) => s.organizationId));
@@ -66,13 +74,6 @@ export async function grantTrialSubscriptions(
     })),
   };
   if (opts.dryRun) return result;
-
-  const [userPlan, orgPlan] = await Promise.all([
-    db.plan.findUnique({ where: { key: "trial_individual" } }),
-    db.plan.findUnique({ where: { key: "org_trial" } }),
-  ]);
-  if (!userPlan) throw new PlanError("plan_not_found", { planKey: "trial_individual" });
-  if (!orgPlan) throw new PlanError("plan_not_found", { planKey: "org_trial" });
 
   // Đếm theo số thật sự cấp được (chạy song song hai lần thì phía sau thấy đã có và bỏ qua).
   let usersGranted = 0;

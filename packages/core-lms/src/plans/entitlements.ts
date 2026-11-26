@@ -3,6 +3,8 @@
  * Quy tắc gộp dùng chung với resolver quyền theo vai trò: boolean OR,
  * int MAX, string_array UNION — "nguồn nào cho nhiều hơn thì thắng".
  */
+import { TECH_CEILINGS } from "@feedbackme/shared-types";
+
 export type FeatureValue = boolean | number | string[] | null;
 
 type ValueType = "boolean" | "int" | "string_array";
@@ -82,6 +84,11 @@ export function validateEntitlements(
         Array.isArray(value) &&
         value.every((s) => typeof s === "string"));
     if (!ok) throw new PlanError("invalid_value_type", { key, valueType: flag.valueType, value });
+    // Trần kỹ thuật chặn ở máy chủ, không chỉ ở form.
+    const max = TECH_CEILINGS[key];
+    if (flag.valueType === "int" && max !== undefined && (value as number) > max) {
+      throw new PlanError("invalid_value_type", { key, max });
+    }
     out[key] = value as FeatureValue;
   }
   return out;

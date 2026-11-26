@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { prisma } from "@feedbackme/db";
 import { FLAGS } from "@feedbackme/db/feature-flag-catalog";
-import { PLAN_CATALOG } from "../config";
+import { PLAN_CATALOG, TECH_CEILINGS } from "../config";
 import { mergeEntitlements, mergeValues, validateEntitlements, PlanError } from "../entitlements";
 
 const flagsDef = [
@@ -38,6 +38,14 @@ describe("validateEntitlements", () => {
     expect(() => validateEntitlements({ "storage.mb": -1 }, flagsDef)).toThrow(code("invalid_value_type"));
     expect(() => validateEntitlements({ "storage.mb": null }, flagsDef)).toThrow(code("invalid_value_type"));
     expect(() => validateEntitlements({ "ai.enabled": 1 }, flagsDef)).toThrow(code("invalid_value_type"));
+  });
+  it("từ chối int vượt trần kỹ thuật, kèm max; bằng trần thì chấp nhận", () => {
+    expect(() => validateEntitlements({ "storage.mb": TECH_CEILINGS["storage.mb"]! + 1 }, flagsDef)).toThrow(
+      expect.objectContaining({ code: "invalid_value_type", details: { key: "storage.mb", max: TECH_CEILINGS["storage.mb"] } }),
+    );
+    expect(validateEntitlements({ "storage.mb": TECH_CEILINGS["storage.mb"]! }, flagsDef)).toEqual({
+      "storage.mb": TECH_CEILINGS["storage.mb"],
+    });
   });
   it("từ chối khoá lạ", () => {
     expect(() => validateEntitlements({ "x.y": 1 }, flagsDef)).toThrow(code("unknown_key"));

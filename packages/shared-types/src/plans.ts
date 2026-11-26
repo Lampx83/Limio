@@ -66,10 +66,15 @@ function ent(n: Num): Record<string, boolean | number> {
   return e;
 }
 
-/** Gói dùng thử: mọi boolean của gói bán bật, mọi hạn mức lấy trần kỹ thuật. */
+/**
+ * Gói dùng thử: boolean của gói bán bật, trừ `center.access`; mọi hạn mức lấy trần kỹ thuật.
+ * `center.access` cố ý vắng: có mặt thì giảng viên đang dùng thử bỗng thấy menu trung tâm
+ * (xem isCenterEnabledForUser), trái với "chạy như hôm nay". Khoá vắng thì rơi về
+ * override theo vai trò / mặc định như cũ; cổng AND theo gói là việc của mốc 2.
+ */
 function trialEntitlements(withOrg: boolean): Record<string, boolean | number> {
   const e: Record<string, boolean | number> = {};
-  for (const k of PLAN_BOOLEAN_KEYS) e[k] = true;
+  for (const k of PLAN_BOOLEAN_KEYS) if (k !== "center.access") e[k] = true;
   for (const k of PLAN_LIMIT_KEYS) {
     if (k.startsWith("org.") && !withOrg) continue;
     e[k] = TECH_CEILINGS[k]!;
