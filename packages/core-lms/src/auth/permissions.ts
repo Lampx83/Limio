@@ -13,8 +13,9 @@
  */
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { logAudit } from "./audit";
+import { mergeValues, type FeatureValue } from "../plans/entitlements";
 
-export type FeatureValue = boolean | number | string[] | null;
+export type { FeatureValue };
 
 export class FeatureFlagError extends Error {
   constructor(
@@ -29,23 +30,6 @@ type ValueType = "boolean" | "int" | "string_array";
 
 function jsonToFeatureValue(json: Prisma.JsonValue): FeatureValue {
   return json as FeatureValue;
-}
-
-function mergeValues(valueType: ValueType, values: FeatureValue[]): FeatureValue {
-  if (values.length === 0) return null;
-  if (valueType === "boolean") {
-    return values.some((v) => v === true);
-  }
-  if (valueType === "int") {
-    const nums = values.filter((v): v is number => typeof v === "number");
-    return nums.length > 0 ? Math.max(...nums) : null;
-  }
-  // string_array
-  const union = new Set<string>();
-  for (const v of values) {
-    if (Array.isArray(v)) for (const s of v) union.add(s);
-  }
-  return Array.from(union);
 }
 
 function validateValueType(valueType: ValueType, value: FeatureValue): void {
