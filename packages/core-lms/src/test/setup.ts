@@ -53,7 +53,10 @@ async function cleanDb() {
     prisma.catalogSection.deleteMany(),
     prisma.bankTransaction.deleteMany(), // nhật ký giao dịch ngân hàng (không có khoá ngoại nên không bị xoá theo đơn)
     prisma.courseBundle.deleteMany(), // combo (không bị xoá theo khoá: chỉ các dòng khoá-trong-combo đi theo)
+    prisma.subscription.deleteMany(), // gói tài khoản: trước đơn/người dùng/tổ chức
     prisma.course.deleteMany(),
+    prisma.planPrice.deleteMany(),
+    prisma.plan.deleteMany(),
     prisma.skillPrerequisite.deleteMany(),
     prisma.skill.deleteMany(),
     prisma.misconception.deleteMany(),

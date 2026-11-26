@@ -110,6 +110,7 @@ model User {
   createdAccessCodeBatches       CourseAccessCodeBatch[]   @relation("CourseAccessCodeBatchCreator")
   redeemedAccessCodes            CourseAccessCode[]        @relation("CourseAccessCodeRedeemer")
   orders                         Order[]
+  subscriptions                  Subscription[]
   auditEntriesAsActor            AuditLog[]                @relation("AuditActor")
   auditEntriesAsTarget           AuditLog[]                @relation("AuditTarget")
   instructorApplications         InstructorApplication[]   @relation("InstructorApplicant")
@@ -2922,6 +2923,8 @@ model Order {
   // Course.priceCents cũ (vĩnh viễn) — đường trước khi có CourseAccessPlan,
   // giữ nguyên để không phải migrate Order lịch sử.
   accessPlanId String?
+  /// Giá gói tài khoản đã chọn lúc checkout (docs/tieu-chi/goi-tai-khoan.md). null = đơn khoá học/combo.
+  planPriceId  String?
   // Locked at order time so price changes don't affect pending orders.
   amountCents  Int
   currency     String          @default("USD")
@@ -2948,6 +2951,8 @@ model Order {
   course     Course?           @relation(fields: [courseId], references: [id], onDelete: Cascade)
   bundle     CourseBundle?     @relation(fields: [bundleId], references: [id], onDelete: SetNull)
   accessPlan CourseAccessPlan? @relation(fields: [accessPlanId], references: [id], onDelete: SetNull)
+  planPrice  PlanPrice?        @relation(fields: [planPriceId], references: [id], onDelete: SetNull)
+  subscription Subscription?
 
   @@index([userId, createdAt])
   @@index([courseId, status])
@@ -2956,6 +2961,84 @@ model Order {
   @@index([bundleId, status])
   @@index([paidAt])
   @@index([refundedAt])
+}
+
+// =====================================================================
+// Gói tài khoản (docs/tieu-chi/goi-tai-khoan.md): Plan = bộ quyền, PlanPrice = giá theo chu kỳ,
+// Subscription = quyền đang có của một người dùng HOẶC một tổ chức.
+// =====================================================================
+
+enum PlanScope {
+  individual
+  organization
+}
+
+enum PlanPeriod {
+  month
+  year
+}
+
+enum SubscriptionSource {
+  trial
+  purchase
+  contract
+  admin
+}
+
+model Plan {
+  id               String         @id @default(uuid())
+  key              String         @unique
+  name             String
+  scope            PlanScope
+  /// featureKey → giá trị; chỉ khoá sellable (kiểm ở core-lms/src/plans/entitlements.ts)
+  entitlements     Json           @default("{}")
+  /// Gói dùng thử: gói dùng để so "vượt mức" (pro / org_khoa). null với gói thường.
+  referencePlanKey String?
+  isPublic         Boolean        @default(false)
+  sortOrder        Int            @default(0)
+  active           Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  prices           PlanPrice[]
+  subscriptions    Subscription[]
+}
+
+model PlanPrice {
+  id        String     @id @default(uuid())
+  planId    String
+  period    PlanPeriod
+  amountVnd Int
+  active    Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  plan      Plan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  orders    Order[]
+
+  @@unique([planId, period])
+}
+
+model Subscription {
+  id             String             @id @default(uuid())
+  planId         String
+  /// Đúng một trong userId / organizationId (CHECK trong migration SQL).
+  userId         String?
+  organizationId String?
+  source         SubscriptionSource
+  startsAt       DateTime
+  endsAt         DateTime
+  orderId        String?            @unique
+  grantedById    String?
+  note           String?
+  cancelledAt    DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  plan           Plan               @relation(fields: [planId], references: [id], onDelete: Restrict)
+  user           User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization?      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  order          Order?             @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([userId, endsAt])
+  @@index([organizationId, endsAt])
 }
 
 // =====================================================================
@@ -5693,6 +5776,7 @@ model Organization {
   checkinThresholdMin Int                   @default(15)
 
   @@index([code])
+  subscriptions Subscription[]
 }
 
 // Kỳ học của trường — OrgAdmin/Platform Admin cấu hình, để lịch của mọi tài
