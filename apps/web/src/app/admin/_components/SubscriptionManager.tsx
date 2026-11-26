@@ -23,7 +23,7 @@ interface Sub {
 interface PlanOpt { key: string; name: string; scope: "individual" | "organization"; active: boolean }
 
 const TONE: Record<SubStatus, StatusTone> = { active: "success", expired: "neutral", cancelled: "danger", upcoming: "info" };
-const SOURCE_LABEL: Record<string, string> = { contract: "Hợp đồng", admin: "Quản trị", trial: "Dùng thử", order: "Mua", stripe: "Mua" };
+const SOURCE_LABEL: Record<string, string> = { trial: "Dùng thử", purchase: "Mua", contract: "Hợp đồng", admin: "Admin cấp" };
 
 export default function SubscriptionManager(props: Target) {
   const query = props.userId ? `userId=${encodeURIComponent(props.userId)}` : `organizationId=${encodeURIComponent(props.organizationId!)}`;
@@ -117,7 +117,7 @@ export default function SubscriptionManager(props: Target) {
                   Từ <DateTime value={s.startsAt} format="date" /> · đến hết {formatDayKey(endsAtToLastDay(s.endsAt))}
                   {s.note ? ` · ${s.note}` : ""}
                 </p>
-                {st !== "cancelled" && (
+                {(st === "active" || st === "upcoming") && (
                   <div className="mt-2 flex flex-wrap items-center gap-3">
                     {extendId === s.id ? (
                       <>

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { PLAN_BOOLEAN_KEYS, PLAN_LIMIT_KEYS, TECH_CEILINGS } from "@feedbackme/shared-types";
 import { apiUrl } from "@/lib/apiUrl";
-import { BOOLEAN_LABELS, LIMIT_LABELS, PLANS_DISABLED_TEXT, planErrorText } from "@/lib/planAdminUi";
+import { BOOLEAN_LABELS, LIMIT_HINTS, LIMIT_LABELS, PLANS_DISABLED_TEXT, planErrorText } from "@/lib/planAdminUi";
 import StatusBadge from "@/components/ui/StatusBadge";
 
 interface Price { period: "month" | "year"; amountVnd: number; active: boolean }
@@ -167,7 +167,10 @@ function PlanForm({ plan, onSaved }: { plan: PlanRow; onSaved: () => Promise<voi
               placeholder="Không đặt"
               onChange={(e) => setLimits({ ...limits, [k]: e.target.value })}
             />
-            <span className="text-caption text-faint">Tối đa {TECH_CEILINGS[k]?.toLocaleString("vi-VN")} · để trống = không đặt</span>
+            <span className="text-caption text-faint">
+              Tối đa {TECH_CEILINGS[k]?.toLocaleString("vi-VN")} · để trống = không đặt
+              {LIMIT_HINTS[k] && (!LIMIT_HINTS[k]!.orgOnly || plan.scope === "organization") ? ` · ${LIMIT_HINTS[k]!.text}` : ""}
+            </span>
           </label>
         ))}
       </div>

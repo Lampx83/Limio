@@ -144,8 +144,8 @@ export const FLAGS: FlagSeed[] = [
   {
     key: "activity.max_responses",
     group: "teaching_tools",
-    name: "Số phiếu tối đa mỗi hoạt động",
-    description: "Hạn mức theo gói: số lượt gửi tối đa của một hoạt động nhanh.",
+    name: "Số lượt gửi tối đa mỗi hoạt động",
+    description: "Hạn mức theo gói: số lượt gửi tối đa mỗi hoạt động (hoạt động nhanh, slide tương tác, bảng).",
     valueType: "int",
     defaultValue: Prisma.JsonNull,
     sellable: true,

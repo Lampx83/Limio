@@ -181,7 +181,8 @@ export default async function AdminUserDetailPage({
 
         {/* Gói tài khoản */}
         <section className="card lg:col-span-2">
-          <h2 className="mb-3 text-base font-semibold">Gói tài khoản</h2>
+          <h2 className="mb-1 text-base font-semibold">Gói tài khoản</h2>
+          <p className="mb-3 text-meta">Gói chỉ áp cho tài khoản giảng dạy (giảng viên, giáo viên trung tâm, quản trị tổ chức).</p>
           <SubscriptionManager userId={user.id} />
         </section>
 

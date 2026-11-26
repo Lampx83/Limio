@@ -2,7 +2,7 @@
 export const PLAN_ERROR_TEXT: Record<string, string> = {
   unknown_key: "Có khoá quyền không tồn tại.",
   non_sellable_key: "Có khoá quyền không được đưa vào gói bán.",
-  invalid_value_type: "Giá trị không hợp lệ (phải là số nguyên dương hoặc bật/tắt).",
+  invalid_value_type: "Giá trị không hợp lệ (phải là số nguyên không âm hoặc bật/tắt).",
   plan_not_found: "Không tìm thấy gói.",
   plan_inactive: "Gói này đang ngừng bán, không gán được.",
   invalid_subject: "Gói không đúng phạm vi với đối tượng (gói cá nhân cho người, gói tổ chức cho tổ chức).",
@@ -19,19 +19,25 @@ export const planErrorText = (code: unknown) =>
 export const PLANS_DISABLED_TEXT = "Gói chưa bật trên máy chủ này; sửa ở đây chưa có tác dụng.";
 
 export const LIMIT_LABELS: Record<string, string> = {
-  "activity.max_responses": "Hoạt động nhanh: số lượt trả lời tối đa",
+  "activity.max_responses": "Số lượt gửi tối đa mỗi hoạt động (hoạt động nhanh, slide tương tác, bảng)",
   "gameshow.max_participants": "Gameshow: số người chơi tối đa",
   "exam.session.max_candidates": "Ca thi: số thí sinh tối đa",
-  "ai_oral.monthly_attempts": "Chấm nói AI: số lượt mỗi tháng",
+  "ai_oral.monthly_attempts": "Vấn đáp AI: số lượt mỗi tháng",
   "ai.tokens.monthly_override": "Token AI mỗi tháng",
   "storage.mb": "Dung lượng (MB)",
   "org.max_instructors": "Tổ chức: số giảng viên tối đa",
-  "org.active_learners": "Tổ chức: số học viên đang học tối đa",
+  "org.active_learners": "Tổ chức: học viên hoạt động mỗi tháng (chỉ cảnh báo, không chặn)",
+};
+/** Gợi ý ngắn dưới ô nhập; khoá nằm trong `orgOnly` chỉ hiện ở gói tổ chức. */
+export const LIMIT_HINTS: Record<string, { text: string; orgOnly?: boolean }> = {
+  "ai_oral.monthly_attempts": { text: "quỹ chung của tổ chức", orgOnly: true },
+  "storage.mb": { text: "gói tổ chức: quỹ chung" },
+  "ai.tokens.monthly_override": { text: "mỗi người" },
 };
 export const BOOLEAN_LABELS: Record<string, string> = {
   "limio_live.access": "Limio-Live",
-  "ai_oral.access": "Chấm nói AI",
-  "center.access": "Chức năng trung tâm",
+  "ai_oral.access": "Vấn đáp AI",
+  "center.access": "Tính năng trung tâm",
 };
 
 export type SubStatus = "active" | "expired" | "cancelled" | "upcoming";
