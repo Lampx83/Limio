@@ -3925,3 +3925,52 @@ textarea.fc-input {
     transition: none;
   }
 }
+
+/* ---------- Bìa sách 3D nhẹ (components/BookCover.tsx) ----------
+   Vuông góc như sách thật; gáy bên trái, cạnh trang bên phải và phía dưới bằng các lớp bóng; nghiêng nhẹ và dựng thẳng khi rê chuột vào thẻ (.group). */
+.book3d {
+  perspective: 800px;
+  padding: 0 8px 10px 0;
+}
+.book3d-body {
+  position: relative;
+  background: #2f4a14;
+  transform: rotateY(-9deg);
+  transform-origin: 25% 50%;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow:
+    1px 0 0 #cfc9b8,
+    2px 0 0 #fbfaf4,
+    3px 0 0 #cfc9b8,
+    4px 0 0 #fbfaf4,
+    5px 1px 0 #bdb7a4,
+    0 1px 0 #cfc9b8,
+    1px 2px 0 #fbfaf4,
+    2px 3px 0 #bdb7a4,
+    10px 14px 18px -8px rgb(20 30 10 / 0.55);
+}
+.book3d-body > img {
+  aspect-ratio: 190 / 260;
+}
+.book3d-spine {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 7%;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgb(0 0 0 / 0.3), rgb(255 255 255 / 0.16) 42%, rgb(0 0 0 / 0.1) 78%, transparent);
+}
+.book3d-body::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, rgb(255 255 255 / 0.2) 0%, transparent 38%);
+}
+:is(.group:hover, .book3d:hover) .book3d-body {
+  transform: rotateY(-3deg) translateY(-3px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .book3d-body {
+    transition: none;
+  }
+}

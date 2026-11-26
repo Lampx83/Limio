@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ArrowUpRight, X } from "lucide-react";
+import BookCover from "@/components/BookCover";
 import { PriceBlock } from "@/components/PriceTag";
 import type { HskBook } from "@/lib/space/hskBundles";
 import type { SpaceLang } from "@/lib/space/types";
@@ -160,14 +161,11 @@ export default function HskLevelPopup({
                 prefetch={false}
                 className="group flex h-full flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-card transition-all hover:-translate-y-1 hover:shadow-card-hover"
               >
-                {b.coverUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={b.coverUrl} alt={b.title} loading="lazy" className="aspect-[190/260] w-full rounded-lg object-cover ring-1 ring-slate-200" />
-                ) : (
-                  <span className="flex aspect-[190/260] w-full items-center justify-center rounded-lg bg-[var(--sp-soft)] text-3xl font-extrabold text-[color:var(--sp)]">
-                    {b.book}
-                  </span>
-                )}
+                <BookCover
+                  src={b.coverUrl}
+                  alt={b.title}
+                  fallback={<span className="text-3xl font-extrabold text-[color:var(--sp)]">{b.book}</span>}
+                />
                 <span className="min-w-0">
                   <span className="block text-sm font-bold leading-snug text-slate-900">{t.book(b.book)}</span>
                   <span className="block text-xs text-slate-500">{t.lessons(b.lessonCount)}</span>

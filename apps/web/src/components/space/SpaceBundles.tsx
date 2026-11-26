@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import type { BundleView } from "@feedbackme/core-lms";
+import BookCover from "@/components/BookCover";
 import { PriceBlock } from "@/components/PriceTag";
 import { formatPrice } from "@/lib/formatPrice";
 import { bundleDurationText } from "@/lib/space/hskBundles";
@@ -63,19 +64,11 @@ function BundleCard({ bundle, lang, rounded }: { bundle: BundleView; lang: Space
           <ul className="mt-5 grid max-w-xl grid-cols-5 gap-2 sm:gap-3" aria-label={t.books(bundle.courses.length)}>
             {bundle.courses.slice(0, 10).map((c, i) => (
               <li key={c.id} className="min-w-0">
-                {c.coverUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={c.coverUrl}
-                    alt={c.title}
-                    loading="lazy"
-                    className="aspect-[190/260] w-full rounded-lg object-cover shadow-card ring-1 ring-slate-200"
-                  />
-                ) : (
-                  <span className="flex aspect-[190/260] w-full items-center justify-center rounded-lg bg-[var(--sp-soft)] text-lg font-extrabold text-[color:var(--sp)]">
-                    {i + 1}
-                  </span>
-                )}
+                <BookCover
+                  src={c.coverUrl}
+                  alt={c.title}
+                  fallback={<span className="text-lg font-extrabold text-[color:var(--sp)]">{i + 1}</span>}
+                />
               </li>
             ))}
           </ul>
