@@ -6,14 +6,26 @@
  * BẬT tính năng gì" (ranh giới governance/thương mại tương lai) — 2 trục độc
  * lập cùng tồn tại song song.
  *
- * Resolution: UserFeatureOverride (còn hạn) > RoleFeatureOverride > default.
+ * Resolution: UserFeatureOverride (còn hạn) > gói tài khoản > RoleFeatureOverride
+ * > default.
+ *
+ * Tầng gói (docs/tieu-chi/goi-tai-khoan.md §5.2, plans/subscriptions.ts) chỉ
+ * chạy khi PLANS_ENABLED bật, khoá được hỏi có `sellable = true` và người dùng
+ * là người giảng dạy (admin nền tảng và học viên không đi qua). Với khoá đó,
+ * giá trị gộp của các gói hiệu lực thay cho vai trò và mặc định; khoá vắng mặt
+ * ở mọi gói thì rơi tiếp xuống vai trò rồi mặc định. Lần kiểm chỉ hỏi khoá
+ * không sellable (phần lớn) không thêm truy vấn nào.
+ *
  * Multi-role xung đột trên cùng key: OR cho boolean, MAX cho int, UNION cho
  * string_array — "role nào cho phép nhiều hơn thì thắng", nhất quán với
  * isInstructor()-style check hiện có (có bất kỳ scope nào của role đó là đủ).
+ * Các gói gộp theo cùng quy tắc.
  */
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { logAudit } from "./audit";
 import { mergeValues, type FeatureValue } from "../plans/entitlements";
+import { plansEnabled } from "../plans/config";
+import { planEntitlementsWithFlags } from "../plans/subscriptions";
 
 export type { FeatureValue };
 
@@ -50,7 +62,7 @@ async function getUserRoleIds(userId: string, db: PrismaClient): Promise<string[
 /**
  * Resolve nhiều feature key cùng lúc cho 1 user — dùng khi cần check nhiều
  * key (vd trang tổng hợp quyền của 1 user). Tối đa 4 query cố định, không
- * N+1 theo số key.
+ * N+1 theo số key; cộng thêm 2–4 query của tầng gói khi có khoá sellable.
  */
 export async function resolveFeatures(
   userId: string,
@@ -71,12 +83,26 @@ export async function resolveFeatures(
     throw new FeatureFlagError("unknown_key", { keys: missing });
   }
 
-  const roleOverrides =
+  const activeUserOverride = (key: string) =>
+    userOverrides.find(
+      (o) => o.featureKey === key && (o.expiresAt === null || o.expiresAt > now),
+    );
+  // Tầng gói: một lần cho cả lô, chỉ khi có thể ảnh hưởng kết quả (khoá
+  // sellable chưa bị cấp riêng còn hạn che mất).
+  const planFlags = plansEnabled()
+    ? flags.filter((f) => f.sellable && !activeUserOverride(f.key))
+    : [];
+
+  const [roleOverrides, planValues] = await Promise.all([
     roleIds.length > 0
-      ? await db.roleFeatureOverride.findMany({
+      ? db.roleFeatureOverride.findMany({
           where: { roleId: { in: roleIds }, featureKey: { in: keys } },
         })
-      : [];
+      : Promise.resolve([]),
+    planFlags.length > 0
+      ? planEntitlementsWithFlags(userId, now, db, planFlags)
+      : Promise.resolve(null),
+  ]);
 
   const userOverrideByKey = new Map(userOverrides.map((o) => [o.featureKey, o]));
   const roleOverridesByKey = new Map<string, typeof roleOverrides>();
@@ -91,6 +117,11 @@ export async function resolveFeatures(
     const userOverride = userOverrideByKey.get(flag.key);
     if (userOverride && (userOverride.expiresAt === null || userOverride.expiresAt > now)) {
       result[flag.key] = jsonToFeatureValue(userOverride.value);
+      continue;
+    }
+
+    if (flag.sellable && planValues && Object.prototype.hasOwnProperty.call(planValues, flag.key)) {
+      result[flag.key] = planValues[flag.key] as FeatureValue;
       continue;
     }
 

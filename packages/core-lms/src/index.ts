@@ -33,4 +33,5 @@ export * from "./portfolio/index";
 export * from "./vandap/index";
 export * from "./certification/index";
 export * from "./storage/index";
+export * from "./plans";
 export * from "./narration/index";
