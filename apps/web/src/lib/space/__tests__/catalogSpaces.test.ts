@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
+const { setting } = vi.hoisted(() => ({ setting: { value: null as string | null } }));
+vi.mock("@/lib/site-settings", () => ({ getSiteSetting: vi.fn(async () => setting.value) }));
+
 vi.mock("@feedbackme/db", () => ({
   prisma: {
     course: {
@@ -44,6 +47,22 @@ describe("getCatalogSpaces", () => {
     const hsk = (await getCatalogSpaces()).find((s) => s.slug === "hsk")!;
     // Cấp 1 (khoá c) có bìa; cấp 2 có quyển 1 (có bìa) và quyển 2 (không bìa → bỏ).
     expect(hsk.previews.map((p) => p.slug)).toEqual(["c", "hsk-2-quyen-1"]);
+  });
+});
+
+describe("getCatalogSpaces — admin chọn space", () => {
+  it("chọn tay: chỉ các space đã chọn, đúng thứ tự admin đặt; slug không còn bật bị bỏ", async () => {
+    setting.value = JSON.stringify(["zeta", "khong-con", "hsk"]);
+    const out = await getCatalogSpaces();
+    expect(out.map((s) => s.slug)).toEqual(["zeta", "hsk"]);
+    setting.value = null;
+  });
+  it("chọn tay mảng rỗng: ẩn cả mục; dữ liệu hỏng coi như tự động", async () => {
+    setting.value = "[]";
+    expect(await getCatalogSpaces()).toEqual([]);
+    setting.value = "{khong phai json";
+    expect((await getCatalogSpaces()).map((s) => s.name)).toEqual(["Alpha", "Zeta"]);
+    setting.value = null;
   });
 });
 

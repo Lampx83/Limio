@@ -1,6 +1,8 @@
 import { prisma } from "@feedbackme/db";
 import { listSpaces, spaceHomePath } from "./resolve";
 import { getHskBooksByLevel, type HskBook } from "./hskBundles";
+import { getSiteSetting } from "@/lib/site-settings";
+import { CATALOG_SPACES_KEY, applyCatalogSpaceSelection, parseCatalogSpacesSetting } from "./catalogSpaceConfig";
 
 /** Một khoá để xem trước trong thẻ space ở /catalog. */
 export interface SpacePreviewCourse {
@@ -80,7 +82,10 @@ export function pickSpacePreviews(
  */
 export async function getCatalogSpaces(): Promise<CatalogSpaceCard[]> {
   try {
-    const spaces = await listSpaces();
+    const [allSpaces, rawSelection] = await Promise.all([listSpaces(), getSiteSetting(CATALOG_SPACES_KEY).catch(() => null)]);
+    // Admin chọn tay space nào hiện (và thứ tự); chưa chọn thì hiện mọi space đang bật.
+    const selection = parseCatalogSpacesSetting(rawSelection);
+    const spaces = selection === null ? allSpaces : applyCatalogSpaceSelection(allSpaces, selection);
     if (spaces.length === 0) return [];
     const slugs = Array.from(new Set(spaces.flatMap((s) => s.courses.map((c) => c.slug))));
     const dbRows = slugs.length
@@ -128,7 +133,17 @@ export async function getCatalogSpaces(): Promise<CatalogSpaceCard[]> {
           booksByLevel,
         ),
       }))
-      .sort((a, b) => a.name.localeCompare(b.name, "vi"));
+      // Tự động: xếp theo tên. Chọn tay: giữ đúng thứ tự admin đã đặt.
+      .sort((a, b) => (selection === null ? a.name.localeCompare(b.name, "vi") : 0));
+  } catch {
+    return [];
+  }
+}
+
+/** Mọi space đang bật (cho trang admin chọn space hiện ở /catalog). */
+export async function listCatalogSpaceChoices(): Promise<Array<{ slug: string; name: string }>> {
+  try {
+    return (await listSpaces()).map((s) => ({ slug: s.slug, name: s.name })).sort((a, b) => a.name.localeCompare(b.name, "vi"));
   } catch {
     return [];
   }

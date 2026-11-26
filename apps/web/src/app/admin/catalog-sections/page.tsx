@@ -3,6 +3,10 @@ import { redirect } from "next/navigation";
 import { isAdmin, listCatalogSectionsForAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import CatalogSectionsManager from "./CatalogSectionsManager";
+import CatalogSpacesManager from "./CatalogSpacesManager";
+import { getSiteSetting } from "@/lib/site-settings";
+import { listCatalogSpaceChoices } from "@/lib/space/catalogSpaces";
+import { CATALOG_SPACES_KEY, parseCatalogSpacesSetting } from "@/lib/space/catalogSpaceConfig";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +24,8 @@ export default async function CatalogSectionsAdminPage() {
   }
 
   const sections = await listCatalogSectionsForAdmin(session.user.id);
+  const [spaceChoices, rawSpaces] = await Promise.all([listCatalogSpaceChoices(), getSiteSetting(CATALOG_SPACES_KEY)]);
+  const spaceSelection = parseCatalogSpacesSetting(rawSpaces);
 
   return (
     <main>
@@ -38,6 +44,10 @@ export default async function CatalogSectionsAdminPage() {
           mặc định (khi chưa lọc/tìm kiếm). Section &quot;Tự động&quot; luôn lấy khoá học publish
           gần nhất, không cần chọn tay.
         </p>
+      </div>
+
+      <div className="mt-8">
+        <CatalogSpacesManager initialMode={spaceSelection === null ? "auto" : "manual"} initialSlugs={spaceSelection ?? []} choices={spaceChoices} />
       </div>
 
       <div className="mt-8">
