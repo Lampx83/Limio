@@ -186,6 +186,8 @@ export default async function CatalogPage({
           title={t("catalog.spaces.title")}
           sub={t("catalog.spaces.sub")}
           openLabel={(n) => t("catalog.spaces.open", { n })}
+          viewAllLabel={t("catalog.spaces.viewAll")}
+          freeLabel={t("catalog.free")}
         />
       )}
 

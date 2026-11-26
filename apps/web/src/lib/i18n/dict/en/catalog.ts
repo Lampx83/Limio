@@ -122,6 +122,7 @@ export const enCatalog: PartialDict<typeof viCatalog> = {
   "catalog.list.title": "Explore courses",
   "catalog.spaces.title": "Learning spaces",
   "catalog.spaces.sub": "Dedicated pages that group courses by school or project.",
+  "catalog.spaces.viewAll": "View all",
   "catalog.spaces.open": "{n} courses open",
   "catalog.list.metaDescription":
     "Browse every open course on Limio — filter by category, level and language. Free and paid courses, with personalized feedback based on your skills.",

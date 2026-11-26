@@ -125,6 +125,7 @@ export const viCatalog = {
   "catalog.list.title": "Khám phá khoá học",
   "catalog.spaces.title": "Không gian học liệu",
   "catalog.spaces.sub": "Các trang riêng gom khoá học theo trường hoặc dự án.",
+  "catalog.spaces.viewAll": "Xem tất cả",
   "catalog.spaces.open": "{n} khoá đang mở",
   "catalog.list.metaDescription":
     "Duyệt toàn bộ khoá học đang mở trên Limio — lọc theo danh mục, cấp độ và ngôn ngữ. Khoá miễn phí lẫn có phí, kèm phản hồi cá nhân hoá theo năng lực của bạn.",
