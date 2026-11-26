@@ -22,7 +22,7 @@ Chế độ chiếu lớp **đọc nội dung bài tại lúc mở**, nên bài 
 
 Mỗi bài khoá sinh các màn theo thứ tự sau. Phần nào bài không có thì bỏ màn đó, không để màn trống.
 
-- **A1. Mở bài:** tên bài, mục tiêu.
+- **A1. Mở bài:** tên bài, mục tiêu. **Cấp độ "Limio HSK N"** (thầy yêu cầu 26/11) hiện ở đầu thanh trên (viên lime, rê chuột thấy tên khoá) và trên bìa. N lấy từ tên khoá (`limioHskLabel`): "… HSK 3.0 — Cấp 4 …" → 4 (3.0 là phiên bản chuẩn, không phải cấp), "Limio HSK4 …" → 4. Không nhận ra thì không hiện viên và bìa hiện tên khoá như trước. **Số chủ đề** (thầy yêu cầu 26/11) đi kèm: viên và dòng trên bìa ghi "Limio HSK 4 · Chủ đề 1"; dòng nhỏ dưới tên bài và dòng phụ của thanh trên ghi tên đầy đủ của chủ đề ("Chủ đề 1 · 搬进新家 — Dọn về nhà mới"). Số lấy từ tên module (`unitNumberLabel`: "Chủ đề N", "Unit N"); không có số thì chỉ hiện cấp độ.
 - **A2. Tình huống:** đoạn tình huống và câu tóm tắt tiếng Trung, kèm ảnh nếu có.
 - **A3. Hội thoại** (mỗi hội thoại A, B…): một màn nghe cả đoạn, rồi mỗi lượt một màn. Mỗi lượt hiện chữ Hán lớn có pinyin dưới chữ, bản dịch tiếng Việt, nút nghe lượt đó.
 - **A4. Từ mới:** mỗi từ một **thẻ lật** giống tab Từ vựng của bài học (thầy yêu cầu 26/11): mặt trước chữ Hán lớn có pinyin dưới chữ; bấm vào thẻ (hoặc Enter, mũi tên lên/xuống) để lật sang mặt sau gồm pinyin, loại từ và nghĩa, câu ví dụ có pinyin và dịch, ghi chú dễ nhầm. Phía trên thẻ có nút "Nghe từ", "Nghe câu" (nếu có âm thanh) và **"Cách viết"** mở hộp thứ tự nét của bài học ("Xem nét", "Tập viết"), kèm pinyin, nghĩa và ví dụ của từ. Esc đóng hộp, chưa thoát bài. Sang từ khác thì thẻ về mặt trước.

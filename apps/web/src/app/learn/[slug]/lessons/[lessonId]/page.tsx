@@ -780,7 +780,10 @@ export default async function LessonPage({
   // (`lessonFrameApplies`). Công tắc `lesson_frame.all_courses` = "false" thì chỉ còn khoá ngoại ngữ. Tính năng riêng của ngoại ngữ
   // (đánh số lời thoại, tab Từ vựng) vẫn theo khoá `languageMode` (`languageSkin`).
   const languageMode = lesson.module.course.languageMode;
+  // Người dạy khoá ngoại ngữ thấy sẵn khung bài học như học viên (thầy chốt 26/11/2026); `?preview=0` trả về giao diện giảng viên cũ.
+  const teacherFrame = !!canEdit && languageMode && !previewMode && !teacherMode && !stageMode && searchParams?.preview !== "0";
   const frameOn = lessonFrameApplies({
+    teacherFrame,
     languageMode,
     allCoursesEnabled: isLessonFrameAllCoursesEnabled(await getSiteSetting(LESSON_FRAME_ALL_COURSES_KEY)),
     enrolled: !!enrolled,
@@ -817,7 +820,8 @@ export default async function LessonPage({
   // Dữ liệu nhúng của từng khối: tên tab theo số exercise lấy từ nhãn các đoạn, và khối gom nhiều exercise được tách thành từng tab.
   const practiceEmbeds = new Map<string, { embed: PracticeEmbed; preview: boolean; title?: string }>();
   const practiceForLearner = enrolled && !previewMode && !stageMode && !teacherMode;
-  const practiceForPreview = previewMode && !stageMode && !!userId;
+  // Khung của người dạy (chưa ghi danh) dùng bản xem trước của Bài luyện: không tạo buổi luyện, không ghi gì.
+  const practiceForPreview = (previewMode || (teacherFrame && !!lessonFrame)) && !stageMode && !!userId;
   if (practiceForLearner || practiceForPreview) {
     // Nội dung Bài luyện nằm trong đề ẩn của chính khối (Exam.ownerContentItemId); khối chưa có câu nào thì học viên không thấy.
     const practiceItems = shownItems.filter((it) => it.type === "exam_practice");
@@ -1063,7 +1067,7 @@ export default async function LessonPage({
         const card = cards.find((c) => c.examId === examId);
         if (card) examRefBlocks[it.id] = <ExamRefLearnerBlock slug={params.slug} exam={card} title={title} lang={lang} />;
       }
-    } else if (previewMode) {
+    } else if (previewMode || (teacherFrame && !!lessonFrame)) {
       const states = await getExamRefStates(courseId, examRefItems.map((it) => refOf(it).examId ?? null));
       for (const it of examRefItems) {
         const { examId, title } = refOf(it);
@@ -1200,13 +1204,16 @@ export default async function LessonPage({
                   <NarrationButton durationSec={narrations.lecture.durationSec} inviteCourseSlug={lecturerChoice?.mode === "HIEN" ? params.slug : undefined} userId={userId ?? null} />
                 )}
                 {narrations.podcast && <PodcastButton durationSec={narrations.podcast.durationSec} title={narrations.podcast.title} />}
+                {/* Màu hồng Limio để hợp tông khung HSK và khác nút Nghe giảng (lime), không dùng xanh dương của nút Slide Limio-Live. */}
                 {/* Khoá ngoại ngữ: "Slide" của người dạy chính là Chiếu lớp (slide tự dựng từ nội dung bài, có pinyin và giọng đọc), nên thay nút Slide Limio-Live bằng một nút duy nhất, không để hai nút cùng tên gọi. */}
                 {canTeach ? (
                   <Link
                     href={`/learn/${params.slug}/lessons/${params.lessonId}/day`}
-                    className="btn-listen btn-listen-slide"
+                    className="btn-listen"
+                    // Hồng Limio (cùng hồng với tiêu đề ngữ pháp/chữ tô nổi của bài HSK): ghi đè các biến màu của .btn-listen ngay trên nút, kèm viền hồng.
+                    style={{ "--l-bg": "#fce7f3", "--l-bg-hover": "#fbcfe8", "--l-fg": "#831843", "--l-solid": "#be185d", border: "1.5px solid #ec4899" } as React.CSSProperties}
                     data-testid="teach-mode-link"
-                    title="Slide của bài: tự dựng từ nội dung bài, có pinyin, giọng đọc, bút laser và bút vẽ"
+                    title="Chỉ hiện với tài khoản GV"
                   >
                     <span className="listen-icon">
                       <MonitorPlay size={18} aria-hidden />

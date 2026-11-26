@@ -119,3 +119,12 @@
 
 - Khoá có ảnh bìa (`Course.coverUrl`, giảng viên tải ở "Thông tin sách") thì đầu thanh bên, chỗ "← Về khoá học", hiện **bìa nhỏ**, liên kết "← Về khoá học" nằm **dưới bìa**, một dòng (chỉ bìa, **không ghi tên sách**: thầy 11/11/2026); bấm bìa hay chữ đều về trang khoá. Khoá chưa có bìa: chỉ còn liên kết "← Về khoá học" như cũ (không ô trống, không ảnh vỡ). Ảnh trang trí nên alt rỗng. Xem thử của giảng viên giữ `preview=1`.
 - Cách làm: `RailCourseHeader` (`LessonFrame.tsx`), `LessonFrameLayout` nhận thêm `coverUrl`, trang bài lấy từ `Course.coverUrl`. Test: `LessonFrame.test.tsx` (có bìa, không bìa, preview, qua khung).
+
+## Người dạy khoá ngoại ngữ thấy sẵn khung bài học (thầy chốt 26/11/2026)
+
+Trước đây chỉ học viên đã ghi danh, hoặc giảng viên bấm "xem như học viên" (`?preview=1`), mới thấy khung 3 cột; chủ khoá và đồng giảng viên vào bài thì thấy giao diện giảng viên cũ nên "nhìn như khoá bình thường". Nay **người dạy (sửa được khoá) mở bài của khoá `languageMode` mà không chọn chế độ nào thì thấy sẵn khung bài học như học viên** (`lessonFrameApplies` nhận thêm `teacherFrame`):
+
+- Vẫn giữ nút của giảng viên: "Slide" (mở Chiếu lớp), "Về soạn nội dung", ghi chú giảng viên.
+- Bài luyện trong bài dùng bản xem trước của giảng viên (không tạo buổi luyện, không ghi gì).
+- Muốn giao diện giảng viên cũ: thêm `?preview=0`. `?gv=1` (giảng viên đứng lớp), `?stage=1` (màn chiếu cũ) và bài có bài giảng slide vẫn dùng giao diện cũ.
+- Khoá không phải ngoại ngữ không đổi.

@@ -128,3 +128,21 @@ describe("isLearnerInCourse", () => {
     expect(isLearnerInCourse({ activeRoleIsLearner: false, enrolled: false, canEdit: false })).toBe(false);
   });
 });
+
+describe("lessonFrameApplies: người dạy khoá ngoại ngữ thấy sẵn khung (teacherFrame)", () => {
+  const base = { languageMode: true, allCoursesEnabled: false, enrolled: false, learnerRole: false, previewMode: false, stageMode: false, teacherMode: false, hasDeckCover: false };
+  it("bật khung cho khoá ngoại ngữ dù chưa ghi danh", () => {
+    expect(lessonFrameApplies({ ...base, teacherFrame: true })).toBe(true);
+  });
+  it("không bật cho khoá không phải ngoại ngữ (kể cả khi công tắc mọi khoá tắt)", () => {
+    expect(lessonFrameApplies({ ...base, languageMode: false, teacherFrame: true })).toBe(false);
+  });
+  it("giảng viên đứng lớp (?gv=1), màn chiếu cũ và bài có bài giảng slide vẫn giữ giao diện cũ", () => {
+    expect(lessonFrameApplies({ ...base, teacherFrame: true, teacherMode: true })).toBe(false);
+    expect(lessonFrameApplies({ ...base, teacherFrame: true, stageMode: true })).toBe(false);
+    expect(lessonFrameApplies({ ...base, teacherFrame: true, hasDeckCover: true })).toBe(false);
+  });
+  it("không có cờ thì người dạy chưa ghi danh vẫn thấy giao diện cũ như trước", () => {
+    expect(lessonFrameApplies({ ...base })).toBe(false);
+  });
+});

@@ -121,11 +121,20 @@ export default function TeachingDeck({
   frames,
   lessonTitle,
   courseTitle,
+  levelLabel,
+  unitTitle,
+  unitLabel,
   backHref,
 }: {
   frames: TeachingFrame[];
   lessonTitle: string;
   courseTitle: string;
+  /** Tên đầy đủ của chủ đề (module) chứa bài, vd. "Chủ đề 1 · 搬进新家 — Dọn về nhà mới". */
+  unitTitle?: string;
+  /** Số chủ đề, vd. "Chủ đề 1" (rút từ tên module); null = không rút được. */
+  unitLabel?: string | null;
+  /** Cấp độ hiện trên màn chiếu, vd. "Limio HSK 4" (rút từ tên khoá); null = chỉ hiện tên khoá. */
+  levelLabel?: string | null;
   backHref: string;
 }) {
   const [idx, setIdx] = useState(0);
@@ -456,9 +465,14 @@ export default function TeachingDeck({
         <Link href={backHref} className="teach-btn" aria-label="Thoát về bài học" title="Thoát (Esc)">
           <X className="h-5 w-5" />
         </Link>
+        {levelLabel || unitLabel ? (
+          <span className="teach-level" title={`${courseTitle}${unitTitle ? ` · ${unitTitle}` : ""}`}>
+            {[levelLabel, unitLabel].filter(Boolean).join(" · ")}
+          </span>
+        ) : null}
         <div className="teach-title">
           <span className="teach-title-main">{lessonTitle}</span>
-          <span className="teach-title-sub">{courseTitle}</span>
+          <span className="teach-title-sub">{unitTitle ?? courseTitle}</span>
         </div>
         <div className="teach-bar-actions">
           {/* Nhóm 1: hiện/ẩn chữ trong lớp (dùng nhiều nhất) */}
@@ -549,6 +563,9 @@ export default function TeachingDeck({
           frame={frame}
           lessonTitle={lessonTitle}
           courseTitle={courseTitle}
+          levelLabel={levelLabel ?? null}
+          unitTitle={unitTitle ?? null}
+          unitLabel={unitLabel ?? null}
           playing={playing}
           play={play}
           lit={lit}
@@ -667,6 +684,9 @@ function FrameView({
   frame,
   lessonTitle,
   courseTitle,
+  levelLabel,
+  unitTitle,
+  unitLabel,
   playing,
   play,
   lit,
@@ -679,6 +699,9 @@ function FrameView({
   frame: TeachingFrame;
   lessonTitle: string;
   courseTitle: string;
+  levelLabel: string | null;
+  unitTitle: string | null;
+  unitLabel: string | null;
   playing: string | null;
   play: PlayFn;
   lit: Lit;
@@ -698,8 +721,9 @@ function FrameView({
               {watermark}
             </span>
           ) : null}
-          <p className="teach-cover-kicker">{courseTitle}</p>
+          <p className="teach-cover-kicker">{[levelLabel, unitLabel].filter(Boolean).join(" · ") || courseTitle}</p>
           <h1 className="teach-cover-title">{lessonTitle}</h1>
+          {levelLabel || unitLabel ? <p className="teach-cover-course">{[unitTitle, courseTitle].filter(Boolean).join(" · ")}</p> : null}
           <p className="teach-cover-hint">Bấm → hoặc phím cách để bắt đầu</p>
         </div>
       );

@@ -26,6 +26,11 @@ export interface LessonFrameInput {
   teacherMode: boolean;
   /** Bài có bài giảng slide (bố cục riêng toàn màn hình): ngoại lệ ở đợt này. */
   hasDeckCover: boolean;
+  /**
+   * Người dạy (sửa được khoá) mở bài của khoá NGOẠI NGỮ mà không chọn chế độ nào: thấy sẵn khung bài học như học viên (thầy chốt 26/11/2026), vẫn giữ
+   * các nút của giảng viên. Muốn giao diện giảng viên cũ thì thêm `?preview=0`.
+   */
+  teacherFrame?: boolean;
 }
 
 /**
@@ -43,6 +48,7 @@ export function isLearnerInCourse(i: { activeRoleIsLearner: boolean; enrolled: b
  */
 export function lessonFrameApplies(i: LessonFrameInput): boolean {
   if (i.stageMode || i.teacherMode || i.hasDeckCover) return false;
+  if (i.teacherFrame) return i.languageMode;
   if (i.previewMode) return i.languageMode || i.allCoursesEnabled;
   if (!i.enrolled || !i.learnerRole) return false;
   return i.languageMode || i.allCoursesEnabled;

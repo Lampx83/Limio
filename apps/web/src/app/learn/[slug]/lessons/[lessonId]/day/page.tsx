@@ -5,6 +5,7 @@ import { canGradeCourse, getPracticeBlockSummaries, getPracticeForTeaching, Exam
 import { auth } from "@/lib/auth";
 import { buildTeachingFrames, type TeachingPracticeInput } from "@/lib/teachingFrames";
 import TeachingDeck from "@/components/lesson/TeachingDeck";
+import { limioHskLabel, unitNumberLabel } from "@/lib/hskLevelLabel";
 
 /**
  * "Chiếu lớp" của một bài học HSK (docs/tieu-chi/hsk-che-do-chieu-lop.md): các màn dựng thẳng từ nội dung bài lúc mở, không lưu bản sao.
@@ -63,5 +64,5 @@ export default async function TeachPage({ params }: Props) {
     practices,
   });
 
-  return <TeachingDeck frames={frames} lessonTitle={lesson.title} courseTitle={lesson.module.course.title} backHref={back} />;
+  return <TeachingDeck frames={frames} lessonTitle={lesson.title} courseTitle={lesson.module.course.title} levelLabel={limioHskLabel(lesson.module.course.title)} unitTitle={lesson.module.title} unitLabel={unitNumberLabel(lesson.module.title)} backHref={back} />;
 }

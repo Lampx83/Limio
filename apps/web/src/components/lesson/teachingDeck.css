@@ -1183,3 +1183,29 @@
   vertical-align: baseline;
   margin-block: 0;
 }
+
+/* Cấp độ Limio HSK: viên lime đặc ở đầu thanh trên và trên bìa. */
+.teach-level {
+  flex: none;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  background: var(--chrome);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.teach-root[data-theme="board"] .teach-level {
+  color: #14261f;
+}
+.teach-cover-kicker {
+  font-size: 0.95em;
+  letter-spacing: 0.08em;
+}
+.teach-cover-course {
+  position: relative;
+  margin-top: 1rem;
+  font-size: 0.7em;
+  color: rgb(var(--text) / 0.7);
+}
