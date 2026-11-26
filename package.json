@@ -23,6 +23,7 @@
     "backfill:sso-org": "pnpm --filter @feedbackme/core-lms backfill:sso-org",
     "backfill:lesson-tags": "pnpm --filter @feedbackme/core-lms backfill:lesson-tags",
     "backfill:plan-trials": "pnpm --filter @feedbackme/core-lms backfill:plan-trials",
+    "backfill:plan-trials:prod": "pnpm --filter @feedbackme/core-lms backfill:plan-trials:prod",
     "backfill:stored-files": "pnpm --filter @feedbackme/core-lms backfill:stored-files",
     "storage:orphans": "pnpm --filter @feedbackme/core-lms storage:orphans",
     "backfill:feedback-coding": "pnpm --filter @feedbackme/core-feedback backfill:feedback-coding",

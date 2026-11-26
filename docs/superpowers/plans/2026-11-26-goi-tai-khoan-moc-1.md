@@ -433,4 +433,11 @@ Expected: không lỗi kiểu; mọi test xanh (kể cả `ownedPracticeExcluded
 
 Hoãn sang mốc 2 có chủ ý: đệm Redis cho tầng gói (mốc 1 chỉ thêm một truy vấn mỗi lần tra, chưa có chỗ đếm nóng), danh sách "ai vượt mức Pro/Khoa" trên `/admin/plans` (cần sự kiện `plan.limit.reached` do các điểm kiểm của mốc 2 phát ra), và việc gắn `ai.tokens.monthly_override` vào ví token.
 
-Lên prod: deploy → `PLANS_ENABLED=1` trong `/etc/feedbackme/.env.prod` → `$COMPOSE up -d web` → chạy `backfill:plan-trials` (thử) → đọc danh sách override → chạy `--apply`. Từ lúc này tài khoản giảng viên **mới** ở gói Free nhưng chưa có điểm kiểm hạn mức nào (mốc 2), nên thực tế chưa ai bị chặn, trừ các boolean Free tắt (`center.access`).
+Lên prod, đúng thứ tự:
+
+1. Deploy. Log migrator của bước seed gói phải báo `created 9 of 9` (hoặc `created 0 of 9` khi deploy lại), không có dòng WARN.
+2. Trên prod chạy thử: `PLANS_ENABLED=1 pnpm backfill:plan-trials:prod` (mặc định dry-run, không ghi). Đọc danh sách override theo vai trò của khoá `sellable`.
+3. Cùng lệnh với `--apply`.
+4. Chỉ sau đó mới đặt `PLANS_ENABLED=1` trong `/etc/feedbackme/.env.prod` rồi `$COMPOSE up -d web worker`.
+
+Danh mục gói đóng băng ở lần deploy đầu (seed dùng `update: {}`): đổi giá trị về sau đi qua `/admin/plans`. Từ lúc bật, tài khoản giảng viên **mới** ở gói Free nhưng chưa có điểm kiểm hạn mức nào (mốc 2), nên thực tế chưa ai bị chặn, trừ các boolean Free tắt (`center.access`).
