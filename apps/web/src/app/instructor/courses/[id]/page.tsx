@@ -297,14 +297,14 @@ export default async function InstructorCourseEditPage({
                 còn nguyên. */}
             {presentLessonId && (
               <Link
-                href={`/learn/${course.slug}/lessons/${presentLessonId}?gv=1`}
+                href={course.languageMode ? `/learn/${course.slug}/lessons/${presentLessonId}/day` : `/learn/${course.slug}/lessons/${presentLessonId}?gv=1`}
                 target="_blank"
                 rel="noopener"
                 className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
                 title="Sử dụng để trình chiếu học liệu này trực tiếp tại lớp"
               >
                 <Presentation className="h-4 w-4" aria-hidden />
-                Chế độ đứng lớp
+                {course.languageMode ? "Chiếu lớp" : "Chế độ đứng lớp"}
               </Link>
             )}
         </div>

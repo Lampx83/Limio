@@ -1209,3 +1209,127 @@
   font-size: 0.7em;
   color: rgb(var(--text) / 0.7);
 }
+
+/* ---------- đồng hồ và ghi chú giảng viên ---------- */
+.teach-timer {
+  gap: 0.4rem;
+  font-variant-numeric: tabular-nums;
+}
+.teach-timer[data-paused="true"] {
+  opacity: 0.6;
+}
+.teach-dot {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: rgb(var(--hl));
+}
+.teach-btn {
+  position: relative;
+}
+/* Màn giảng viên (cửa sổ riêng, không lên máy chiếu): ghi chú, đồng hồ, màn kế tiếp. Trang này nằm ngoài .teach-root nên dùng token toàn cục. */
+.teach-presenter {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 1.25rem 1.25rem;
+  background: rgb(var(--bg, 250 250 247));
+  color: rgb(var(--text, 30 30 30));
+}
+.teach-presenter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.teach-presenter-kicker {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgb(190 24 93);
+}
+.teach-presenter-now,
+.teach-presenter-next {
+  border: 1px solid rgb(0 0 0 / 0.12);
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+  background: rgb(var(--surface, 255 255 255));
+}
+.teach-presenter-now {
+  flex: 1;
+  overflow-y: auto;
+}
+.teach-presenter-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+.teach-presenter-notes {
+  margin: 0;
+  padding-left: 1.4rem;
+  list-style: disc;
+  font-size: 1.35rem;
+  line-height: 1.55;
+}
+.teach-presenter-notes li + li {
+  margin-top: 0.6rem;
+}
+.teach-presenter-empty {
+  margin: 0;
+  font-size: 1.05rem;
+  color: rgb(0 0 0 / 0.55);
+}
+.teach-presenter-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.teach-presenter-nav .teach-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid rgb(0 0 0 / 0.18);
+  border-radius: 999px;
+  background: rgb(var(--surface, 255 255 255));
+  font-weight: 700;
+}
+.teach-presenter-nav .teach-btn:disabled {
+  opacity: 0.4;
+}
+.teach-presenter-jump {
+  flex: 1;
+  min-width: 0;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgb(0 0 0 / 0.18);
+  border-radius: 0.75rem;
+  background: rgb(var(--surface, 255 255 255));
+}
+.teach-presenter-link {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgb(0 0 0 / 0.6);
+}
+.teach-presenter-link[data-linked="true"] {
+  color: rgb(21 128 61);
+}
+.teach-presenter-bar .teach-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid rgb(0 0 0 / 0.18);
+  border-radius: 999px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}

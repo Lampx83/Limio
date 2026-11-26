@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Eraser, Eye, List, Maximize, Minimize, Pause, PenLine, Palette, Pencil, Target, Undo2, Volume2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eraser, Eye, List, Maximize, Minimize, Pause, PenLine, NotebookPen, Palette, Pencil, Target, Undo2, Volume2, X } from "lucide-react";
 import HanFontLoader from "@/components/HanFontLoader";
 import RubyText, { hanTextProps, rubyPlan } from "@/components/RubyText";
 import LessonRichText from "@/components/lesson/LessonRichText";
 import HanziStrokeDialog from "@/components/lesson/HanziStrokeDialog";
 import { hasHanChars } from "@/lib/hskVocab";
 import { splitHanWords } from "@/lib/keyTerms";
+import { teachSyncName, type TeachSyncMessage } from "./TeachingPresenter";
 import TeachingInk, { type InkHandle, type InkTool } from "@/components/lesson/TeachingInk";
 import { apiUrl } from "@/lib/apiUrl";
 import { frameAccent, frameHeading, frameSections, type PassageBlock, type TeachingFrame } from "@/lib/teachingFrames";
@@ -125,6 +126,7 @@ export default function TeachingDeck({
   unitTitle,
   unitLabel,
   backHref,
+  lessonId,
 }: {
   frames: TeachingFrame[];
   lessonTitle: string;
@@ -136,6 +138,8 @@ export default function TeachingDeck({
   /** Cấp độ hiện trên màn chiếu, vd. "Limio HSK 4" (rút từ tên khoá); null = chỉ hiện tên khoá. */
   levelLabel?: string | null;
   backHref: string;
+  /** Khoá đồng bộ với cửa sổ "Màn giảng viên" (ghi chú, đồng hồ, màn kế tiếp) đặt ở màn hình của thầy/cô. */
+  lessonId: string;
 }) {
   const [idx, setIdx] = useState(0);
   const [pinyin, setPinyin] = useState(true);
@@ -172,6 +176,8 @@ export default function TeachingDeck({
   const frame = frames[idx]!;
   const sections = useMemo(() => frameSections(frames), [frames]);
   const accent = frameAccent(frame);
+  const notesTotal = useMemo(() => frames.reduce((n, f) => n + (f.notes?.length ?? 0), 0), [frames]);
+  const frameHasNotes = (frame.notes?.length ?? 0) > 0;
 
   // ---- âm thanh: một nguồn một lúc; đổi màn thì dừng ----
   const stopAudio = useCallback(() => {
@@ -256,6 +262,32 @@ export default function TeachingDeck({
     },
     [total, stopAudio],
   );
+
+  // ---- đồng bộ với cửa sổ "Màn giảng viên" (BroadcastChannel cùng trình duyệt; không qua máy chủ) ----
+  const syncRef = useRef<BroadcastChannel | null>(null);
+  const idxRef = useRef(0);
+  idxRef.current = idx;
+  useEffect(() => {
+    if (typeof BroadcastChannel === "undefined") return;
+    const c = new BroadcastChannel(teachSyncName(lessonId));
+    syncRef.current = c;
+    c.onmessage = (e: MessageEvent<TeachSyncMessage>) => {
+      const m = e.data;
+      if (m?.type === "hello") c.postMessage({ type: "idx", idx: idxRef.current } satisfies TeachSyncMessage);
+      else if (m?.type === "goto" && Number.isInteger(m.idx)) go(m.idx);
+    };
+    return () => {
+      c.close();
+      syncRef.current = null;
+    };
+  }, [lessonId, go]);
+  useEffect(() => {
+    syncRef.current?.postMessage({ type: "idx", idx } satisfies TeachSyncMessage);
+  }, [idx]);
+  const openPresenter = useCallback(() => {
+    const url = `${window.location.pathname}?presenter=1`;
+    window.open(url, "limio-presenter", "popup=yes,width=1100,height=780");
+  }, []);
 
   // Cỡ chữ nhớ theo trình duyệt (tiện cho máy chiếu của phòng); chặn lưu trữ thì dùng cỡ vừa.
   useEffect(() => {
@@ -379,6 +411,10 @@ export default function TeachingDeck({
             setFlipped((v) => !v);
           }
           break;
+        case "n":
+        case "N":
+          openPresenter();
+          break;
         case "l":
         case "L":
           setTool((v) => (v === "laser" ? "none" : "laser"));
@@ -405,7 +441,7 @@ export default function TeachingDeck({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [idx, total, frame, go, reveal, toggleFull, menu, themeMenu, backHref, tool]);
+  }, [idx, total, frame, go, reveal, toggleFull, menu, themeMenu, backHref, tool, openPresenter]);
 
   // Màn dài hơn khung thì co chữ nhưng KHÔNG nhỏ hơn MIN_FIT (80%): quá mức đó thì giữ cỡ chữ và cho cuộn (thầy chốt 26/11). Chạy lại khi nội dung màn đổi
   // (bài viết dựng bằng SafeHtml xong muộn) hoặc đổi cỡ cửa sổ.
@@ -475,6 +511,22 @@ export default function TeachingDeck({
           <span className="teach-title-sub">{unitTitle ?? courseTitle}</span>
         </div>
         <div className="teach-bar-actions">
+          {/* Nhóm giảng viên: mở "Màn giảng viên" ở cửa sổ riêng (ghi chú + đồng hồ + màn kế tiếp). Ghi chú không bao giờ hiện trên cửa sổ này vì cửa sổ này có thể đang lên máy chiếu. */}
+          <div className="teach-group" role="group" aria-label="Công cụ giảng viên">
+            <button
+              type="button"
+              className="teach-btn"
+              onClick={openPresenter}
+              title="Mở màn giảng viên ở cửa sổ riêng: ghi chú, đồng hồ, màn kế tiếp. Cửa sổ này đưa sang máy chiếu (N)"
+              aria-label="Mở màn giảng viên"
+              data-testid="open-presenter"
+            >
+              <NotebookPen className="h-5 w-5" />
+              <span className="teach-btn-label">Màn giảng viên</span>
+              {frameHasNotes ? <span className="teach-dot" aria-hidden /> : null}
+            </button>
+          </div>
+          <span className="teach-sep" aria-hidden />
           {/* Nhóm 1: hiện/ẩn chữ trong lớp (dùng nhiều nhất) */}
           <div className="teach-group" role="group" aria-label="Hiển thị chữ">
             <button type="button" className="teach-btn teach-btn-text" data-on={pinyin} aria-pressed={pinyin} onClick={() => setPinyin((v) => !v)} title="Bật/tắt pinyin (P)">

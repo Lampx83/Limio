@@ -80,6 +80,16 @@ Mỗi bài khoá sinh các màn theo thứ tự sau. Phần nào bài không có
 - **F2.** Thử bằng mắt trên máy dev với **Chủ đề 1 · Bài khoá 1** (hội thoại A, B; 10+ từ mới; luyện tập): đủ pinyin, nghe được, phím chạy, ngang 1280 px và điện thoại.
 - **F3.** Chạy `buildTeachingFrames` trên cả 25 chủ đề của khoá `hsk-4-goc` và báo số màn mỗi bài; bài nào ra 0 màn hoặc quá 120 màn thì liệt kê.
 
+## H. Màn giảng viên (dạy trên máy chiếu; thầy chốt 26/11/2026)
+
+Thầy/cô chiếu Slide lên máy chiếu thì **mọi thứ trên cửa sổ Slide học viên đều thấy**. Vì vậy ghi chú giảng viên, đồng hồ và màn kế tiếp nằm ở một cửa sổ riêng.
+
+- H1. Nút "Màn giảng viên" (phím N) trên thanh Slide mở `/day?presenter=1` ở cửa sổ phụ. Cửa sổ Slide **không bao giờ** hiện ghi chú; chữ ghi chú không được gửi xuống trang Slide (chỉ còn số lượng để hiện dấu chấm "có ghi chú" ở nút).
+- H2. Màn giảng viên có: tên màn đang chiếu và số thứ tự, ghi chú của màn đó cỡ chữ lớn, tên màn kế tiếp, nút Trước/Sau (phím mũi tên, Space, PageUp/PageDown), danh sách nhảy tới màn bất kỳ, đồng hồ buổi dạy (bấm tạm dừng, bấm đúp đặt lại).
+- H3. Hai cửa sổ đồng bộ hai chiều qua BroadcastChannel cùng trình duyệt (không qua máy chủ, không lưu gì): đổi màn ở bên nào, bên kia theo; mở màn giảng viên sau vẫn nhận đúng màn đang chiếu. Dòng cuối nói rõ đã nối hay chưa.
+- H4. Cách dùng: mở Slide ở một cửa sổ và kéo sang máy chiếu; mở Màn giảng viên ở màn hình của mình.
+- Giới hạn: hai cửa sổ phải cùng một trình duyệt và cùng hồ sơ; chưa dùng Window Management API để tự đặt cửa sổ lên màn hình thứ hai.
+
 ## Kết quả đo F3 (dev, 26/11/2026)
 
 Khoá `hsk-4-goc`, Chủ đề 1–9 (các chủ đề 10–25 trên máy dev mới là bản giữ chỗ nên chưa có nội dung để dựng): bài khoá 88–100 màn, Khởi động 24–28, Bài tập tổng hợp 53–64, Ôn tập 62–71. Không bài nào quá 120 màn. Chạy lại bằng `packages/core-lms/scripts/teaching-frames-report.ts`.

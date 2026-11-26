@@ -282,11 +282,11 @@ export default function LessonHeader({
         <div className="ml-auto flex items-center gap-1 rounded-lg p-0.5 opacity-70 transition-opacity group-hover:opacity-100 focus-within:opacity-100 max-lg:opacity-100">
           {courseSlug && (
             <Link
-              href={`/learn/${courseSlug}/lessons/${lessonId}?gv=1`}
+              href={languageMode ? `/learn/${courseSlug}/lessons/${lessonId}/day` : `/learn/${courseSlug}/lessons/${lessonId}?gv=1`}
               target="_blank"
               rel="noopener"
               className="flex h-7 w-7 items-center justify-center rounded-md text-faint transition-colors hover:bg-brand-soft hover:text-brand-600"
-              title="Mở chế độ giảng dạy trong tab mới"
+              title={languageMode ? "Chiếu lớp (Slide) trong tab mới" : "Mở chế độ giảng dạy trong tab mới"}
               aria-label="Trình chiếu"
             >
               <Presentation className="h-3.5 w-3.5" />

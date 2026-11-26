@@ -45,7 +45,8 @@ import { parseLessonView, splitLessonItems } from "@/lib/lessonFrameView";
 import { loadCourseLessonVideos, type LessonVideoInfo } from "@/lib/lessonVideo";
 import EnrollButton from "@/components/EnrollButton";
 import LessonFrameLayout, { LessonViewTabs } from "@/components/language/LessonFrame";
-import { LESSON_FRAME_ALL_COURSES_KEY, isLearnerInCourse, isLessonFrameAllCoursesEnabled, lessonFrameApplies, lessonLevelLabel, previewHidesSiteChrome } from "@/lib/lessonFramePolicy";
+import { LESSON_FRAME_ALL_COURSES_KEY, isLearnerInCourse, isLessonFrameAllCoursesEnabled, lessonViewModes,
+  resolveLessonView, lessonLevelLabel, previewHidesSiteChrome } from "@/lib/lessonFramePolicy";
 import { getSiteSetting } from "@/lib/site-settings";
 import { ExamRefLearnerBlock, ExamRefPreviewBlock } from "@/components/exam/ExamRefBlock";
 import LessonPractice from "@/components/language/LessonPractice";
@@ -96,7 +97,7 @@ import { loadDeck } from "@/lib/slideDeck/decks";
 import LessonSlideButton, { type LessonSlideInfo } from "@/components/lesson/LessonSlideButton";
 import TeacherBar, { StageListener } from "@/components/lesson/TeacherBar";
 import { isNativeVideoUrl } from "@/lib/videoUrl";
-import { Download, Lock, MonitorPlay, PenLine } from "lucide-react";
+import { Download, Eye, Lock, MonitorPlay, PenLine } from "lucide-react";
 import JsonLd from "@/components/JsonLd";
 import { SITE_NAME, absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
@@ -255,13 +256,24 @@ export default async function LessonPage({
   const canEdit = userId && !viewingAsLearner ? await canEditCourse(userId, lesson.module.course.id) : false;
   // "Chiếu lớp" (docs/tieu-chi/hsk-che-do-chieu-lop.md, D2): người dạy của khoá (kể cả giảng viên không sửa, trợ giảng), chỉ khoá ngoại ngữ.
   const canTeach = lesson.module.course.languageMode && userId && !viewingAsLearner ? await canGradeCourse(userId, lesson.module.course.id) : false;
+  // Người dạy khoá NGOẠI NGỮ đang chọn vai "học viên" và chưa ghi danh: vai này là "Xem như học viên" (như ?preview=1), không đá về trang người đọc/thanh toán
+  // trên chính khoá của mình (lessonViewModes). Đã ghi danh thì vẫn là học viên thật.
+  const asLearnerStaff =
+    lesson.module.course.languageMode && viewingAsLearner && !enrolled && userId ? await canEditCourse(userId, lesson.module.course.id) : false;
   // Ẩn cả module thì bài bên trong cũng phải khoá lại, không thì học viên biết
   // đường dẫn vẫn vào thẳng được. Người dạy khoá này thì vẫn vào — họ cần soạn
   // và chiếu thử nội dung chưa mở cho lớp.
-  if (lesson.module.isHidden && !canEdit) notFound();
-  const teacherMode = canEdit && searchParams?.gv === "1";
-  const stageMode = searchParams?.stage === "1";
-  const previewMode = canEdit && searchParams?.preview === "1";
+  if (lesson.module.isHidden && !canEdit && !asLearnerStaff) notFound();
+  // Mọi quyết định giao diện (giao diện giảng viên cũ / khung bài học / nút Slide) nằm ở lessonViewModes + resolveLessonView (lib/lessonFramePolicy.ts, có bảng quyết định và test).
+  const { teacherMode, stageMode, previewMode, teachSlide } = lessonViewModes({
+    canEdit: !!canEdit,
+    asLearnerStaff: !!asLearnerStaff,
+    canTeach: !!canTeach,
+    languageMode: lesson.module.course.languageMode,
+    preview: searchParams?.preview,
+    gv: searchParams?.gv,
+    stage: searchParams?.stage,
+  });
   // Nút "Slide" của giảng viên (docs/tieu-chi/nghe-giang-slide.md): trạng thái bài giảng slide của bài. Lỗi thì không hiện nút,
   // không làm hỏng trang bài.
   let slideInfo: LessonSlideInfo | null = null;
@@ -300,7 +312,7 @@ export default async function LessonPage({
   // khoá), nhưng nội dung không được gửi xuống trình duyệt. Chặn ngay ở đây,
   // trước mọi truy vấn nội dung, chứ không giấu bằng CSS: giấu bằng CSS thì
   // toàn bộ bài vẫn nằm trong mã nguồn trang.
-  const lockedForLearner = (lesson.isLocked || lesson.module.isLocked) && !canEdit;
+  const lockedForLearner = (lesson.isLocked || lesson.module.isLocked) && !canEdit && !asLearnerStaff;
   if (lockedForLearner) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-16 text-center">
@@ -324,7 +336,7 @@ export default async function LessonPage({
       </main>
     );
   }
-  if (!enrolled && !canEdit) {
+  if (!enrolled && !canEdit && !asLearnerStaff) {
     if (!userId) {
       // Logged out: public courses render as preview, everything else signs in.
       if (!publiclyReadable) {
@@ -385,7 +397,7 @@ export default async function LessonPage({
   // Preview mode: anyone without an enrollment — logged out on a public course, or
   // logged in on a previewable lesson. Skip enrollment-dependent queries and render
   // with a CTA banner.
-  if (!enrolled && !canEdit) {
+  if (!enrolled && !canEdit && !asLearnerStaff) {
     const anonymous = userId === null;
     // Forum stays behind sign-in: threads carry learner display names, and
     // publishing those to the open internet is not something a course-visibility
@@ -780,20 +792,21 @@ export default async function LessonPage({
   // (`lessonFrameApplies`). Công tắc `lesson_frame.all_courses` = "false" thì chỉ còn khoá ngoại ngữ. Tính năng riêng của ngoại ngữ
   // (đánh số lời thoại, tab Từ vựng) vẫn theo khoá `languageMode` (`languageSkin`).
   const languageMode = lesson.module.course.languageMode;
-  // Người dạy khoá ngoại ngữ thấy sẵn khung bài học như học viên (thầy chốt 26/11/2026); `?preview=0` trả về giao diện giảng viên cũ.
-  const teacherFrame = !!canEdit && languageMode && !previewMode && !teacherMode && !stageMode && searchParams?.preview !== "0";
-  const frameOn = lessonFrameApplies({
-    teacherFrame,
+  const view = resolveLessonView({
+    canEdit: !!canEdit,
+    asLearnerStaff: !!asLearnerStaff,
+    canTeach: !!canTeach,
     languageMode,
     allCoursesEnabled: isLessonFrameAllCoursesEnabled(await getSiteSetting(LESSON_FRAME_ALL_COURSES_KEY)),
     enrolled: !!enrolled,
     // Giảng viên khác vào lớp bằng link mời cũng là học viên của khoá này (xem isLearnerInCourse).
-    learnerRole: isLearnerInCourse({ activeRoleIsLearner: isLearnerRole(getActiveRole(session?.user?.roles ?? [])), enrolled: !!enrolled, canEdit: !!canEdit }),
-    previewMode: !!previewMode,
-    stageMode: !!stageMode,
-    teacherMode: !!teacherMode,
+    activeRoleIsLearner: isLearnerRole(getActiveRole(session?.user?.roles ?? [])),
     hasDeckCover: !!deckCover,
+    preview: searchParams?.preview,
+    gv: searchParams?.gv,
+    stage: searchParams?.stage,
   });
+  const frameOn = view.frame;
   const languageSkin = frameOn && languageMode;
   // Giao diện bài HSK (đầu bài có con dấu, mục đánh số…): chỉ khoá nằm trong danh sách slug của cài đặt hệ thống, và chỉ trong khung bài học ngoại ngữ.
   const hskSlugsSetting = await getSiteSetting(HSK_DECOR_SLUGS_KEY);
@@ -821,7 +834,7 @@ export default async function LessonPage({
   const practiceEmbeds = new Map<string, { embed: PracticeEmbed; preview: boolean; title?: string }>();
   const practiceForLearner = enrolled && !previewMode && !stageMode && !teacherMode;
   // Khung của người dạy (chưa ghi danh) dùng bản xem trước của Bài luyện: không tạo buổi luyện, không ghi gì.
-  const practiceForPreview = (previewMode || (teacherFrame && !!lessonFrame)) && !stageMode && !!userId;
+  const practiceForPreview = (previewMode || view.practiceAsPreview) && !stageMode && !!userId;
   if (practiceForLearner || practiceForPreview) {
     // Nội dung Bài luyện nằm trong đề ẩn của chính khối (Exam.ownerContentItemId); khối chưa có câu nào thì học viên không thấy.
     const practiceItems = shownItems.filter((it) => it.type === "exam_practice");
@@ -941,6 +954,18 @@ export default async function LessonPage({
     sections.theory.every((it) => it.type === "richtext" && typeof (it.payload as { html?: unknown } | null)?.html === "string" && !(it.payload as { look?: unknown }).look);
   // Dòng tên bài: chip kỹ năng + tên bài (+ nút "Về soạn nội dung" của giảng viên). Khoá ngoại ngữ có thẻ lý thuyết thì nó là đầu thẻ đó (phương án A),
   // không còn thẻ tên bài riêng.
+  // Khoá ngoại ngữ, người dạy ở khung mặc định: một công tắc "Xem như học viên" cạnh "Về soạn nội dung" (cùng đường dẫn `?preview=1` với nút ở trang soạn).
+  const viewAsLearnerPill = view.teacherFrame ? (
+    <Link
+      href={`/learn/${params.slug}/lessons/${lesson.id}?preview=1`}
+      title="Xem đúng như học viên thấy: ẩn các nút của giảng viên. Quay lại bằng nút ở đầu trang."
+      data-testid="view-as-learner"
+      className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-token bg-[rgb(var(--surface))] px-3 py-1 text-sm font-medium text-muted transition-colors hover:bg-brand-soft hover:text-brand-700"
+    >
+      <Eye className="h-4 w-4" aria-hidden />
+      Xem như học viên
+    </Link>
+  ) : null;
   const lessonTitleRow = (
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
@@ -949,14 +974,17 @@ export default async function LessonPage({
           <h1 className="h-display min-w-0 text-xl font-bold sm:text-2xl">{lesson.title}</h1>
         </div>
         {!previewMode && canEdit && (
-          <Link
-            href={`/instructor/courses/${lesson.module.course.id}?tab=content&lesson=${lesson.id}`}
-            title={t("learn.lesson.backToEditorTitle")}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
-          >
-            <PenLine className="h-4 w-4" aria-hidden />
-            {t("learn.lesson.backToEditor")}
-          </Link>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {viewAsLearnerPill}
+            <Link
+              href={`/instructor/courses/${lesson.module.course.id}?tab=content&lesson=${lesson.id}`}
+              title={t("learn.lesson.backToEditorTitle")}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
+            >
+              <PenLine className="h-4 w-4" aria-hidden />
+              {t("learn.lesson.backToEditor")}
+            </Link>
+          </div>
         )}
       </div>
   );
@@ -1067,7 +1095,7 @@ export default async function LessonPage({
         const card = cards.find((c) => c.examId === examId);
         if (card) examRefBlocks[it.id] = <ExamRefLearnerBlock slug={params.slug} exam={card} title={title} lang={lang} />;
       }
-    } else if (previewMode || (teacherFrame && !!lessonFrame)) {
+    } else if (previewMode || view.practiceAsPreview) {
       const states = await getExamRefStates(courseId, examRefItems.map((it) => refOf(it).examId ?? null));
       for (const it of examRefItems) {
         const { examId, title } = refOf(it);
@@ -1133,6 +1161,19 @@ export default async function LessonPage({
           )}
         </div>
       )}
+      {/* "Xem như học viên" của khoá ngoại ngữ: một dải nhắc đang ở chế độ này và đường quay lại. Vai học viên của người dạy (RoleSwitcher) thì đổi vai ở menu tài khoản. */}
+      {previewMode && lessonFrame && languageMode && (
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-brand-200 bg-brand-soft px-4 py-2 text-sm text-brand-700" data-testid="view-as-learner-banner">
+          <span className="font-medium">Đang xem như học viên: các nút của giảng viên đã ẩn.</span>
+          {canEdit ? (
+            <Link href={`/learn/${params.slug}/lessons/${lesson.id}`} className="font-semibold underline decoration-dotted">
+              Quay lại giao diện giảng viên
+            </Link>
+          ) : (
+            <span className="text-brand-600">Đổi vai ở menu tài khoản để quay lại.</span>
+          )}
+        </div>
+      )}
       {previewMode && !lessonFrame && (
         <Link
           href={`/learn/${params.slug}?preview=1`}
@@ -1156,14 +1197,17 @@ export default async function LessonPage({
             description={descriptionShown ? htmlToPlainText(lesson.description!) : null}
             action={
               !previewMode && canEdit ? (
-                <Link
-                  href={`/instructor/courses/${lesson.module.course.id}?tab=content&lesson=${lesson.id}`}
-                  title={t("learn.lesson.backToEditorTitle")}
-                  className="relative inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-brand-200 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
-                >
-                  <PenLine className="h-4 w-4" aria-hidden />
-                  {t("learn.lesson.backToEditor")}
-                </Link>
+                <div className="relative flex shrink-0 flex-wrap items-center gap-2 self-start">
+                  {viewAsLearnerPill}
+                  <Link
+                    href={`/instructor/courses/${lesson.module.course.id}?tab=content&lesson=${lesson.id}`}
+                    title={t("learn.lesson.backToEditorTitle")}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
+                  >
+                    <PenLine className="h-4 w-4" aria-hidden />
+                    {t("learn.lesson.backToEditor")}
+                  </Link>
+                </div>
               ) : null
             }
           />
@@ -1194,11 +1238,12 @@ export default async function LessonPage({
           <LecturerInvite courseSlug={params.slug} userId={userId ?? null} name={lecturerChoice.name} accent={lecturerChoice.accent} />
         )}
         <div className={lessonFrame ? "mt-2 flex flex-wrap items-center gap-x-5 gap-y-2" : undefined}>
-        {!previewMode && (
+        {/* Xem trước (`?preview=1`) giấu mọi nút của giảng viên, trừ "Slide" của khoá ngoại ngữ: giảng viên đang xem trước bài thường muốn chiếu luôn. */}
+        {(!previewMode || teachSlide) && (
           <div className={`${lessonFrame ? "" : "mt-3 "}flex flex-wrap items-center gap-2`}>
             {/* Các nút nghe nổi bật (Nghe giảng, Podcast, Slide) đứng bên trái; nút công cụ (in) dồn sang phải cùng hàng để đỡ tốn thêm một hàng. */}
             {/* Màn hẹp: các nút nghe chia đều cột, nằm riêng một hàng; từ sm: xếp ngang theo bề rộng cố định của nút. */}
-            {(narrations.lecture || narrations.podcast || slideInfo || canTeach) && (
+            {(narrations.lecture || narrations.podcast || slideInfo || teachSlide) && (
               <div className="grid w-full auto-cols-fr grid-flow-col gap-2 sm:flex sm:w-auto">
                 {narrations.lecture && !deckCover && (
                   <NarrationButton durationSec={narrations.lecture.durationSec} inviteCourseSlug={lecturerChoice?.mode === "HIEN" ? params.slug : undefined} userId={userId ?? null} />
@@ -1206,7 +1251,7 @@ export default async function LessonPage({
                 {narrations.podcast && <PodcastButton durationSec={narrations.podcast.durationSec} title={narrations.podcast.title} />}
                 {/* Màu hồng Limio để hợp tông khung HSK và khác nút Nghe giảng (lime), không dùng xanh dương của nút Slide Limio-Live. */}
                 {/* Khoá ngoại ngữ: "Slide" của người dạy chính là Chiếu lớp (slide tự dựng từ nội dung bài, có pinyin và giọng đọc), nên thay nút Slide Limio-Live bằng một nút duy nhất, không để hai nút cùng tên gọi. */}
-                {canTeach ? (
+                {teachSlide ? (
                   <Link
                     href={`/learn/${params.slug}/lessons/${params.lessonId}/day`}
                     className="btn-listen"
@@ -1308,7 +1353,8 @@ export default async function LessonPage({
         />
       )}
 
-      {canEdit && !stageMode && !previewMode && (
+      {/* Khoá ngoại ngữ: Slide (Chiếu lớp) đã gồm ghi chú giảng viên và đồng hồ, nên không còn bảng giảng viên nổi. */}
+      {canEdit && !stageMode && !previewMode && !languageMode && (
         <TeacherBar
           lessonId={lesson.id}
           lessonTitle={lesson.title}

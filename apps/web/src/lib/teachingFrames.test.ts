@@ -213,3 +213,28 @@ describe("sectionName", () => {
     expect(sectionName("Mục tiêu bài học")).toBe("Mục tiêu bài học");
   });
 });
+
+describe("ghi chú giảng viên (includeNotes)", () => {
+  const note = (id: string, html: string): TeachingItem => ({ id, type: "teacher_note", payload: { html } });
+  const items = [rich("r", "<h2>Tình huống</h2><p>Nội dung</p>"), note("n1", "<p>Nhắc lớp đọc to.</p><p>Hỏi: nhà em ở đâu?</p>"), dialogue, note("n2", "<p>Ghi chú cuối bài</p>")];
+
+  it("mặc định KHÔNG đưa ghi chú vào màn nào (học viên không bao giờ nhận)", () => {
+    const f = buildTeachingFrames({ lessonTitle: "B", items, practices: {} });
+    expect(JSON.stringify(f)).not.toContain("Nhắc lớp");
+    expect(f.every((x) => x.notes === undefined)).toBe(true);
+  });
+
+  it("includeNotes: ghi chú gắn vào màn đầu của khối liền sau; ghi chú cuối gắn vào màn cuối", () => {
+    const f = buildTeachingFrames({ lessonTitle: "B", items, practices: {}, includeNotes: true });
+    const dlg = f.find((x) => x.kind === "dialogue")!;
+    expect(dlg.notes).toEqual(["Nhắc lớp đọc to.", "Hỏi: nhà em ở đâu?"]);
+    expect(f[f.length - 1]!.notes).toEqual(["Ghi chú cuối bài"]);
+    expect(f.filter((x) => x.notes).length).toBe(2);
+  });
+
+  it("ghi chú không làm sinh thêm màn", () => {
+    const a = buildTeachingFrames({ lessonTitle: "B", items, practices: {} });
+    const b = buildTeachingFrames({ lessonTitle: "B", items, practices: {}, includeNotes: true });
+    expect(b.length).toBe(a.length);
+  });
+});

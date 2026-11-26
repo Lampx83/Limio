@@ -28,7 +28,7 @@ export interface LessonFrameInput {
   hasDeckCover: boolean;
   /**
    * Người dạy (sửa được khoá) mở bài của khoá NGOẠI NGỮ mà không chọn chế độ nào: thấy sẵn khung bài học như học viên (thầy chốt 26/11/2026), vẫn giữ
-   * các nút của giảng viên. Muốn giao diện giảng viên cũ thì thêm `?preview=0`.
+   * các nút của giảng viên. (Khoá ngoại ngữ không còn giao diện giảng viên cũ.)
    */
   teacherFrame?: boolean;
 }
@@ -52,6 +52,92 @@ export function lessonFrameApplies(i: LessonFrameInput): boolean {
   if (i.previewMode) return i.languageMode || i.allCoursesEnabled;
   if (!i.enrolled || !i.learnerRole) return false;
   return i.languageMode || i.allCoursesEnabled;
+}
+
+/**
+ * MỌI quyết định hiển thị của trang bài học (giao diện giảng viên cũ / khung bài học / nút của giảng viên) gom ở đây để rà được trong một chỗ
+ * và kiểm thử cả ma trận (lessonFramePolicy.test.ts). Trang bài học chỉ đọc kết quả, không tự so sánh các cờ.
+ *
+ * Bảng quyết định (vai "người dạy" = `canEdit`: chủ khoá, đồng giảng viên, quản trị, và KHÔNG đang chọn vai học viên):
+ *
+ * | Ai mở                                            | Địa chỉ        | Khoá ngoại ngữ                       | Khoá khác                         |
+ * |--------------------------------------------------|----------------|--------------------------------------|-----------------------------------|
+ * | Học viên đã ghi danh (hoặc đang ở vai học viên)  | bất kỳ         | khung bài học                        | khung (nếu bật mọi khoá) / cũ     |
+ * | Người dạy                                        | không tham số  | khung bài học + nút giảng viên       | giao diện giảng viên cũ           |
+ * | Người dạy                                        | ?preview=1     | khung, như học viên (chỉ còn "Slide")| khung nếu bật mọi khoá, không thì cũ |
+ * | Người dạy                                        | ?preview=0     | như không tham số (bỏ qua)           | giao diện giảng viên cũ           |
+ * | Người dạy                                        | ?gv=1          | như không tham số (bỏ qua)           | cũ + ghi chú giảng viên           |
+ * | Người dạy chọn vai "học viên", chưa ghi danh     | bất kỳ         | như ?preview=1 ("Xem như học viên")  | trang người đọc chưa ghi danh     |
+ * | Bất kỳ                                           | ?stage=1       | màn chiếu cũ (không khung)           | màn chiếu cũ                      |
+ * | Bài có bài giảng slide (bố cục riêng)            | bất kỳ         | cũ                                   | cũ                                |
+ * | Chưa ghi danh, không phải người dạy              | —              | không qua đây (trang xem thử/chuyển) |                                   |
+ *
+ * Nút "Slide" (mở Chiếu lớp) hiện cho người dạy của khoá ngoại ngữ (`canTeach`: kể cả giảng viên không sửa, trợ giảng đã ghi danh) ở mọi chế độ trừ màn chiếu cũ.
+ */
+export interface LessonViewModesInput {
+  canEdit: boolean;
+  /**
+   * Người dạy của khoá NGOẠI NGỮ đang chọn vai "học viên" (RoleSwitcher) và chưa ghi danh: vai này là "Xem như học viên" (cùng giao diện với `?preview=1`),
+   * không phải trang người đọc chưa ghi danh (bị chuyển đi hoặc chặn thanh toán) trên chính khoá của mình.
+   */
+  asLearnerStaff?: boolean;
+  /** Người dạy của khoá NGOẠI NGỮ (chủ, đồng giảng viên, không sửa, trợ giảng, quản trị; không đang chọn vai học viên); false nếu không phải khoá ngoại ngữ. */
+  canTeach: boolean;
+  languageMode: boolean;
+  preview?: string;
+  gv?: string;
+  stage?: string;
+}
+
+export interface LessonViewModes {
+  stageMode: boolean;
+  teacherMode: boolean;
+  previewMode: boolean;
+  teacherFrame: boolean;
+  teachSlide: boolean;
+}
+
+export function lessonViewModes(i: LessonViewModesInput): LessonViewModes {
+  const stageMode = i.stage === "1";
+  // Khoá ngoại ngữ chỉ có ba trạng thái: mặc định (khung + nút giảng viên), "Xem như học viên" (`?preview=1` hoặc vai học viên) và Slide (Chiếu lớp).
+  // `?gv=1` (đứng lớp) và `?preview=0` (giao diện giảng viên cũ) bị bỏ qua ở khoá ngoại ngữ: Slide đã gồm ghi chú giảng viên và đồng hồ.
+  const teacherMode = i.canEdit && i.gv === "1" && !i.languageMode;
+  const asLearnerStaff = !!i.asLearnerStaff && i.languageMode;
+  const previewMode = (i.canEdit && i.preview === "1") || asLearnerStaff;
+  const teacherFrame = i.canEdit && i.languageMode && !previewMode && !stageMode;
+  return { stageMode, teacherMode, previewMode, teacherFrame, teachSlide: i.canTeach && !stageMode };
+}
+
+export interface LessonViewInput extends LessonViewModesInput {
+  allCoursesEnabled: boolean;
+  enrolled: boolean;
+  activeRoleIsLearner: boolean;
+  hasDeckCover: boolean;
+}
+
+export interface LessonViewDecision extends LessonViewModes {
+  learnerRole: boolean;
+  /** Dùng khung bài học 3 cột (và giao diện riêng của ngoại ngữ nếu là khoá ngoại ngữ). */
+  frame: boolean;
+  /** Bài luyện trong khung dùng bản xem trước của giảng viên (không tạo buổi luyện, không ghi gì). */
+  practiceAsPreview: boolean;
+}
+
+export function resolveLessonView(i: LessonViewInput): LessonViewDecision {
+  const m = lessonViewModes(i);
+  const learnerRole = isLearnerInCourse({ activeRoleIsLearner: i.activeRoleIsLearner, enrolled: i.enrolled, canEdit: i.canEdit });
+  const frame = lessonFrameApplies({
+    languageMode: i.languageMode,
+    allCoursesEnabled: i.allCoursesEnabled,
+    enrolled: i.enrolled,
+    learnerRole,
+    previewMode: m.previewMode,
+    stageMode: m.stageMode,
+    teacherMode: m.teacherMode,
+    hasDeckCover: i.hasDeckCover,
+    teacherFrame: m.teacherFrame,
+  });
+  return { ...m, learnerRole, frame, practiceAsPreview: frame && (m.previewMode || m.teacherFrame) };
 }
 
 export type PanelTab = "ai" | "notes";

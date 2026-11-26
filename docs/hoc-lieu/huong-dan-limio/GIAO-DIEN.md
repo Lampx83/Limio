@@ -98,7 +98,7 @@ không sửa** (hệ thống không kiểm tra khoá rỗng) — nên nhắc th�
 
 **Trình soạn khoá** (`/instructor/courses/[id]`):
 - Đầu trang: "← Khóa của tôi", nhãn trạng thái (Nháp / Đã publish / Lưu trữ), nút
-  xanh **Publish**, nút **"Chế độ đứng lớp"** (mở bài ở tab mới, chế độ giảng viên).
+  xanh **Publish**, nút **"Chế độ đứng lớp"** (mở bài ở tab mới, chế độ giảng viên; ở khoá ngoại ngữ nút này đổi tên thành **"Chiếu lớp"** và mở slide tự dựng từ bài, kèm nút **"Màn giảng viên"** mở cửa sổ riêng có ghi chú, đồng hồ và màn kế tiếp để thầy/cô đặt ở màn hình của mình, còn cửa sổ Slide đưa sang máy chiếu).
 - Các tab theo thứ tự: **Tổng quan · Nội dung · Lớp học · Học viên · Grade · Phân tích · Gamification**
   (Lớp học đứng TRƯỚC Học viên). Khoá còn nháp chỉ hiện Tổng quan và Nội dung. "Phân tích" chỉ dành cho
   nhà nghiên cứu — không nhắc.

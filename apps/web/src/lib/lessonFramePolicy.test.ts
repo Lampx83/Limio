@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { lessonViewModes, resolveLessonView, type LessonViewInput } from "./lessonFramePolicy";
 import {
   defaultPanelOpen,
   isLessonFrameAllCoursesEnabled,
@@ -144,5 +145,120 @@ describe("lessonFrameApplies: người dạy khoá ngoại ngữ thấy sẵn kh
   });
   it("không có cờ thì người dạy chưa ghi danh vẫn thấy giao diện cũ như trước", () => {
     expect(lessonFrameApplies({ ...base })).toBe(false);
+  });
+});
+
+/* ---------- ma trận hiển thị của trang bài học (resolveLessonView) ---------- */
+describe("resolveLessonView: ma trận người xem × chế độ × loại khoá", () => {
+  const v = (o: Partial<LessonViewInput>) =>
+    resolveLessonView({
+      canEdit: false,
+      canTeach: false,
+      languageMode: true,
+      allCoursesEnabled: true,
+      enrolled: false,
+      activeRoleIsLearner: false,
+      hasDeckCover: false,
+      ...o,
+    });
+  const owner = { canEdit: true, canTeach: true };
+
+  it("học viên đã ghi danh: khung bài học (khoá ngoại ngữ, và khoá khác khi bật mọi khoá)", () => {
+    expect(v({ enrolled: true, activeRoleIsLearner: true }).frame).toBe(true);
+    expect(v({ enrolled: true, activeRoleIsLearner: true, languageMode: false }).frame).toBe(true);
+    expect(v({ enrolled: true, activeRoleIsLearner: true, languageMode: false, allCoursesEnabled: false }).frame).toBe(false);
+  });
+
+  it("người đọc ở vai học viên (không phải người dạy của khoá) chưa ghi danh: không khung, không nút giảng viên", () => {
+    const d = v({ activeRoleIsLearner: true });
+    expect(d).toMatchObject({ frame: false, teachSlide: false, teacherFrame: false });
+  });
+
+  it("người dạy khoá NGOẠI NGỮ chọn vai học viên, chưa ghi danh: là 'Xem như học viên' (khung, bài luyện bản xem thử), không nút Slide, không nút giảng viên", () => {
+    const d = v({ activeRoleIsLearner: true, asLearnerStaff: true });
+    expect(d).toMatchObject({ frame: true, previewMode: true, teacherFrame: false, teachSlide: false, practiceAsPreview: true, teacherMode: false });
+  });
+
+  it("vai học viên của người dạy ở khoá KHÁC (không ngoại ngữ) không đổi: asLearnerStaff bị bỏ qua", () => {
+    expect(v({ activeRoleIsLearner: true, asLearnerStaff: true, languageMode: false })).toMatchObject({ frame: false, previewMode: false });
+  });
+
+  it("người dạy khoá NGOẠI NGỮ, không tham số: khung + nút Slide, không phải xem trước", () => {
+    expect(v({ ...owner })).toMatchObject({ frame: true, teacherFrame: true, previewMode: false, teachSlide: true, practiceAsPreview: true });
+  });
+
+  it("người dạy khoá ngoại ngữ đã ghi danh vào khoá của mình: vẫn khung giảng viên (không rơi về giao diện cũ)", () => {
+    expect(v({ ...owner, enrolled: true })).toMatchObject({ frame: true, teacherFrame: true, practiceAsPreview: true });
+  });
+
+  it("?preview=1: khung như học viên nhưng vẫn có nút Slide", () => {
+    expect(v({ ...owner, preview: "1" })).toMatchObject({ frame: true, previewMode: true, teacherFrame: false, teachSlide: true, practiceAsPreview: true });
+  });
+
+  it("?preview=0 và ?gv=1 bị bỏ qua ở khoá ngoại ngữ: vẫn khung + nút giảng viên (chỉ còn ba trạng thái)", () => {
+    expect(v({ ...owner, preview: "0" })).toMatchObject({ frame: true, teacherFrame: true, previewMode: false, teachSlide: true });
+    expect(v({ ...owner, gv: "1" })).toMatchObject({ frame: true, teacherFrame: true, teacherMode: false, teachSlide: true });
+  });
+
+  it("?stage=1 (màn chiếu cũ): không khung và không nút Slide", () => {
+    expect(v({ ...owner, stage: "1" })).toMatchObject({ frame: false, stageMode: true, teachSlide: false });
+  });
+
+  it("khoá khác ngoại ngữ vẫn có ?gv=1 (đứng lớp) và ?preview=0 như cũ", () => {
+    const o = { canEdit: true, canTeach: false, languageMode: false };
+    expect(v({ ...o, gv: "1" })).toMatchObject({ frame: false, teacherMode: true });
+    expect(v({ ...o, preview: "0" })).toMatchObject({ frame: false, teacherFrame: false, previewMode: false });
+  });
+
+  it("bài có bài giảng slide (bố cục riêng): không khung ở mọi vai", () => {
+    expect(v({ ...owner, hasDeckCover: true }).frame).toBe(false);
+    expect(v({ enrolled: true, activeRoleIsLearner: true, hasDeckCover: true }).frame).toBe(false);
+  });
+
+  it("khoá KHÔNG phải ngoại ngữ: người dạy giữ giao diện cũ; chỉ ?preview=1 mới có khung và chỉ khi bật mọi khoá; không có nút Slide của Chiếu lớp", () => {
+    const o = { canEdit: true, canTeach: false, languageMode: false };
+    expect(v(o)).toMatchObject({ frame: false, teacherFrame: false, teachSlide: false });
+    expect(v({ ...o, preview: "1" }).frame).toBe(true);
+    expect(v({ ...o, preview: "1", allCoursesEnabled: false }).frame).toBe(false);
+  });
+
+  it("giảng viên không sửa / trợ giảng ĐÃ GHI DANH (canTeach, không canEdit): thấy khung như học viên + nút Slide, bài luyện làm thật", () => {
+    expect(v({ canEdit: false, canTeach: true, enrolled: true })).toMatchObject({ frame: true, teachSlide: true, teacherFrame: false, practiceAsPreview: false });
+  });
+
+  it("giảng viên khác vào lớp bằng link mời (không sửa, đã ghi danh, không có quyền dạy): khung học viên, không nút", () => {
+    expect(v({ enrolled: true })).toMatchObject({ frame: true, teachSlide: false });
+  });
+
+  it("bất biến trên toàn bộ tổ hợp", () => {
+    const bool = [false, true];
+    const params = [undefined, "0", "1"];
+    for (const canEdit of bool) for (const canTeachRaw of bool) for (const languageMode of bool) for (const allCoursesEnabled of bool)
+      for (const enrolled of bool) for (const activeRoleIsLearner of bool) for (const hasDeckCover of bool)
+        for (const preview of params) for (const gv of params) for (const stage of params) {
+          // canTeach ngụ ý canEdit hoặc không (giảng viên không sửa), và chỉ có ở khoá ngoại ngữ; chủ khoá ở vai học viên thì cả hai đều false.
+          const canTeach = canTeachRaw && languageMode && !(activeRoleIsLearner);
+          const ce = canEdit && !activeRoleIsLearner;
+          // Người dạy (có quyền sửa nếu không chọn vai học viên) ở vai học viên và chưa ghi danh: khoá ngoại ngữ coi như "Xem như học viên".
+          const asLearnerStaff = canEdit && activeRoleIsLearner && !enrolled;
+          const d = resolveLessonView({ canEdit: ce, canTeach: canTeach || (ce && languageMode), languageMode, allCoursesEnabled, enrolled, activeRoleIsLearner, asLearnerStaff, hasDeckCover, preview, gv, stage });
+          const tag = JSON.stringify({ ce, languageMode, enrolled, activeRoleIsLearner, hasDeckCover, preview, gv, stage });
+          // màn chiếu cũ, ?gv=1 và bài có bài giảng slide không bao giờ có khung
+          if (d.stageMode || d.teacherMode || hasDeckCover) expect(d.frame, tag).toBe(false);
+          // các chế độ của người dạy chỉ có khi người dạy có quyền sửa (riêng "xem như học viên" còn có từ vai học viên của người dạy ở khoá ngoại ngữ)
+          if (d.teacherMode || d.teacherFrame) expect(ce, tag).toBe(true);
+          if (d.previewMode) expect(ce || (asLearnerStaff && languageMode), tag).toBe(true);
+          // ?gv=1 và ?preview=0 chỉ còn ý nghĩa ở khoá không phải ngoại ngữ
+          if (languageMode) expect(d.teacherMode, tag).toBe(false);
+          // vai học viên không bao giờ có nút của người dạy
+          if (asLearnerStaff) expect(d.teachSlide || d.teacherFrame, tag).toBe(false);
+          // khung của người dạy chỉ ở khoá ngoại ngữ; bài luyện bản xem trước chỉ trong khung và chỉ cho người sửa được
+          if (d.teacherFrame) expect(languageMode, tag).toBe(true);
+          if (d.practiceAsPreview) expect(d.frame && (ce || asLearnerStaff), tag).toBe(true);
+          // một người dạy có quyền sửa, khoá ngoại ngữ, không ở màn chiếu cũ và không có bài giảng slide thì LUÔN thấy khung (gv và preview=0 không còn đổi được)
+          if (ce && languageMode && !preview && !stage && !hasDeckCover) expect(d.frame, tag).toBe(true);
+          // nút Slide không hiện ở màn chiếu cũ
+          if (d.stageMode) expect(d.teachSlide, tag).toBe(false);
+        }
   });
 });

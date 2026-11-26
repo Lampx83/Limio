@@ -120,11 +120,29 @@
 - Khoá có ảnh bìa (`Course.coverUrl`, giảng viên tải ở "Thông tin sách") thì đầu thanh bên, chỗ "← Về khoá học", hiện **bìa nhỏ**, liên kết "← Về khoá học" nằm **dưới bìa**, một dòng (chỉ bìa, **không ghi tên sách**: thầy 11/11/2026); bấm bìa hay chữ đều về trang khoá. Khoá chưa có bìa: chỉ còn liên kết "← Về khoá học" như cũ (không ô trống, không ảnh vỡ). Ảnh trang trí nên alt rỗng. Xem thử của giảng viên giữ `preview=1`.
 - Cách làm: `RailCourseHeader` (`LessonFrame.tsx`), `LessonFrameLayout` nhận thêm `coverUrl`, trang bài lấy từ `Course.coverUrl`. Test: `LessonFrame.test.tsx` (có bìa, không bìa, preview, qua khung).
 
-## Người dạy khoá ngoại ngữ thấy sẵn khung bài học (thầy chốt 26/11/2026)
+## Bảng quyết định giao diện trang bài học (rà soát 26/11/2026, gọn lại cùng ngày)
 
-Trước đây chỉ học viên đã ghi danh, hoặc giảng viên bấm "xem như học viên" (`?preview=1`), mới thấy khung 3 cột; chủ khoá và đồng giảng viên vào bài thì thấy giao diện giảng viên cũ nên "nhìn như khoá bình thường". Nay **người dạy (sửa được khoá) mở bài của khoá `languageMode` mà không chọn chế độ nào thì thấy sẵn khung bài học như học viên** (`lessonFrameApplies` nhận thêm `teacherFrame`):
+Mọi quyết định "giao diện cũ / khung bài học / nút giảng viên" nằm ở `lessonViewModes` + `resolveLessonView` (`apps/web/src/lib/lessonFramePolicy.ts`); trang bài học chỉ đọc kết quả. Test `lessonFramePolicy.test.ts` kiểm cả ma trận và các bất biến. "Người dạy" = có quyền sửa khoá (chủ, đồng giảng viên, quản trị) **và không đang chọn vai học viên**.
 
-- Vẫn giữ nút của giảng viên: "Slide" (mở Chiếu lớp), "Về soạn nội dung", ghi chú giảng viên.
-- Bài luyện trong bài dùng bản xem trước của giảng viên (không tạo buổi luyện, không ghi gì).
-- Muốn giao diện giảng viên cũ: thêm `?preview=0`. `?gv=1` (giảng viên đứng lớp), `?stage=1` (màn chiếu cũ) và bài có bài giảng slide vẫn dùng giao diện cũ.
-- Khoá không phải ngoại ngữ không đổi.
+**Khoá ngoại ngữ chỉ có ba trạng thái** (người mới dùng chỉ cần nhớ ba chữ này):
+
+1. **Mặc định**: khung bài học như học viên + nút giảng viên ("Về soạn nội dung", "Xem như học viên", "Slide"). Bài luyện là bản xem trước.
+2. **Xem như học viên** (`?preview=1`, nút ở đầu bài và ở trang soạn): đúng cái học viên thấy, ẩn nút giảng viên (còn "Slide"); có dải nhắc và đường quay lại.
+3. **Slide** (Chiếu lớp, `/day`): slide tự dựng từ bài; gồm cả việc đứng lớp (ghi chú giảng viên, đồng hồ).
+
+`?gv=1` (đứng lớp) và `?preview=0` (giao diện giảng viên cũ) **bị bỏ qua** ở khoá ngoại ngữ; bảng giảng viên nổi (TeacherBar) không còn ở khoá ngoại ngữ. Người dạy chọn vai "học viên" mà chưa ghi danh khoá của mình = trạng thái 2 (không bị đá về trang người đọc/thanh toán).
+
+| Ai mở | Địa chỉ | Khoá ngoại ngữ | Khoá khác |
+|---|---|---|---|
+| Học viên đã ghi danh, hoặc người dạy khác vào lớp bằng link mời | bất kỳ | khung bài học | khung nếu bật mọi khoá, không thì cũ |
+| Người dạy | không tham số | **khung + nút giảng viên** | giao diện giảng viên cũ |
+| Người dạy | `?preview=1` | khung như học viên, chỉ còn **Slide** | khung nếu bật mọi khoá, không thì cũ |
+| Người dạy | `?preview=0` / `?gv=1` | như không tham số (bỏ qua) | cũ / cũ + ghi chú |
+| Bất kỳ | `?stage=1` | màn chiếu cũ, không nút Slide | màn chiếu cũ |
+| Bất kỳ | bài có bài giảng slide (bố cục riêng) | cũ | cũ |
+| **Người dạy đang ở vai "học viên"**, chưa ghi danh | bất kỳ | **như `?preview=1`** (Xem như học viên), không nút giảng viên | trang người đọc chưa ghi danh |
+| Chưa ghi danh, không phải người dạy | — | trang xem thử (khoá công khai) hoặc chuyển về trang khoá | giống |
+
+Nút "Slide" chỉ có ở khoá ngoại ngữ, cho người dạy của khoá (`canGradeCourse`: gồm giảng viên không sửa và trợ giảng **đã ghi danh**), ở mọi chế độ trừ màn chiếu cũ và vai học viên. Ở trang soạn, "Chế độ đứng lớp" của khoá ngoại ngữ đã đổi thành "Chiếu lớp" và mở thẳng `/day`.
+
+Giới hạn đã biết: giảng viên không sửa / trợ giảng **chưa ghi danh** bị chuyển về trang khoá (quyền xem bài hiện chỉ gồm người sửa được khoá); họ vẫn mở được Chiếu lớp bằng địa chỉ `/day`. Khoá KHÁC ngoại ngữ giữ nguyên mô hình cũ (đợt sau).

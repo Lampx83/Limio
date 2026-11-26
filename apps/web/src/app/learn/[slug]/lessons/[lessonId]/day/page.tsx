@@ -5,6 +5,7 @@ import { canGradeCourse, getPracticeBlockSummaries, getPracticeForTeaching, Exam
 import { auth } from "@/lib/auth";
 import { buildTeachingFrames, type TeachingPracticeInput } from "@/lib/teachingFrames";
 import TeachingDeck from "@/components/lesson/TeachingDeck";
+import TeachingPresenter from "@/components/lesson/TeachingPresenter";
 import { limioHskLabel, unitNumberLabel } from "@/lib/hskLevelLabel";
 
 /**
@@ -15,7 +16,7 @@ import { limioHskLabel, unitNumberLabel } from "@/lib/hskLevelLabel";
  */
 export const dynamic = "force-dynamic";
 
-type Props = { params: { slug: string; lessonId: string } };
+type Props = { params: { slug: string; lessonId: string }; searchParams?: { presenter?: string } };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const lesson = await prisma.lesson.findUnique({ where: { id: params.lessonId }, select: { title: true, module: { select: { course: { select: { protectedMedia: true } } } } } });
@@ -23,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: hide ? "Chiếu lớp" : `Chiếu lớp · ${lesson.title}`, robots: { index: false, follow: false } };
 }
 
-export default async function TeachPage({ params }: Props) {
+export default async function TeachPage({ params, searchParams }: Props) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const back = `/learn/${params.slug}/lessons/${params.lessonId}`;
@@ -39,7 +40,8 @@ export default async function TeachPage({ params }: Props) {
   if (!lesson || lesson.isHidden || lesson.module.course.slug !== params.slug) notFound();
   if (!(await canGradeCourse(userId, lesson.module.course.id))) notFound();
 
-  const items = lesson.contentItems.filter((c) => c.type !== "teacher_note");
+  // Trang này chỉ mở cho người dạy (canGradeCourse ở trên) nên mới được nhận ghi chú giảng viên (`teacher_note`); học viên không bao giờ tới đây.
+  const items = lesson.contentItems;
   const practiceItems = items.filter((c) => c.type === "exam_practice");
   const summaries = practiceItems.length ? await getPracticeBlockSummaries(practiceItems.map((c) => c.id)) : {};
   const practices: Record<string, TeachingPracticeInput> = {};
@@ -62,7 +64,13 @@ export default async function TeachPage({ params }: Props) {
     lessonTitle: lesson.title,
     items: items.map((c) => ({ id: c.id, type: c.type, payload: c.payload })),
     practices,
+    includeNotes: true,
   });
 
-  return <TeachingDeck frames={frames} lessonTitle={lesson.title} courseTitle={lesson.module.course.title} levelLabel={limioHskLabel(lesson.module.course.title)} unitTitle={lesson.module.title} unitLabel={unitNumberLabel(lesson.module.title)} backHref={back} />;
+  // `?presenter=1`: "Màn giảng viên" ở cửa sổ riêng (ghi chú, đồng hồ, màn kế tiếp), nối với cửa sổ Slide đang chiếu. Ghi chú CHỈ đi vào cửa sổ này.
+  if (searchParams?.presenter === "1") return <TeachingPresenter frames={frames} lessonTitle={lesson.title} lessonId={lesson.id} />;
+
+  // Cửa sổ chiếu lên lớp không nhận chữ của ghi chú giảng viên (chỉ số lượng, để hiện dấu chấm "có ghi chú" ở nút Màn giảng viên).
+  const projected = frames.map((f) => (f.notes?.length ? { ...f, notes: f.notes.map(() => "") } : f));
+  return <TeachingDeck lessonId={lesson.id} frames={projected} lessonTitle={lesson.title} courseTitle={lesson.module.course.title} levelLabel={limioHskLabel(lesson.module.course.title)} unitTitle={lesson.module.title} unitLabel={unitNumberLabel(lesson.module.title)} backHref={back} />;
 }
