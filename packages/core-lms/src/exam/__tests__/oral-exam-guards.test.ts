@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { prisma } from "@feedbackme/db";
 import { registerUser } from "../../auth/register";
 import { createCourse } from "../../courses/courses";
@@ -8,12 +8,15 @@ import {
   applyAutoGradingForAttempt,
   bulkCreateExamSessionsInRound,
   createExam,
+  createExamQuestion,
   createExamRound,
   createOralMaterialTopicList,
   disqualifyAttempt,
   extendAttempt,
   forceSubmitAttemptMarkOnly,
+  gradeStuckSubmittedAttempts,
   publishExam,
+  startExamAttempt,
   startOralExamAttempt,
 } from "../";
 import { openForEnrolled } from "../../test/openForEnrolled";
@@ -108,6 +111,79 @@ describe("Guard: applyAutoGradingForAttempt từ chối đề vấn đáp AI", (
     expect(attempt.status).toBe("submitted");
     expect(attempt.score).toBeNull();
     expect(attempt.scorePct).toBeNull();
+  });
+});
+
+describe("Guard: cron gỡ kẹt (gradeStuckSubmittedAttempts) bỏ qua đề vấn đáp AI", () => {
+  // Lượt vấn đáp đã nộp ở "submitted" + score=null là trạng thái BÌNH THƯỜNG
+  // (chờ GV chốt điểm ở tab Chấm bài), không phải bài kẹt. Trước khi vá, cron
+  // nhặt chúng mỗi lượt, applyAutoGradingForAttempt ném exam_not_written, rồi
+  // lượt sau nhặt lại — prod 26/11/2026: ~2.000 dòng lỗi/giờ/replica, và 100
+  // lượt vấn đáp chiếm hết `take` nên bài thi viết kẹt thật không tới lượt.
+  it("không nhặt lượt vấn đáp đã nộp, không ghi lỗi, không đổi lượt đó", async () => {
+    const s = await setupOral("st1");
+    const { attemptId } = await startOralExamAttempt(s.learnerId, s.examId);
+    await prisma.examAttempt.update({
+      where: { id: attemptId },
+      data: { status: "submitted", submittedAt: new Date(Date.now() - 3_600_000) },
+    });
+
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const r = await gradeStuckSubmittedAttempts(prisma, { graceMs: 0, batchSize: 1000 });
+      expect(r.attemptIds).not.toContain(attemptId);
+      const logged = errSpy.mock.calls.some((c) => String(c[0]).includes(attemptId));
+      expect(logged).toBe(false);
+    } finally {
+      errSpy.mockRestore();
+    }
+
+    const attempt = await prisma.examAttempt.findUniqueOrThrow({ where: { id: attemptId } });
+    expect(attempt).toMatchObject({ status: "submitted", score: null, scorePct: null, gradedAt: null });
+  });
+
+  it("lượt vấn đáp cũ hơn không chiếm chỗ của bài thi viết kẹt thật (batchSize nhỏ)", async () => {
+    const s = await setupOral("st2");
+    const oral = await startOralExamAttempt(s.learnerId, s.examId);
+    await prisma.examAttempt.update({
+      where: { id: oral.attemptId },
+      data: { status: "submitted", submittedAt: new Date(Date.now() - 2 * 3_600_000) },
+    });
+
+    // Đề viết cùng khoá, 1 câu trắc nghiệm; bài "kẹt" = đã nộp mà worker chưa chấm.
+    const now = Date.now();
+    const { examId: writtenId } = await createExam(s.ownerId, s.courseId, {
+      title: "Viết st2",
+      durationMin: 20,
+      openAt: new Date(now - 60_000),
+      closeAt: new Date(now + 7 * 24 * 60 * 60_000),
+    });
+    const skill = await prisma.skill.create({ data: { code: "oeg.st2", name: "S" } });
+    await createExamQuestion(s.ownerId, writtenId, {
+      type: "mcq",
+      prompt: "Q1",
+      config: {
+        options: [
+          { id: "a", label: "A", isCorrect: true },
+          { id: "b", label: "B", isCorrect: false },
+        ],
+      },
+      points: 5,
+      skillIds: [skill.id],
+    });
+    await publishExam(s.ownerId, writtenId);
+    await openForEnrolled(s.ownerId, writtenId);
+    const written = await startExamAttempt(s.learnerId, writtenId);
+    await prisma.examAttempt.update({
+      where: { id: written.attemptId },
+      data: { status: "submitted", submittedAt: new Date(Date.now() - 3_600_000) },
+    });
+
+    const r = await gradeStuckSubmittedAttempts(prisma, { graceMs: 0, batchSize: 1 });
+    expect(r.errors).toBe(0);
+    expect(r.attemptIds).toEqual([written.attemptId]);
+    const w = await prisma.examAttempt.findUniqueOrThrow({ where: { id: written.attemptId } });
+    expect(w.status).toBe("graded");
   });
 });
 

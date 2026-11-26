@@ -665,9 +665,14 @@ export async function gradeStuckSubmittedAttempts(
       status: { in: ["submitted", "auto_submitted"] },
       score: null,
       submittedAt: { lt: cutoff, not: null },
-      // Phiếu Khảo sát luôn score = null và không bao giờ chấm. Không loại ra thì
-      // chúng chiếm hết `take` mỗi lượt và bài thi kẹt thật không bao giờ tới lượt.
-      exam: { purpose: { not: "survey" } },
+      // Hai loại luôn ở "đã nộp" + score = null mà KHÔNG kẹt, nên phải loại khỏi
+      // truy vấn (không thì chúng chiếm hết `take` mỗi lượt và bài kẹt thật không
+      // bao giờ tới lượt):
+      // - Phiếu Khảo sát: không bao giờ chấm.
+      // - Vấn đáp AI (kind=oral): chờ GV chốt điểm ở tab Chấm bài
+      //   (submitOralEvaluation); applyAutoGradingForAttempt ném exam_not_written,
+      //   nên trước khi loại ra, mỗi lượt cron ghi lại đúng 100 dòng lỗi (26/11/2026).
+      exam: { purpose: { not: "survey" }, kind: { not: "oral" } },
     },
     select: { id: true },
     take: batchSize,
