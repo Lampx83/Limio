@@ -124,7 +124,7 @@ WORKDIR /app/packages/db
 # ngoài 9 loại có mẫu dự phòng trong code sẽ không gửi được. Seed chỉ ghi đè mẫu
 # chưa từng được admin sửa (updatedByUserId = null).
 # Seed failures are non-fatal: migrations have already succeeded, web can boot.
-CMD ["sh", "-c", "pnpm exec prisma migrate deploy && (pnpm exec tsx src/seed-mission-templates.ts || echo 'WARN: mission-templates seed failed (non-fatal)') && (pnpm exec tsx src/seed-feature-flags.ts || echo 'WARN: feature-flags seed failed (non-fatal)') && (pnpm exec tsx src/seed-email-templates.ts || echo 'WARN: email-templates seed failed (non-fatal)')"]
+CMD ["sh", "-c", "pnpm exec prisma migrate deploy && (pnpm exec tsx src/seed-mission-templates.ts || echo 'WARN: mission-templates seed failed (non-fatal)') && (pnpm exec tsx src/seed-feature-flags.ts || echo 'WARN: feature-flags seed failed (non-fatal)') && (pnpm exec tsx src/seed-plans.ts || echo 'WARN: plans seed failed (non-fatal)') && (pnpm exec tsx src/seed-email-templates.ts || echo 'WARN: email-templates seed failed (non-fatal)')"]
 
 # ---------- runner (Next.js standalone) ----------
 FROM node:${NODE_VERSION} AS runner
