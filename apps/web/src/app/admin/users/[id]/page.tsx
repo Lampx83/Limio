@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { isDeletedUserEmail } from "@feedbackme/core-lms";
 import UserRoleManager from "./UserRoleManager";
+import SubscriptionManager from "../../_components/SubscriptionManager";
 import UserOrgAssigner from "./UserOrgAssigner";
 import ImpersonateButton from "./ImpersonateButton";
 import DeleteUserButton from "./DeleteUserButton";
@@ -176,6 +177,12 @@ export default async function AdminUserDetailPage({
             currentOrgId={user.organizationId}
             orgs={orgs}
           />
+        </section>
+
+        {/* Gói tài khoản */}
+        <section className="card lg:col-span-2">
+          <h2 className="mb-3 text-base font-semibold">Gói tài khoản</h2>
+          <SubscriptionManager userId={user.id} />
         </section>
 
         {/* Auth providers */}

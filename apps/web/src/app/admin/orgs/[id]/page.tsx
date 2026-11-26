@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { listAcademicTerms, listOrgAdmins } from "@feedbackme/core-lms";
 import OrgAdminManager from "./OrgAdminManager";
+import SubscriptionManager from "../../_components/SubscriptionManager";
 import OrgMembersClient from "@/app/org-admin/members/OrgMembersClient";
 import OrgSettingsClient from "@/app/org-admin/settings/OrgSettingsClient";
 import AcademicTermsManager from "@/app/org-admin/settings/AcademicTermsManager";
@@ -93,6 +94,14 @@ export default async function AdminOrgDetailPage({
           initialTerms={terms}
           todayKey={toDayKey(new Date())}
         />
+      </section>
+
+      <section className="card mt-6">
+        <h2 className="mb-1 text-base font-semibold">Gói tài khoản</h2>
+        <p className="mb-3 text-xs text-muted">
+          Gói của tổ chức: gán theo hợp đồng, gia hạn hoặc huỷ. Ngày tính theo giờ Việt Nam.
+        </p>
+        <SubscriptionManager organizationId={org.id} />
       </section>
 
       <section className="card mt-6">

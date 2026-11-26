@@ -22,6 +22,7 @@ import {
   Building2,
   type LucideIcon,
   HardDrive,
+  Package,
   ListChecks,
 } from "lucide-react";
 
@@ -81,6 +82,7 @@ const GROUPS: Group[] = [
       { label: "Email templates", href: "/admin/emails", icon: Mail },
       { label: "Token AI", href: "/admin/ai-tokens", icon: Coins },
       { label: "Dung lượng", href: "/admin/storage", icon: HardDrive },
+      { label: "Gói tài khoản", href: "/admin/plans", icon: Package },
     ],
   },
   {
