@@ -1,6 +1,6 @@
 /**
- * Bìa sách trên trang bán: vuông góc như cuốn sách thật, có gáy (bóng ở mép trái), cạnh trang ở bên phải và phía dưới, nghiêng nhẹ trong không gian
- * và dựng thẳng lại khi rê chuột vào thẻ chứa nó (CSS `.book3d*` ở globals.css). Thuần trình bày; `alt` rỗng nếu tên sách đã nằm ngay cạnh.
+ * Bìa sách trên trang bán: vuông góc như cuốn sách thật, có gáy (bóng ở mép trái), cạnh trang ở bên phải và phía dưới, nghiêng rất nhẹ (3°) trong không gian,
+ * đứng yên (không có hiệu ứng chuyển động; CSS `.book3d*` ở globals.css). Thuần trình bày; `alt` rỗng nếu tên sách đã nằm ngay cạnh.
  */
 export default function BookCover({
   src,
