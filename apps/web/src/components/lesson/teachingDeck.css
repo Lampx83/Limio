@@ -1218,15 +1218,6 @@
 .teach-timer[data-paused="true"] {
   opacity: 0.6;
 }
-.teach-dot {
-  position: absolute;
-  top: 0.35rem;
-  right: 0.35rem;
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 50%;
-  background: rgb(var(--hl));
-}
 .teach-btn {
   position: relative;
 }
@@ -1265,29 +1256,13 @@
   background: rgb(var(--surface, 255 255 255));
 }
 .teach-presenter-now {
-  flex: 1;
-  overflow-y: auto;
+  padding-block: 1.5rem;
 }
 .teach-presenter-title {
-  margin: 0 0 0.75rem;
-  font-size: 1.5rem;
+  margin: 0;
+  font-size: 2rem;
   font-weight: 800;
   line-height: 1.25;
-}
-.teach-presenter-notes {
-  margin: 0;
-  padding-left: 1.4rem;
-  list-style: disc;
-  font-size: 1.35rem;
-  line-height: 1.55;
-}
-.teach-presenter-notes li + li {
-  margin-top: 0.6rem;
-}
-.teach-presenter-empty {
-  margin: 0;
-  font-size: 1.05rem;
-  color: rgb(0 0 0 / 0.55);
 }
 .teach-presenter-nav {
   display: flex;

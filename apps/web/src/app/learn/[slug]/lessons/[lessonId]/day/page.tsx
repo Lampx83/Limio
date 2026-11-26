@@ -40,7 +40,7 @@ export default async function TeachPage({ params, searchParams }: Props) {
   if (!lesson || lesson.isHidden || lesson.module.course.slug !== params.slug) notFound();
   if (!(await canGradeCourse(userId, lesson.module.course.id))) notFound();
 
-  // Trang này chỉ mở cho người dạy (canGradeCourse ở trên) nên mới được nhận ghi chú giảng viên (`teacher_note`); học viên không bao giờ tới đây.
+  // Trang này chỉ mở cho người dạy (canGradeCourse ở trên).
   const items = lesson.contentItems;
   const practiceItems = items.filter((c) => c.type === "exam_practice");
   const summaries = practiceItems.length ? await getPracticeBlockSummaries(practiceItems.map((c) => c.id)) : {};
@@ -64,13 +64,10 @@ export default async function TeachPage({ params, searchParams }: Props) {
     lessonTitle: lesson.title,
     items: items.map((c) => ({ id: c.id, type: c.type, payload: c.payload })),
     practices,
-    includeNotes: true,
   });
 
-  // `?presenter=1`: "Màn giảng viên" ở cửa sổ riêng (ghi chú, đồng hồ, màn kế tiếp), nối với cửa sổ Slide đang chiếu. Ghi chú CHỈ đi vào cửa sổ này.
+  // `?presenter=1`: "Màn giảng viên" ở cửa sổ riêng (đồng hồ, màn kế tiếp, chuyển màn), nối với cửa sổ Slide đang chiếu.
   if (searchParams?.presenter === "1") return <TeachingPresenter frames={frames} lessonTitle={lesson.title} lessonId={lesson.id} />;
 
-  // Cửa sổ chiếu lên lớp không nhận chữ của ghi chú giảng viên (chỉ số lượng, để hiện dấu chấm "có ghi chú" ở nút Màn giảng viên).
-  const projected = frames.map((f) => (f.notes?.length ? { ...f, notes: f.notes.map(() => "") } : f));
-  return <TeachingDeck lessonId={lesson.id} frames={projected} lessonTitle={lesson.title} courseTitle={lesson.module.course.title} levelLabel={limioHskLabel(lesson.module.course.title)} unitTitle={lesson.module.title} unitLabel={unitNumberLabel(lesson.module.title)} backHref={back} />;
+  return <TeachingDeck lessonId={lesson.id} frames={frames} lessonTitle={lesson.title} courseTitle={lesson.module.course.title} levelLabel={limioHskLabel(lesson.module.course.title)} unitTitle={lesson.module.title} unitLabel={unitNumberLabel(lesson.module.title)} backHref={back} />;
 }

@@ -29,7 +29,7 @@ export interface TeachingPracticeInput {
   passages: Array<{ id: string; title: string; contentJson: unknown }>;
 }
 
-export type TeachingFrame = TeachingFrameBase & { notes?: string[] };
+export type TeachingFrame = TeachingFrameBase;
 
 type TeachingFrameBase =
   | { kind: "cover"; label: string; title: string }
@@ -239,11 +239,6 @@ export function buildTeachingFrames(input: {
   items: TeachingItem[];
   /** Theo `item.id` của khối exam_practice. Khối không có ở đây (chưa có câu nào) bị bỏ. */
   practices: Record<string, TeachingPracticeInput>;
-  /**
-   * Đưa ghi chú giảng viên (`teacher_note`) vào `frame.notes`: ghi chú gắn với màn đầu tiên của khối liền SAU nó (không có khối sau thì gắn màn cuối).
-   * CHỈ bật ở trang dành cho người dạy; học viên không bao giờ nhận các màn này.
-   */
-  includeNotes?: boolean;
 }): TeachingFrame[] {
   const frames: TeachingFrame[] = [{ kind: "cover", label: "", title: input.lessonTitle }];
   // Từ mới của cả bài: tô nổi bật khi gặp trong hội thoại và kịch bản đóng vai.
@@ -251,26 +246,9 @@ export function buildTeachingFrames(input: {
     input.items.filter((i) => i.type === "vocab_list").flatMap((i) => arr(rec(i.payload).items).map((v) => str(rec(v).term))),
   );
 
-  let pendingNotes: string[] = [];
-  let startLen = frames.length;
-  const flushNotes = () => {
-    if (pendingNotes.length && frames.length > startLen) {
-      const f = frames[startLen]!;
-      f.notes = [...(f.notes ?? []), ...pendingNotes];
-      pendingNotes = [];
-    }
-  };
   for (const item of input.items) {
-    // Ghi chú đứng trước khối nào thì gắn vào màn đầu của khối đó (xem `includeNotes`).
-    flushNotes();
-    startLen = frames.length;
-    if (item.type === "teacher_note") {
-      if (input.includeNotes) {
-        const lines = topLevelBlocks(str(rec(item.payload).html)).map(plainText).filter(Boolean);
-        if (lines.length) pendingNotes.push(...lines);
-      }
-      continue;
-    }
+    // Ghi chú giảng viên (`teacher_note`) không vào màn nào: Slide chiếu lên lớp, học viên nhìn thấy.
+    if (item.type === "teacher_note") continue;
     const p = rec(item.payload);
     if (item.type === "richtext" || item.type === "markdown") {
       const html = str(p.html);
@@ -350,12 +328,6 @@ export function buildTeachingFrames(input: {
       });
     }
     // Mọi loại khác (video, nhúng, tệp…): không có màn.
-  }
-  flushNotes();
-  // Ghi chú còn lại (đứng sau khối cuối, hoặc khối sau không ra màn nào) gắn vào màn cuối.
-  if (pendingNotes.length) {
-    const last = frames[frames.length - 1]!;
-    last.notes = [...(last.notes ?? []), ...pendingNotes];
   }
   return frames;
 }

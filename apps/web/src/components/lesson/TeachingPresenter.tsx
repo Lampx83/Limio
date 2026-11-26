@@ -6,7 +6,7 @@ import { frameHeading, type TeachingFrame } from "@/lib/teachingFrames";
 
 /**
  * Màn giảng viên của "Chiếu lớp": cửa sổ riêng để thầy/cô đặt ở màn hình của mình, còn cửa sổ Slide đưa sang máy chiếu.
- * Ghi chú giảng viên, đồng hồ buổi dạy và màn kế tiếp chỉ nằm ở đây nên không bao giờ lên màn chiếu cho học viên.
+ * Đồng hồ buổi dạy và màn kế tiếp chỉ nằm ở đây nên không lên màn chiếu cho học viên.
  * Hai cửa sổ nói chuyện qua BroadcastChannel cùng trình duyệt (không qua máy chủ, không lưu gì): đổi màn ở bên nào, bên kia theo.
  */
 export const teachSyncName = (lessonId: string) => `limio-teach-${lessonId}`;
@@ -62,7 +62,6 @@ export default function TeachingPresenter({ frames, lessonTitle, lessonId }: { f
 
   const frame = frames[idx]!;
   const next = frames[idx + 1];
-  const notes = frame.notes ?? [];
 
   return (
     <div className="teach-presenter" data-testid="teach-presenter">
@@ -79,15 +78,6 @@ export default function TeachingPresenter({ frames, lessonTitle, lessonId }: { f
           Đang chiếu · {idx + 1}/{total}
         </p>
         <h2 className="teach-presenter-title">{frameHeading(frame) || lessonTitle}</h2>
-        {notes.length ? (
-          <ul className="teach-presenter-notes">
-            {notes.map((n, i) => (
-              <li key={i}>{n}</li>
-            ))}
-          </ul>
-        ) : (
-          <p className="teach-presenter-empty">Màn này không có ghi chú giảng viên.</p>
-        )}
       </section>
 
       <section className="teach-presenter-next" aria-label="Màn kế tiếp">
@@ -95,7 +85,6 @@ export default function TeachingPresenter({ frames, lessonTitle, lessonId }: { f
         {next ? (
           <>
             <p className="font-semibold">{frameHeading(next) || "Màn tiếp theo"}</p>
-            {next.notes?.length ? <p className="mt-1 text-sm text-muted">Có {next.notes.length} ghi chú.</p> : null}
           </>
         ) : (
           <p className="text-muted">Đây là màn cuối.</p>

@@ -138,7 +138,7 @@ export default function TeachingDeck({
   /** Cấp độ hiện trên màn chiếu, vd. "Limio HSK 4" (rút từ tên khoá); null = chỉ hiện tên khoá. */
   levelLabel?: string | null;
   backHref: string;
-  /** Khoá đồng bộ với cửa sổ "Màn giảng viên" (ghi chú, đồng hồ, màn kế tiếp) đặt ở màn hình của thầy/cô. */
+  /** Khoá đồng bộ với cửa sổ "Màn giảng viên" (đồng hồ, màn kế tiếp) đặt ở màn hình của thầy/cô. */
   lessonId: string;
 }) {
   const [idx, setIdx] = useState(0);
@@ -176,8 +176,6 @@ export default function TeachingDeck({
   const frame = frames[idx]!;
   const sections = useMemo(() => frameSections(frames), [frames]);
   const accent = frameAccent(frame);
-  const notesTotal = useMemo(() => frames.reduce((n, f) => n + (f.notes?.length ?? 0), 0), [frames]);
-  const frameHasNotes = (frame.notes?.length ?? 0) > 0;
 
   // ---- âm thanh: một nguồn một lúc; đổi màn thì dừng ----
   const stopAudio = useCallback(() => {
@@ -511,19 +509,18 @@ export default function TeachingDeck({
           <span className="teach-title-sub">{unitTitle ?? courseTitle}</span>
         </div>
         <div className="teach-bar-actions">
-          {/* Nhóm giảng viên: mở "Màn giảng viên" ở cửa sổ riêng (ghi chú + đồng hồ + màn kế tiếp). Ghi chú không bao giờ hiện trên cửa sổ này vì cửa sổ này có thể đang lên máy chiếu. */}
+          {/* Nhóm giảng viên: mở "Màn giảng viên" ở cửa sổ riêng (đồng hồ + màn kế tiếp + chuyển màn); cửa sổ này có thể đang lên máy chiếu nên không chứa gì của giảng viên. */}
           <div className="teach-group" role="group" aria-label="Công cụ giảng viên">
             <button
               type="button"
               className="teach-btn"
               onClick={openPresenter}
-              title="Mở màn giảng viên ở cửa sổ riêng: ghi chú, đồng hồ, màn kế tiếp. Cửa sổ này đưa sang máy chiếu (N)"
+              title="Mở màn giảng viên ở cửa sổ riêng: đồng hồ, màn kế tiếp. Cửa sổ này đưa sang máy chiếu (N)"
               aria-label="Mở màn giảng viên"
               data-testid="open-presenter"
             >
               <NotebookPen className="h-5 w-5" />
               <span className="teach-btn-label">Màn giảng viên</span>
-              {frameHasNotes ? <span className="teach-dot" aria-hidden /> : null}
             </button>
           </div>
           <span className="teach-sep" aria-hidden />
