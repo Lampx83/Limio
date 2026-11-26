@@ -148,6 +148,9 @@ export async function deleteUser(
     // A8 — e-portfolio là trang trưng bày gắn danh tính; ẩn danh hoá mà giữ
     // lại thì /p/<slug> vẫn sống. Item cascade theo Portfolio.
     await tx.portfolio.deleteMany({ where: { userId: targetUserId } });
+    // Gói tài khoản — thuê bao cá nhân gắn danh tính; xoá user ở đây chỉ ẩn danh hoá nên cascade FK không chạy.
+    // Thuê bao của tổ chức (userId rỗng) không bị đụng.
+    await tx.subscription.deleteMany({ where: { userId: targetUserId } });
 
     await tx.user.update({
       where: { id: targetUserId },

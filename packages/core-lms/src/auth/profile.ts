@@ -227,14 +227,27 @@ const EXPORT_SELECT = {
           team: { select: { name: true, course: { select: { slug: true, title: true } } } },
         },
       },
+      // Gói tài khoản — chỉ thuê bao CÁ NHÂN của chính người này (thuê bao tổ chức không có userId nên không lọt vào);
+      // không mang người cấp, ghi chú nội bộ hay mã đơn.
+      subscriptions: {
+        select: { source: true, startsAt: true, endsAt: true, cancelledAt: true, plan: { select: { key: true } } },
+        orderBy: { startsAt: "asc" },
+      },
 } satisfies Prisma.UserSelect;
 
-export type ExportedProfile = Prisma.UserGetPayload<{ select: typeof EXPORT_SELECT }>;
+type ExportedProfileRaw = Prisma.UserGetPayload<{ select: typeof EXPORT_SELECT }>;
+export type ExportedProfile = Omit<ExportedProfileRaw, "subscriptions"> & {
+  subscriptions: { planKey: string; source: string; startsAt: Date; endsAt: Date; cancelledAt: Date | null }[];
+};
 
 /** Foundational GDPR export — all data tied to the user, in JSON. Never includes passwordHash. */
 export async function exportProfile(userId: string, db: DbClient = prisma): Promise<ExportedProfile> {
-  return db.user.findUniqueOrThrow({
+  const { subscriptions, ...rest } = await db.user.findUniqueOrThrow({
     where: { id: userId },
     select: EXPORT_SELECT,
   });
+  return {
+    ...rest,
+    subscriptions: subscriptions.map(({ plan, ...s }) => ({ planKey: plan.key, ...s })),
+  };
 }
