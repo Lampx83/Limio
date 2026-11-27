@@ -1,5 +1,5 @@
 import { unstable_cache, revalidateTag } from "next/cache";
-import { hasClassSchedule, isCenterEnabledForUser, learnerHasActiveGoal } from "@feedbackme/core-lms";
+import { hasClassSchedule, isCenterCourse, isCenterEnabledForUser, learnerHasActiveGoal } from "@feedbackme/core-lms";
 
 export { CENTER_INSTRUCTOR_HREFS, CENTER_LEARNER_HREF, LEARNER_GOALS_HREF, TEACHING_ONLY_HREFS } from "./centerAccess.constants";
 
@@ -14,6 +14,9 @@ export const getInstructorCenterAccess = unstable_cache(
   ["center-access-instructor"],
   { revalidate: 30, tags: [TAG] },
 );
+
+/** Khoá này có dùng tính năng trung tâm không (theo loại tổ chức sở hữu khoá, hoặc đã có lớp đặt lịch). Không cache: một truy vấn nhẹ theo khoá. */
+export const getCourseCenterAccess = (courseId: string) => isCenterCourse(courseId);
 
 export const getLearnerCenterAccess = unstable_cache(
   async (userId: string) => hasClassSchedule(userId),

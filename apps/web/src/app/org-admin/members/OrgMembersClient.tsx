@@ -37,8 +37,11 @@ function errorMessage(code: unknown): string {
 
 export default function OrgMembersClient({
   organizationId,
+  isCenter = false,
 }: {
   organizationId: string;
+  /** Tổ chức loại trung tâm: chỉ ở đây mới cấp được vai "Giảng viên trung tâm". */
+  isCenter?: boolean;
 }) {
   const [data, setData] = useState<MembersResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -245,6 +248,7 @@ export default function OrgMembersClient({
                   ) : (
                     m.roles.join(", ")
                   )}
+{(isCenter || m.roles.includes("center_teacher")) && (
                   <label className="mt-1.5 flex cursor-pointer items-center gap-2 text-xs text-muted">
                     <input
                       type="checkbox"
@@ -254,6 +258,7 @@ export default function OrgMembersClient({
                     />
                     Giảng viên trung tâm (chỉ dạy)
                   </label>
+                  )}
                 </td>
                 <td className="px-4 py-2.5 text-xs text-muted tabular-nums">
                   {formatDate(m.createdAt)}

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { signOut } from "next-auth/react";
+import type { OrgKind } from "@feedbackme/core-lms";
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 import { useEffect, useRef, useState } from "react";
@@ -17,6 +18,9 @@ const ROLE_BADGES: Record<string, { label: "role.learner" | "role.instructor" | 
   mentor:     { label: "role.mentor",     className: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" },
 };
 
+const ADMIN_BADGE_CLASS =
+  "inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-semibold text-brand-700 dark:bg-brand-950/40 dark:text-brand-300";
+
 export default function UserMenu({
   name,
   email,
@@ -25,6 +29,8 @@ export default function UserMenu({
   activeRole: cookieRole,
   isResearcher = false,
   isOrgAdmin = false,
+  isPlatformAdmin = false,
+  adminKinds = [],
   hasReports = false,
 }: {
   name: string;
@@ -36,6 +42,10 @@ export default function UserMenu({
   isResearcher?: boolean;
   /** True nếu user là OrgAdmin của ≥1 trường (hoặc Platform Admin) — xem isAnyOrgAdmin. */
   isOrgAdmin?: boolean;
+  /** Admin nền tảng: nhãn "Admin nền tảng" thay cho nhãn các loại tổ chức. */
+  isPlatformAdmin?: boolean;
+  /** Loại các tổ chức người này được gán quản trị: mỗi loại một nhãn ("Admin trung tâm", "Admin trường", "Admin NXB"). */
+  adminKinds?: OrgKind[];
   /** True nếu user mở được trang Báo cáo nhà xuất bản — xem hasAnyReportAccess. */
   hasReports?: boolean;
 }) {
@@ -109,12 +119,21 @@ export default function UserMenu({
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold leading-tight">{name}</p>
               <p className="truncate text-xs text-muted">{email}</p>
-              {(activeBadge || isResearcher) && (
+              {(activeBadge || isResearcher || isPlatformAdmin || adminKinds.length > 0) && (
                 <div className="mt-1.5 flex flex-wrap gap-1">
-                  {activeBadge && (
+                  {activeBadge && !(isPlatformAdmin && activeRole === "admin") && (
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${activeBadge.className}`}>
                       {t(activeBadge.label)}
                     </span>
+                  )}
+                  {isPlatformAdmin ? (
+                    <span className={ADMIN_BADGE_CLASS}>{t("userMenu.adminBadge.platform")}</span>
+                  ) : (
+                    adminKinds.map((k) => (
+                      <span key={k} className={ADMIN_BADGE_CLASS}>
+                        {t(`userMenu.adminBadge.${k}`)}
+                      </span>
+                    ))
                   )}
                   {isResearcher && (
                     <span className="inline-flex items-center rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-700 dark:bg-violet-950/40 dark:text-violet-300">

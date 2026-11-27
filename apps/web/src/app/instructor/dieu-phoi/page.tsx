@@ -8,22 +8,30 @@ import CenterBoardView from "@/components/center/CenterBoardView";
 
 export const dynamic = "force-dynamic";
 
-/** Bảng điều phối lịch cho chủ khoá / đồng giảng viên của một trường (CENTER M, Q1): thấy các khoá của mình. OrgAdmin dùng /org-admin/dieu-phoi. */
+/** Bảng điều phối lịch cho chủ khoá / đồng giảng viên của một trường (CENTER M, Q1): thấy các khoá của mình; giảng viên trung tâm (chỉ dạy) chỉ thấy buổi được xếp cho mình. OrgAdmin dùng /org-admin/dieu-phoi. */
 export default async function InstructorBoardPage({ searchParams }: { searchParams: { che_do?: string; ngay?: string } }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/instructor/dieu-phoi");
   const userId = session.user.id;
   if (!(await getInstructorCenterAccess(userId))) redirect("/instructor/dashboard");
-  const course = await prisma.courseInstructor.findFirst({
-    where: { userId, role: { in: [...EDIT_ROLES] }, course: { organizationId: { not: null } } },
-    select: { course: { select: { organization: { select: { id: true, name: true, centerEnabled: true } } } } },
-    orderBy: { createdAt: "asc" },
-  });
+  const pick = { course: { select: { organization: { select: { id: true, name: true, centerEnabled: true } } } } } as const;
+  // Ưu tiên khoá mình sửa được; giảng viên trung tâm (chỉ dạy) không có khoá nào như vậy nên lấy khoá mình được xếp dạy.
+  const course =
+    (await prisma.courseInstructor.findFirst({
+      where: { userId, role: { in: [...EDIT_ROLES] }, course: { organizationId: { not: null } } },
+      select: pick,
+      orderBy: { createdAt: "asc" },
+    })) ??
+    (await prisma.courseInstructor.findFirst({
+      where: { userId, course: { organizationId: { not: null } } },
+      select: pick,
+      orderBy: { createdAt: "asc" },
+    }));
   const org = course?.course.organization;
   return (
     <main>
       <h1 className="text-h1">Điều phối lịch</h1>
-      <p className="mt-1 text-sm text-muted">Các buổi thuộc khoá thầy/cô quản lý: mỗi khối là một buổi học, vạch hồng là bây giờ.</p>
+      <p className="mt-1 text-sm text-muted">Các buổi của thầy/cô: mỗi khối là một buổi học, vạch hồng là bây giờ.</p>
       <div className="mt-4">
         {org && !org.centerEnabled ? (
           <EmptyState title="Tổ chức này không phải trung tâm" description="Bảng điều phối dành cho tổ chức loại trung tâm. Nhờ quản trị nền tảng đổi loại nếu cần." />

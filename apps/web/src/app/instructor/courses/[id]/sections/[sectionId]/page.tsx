@@ -23,7 +23,7 @@ import SectionGoalsCard from "./SectionGoalsCard";
 import SectionTabs from "./SectionTabs";
 import { resolveSectionTab } from "@/lib/sectionTabs";
 import { loadLearnerGoalProgress } from "@/lib/goalProgress";
-import { getInstructorCenterAccess } from "@/lib/centerAccess";
+import { getCourseCenterAccess } from "@/lib/centerAccess";
 
 export const dynamic = "force-dynamic";
 
@@ -71,9 +71,9 @@ export default async function SectionRosterPage({
     }
   }
 
-  // Tính năng trung tâm (lịch dạy, chuyên cần, giáo trình) chỉ hiện khi tài khoản được bật; không thì trang lớp
+  // Tính năng trung tâm (lịch dạy, chuyên cần, giáo trình) chỉ hiện khi khoá thuộc tổ chức loại trung tâm (hoặc đã có lịch); không thì trang lớp
   // chỉ còn danh sách học viên như trước và không tốn thêm truy vấn.
-  const centerEnabled = await getInstructorCenterAccess(userId);
+  const centerEnabled = await getCourseCenterAccess(params.id);
   // Hai tab khi dùng tính năng trung tâm: "Lịch dạy" (đặt lịch, các buổi) và "Học viên" (chuyên cần, mục tiêu, danh sách).
   // Mỗi tab chỉ tải dữ liệu của chính nó. Không dùng trung tâm: chỉ có danh sách học viên như trước.
   const tab = resolveSectionTab(searchParams.tab, centerEnabled);

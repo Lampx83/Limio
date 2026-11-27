@@ -18,7 +18,11 @@ export const viHeader = {
 
   "userMenu.dashboard": "Tổng quan của tôi",
   "userMenu.settings": "Cài đặt tài khoản",
-  "userMenu.orgAdmin": "Quản trị trường (OrgAdmin)",
+  "userMenu.orgAdmin": "Quản trị đơn vị",
+  "userMenu.adminBadge.platform": "Admin nền tảng",
+  "userMenu.adminBadge.center": "Admin trung tâm",
+  "userMenu.adminBadge.school": "Admin trường",
+  "userMenu.adminBadge.publisher": "Admin NXB",
   "userMenu.publisherReport": "Báo cáo nhà xuất bản",
   "userMenu.signOut": "Đăng xuất",
 

@@ -408,15 +408,16 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   lớp học" → "Vào học". Từ tab này còn mở được trang "Nhóm làm bài tập" (mục 6).
 - **Bật tính năng trung tâm** (mới, CENTER mục G): các mục **"Lịch dạy"** và **"Giáo trình"** trong menu LMS (và khối
   "Lịch dạy", bảng "Chuyên cần", thông báo giáo trình có bản mới ở trang lớp) **chỉ hiện khi tính năng trung tâm được bật** cho
-  tài khoản: trường của giảng viên có **loại "Trung tâm"** (do Platform Admin đặt ở trang quản trị trường; quản trị của trường không
-  tự đổi được), hoặc Platform Admin cấp cờ `center.access` riêng cho một tài khoản chưa thuộc trường, hoặc giảng viên
-  đang dạy khoá có lớp đã đặt lịch (không bị mất lối vào). Học viên thấy mục **"Lịch học"** khi đang học ở lớp có buổi. Tắt chỉ ẩn,
+  tài khoản: giảng viên thuộc một tổ chức có **loại "Trung tâm"** (do Platform Admin đặt ở trang quản trị tổ chức; quản trị của
+  tổ chức không tự đổi được), hoặc đang dạy một khoá của trung tâm, hoặc đang dạy khoá có lớp đã đặt lịch (không bị mất lối
+  vào). Giảng viên của trường thường và của nhà xuất bản không có các mục này. Học viên thấy mục **"Lịch học"** khi đang học ở lớp có buổi. Tắt chỉ ẩn,
   không xoá dữ liệu.
 - **Giảng viên trung tâm** (mới, CENTER mục H): vai trò **chỉ dạy, không soạn**, do Platform Admin hoặc quản trị trường cấp cho
-  thành viên của trường (trang quản lý thành viên của quản trị trường, công tắc **"Giảng viên trung tâm (chỉ dạy)"** ở cột vai
-  trò). Giảng viên trung tâm làm việc ở không gian "Giảng viên" nhưng menu chỉ còn **"Lịch dạy"**, **"Assignment"**, **"Forum Q&A"**
-  (và "Giám sát phòng thi" nếu được xếp coi thi): không có "Khoá học của tôi", "Giáo trình", Limio-Live, Vấn đáp AI, Kiểm tra đánh
-  giá, Đấu trường, Phân tích; không tạo được khoá. Trang chủ của họ là **"Hôm nay tôi dạy"**: các buổi được xếp cho họ hôm nay và
+  thành viên của tổ chức loại trung tâm (trang quản lý thành viên của quản trị tổ chức, công tắc **"Giảng viên trung tâm (chỉ dạy)"** ở cột vai
+  trò). Giảng viên trung tâm làm việc ở không gian "Giảng viên" nhưng menu chỉ còn **"Lịch dạy"**, **"Điều phối lịch"**, **"Giáo trình"**
+  (và "Giám sát phòng thi" nếu được xếp coi thi); điểm danh và nhận xét sau buổi làm từ "Lịch dạy". Không có "Khoá học của tôi",
+  "Assignment", "Forum Q&A", Limio-Live, Vấn đáp AI, Kiểm tra đánh giá, Đấu trường, Phân tích; không tạo được khoá. "Điều phối
+  lịch" của họ chỉ hiện các buổi và lớp được xếp cho mình, chỉ xem; "Giáo trình" chỉ xem bảng phân phối chương trình. Trang chủ của họ là **"Hôm nay tôi dạy"**: các buổi được xếp cho họ hôm nay và
   7 ngày tới, mỗi buổi có tên giáo án, liên kết "Bài của buổi" và nút **"Điểm danh"**, cùng "Lịch dạy của tôi" dạng lịch. Họ chỉ
   thấy lớp và buổi được xếp cho mình (giáo viên dự kiến của buổi, hoặc giáo viên phụ trách lớp). Ở trang lớp họ chỉ xem: không có
   form đặt lịch, "Sửa", "Huỷ buổi", "+ Thêm buổi dạy bù"; vẫn có "Điểm danh" ở buổi của mình. Đặt lịch, huỷ buổi, dạy bù, cập nhật

@@ -1,6 +1,6 @@
 /**
  * Cấp/thu hồi vai trò giảng viên trung tâm cho thành viên của một trường (CENTER, mục H).
- * Platform Admin hoặc quản trị trường của chính trường đó làm được; người nhận phải là thành viên của trường.
+ * Chỉ cấp được trong tổ chức loại trung tâm. Platform Admin hoặc quản trị của chính tổ chức đó làm được; người nhận phải là thành viên của trường.
  * Vai trò này không cho quyền soạn nội dung: xem courses/teachingScope.ts.
  */
 import { prisma, type PrismaClient } from "@feedbackme/db";
@@ -20,8 +20,10 @@ export async function setOrgMemberCenterTeacher(
   if (!(await isAdmin(actorUserId, db)) && !(await isOrgAdminOf(actorUserId, organizationId, db))) {
     throw new OrgMemberError("forbidden");
   }
-  const org = await db.organization.findUnique({ where: { id: organizationId }, select: { id: true } });
+  const org = await db.organization.findUnique({ where: { id: organizationId }, select: { id: true, kind: true } });
   if (!org) throw new OrgMemberError("org_not_found");
+  // Vai này chỉ có nghĩa trong trung tâm: trường thường và nhà xuất bản không cấp được (thu hồi vai cũ thì vẫn được).
+  if (enabled && org.kind !== "center") throw new OrgMemberError("validation_failed");
   const target = await db.user.findUnique({ where: { id: targetUserId }, select: { organizationId: true } });
   if (!target || target.organizationId !== organizationId) throw new OrgMemberError("not_member");
 

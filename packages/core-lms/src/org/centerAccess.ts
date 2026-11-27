@@ -1,50 +1,39 @@
 /**
- * Tính năng trung tâm theo tổ chức (CENTER, docs/CENTER-schedule-attendance-AC.md mục G). Từ 2026-11-27 do LOẠI tổ chức quyết định
- * (`kind = center`, xem orgKind.ts); công tắc riêng của OrgAdmin đã bỏ.
+ * Tính năng trung tâm theo LOẠI tổ chức (CENTER, docs/CENTER-schedule-attendance-AC.md mục G; chuẩn hoá giáo viên theo loại 2026-11-27,
+ * docs/tieu-chi/giao-vien-theo-loai-to-chuc.md). Chỉ tổ chức loại `center` (xem orgKind.ts) có lịch dạy, giáo trình dựng sẵn, điểm danh,
+ * chuyên cần; trường thường và nhà xuất bản thì giáo viên chỉ có phần giảng viên chuẩn.
  *
- * "Tính năng trung tâm" = lịch dạy, giáo trình dựng sẵn, điểm danh, chuyên cần. Chỉ ẩn/hiện ở GIAO DIỆN
- * (menu, trang, khối trên trang lớp); dữ liệu và API không đổi, nên bật/tắt không làm mất dữ liệu nào.
+ * Chỉ ẩn/hiện ở GIAO DIỆN (menu, trang, khối trên trang lớp); dữ liệu và API không đổi, nên đổi loại không làm mất dữ liệu nào.
  *
- * Giảng viên thấy tính năng khi MỘT trong ba điều đúng:
- *   (a) trường của họ bật (Organization.centerEnabled);
- *   (b) cờ `center.access` đúng cho riêng họ (cơ chế cờ tính năng có sẵn — dùng cho tài khoản chưa thuộc trường);
- *   (c) họ đang dạy một khoá có lớp đã đặt lịch (để không ai bị mất lối vào dữ liệu đã có);
- *   (d) họ là giảng viên trung tâm (vai trò chỉ có ý nghĩa trong trung tâm).
- * Học viên thấy "Lịch học" khi đang học ở một lớp có buổi (điều kiện theo dữ liệu, không theo trường).
+ * Hai mức:
+ *  - theo NGƯỜI (menu, trang "Lịch dạy"...): `isCenterEnabledForUser`;
+ *  - theo KHOÁ (tab Lịch dạy và chuyên cần ở trang lớp): `isCenterCourse`.
+ * Ngoại lệ giữ lối vào dữ liệu đã có: khoá nào đã có lớp đặt lịch thì luôn coi là khoá trung tâm, dù tổ chức là loại gì.
+ * Đã bỏ: cờ riêng `center.access` và vai `center_teacher` đứng một mình (vai này chỉ cấp được trong trung tâm).
+ * Học viên thấy "Lịch học" khi đang học ở một lớp có buổi (điều kiện theo dữ liệu, không theo loại tổ chức).
  */
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import type { DbClient } from "../auth/tokens";
-import { isAdmin, isCenterTeacher, isOrgAdminOf } from "../auth/roles";
+import { isAdmin, isOrgAdminOf } from "../auth/roles";
 import { logAudit } from "../auth/audit";
-import { isFeatureEnabled } from "../auth/permissions";
 import { OrgMemberError } from "./members";
-
-export const CENTER_FEATURE_KEY = "center.access";
 
 /** Giảng viên có được thấy tính năng trung tâm không (xem đầu file). */
 export async function isCenterEnabledForUser(userId: string, db: DbClient = prisma): Promise<boolean> {
-  if (await isCenterTeacher(userId, db)) return true;
-  const user = await db.user.findUnique({
-    where: { id: userId },
-    select: { organization: { select: { centerEnabled: true } } },
-  });
-  if (user?.organization?.centerEnabled) return true;
-  // Quản trị của một trường đã bật tính năng trung tâm: để trang lớp hiện lịch và chuyên cần khi họ mở lớp mình xếp.
-  const adminOfCenter = await db.organizationAdmin.findFirst({ where: { userId, organization: { centerEnabled: true } }, select: { userId: true } });
-  if (adminOfCenter) return true;
+  const [own, adminOfCenter, teachesInCenter, taughtScheduled] = await Promise.all([
+    db.user.findFirst({ where: { id: userId, organization: { kind: "center" } }, select: { id: true } }),
+    db.organizationAdmin.findFirst({ where: { userId, organization: { kind: "center" } }, select: { userId: true } }),
+    db.courseInstructor.findFirst({ where: { userId, course: { organization: { kind: "center" } } }, select: { courseId: true } }),
+    db.classSchedule.findFirst({ where: { section: { course: { instructors: { some: { userId } } } } }, select: { id: true } }),
+  ]);
+  return own !== null || adminOfCenter !== null || teachesInCenter !== null || taughtScheduled !== null;
+}
 
-  // Cờ riêng. Thiếu dòng cờ (chưa seed) hay lỗi khác đều coi là tắt: menu không được hỏng vì một cờ.
-  try {
-    if (await isFeatureEnabled(userId, CENTER_FEATURE_KEY, db as PrismaClient)) return true;
-  } catch {
-    /* coi là tắt */
-  }
-
-  const taught = await db.classSchedule.findFirst({
-    where: { section: { course: { instructors: { some: { userId } } } } },
-    select: { id: true },
-  });
-  return taught !== null;
+/** Khoá này có dùng tính năng trung tâm không: tổ chức sở hữu là trung tâm, hoặc khoá đã có lớp đặt lịch (không mất lối vào dữ liệu). */
+export async function isCenterCourse(courseId: string, db: DbClient = prisma): Promise<boolean> {
+  const course = await db.course.findUnique({ where: { id: courseId }, select: { organization: { select: { kind: true } } } });
+  if (course?.organization?.kind === "center") return true;
+  return (await db.classSchedule.findFirst({ where: { section: { courseId } }, select: { id: true } })) !== null;
 }
 
 /** Học viên đang học ở lớp nào có buổi học không. */

@@ -343,7 +343,7 @@ export default function InstructorLeftMenu(props: {
   centerEnabled?: boolean;
   /** Cờ `van_dap.access`: có thấy mục Limio Vấn đáp (đang thử nghiệm) không. */
   vanDapEnabled?: boolean;
-  /** Giảng viên trung tâm: chỉ dạy, không soạn — menu rút gọn còn Lịch dạy, Assignment, Forum Q&A. */
+  /** Giảng viên trung tâm: chỉ dạy, không soạn — menu rút gọn còn Lịch dạy, Điều phối lịch, Giáo trình. */
   teachingOnly?: boolean;
 }) {
   return (

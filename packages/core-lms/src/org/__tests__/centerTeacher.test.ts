@@ -12,8 +12,9 @@ async function makeUser(email: string) {
   return (await registerUser({ email, password: "password1234", displayName: email }, BASE)).userId;
 }
 
-async function makeOrg(code: string) {
-  return prisma.organization.create({ data: { code: `${code}-${Date.now()}`, name: `Trường ${code}` } });
+// Vai giảng viên trung tâm chỉ cấp được trong tổ chức loại trung tâm.
+async function makeOrg(code: string, kind: "school" | "center" | "publisher" = "center") {
+  return prisma.organization.create({ data: { code: `${code}-${Date.now()}`, name: `Trường ${code}`, kind, centerEnabled: kind === "center" } });
 }
 
 async function setup(tag: string) {
@@ -101,5 +102,23 @@ describe("setOrgMemberCenterTeacher (H2)", () => {
     await setOrgMemberCenterTeacher(t.orgAdmin, t.org.id, t.member, true);
     await setOrgMemberCenterTeacher(t.orgAdmin, t.org.id, t.member, true); // đã có
     expect(await prisma.auditLog.count({ where: { action: "org.center_teacher_changed" } })).toBe(1);
+  });
+});
+
+describe("setOrgMemberCenterTeacher — chỉ trong trung tâm", () => {
+  it("trường thường và nhà xuất bản không cấp được (validation_failed); thu hồi vai cũ thì vẫn được", async () => {
+    for (const kind of ["school", "publisher"] as const) {
+      const org = await makeOrg(`h2k-${kind}`, kind);
+      const oa = await makeUser(`ct-h2k-${kind}-oa@e.com`);
+      const member = await makeUser(`ct-h2k-${kind}-m@e.com`);
+      await prisma.organizationAdmin.create({ data: { organizationId: org.id, userId: oa } });
+      await prisma.user.update({ where: { id: member }, data: { organizationId: org.id } });
+      await expect(setOrgMemberCenterTeacher(oa, org.id, member, true)).rejects.toMatchObject({ code: "validation_failed" });
+      expect(await isCenterTeacher(member)).toBe(false);
+      // Vai đã có từ trước (khi trường còn là trung tâm) vẫn thu hồi được.
+      const role = await prisma.role.upsert({ where: { name: RoleName.CenterTeacher }, update: {}, create: { name: RoleName.CenterTeacher } });
+      await prisma.userRole.create({ data: { userId: member, roleId: role.id } });
+      await expect(setOrgMemberCenterTeacher(oa, org.id, member, false)).resolves.toEqual({ centerTeacher: false });
+    }
   });
 });

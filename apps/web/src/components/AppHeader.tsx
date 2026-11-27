@@ -6,6 +6,7 @@ import { prisma } from "@feedbackme/db";
 import { hasAnyReportAccess, isAnyOrgAdmin } from "@feedbackme/core-lms";
 import { getRegisterEnabled } from "@/lib/site-settings";
 import UserMenu from "./UserMenu";
+import { getOwnAdminKindsCached } from "@/lib/orgAdminOrgs";
 import StudentMenuTrigger from "./StudentMenuTrigger";
 import NotificationBell from "./NotificationBell";
 import HeaderCalendar from "./HeaderCalendar";
@@ -137,6 +138,8 @@ export default async function AppHeader({ space = null }: { space?: SpaceBrand |
               activeRole={activeRole}
               isResearcher={(user.roles ?? []).includes("researcher")}
               isOrgAdmin={user.id ? await getIsAnyOrgAdminCached(user.id).catch(() => false) : false}
+              isPlatformAdmin={(user.roles ?? []).includes("admin")}
+              adminKinds={user.id ? await getOwnAdminKindsCached(user.id).catch(() => []) : []}
               hasReports={user.id ? await getHasReportsCached(user.id).catch(() => false) : false}
             />
           ) : (

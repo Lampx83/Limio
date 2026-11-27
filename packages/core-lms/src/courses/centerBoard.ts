@@ -3,7 +3,8 @@
  * trùng phòng, vòng đời lớp) nằm ở centerBoardCalc.ts để dashboard và bảng dùng chung.
  *
  * Ai xem (Q1): quản trị trường (OrgAdmin) và Platform Admin thấy cả tổ chức; chủ khoá và đồng giảng viên (người `manage`) thấy các khoá
- * của mình thuộc tổ chức đó. Người chỉ dạy và người ngoài bị từ chối. Tải MỘT lần cho cả khoảng, tính vị trí/làn ở trình duyệt.
+ * của mình thuộc tổ chức đó. Người chỉ dạy (giảng viên trung tâm) chỉ thấy các buổi và lớp ĐƯỢC XẾP cho mình, chỉ xem, không mở trang buổi.
+ * Người ngoài bị từ chối. Tải MỘT lần cho cả khoảng, tính vị trí/làn ở trình duyệt.
  */
 import { prisma } from "@feedbackme/db";
 import type { Prisma } from "@feedbackme/db";
@@ -94,6 +95,8 @@ interface Scope {
   where: Prisma.CourseWhereInput;
   actorUserId: string;
   isOrgWide: boolean;
+  /** Người chỉ dạy: chỉ buổi/lớp được xếp cho mình, dù khoá có nhiều buổi khác. */
+  assignedOnly: boolean;
 }
 
 /** Xác định người xem được thấy gì ở tổ chức này (Q1); ném `forbidden` nếu không có quyền nào. */
@@ -101,15 +104,21 @@ async function resolveScope(actorUserId: string, organizationId: string, db: DbC
   const org = await db.organization.findUnique({ where: { id: organizationId }, select: { id: true } });
   if (!org) throw new CourseAuthzError("not_found");
   if ((await isAdmin(actorUserId, db)) || (await isOrgAdminOf(actorUserId, organizationId, db))) {
-    return { scope: "org", where: { organizationId }, actorUserId, isOrgWide: true };
+    return { scope: "org", where: { organizationId }, actorUserId, isOrgWide: true, assignedOnly: false };
   }
   const mine = await db.courseInstructor.count({ where: { userId: actorUserId, role: { in: [...EDIT_ROLES] }, course: { organizationId } } });
-  if (mine === 0) throw new CourseAuthzError("forbidden");
+  if (mine === 0) {
+    // Người chỉ dạy: có tên trong khoá của tổ chức nhưng không có quyền sửa; chỉ xem phần được xếp cho mình.
+    const taught = await db.courseInstructor.count({ where: { userId: actorUserId, course: { organizationId } } });
+    if (taught === 0) throw new CourseAuthzError("forbidden");
+    return { scope: "mine", where: { organizationId, instructors: { some: { userId: actorUserId } } }, actorUserId, isOrgWide: false, assignedOnly: true };
+  }
   return {
     scope: "mine",
     where: { organizationId, instructors: { some: { userId: actorUserId, role: { in: [...EDIT_ROLES] } } } },
     actorUserId,
     isOrgWide: false,
+    assignedOnly: false,
   };
 }
 
@@ -152,7 +161,15 @@ export async function getOrgBoard(
   const thresholdMin = org?.checkinThresholdMin ?? DEFAULT_CHECKIN_THRESHOLD_MIN;
 
   const rows = await db.classMeeting.findMany({
-    where: { startsAt: { lt: end }, endsAt: { gt: start }, section: { course: sc.where } },
+    where: {
+      startsAt: { lt: end },
+      endsAt: { gt: start },
+      section: { course: sc.where },
+      // Cùng luật `isAssignedToMeeting`: giáo viên dự kiến của buổi, hoặc buổi chưa gán và mình phụ trách lớp.
+      ...(sc.assignedOnly
+        ? { OR: [{ plannedTeacherId: actorUserId }, { plannedTeacherId: null, section: { instructorId: actorUserId } }] }
+        : {}),
+    },
     orderBy: [{ startsAt: "asc" }, { createdAt: "asc" }],
     include: MEETING_INCLUDE,
   });
@@ -225,7 +242,11 @@ export async function getOrgClassTimeline(
   const sc = await resolveScope(actorUserId, organizationId, db);
   const { start, end } = rangeBounds(rawRange.from, rawRange.to);
   const sections = await db.courseSection.findMany({
-    where: { isDefault: false, course: sc.where },
+    where: {
+      isDefault: false,
+      course: sc.where,
+      ...(sc.assignedOnly ? { OR: [{ instructorId: actorUserId }, { classMeetings: { some: { plannedTeacherId: actorUserId } } }] } : {}),
+    },
     select: {
       id: true,
       name: true,

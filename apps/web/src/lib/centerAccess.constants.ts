@@ -8,9 +8,12 @@ export const CENTER_LEARNER_HREF = "/me/lich-hoc";
  */
 export const LEARNER_GOALS_HREF = "/me/muc-tieu";
 
-/** Mục menu mà giảng viên trung tâm (chỉ dạy) được thấy; mọi mục soạn nội dung đều ẩn. */
+/**
+ * Mục menu mà giảng viên trung tâm (chỉ dạy) được thấy; mọi mục soạn nội dung đều ẩn. Điểm danh và nhận xét sau buổi
+ * không có mục riêng: làm từ "Lịch dạy" (nút "Điểm danh" ở mỗi buổi) và trang buổi.
+ */
 export const TEACHING_ONLY_HREFS: ReadonlySet<string> = new Set([
   "/instructor/lich-day",
-  "/instructor/assignments",
-  "/instructor/forum",
+  "/instructor/dieu-phoi",
+  "/instructor/giao-trinh",
 ]);

@@ -5,7 +5,7 @@ import {
   getSectionScheduleSummaries,
   listCourseSections,
 } from "@feedbackme/core-lms";
-import { getInstructorCenterAccess } from "@/lib/centerAccess";
+import { getCourseCenterAccess } from "@/lib/centerAccess";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 
@@ -21,9 +21,9 @@ export async function GET(
     const [sections, unassigned, centerEnabled] = await Promise.all([
       listCourseSections(userId, params.id),
       countUnassignedLearners(userId, params.id),
-      getInstructorCenterAccess(userId),
+      getCourseCenterAccess(params.id),
     ]);
-    // Tóm tắt lịch chỉ có khi tính năng trung tâm bật cho người xem; không thì thẻ lớp giữ nguyên như trước.
+    // Tóm tắt lịch chỉ có khi khoá thuộc trung tâm (hoặc đã có lịch); không thì thẻ lớp giữ nguyên như trước.
     const schedules = centerEnabled ? await getSectionScheduleSummaries(userId, params.id) : null;
     return NextResponse.json({ sections, unassigned, centerEnabled, schedules });
   } catch (e) {

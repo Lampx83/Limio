@@ -27,7 +27,7 @@ export default async function OrgMembersPage() {
     where: { userId },
     select: {
       organizationId: true,
-      organization: { select: { name: true, code: true } },
+      organization: { select: { name: true, code: true, kind: true } },
     },
   });
   if (adminships.length === 0) {
@@ -52,7 +52,7 @@ export default async function OrgMembersPage() {
         </p>
       </div>
 
-      <OrgMembersClient organizationId={primary.organizationId} />
+      <OrgMembersClient organizationId={primary.organizationId} isCenter={primary.organization.kind === "center"} />
       <ReportViewersSection organizationId={primary.organizationId} />
     </div>
   );

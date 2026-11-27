@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { prisma } from "@feedbackme/db";
 import {
   hasClassSchedule,
+  isCenterCourse,
   isCenterEnabledForUser,
 } from "../centerAccess";
 import { setOrganizationKind } from "../orgKind";
@@ -37,20 +38,6 @@ async function courseWithSection(teacher: string, tag: string, withSchedule: boo
     );
   }
   return { courseId, sectionId: section.id };
-}
-
-async function seedFlag(defaultValue = false) {
-  await prisma.featureFlag.create({
-    data: {
-      key: "center.access",
-      group: "lms",
-      name: "Tính năng trung tâm",
-      description: "test",
-      valueType: "boolean",
-      defaultValue,
-      sellable: true,
-    },
-  });
 }
 
 describe("setOrganizationKind (loại tổ chức)", () => {
@@ -96,58 +83,74 @@ describe("setOrganizationKind (loại tổ chức)", () => {
   });
 });
 
-describe("isCenterEnabledForUser (G2)", () => {
-  it("tài khoản chưa thuộc trường, không cờ, không lịch → tắt", async () => {
-    await seedFlag();
-    const u = await makeUser("ca-en-none@e.com");
-    expect(await isCenterEnabledForUser(u)).toBe(false);
+describe("isCenterEnabledForUser / isCenterCourse (theo loại tổ chức)", () => {
+  async function orgOfKind(kind: "school" | "center" | "publisher") {
+    const o = await makeOrg(kind);
+    return prisma.organization.update({ where: { id: o.id }, data: { kind, centerEnabled: kind === "center" } });
+  }
+
+  it("tài khoản chưa thuộc tổ chức nào, không lịch → tắt", async () => {
+    expect(await isCenterEnabledForUser(await makeUser("ca-en-none@e.com"))).toBe(false);
   });
 
-  it("thành viên của trường đã bật → bật; trường chưa bật → tắt", async () => {
-    await seedFlag();
-    const on = await makeOrg("ON");
-    const off = await makeOrg("OFF");
-    await prisma.organization.update({ where: { id: on.id }, data: { centerEnabled: true } });
-    const a = await makeUser("ca-en-a@e.com");
-    const b = await makeUser("ca-en-b@e.com");
-    await prisma.user.update({ where: { id: a }, data: { organizationId: on.id } });
-    await prisma.user.update({ where: { id: b }, data: { organizationId: off.id } });
+  it("thành viên của tổ chức loại trung tâm → bật; trường thường và nhà xuất bản → tắt", async () => {
+    const [center, school, publisher] = [await orgOfKind("center"), await orgOfKind("school"), await orgOfKind("publisher")];
+    const [a, b, c] = [await makeUser("ca-en-a@e.com"), await makeUser("ca-en-b@e.com"), await makeUser("ca-en-c@e.com")];
+    await prisma.user.update({ where: { id: a }, data: { organizationId: center.id } });
+    await prisma.user.update({ where: { id: b }, data: { organizationId: school.id } });
+    await prisma.user.update({ where: { id: c }, data: { organizationId: publisher.id } });
+    expect(await isCenterEnabledForUser(a)).toBe(true);
+    expect(await isCenterEnabledForUser(b)).toBe(false);
+    expect(await isCenterEnabledForUser(c)).toBe(false);
+  });
+
+  it("dạy một khoá thuộc trung tâm → bật dù tài khoản thuộc trường thường; khoá của trường thường hay nhà xuất bản → tắt", async () => {
+    const [center, school, publisher] = [await orgOfKind("center"), await orgOfKind("school"), await orgOfKind("publisher")];
+    const t = await makeUser("ca-en-t@e.com");
+    const u = await makeUser("ca-en-u@e.com");
+    const inCenter = await courseWithSection(t, "en-t", false);
+    await prisma.course.update({ where: { id: inCenter.courseId }, data: { organizationId: center.id } });
+    const inSchool = await courseWithSection(u, "en-u1", false);
+    await prisma.course.update({ where: { id: inSchool.courseId }, data: { organizationId: school.id } });
+    const inPub = await courseWithSection(u, "en-u2", false);
+    await prisma.course.update({ where: { id: inPub.courseId }, data: { organizationId: publisher.id } });
+    expect(await isCenterEnabledForUser(t)).toBe(true);
+    expect(await isCenterEnabledForUser(u)).toBe(false);
+    expect(await isCenterCourse(inCenter.courseId)).toBe(true);
+    expect(await isCenterCourse(inSchool.courseId)).toBe(false);
+    expect(await isCenterCourse(inPub.courseId)).toBe(false);
+  });
+
+  it("quản trị của tổ chức loại trung tâm → bật; quản trị nhà xuất bản → tắt", async () => {
+    const center = await orgOfKind("center");
+    const publisher = await orgOfKind("publisher");
+    const a = await makeUser("ca-en-oa1@e.com");
+    const b = await makeUser("ca-en-oa2@e.com");
+    await prisma.organizationAdmin.create({ data: { organizationId: center.id, userId: a } });
+    await prisma.organizationAdmin.create({ data: { organizationId: publisher.id, userId: b } });
     expect(await isCenterEnabledForUser(a)).toBe(true);
     expect(await isCenterEnabledForUser(b)).toBe(false);
   });
 
-  it("cờ center.access cấp riêng cho một tài khoản không thuộc trường → bật", async () => {
-    await seedFlag();
-    const u = await makeUser("ca-en-flag@e.com");
-    const grantedBy = await makeUser("ca-en-flag-by@e.com");
-    await prisma.userFeatureOverride.create({
-      data: { userId: u, featureKey: "center.access", value: true, reason: "thử nghiệm", grantedBy },
-    });
-    expect(await isCenterEnabledForUser(u)).toBe(true);
-  });
-
-  it("giảng viên trung tâm luôn thấy khu trung tâm, kể cả khi trường chưa bật", async () => {
-    await seedFlag();
+  it("vai center_teacher đứng một mình, hay cờ center.access cũ, không còn bật tính năng trung tâm", async () => {
     const admin = await makeUser("ca-en-ct-admin@e.com");
     await grantRole(admin, { targetUserId: admin, roleName: "admin" });
     const ct = await makeUser("ca-en-ct@e.com");
     await grantRole(admin, { targetUserId: ct, roleName: "center_teacher" });
-    expect(await isCenterEnabledForUser(ct)).toBe(true);
+    expect(await isCenterEnabledForUser(ct)).toBe(false);
   });
 
-  it("thiếu dòng cờ trong DB không làm hỏng: coi là tắt", async () => {
-    const u = await makeUser("ca-en-noflag@e.com");
-    expect(await isCenterEnabledForUser(u)).toBe(false);
-  });
-
-  it("đang dạy khoá có lớp đã đặt lịch → bật dù trường tắt (không mất lối vào); lớp chưa có lịch thì không", async () => {
-    await seedFlag();
+  it("khoá đã có lớp đặt lịch vẫn là khoá trung tâm dù tổ chức là trường thường (không mất lối vào); lớp chưa có lịch thì không", async () => {
+    const school = await orgOfKind("school");
     const withSched = await makeUser("ca-en-s@e.com");
     const noSched = await makeUser("ca-en-ns@e.com");
-    await courseWithSection(withSched, "en-s", true);
-    await courseWithSection(noSched, "en-ns", false);
+    const a = await courseWithSection(withSched, "en-s", true);
+    const b = await courseWithSection(noSched, "en-ns", false);
+    await prisma.course.updateMany({ where: { id: { in: [a.courseId, b.courseId] } }, data: { organizationId: school.id } });
     expect(await isCenterEnabledForUser(withSched)).toBe(true);
     expect(await isCenterEnabledForUser(noSched)).toBe(false);
+    expect(await isCenterCourse(a.courseId)).toBe(true);
+    expect(await isCenterCourse(b.courseId)).toBe(false);
   });
 });
 

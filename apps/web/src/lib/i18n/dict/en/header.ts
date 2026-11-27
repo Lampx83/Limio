@@ -21,7 +21,11 @@ export const enHeader: PartialDict<typeof viHeader> = {
 
   "userMenu.dashboard": "My overview",
   "userMenu.settings": "Account settings",
-  "userMenu.orgAdmin": "School admin (OrgAdmin)",
+  "userMenu.orgAdmin": "Organization admin",
+  "userMenu.adminBadge.platform": "Platform admin",
+  "userMenu.adminBadge.center": "Center admin",
+  "userMenu.adminBadge.school": "School admin",
+  "userMenu.adminBadge.publisher": "Publisher admin",
   "userMenu.publisherReport": "Publisher report",
   "userMenu.signOut": "Sign out",
 

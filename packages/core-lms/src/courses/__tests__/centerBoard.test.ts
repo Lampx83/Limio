@@ -95,10 +95,42 @@ describe("getOrgBoard", () => {
     expect(board.meetings[0]!.canManage).toBe(true);
   });
 
-  it("từ chối: người chỉ dạy (không sửa), người ngoài, OrgAdmin của tổ chức khác", async () => {
+  it("người chỉ dạy chỉ thấy buổi và lớp ĐƯỢC XẾP cho mình, và không mở được trang buổi (canManage = false)", async () => {
     const t = await setup();
     const teacherOnly = await user("tonly");
     await prisma.courseInstructor.create({ data: { courseId: t.course1, userId: teacherOnly, role: "non-editing-teacher" } });
+    await prisma.courseInstructor.create({ data: { courseId: t.course2, userId: teacherOnly, role: "non-editing-teacher" } });
+    const secC = await prisma.courseSection.create({ data: { courseId: t.course1, name: "Lớp C" } });
+    const mine = await mk(t.sec1.id, "18:00", "20:00", { plannedTeacherId: teacherOnly, seq: 1 });
+    const other = await mk(t.sec1.id, "09:00", "11:00", { plannedTeacherId: t.teacherA, seq: 2 }); // lớp A do teacherA phụ trách, buổi này xếp cho người khác
+    const unassigned = await mk(secC.id, "14:00", "16:00", {}); // không ai, lớp C chưa có giáo viên phụ trách
+    const board = await getOrgBoard(teacherOnly, t.org.id, RANGE, T("12:00"));
+    expect(board.scope).toBe("mine");
+    expect(board.meetings.map((m) => m.id)).toEqual([mine.id]);
+    expect(board.meetings[0]!.canManage).toBe(false);
+    expect(board.meetings.some((m) => m.id === other.id || m.id === unassigned.id)).toBe(false);
+    const tl = await getOrgClassTimeline(teacherOnly, t.org.id, { from: "2026-11-01", to: "2027-01-31" }, T("12:00"));
+    expect(tl.classes.map((c) => c.name)).toEqual(["Lớp A"]);
+    expect(tl.classes[0]!.canManage).toBe(false);
+  });
+
+  it("buổi chưa gán lấy giáo viên phụ trách lớp: người chỉ dạy phụ trách lớp đó thấy buổi ấy", async () => {
+    const t = await setup();
+    const teacherOnly = await user("tonly2");
+    await prisma.courseInstructor.create({ data: { courseId: t.course1, userId: teacherOnly, role: "non-editing-teacher" } });
+    await prisma.courseSection.update({ where: { id: t.sec1.id }, data: { instructorId: teacherOnly } });
+    const m = await mk(t.sec1.id, "18:00", "20:00", {});
+    const board = await getOrgBoard(teacherOnly, t.org.id, RANGE, T("12:00"));
+    expect(board.meetings.map((x) => x.id)).toEqual([m.id]);
+  });
+
+  it("từ chối: người ngoài, người chỉ dạy ở tổ chức khác, OrgAdmin của tổ chức khác", async () => {
+    const t = await setup();
+    const teacherOnly = await user("tonly");
+    const elsewhere = await prisma.organization.create({ data: { code: `CB3-${randomUUID().slice(0, 8)}`, name: "Trung tâm thứ ba" } });
+    const c3 = await createCourse(t.owner, { title: "Khoá ngoài", description: "Khoá của tổ chức khác.", slug: `c3-${randomUUID().slice(0, 6)}` });
+    await prisma.course.update({ where: { id: c3.courseId }, data: { organizationId: elsewhere.id } });
+    await prisma.courseInstructor.create({ data: { courseId: c3.courseId, userId: teacherOnly, role: "non-editing-teacher" } });
     const stranger = await user("stranger");
     const otherOrg = await prisma.organization.create({ data: { code: `CB2-${randomUUID().slice(0, 8)}`, name: "Trung tâm khác" } });
     const foreign = await user("foreign");

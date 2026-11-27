@@ -47,3 +47,16 @@ export const getManagedKindsCached = unstable_cache(
   ["org-admin-managed-kinds"],
   { revalidate: 60, tags: ["user-roles", "center-access"] },
 );
+
+/**
+ * Các loại tổ chức người này được GÁN quản trị (khác `getManagedKinds`: không tính quyền của Platform Admin). Dùng cho nhãn "Admin trung tâm",
+ * "Admin trường", "Admin NXB" ở menu tài khoản.
+ */
+export const getOwnAdminKindsCached = unstable_cache(
+  async (userId: string): Promise<OrgKind[]> => {
+    const rows = await prisma.organizationAdmin.findMany({ where: { userId }, select: { organization: { select: { kind: true } } } });
+    return [...new Set(rows.map((r) => r.organization.kind))].sort() as OrgKind[];
+  },
+  ["header-own-admin-kinds"],
+  { revalidate: 60, tags: ["user-roles", "center-access"] },
+);
