@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import type { OrgKind } from "@feedbackme/core-lms";
 import { Calendar, ClipboardCheck, GanttChart, GraduationCap, LayoutDashboard, Palette, Menu, X, Building2, Users, Mail, BarChart3, Ticket, Receipt, type LucideIcon } from "lucide-react";
@@ -61,8 +61,22 @@ const GROUPS: Group[] = [
   },
 ];
 
-export default function OrgAdminSidebar({ kinds = [] }: { kinds?: OrgKind[] }) {
+export default function OrgAdminSidebar({ kinds = [], orgName, canSwitch = false }: { kinds?: OrgKind[]; orgName?: string; canSwitch?: boolean }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [switching, setSwitching] = useState(false);
+
+  // Bỏ lựa chọn rồi làm mới: layout thấy chưa chọn nên hiện lại màn chọn tổ chức.
+  async function changeOrg() {
+    setSwitching(true);
+    try {
+      await fetch("/api/org-admin/active-org", { method: "DELETE" });
+      router.push("/org-admin");
+      router.refresh();
+    } finally {
+      setSwitching(false);
+    }
+  }
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isActive = (it: Item) => pathname === it.href || pathname.startsWith(it.href + "/") || !!it.alsoActive?.test(pathname);
@@ -88,10 +102,15 @@ export default function OrgAdminSidebar({ kinds = [] }: { kinds?: OrgKind[] }) {
               Workspace
             </div>
             <div className="truncate text-sm font-semibold text-brand-900 dark:text-brand-100">
-              Quản trị đơn vị
+              {orgName ?? "Quản trị đơn vị"}
             </div>
           </div>
         </Link>
+        {canSwitch && (
+          <button type="button" onClick={changeOrg} disabled={switching} className="mt-1.5 w-full rounded-lg px-3 py-1 text-left text-xs font-medium text-brand-700 hover:bg-brand-50 disabled:opacity-60 dark:text-brand-300 dark:hover:bg-brand-950/30">
+            {switching ? "Đang đổi..." : "Đổi tổ chức"}
+          </button>
+        )}
       </div>
 
       {groups.map((g) => (

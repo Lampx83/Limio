@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { prisma } from "@feedbackme/db";
 import { listSessionTemplates, isAnyOrgAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { activeAdminships } from "@/lib/activeOrg";
 import EmptyState from "@/components/ui/EmptyState";
 import SessionTemplatesClient from "./SessionTemplatesClient";
 
@@ -21,13 +21,7 @@ export default async function SessionTemplatesPage() {
   }
 
   // Find the org this user is OrgAdmin of. If multiple, pick the first.
-  const adminships = await prisma.organizationAdmin.findMany({
-    where: { userId },
-    select: {
-      organizationId: true,
-      organization: { select: { name: true, code: true } },
-    },
-  });
+  const adminships = await activeAdminships(userId, { name: true, code: true });
   if (adminships.length === 0) {
     return (
       <EmptyState

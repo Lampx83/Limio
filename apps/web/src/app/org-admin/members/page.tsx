@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { prisma } from "@feedbackme/db";
 import { isAnyOrgAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { activeAdminships } from "@/lib/activeOrg";
 import EmptyState from "@/components/ui/EmptyState";
 import OrgMembersClient from "./OrgMembersClient";
 import ReportViewersSection from "./ReportViewersSection";
@@ -21,15 +21,8 @@ export default async function OrgMembersPage() {
     );
   }
 
-  // Find the org this user is OrgAdmin of. If multiple, pick the first —
-  // giống quy ước ở /org-admin/settings và /org-admin/session-templates.
-  const adminships = await prisma.organizationAdmin.findMany({
-    where: { userId },
-    select: {
-      organizationId: true,
-      organization: { select: { name: true, code: true, kind: true } },
-    },
-  });
+  // Tổ chức đang chọn của khu quản trị.
+  const adminships = await activeAdminships(userId, { name: true, code: true, kind: true });
   if (adminships.length === 0) {
     return (
       <EmptyState

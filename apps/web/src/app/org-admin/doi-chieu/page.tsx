@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { getOrgReconciliation, isAnyOrgAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { activeAdminships } from "@/lib/activeOrg";
 import { resolveWeek } from "@/lib/weekRange";
 import EmptyState from "@/components/ui/EmptyState";
 import WeekNav from "@/components/WeekNav";
@@ -17,10 +18,7 @@ export default async function OrgReconciliationPage({ searchParams }: { searchPa
   if (!(await isAnyOrgAdmin(userId))) {
     return <EmptyState title="Không có quyền" description="Bạn cần là quản trị viên trường để xem trang này." />;
   }
-  const adminships = await prisma.organizationAdmin.findMany({
-    where: { userId },
-    select: { organizationId: true, organization: { select: { name: true, centerEnabled: true } } },
-  });
+  const adminships = await activeAdminships(userId, { name: true, centerEnabled: true });
   const primary = adminships[0];
   if (!primary) {
     return <EmptyState title="Chưa được gán trường nào" description="Bạn là Platform Admin nhưng chưa được gán làm OrgAdmin cho trường nào." />;

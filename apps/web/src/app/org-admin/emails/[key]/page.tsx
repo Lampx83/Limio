@@ -1,8 +1,8 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { prisma } from "@feedbackme/db";
 import { isAnyOrgAdmin, getTemplateForScope } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { getActiveOrg } from "@/lib/activeOrg";
 import EmptyState from "@/components/ui/EmptyState";
 import EmailEditorClient from "../../../admin/emails/[key]/EmailEditorClient";
 
@@ -27,11 +27,9 @@ export default async function OrgEmailEditPage({
     );
   }
 
-  const grants = await prisma.organizationAdmin.findMany({
-    where: { userId },
-    include: { organization: { select: { id: true, code: true, name: true } } },
-    orderBy: { organization: { name: "asc" } },
-  });
+  // Chỉ tổ chức đang chọn của khu quản trị (quyền vào nó đã kiểm khi chọn).
+  const activeOrg = await getActiveOrg(userId);
+  const grants = activeOrg ? [{ organization: { id: activeOrg.id, code: activeOrg.code, name: activeOrg.name } }] : [];
   if (grants.length === 0) notFound();
   const scopes = grants.map((g) => ({
     id: g.organization.id,

@@ -11,3 +11,4 @@ export * from "./orgKind";
 export * from "./centerTeacher";
 export * from "./space";
 export * from "./courseOrganization";
+export * from "./adminEntry";

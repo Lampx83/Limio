@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { prisma } from "@feedbackme/db";
 import { ORG_KIND_LABEL, isAnyOrgAdmin, listAcademicTerms } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { activeAdminships } from "@/lib/activeOrg";
 import EmptyState from "@/components/ui/EmptyState";
 import OrgSettingsClient from "./OrgSettingsClient";
 import AcademicTermsManager from "./AcademicTermsManager";
@@ -25,28 +25,20 @@ export default async function OrgSettingsPage() {
     );
   }
 
-  // Find the org this user is OrgAdmin of. If multiple, pick the first.
-  const adminships = await prisma.organizationAdmin.findMany({
-    where: { userId },
-    select: {
-      organizationId: true,
-      organization: {
-        select: {
-          name: true,
-          code: true,
-          brandingLogoUrl: true,
-          slideBrand: true,
-          signatureImageUrl: true,
-          signatureName: true,
-          signatureTitle: true,
-          inviteEmailOnImport: true,
-          inviteEmailOnInstructorAdd: true,
-          inviteEmailOnProctorAdd: true,
-          examAllowedIps: true,
-          kind: true,
-        },
-      },
-    },
+  // Tổ chức đang chọn của khu quản trị.
+  const adminships = await activeAdminships(userId, {
+    name: true,
+    code: true,
+    brandingLogoUrl: true,
+    slideBrand: true,
+    signatureImageUrl: true,
+    signatureName: true,
+    signatureTitle: true,
+    inviteEmailOnImport: true,
+    inviteEmailOnInstructorAdd: true,
+    inviteEmailOnProctorAdd: true,
+    examAllowedIps: true,
+    kind: true,
   });
   if (adminships.length === 0) {
     return (

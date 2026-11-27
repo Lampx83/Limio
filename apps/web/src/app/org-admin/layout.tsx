@@ -1,9 +1,10 @@
 import { unstable_cache } from "next/cache";
 import { redirect } from "next/navigation";
-import { isAnyOrgAdmin } from "@feedbackme/core-lms";
+import { isAdmin, isAnyOrgAdmin, listEnterableOrgs } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
-import { getManagedKindsCached } from "@/lib/orgAdminOrgs";
+import { getActiveOrg } from "@/lib/activeOrg";
 import OrgAdminSidebar from "./_components/OrgAdminSidebar";
+import OrgPicker from "./_components/OrgPicker";
 
 // OrgAdmin role hiếm khi đổi → cache 60s per userId, giống admin/layout.tsx.
 const getIsAnyOrgAdminCached = unstable_cache(
@@ -30,9 +31,22 @@ export default async function OrgAdminLayout({
     );
   }
 
+  // Phải chọn một tổ chức rồi mới vào (Platform Admin: bắt buộc, mỗi lần chọn ghi nhật ký; OrgAdmin: mặc định tổ chức được gán đầu tiên).
+  const [active, platform] = await Promise.all([getActiveOrg(session.user.id), isAdmin(session.user.id)]);
+  if (!active) {
+    const orgs = await listEnterableOrgs(session.user.id);
+    return (
+      <main className="mx-auto w-full max-w-7xl px-4 py-10 lg:px-6">
+        <OrgPicker orgs={orgs} platform={platform} />
+      </main>
+    );
+  }
+  // Có quyền vào nhiều hơn một tổ chức thì menu có nút "Đổi tổ chức".
+  const canSwitch = platform || (await listEnterableOrgs(session.user.id)).length > 1;
+
   return (
     <div className="flex w-full">
-      <OrgAdminSidebar kinds={await getManagedKindsCached(session.user.id)} />
+      <OrgAdminSidebar kinds={[active.kind]} orgName={active.name} canSwitch={canSwitch} />
       <div className="min-w-0 flex-1">
         <div className="mx-auto w-full max-w-7xl px-4 py-6 lg:px-6">
           {children}

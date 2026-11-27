@@ -584,6 +584,11 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
 - **Cài đặt tài khoản** (`/me/settings`, "Cài đặt"): "Hướng dẫn sử dụng" với nút "Xem lại hướng dẫn", "Hồ sơ
   công khai" (Ảnh đại diện, tên hiển thị, email), công tắc "Ẩn khỏi bảng xếp hạng", "Quyền riêng tư", "Mật
   khẩu" (tối thiểu 8 ký tự).
+- **Chọn tổ chức khi vào quản trị đơn vị** (`/org-admin`): khu quản trị luôn làm việc với MỘT tổ chức. Platform Admin vào lần đầu thấy màn
+  **"Chọn tổ chức để quản trị"** (danh sách mọi tổ chức, có ô tìm khi nhiều), bấm **"Vào"** ở tổ chức muốn quản trị; mỗi lần vào một tổ chức mà mình
+  không được gán làm quản trị đều được ghi lại. OrgAdmin chỉ thấy tổ chức mình được gán và tự vào tổ chức đầu tiên theo tên. Menu bên trái hiện
+  tên tổ chức đang chọn và chỉ các mục hợp với loại của tổ chức đó (trường thường, trung tâm hay nhà xuất bản); nút **"Đổi tổ chức"** dưới tên
+  tổ chức dẫn về màn chọn (có khi quản trị được nhiều tổ chức hoặc là Platform Admin).
 - **Quản trị trường** (`/org-admin/settings`, "Thương hiệu & kỳ học"): thương hiệu cho bài giảng Limio-Live
   (mục 14), "Kỳ học & lịch" (Tuần 1 = tuần Thứ Hai–Chủ Nhật chứa ngày bắt đầu), giới hạn mạng khi vào thi.
   Giảng viên không tự đặt được.

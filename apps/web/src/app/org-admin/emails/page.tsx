@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { prisma } from "@feedbackme/db";
 import { isAnyOrgAdmin, listTemplatesForScope } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { getActiveOrg } from "@/lib/activeOrg";
 import EmptyState from "@/components/ui/EmptyState";
 import EmailListClient from "../../admin/emails/EmailListClient";
 
@@ -26,11 +26,9 @@ export default async function OrgEmailsPage({
 
   // Chỉ liệt kê (các) trường mà user này là OrgAdmin — không có "Toàn hệ
   // thống" như bên /admin/emails, vì đó là phạm vi của Platform Admin.
-  const grants = await prisma.organizationAdmin.findMany({
-    where: { userId },
-    include: { organization: { select: { id: true, code: true, name: true } } },
-    orderBy: { organization: { name: "asc" } },
-  });
+  // Chỉ tổ chức đang chọn của khu quản trị (quyền vào nó đã kiểm khi chọn).
+  const activeOrg = await getActiveOrg(userId);
+  const grants = activeOrg ? [{ organization: { id: activeOrg.id, code: activeOrg.code, name: activeOrg.name } }] : [];
   if (grants.length === 0) {
     return (
       <EmptyState
