@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { assertCanEditCourse, lookupAccessCode } from "@feedbackme/core-lms";
+import { assertCanManageCourseSales, lookupAccessCode } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
 
@@ -11,7 +11,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const code = new URL(req.url).searchParams.get("code") ?? "";
   try {
-    await assertCanEditCourse(userId, params.id);
+    await assertCanManageCourseSales(userId, params.id);
     const r = await lookupAccessCode(params.id, code);
     return NextResponse.json({
       status: r.status,

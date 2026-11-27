@@ -26,7 +26,7 @@ export default async function OrgReconciliationPage({ searchParams }: { searchPa
     return <EmptyState title="Chưa được gán trường nào" description="Bạn là Platform Admin nhưng chưa được gán làm OrgAdmin cho trường nào." />;
   }
   if (!primary.organization.centerEnabled) {
-    return <EmptyState title="Chưa bật tính năng trung tâm" description="Bật ở mục Thương hiệu & kỳ học để dùng lịch dạy và đối chiếu." />;
+    return <EmptyState title="Tổ chức này không phải trung tâm" description="Đối chiếu lịch dạy dành cho tổ chức loại trung tâm. Liên hệ quản trị nền tảng nếu cần đổi loại." />;
   }
 
   const week = resolveWeek(searchParams.tuan);

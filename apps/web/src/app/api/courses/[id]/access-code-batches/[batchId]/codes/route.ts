@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { assertCanEditCourse, listBatchCodes, type AccessCodeStatusFilter } from "@feedbackme/core-lms";
+import { assertCanManageCourseSales, listBatchCodes, type AccessCodeStatusFilter } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
 
@@ -15,7 +15,7 @@ export async function GET(req: Request, { params }: { params: { id: string; batc
   const status = url.searchParams.get("status");
   const page = Number(url.searchParams.get("page") ?? "1");
   try {
-    await assertCanEditCourse(userId, params.id);
+    await assertCanManageCourseSales(userId, params.id);
     const r = await listBatchCodes(params.id, params.batchId, {
       status: status && STATUSES.includes(status) ? (status as AccessCodeStatusFilter) : undefined,
       page,

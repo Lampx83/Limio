@@ -1,13 +1,12 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { isAnyOrgAdmin, listAcademicTerms } from "@feedbackme/core-lms";
+import { ORG_KIND_LABEL, isAnyOrgAdmin, listAcademicTerms } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import EmptyState from "@/components/ui/EmptyState";
 import OrgSettingsClient from "./OrgSettingsClient";
 import AcademicTermsManager from "./AcademicTermsManager";
 import ExamNetworkSettings from "./ExamNetworkSettings";
 import OrgBrandSettings from "./OrgBrandSettings";
-import OrgCenterToggle from "@/components/OrgCenterToggle";
 import SpaceSettingsSection from "@/components/space/SpaceSettingsSection";
 import { toDayKey } from "@/lib/datetime";
 
@@ -44,7 +43,7 @@ export default async function OrgSettingsPage() {
           inviteEmailOnInstructorAdd: true,
           inviteEmailOnProctorAdd: true,
           examAllowedIps: true,
-          centerEnabled: true,
+          kind: true,
         },
       },
     },
@@ -86,9 +85,9 @@ export default async function OrgSettingsPage() {
         }}
       />
 
-      <div className="mt-6">
-        <OrgCenterToggle organizationId={primary.organizationId} initialEnabled={primary.organization.centerEnabled} />
-      </div>
+      <p className="mt-6 text-sm text-muted">
+        Loại tổ chức: <strong>{ORG_KIND_LABEL[primary.organization.kind]}</strong>. Loại do quản trị nền tảng đặt; cần đổi thì liên hệ họ.
+      </p>
 
       <div className="mt-6">
         <OrgBrandSettings

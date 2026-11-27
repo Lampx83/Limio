@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { isAnyOrgAdmin } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
-import { listManagedCenterOrgs } from "@/lib/orgAdminOrgs";
+import { listManagedOrgs } from "@/lib/orgAdminOrgs";
 import EmptyState from "@/components/ui/EmptyState";
 import InstructorsSection from "@/app/instructor/courses/[id]/InstructorsSection";
 import OrgClassesPanel from "./OrgClassesPanel";
@@ -21,14 +21,8 @@ export default async function OrgClassesPage({ searchParams }: { searchParams: {
   if (!(await isAnyOrgAdmin(userId))) {
     return <EmptyState title="Không có quyền" description="Bạn cần là quản trị viên trường để xem trang này." />;
   }
-  const { orgs, platform, anyAdminship } = await listManagedCenterOrgs(userId);
-  if (orgs.length === 0) {
-    return anyAdminship || platform ? (
-      <EmptyState title="Chưa bật tính năng trung tâm" description="Bật ở mục Thương hiệu & kỳ học để dùng trang này." />
-    ) : (
-      <EmptyState title="Chưa được gán trường nào" description="Bạn chưa được gán làm quản trị viên cho trường nào." />
-    );
-  }
+  const orgs = await listManagedOrgs(userId);
+  if (orgs.length === 0) return <EmptyState title="Chưa được gán trường nào" description="Bạn chưa được gán làm quản trị viên cho trường nào." />;
   const org = orgs.find((o) => o.id === searchParams.truong) ?? orgs[0]!;
   const courses = await prisma.course.findMany({
     where: { organizationId: org.id, status: { not: "archived" } },

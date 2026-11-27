@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   ACCESS_CODE_BATCH_LIMIT,
-  assertCanEditCourse,
+  assertCanManageCourseSales,
   createAccessCodeBatch,
   listAccessCodeBatches,
 } from "@feedbackme/core-lms";
@@ -15,7 +15,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
-    await assertCanEditCourse(userId, params.id);
+    await assertCanManageCourseSales(userId, params.id);
     return NextResponse.json(await listAccessCodeBatches(params.id));
   } catch (e) {
     return mapKnownError(e) ?? (() => { throw e; })();
@@ -38,7 +38,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     return NextResponse.json({ error: "validation_failed", details: { max: ACCESS_CODE_BATCH_LIMIT } }, { status: 400 });
   }
   try {
-    await assertCanEditCourse(userId, params.id);
+    await assertCanManageCourseSales(userId, params.id);
     const r = await createAccessCodeBatch(params.id, userId, {
       label: body.label,
       count: body.count,

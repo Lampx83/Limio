@@ -1,4 +1,4 @@
-import OrgCenterToggle from "@/components/OrgCenterToggle";
+import OrgKindSelect from "@/components/OrgKindSelect";
 import SpaceSettingsSection from "@/components/space/SpaceSettingsSection";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -33,7 +33,7 @@ export default async function AdminOrgDetailPage({
       inviteEmailOnInstructorAdd: true,
       inviteEmailOnProctorAdd: true,
       examAllowedIps: true,
-      centerEnabled: true,
+      kind: true,
     },
   });
   if (!org) notFound();
@@ -77,7 +77,7 @@ export default async function AdminOrgDetailPage({
       </section>
 
       <section className="mt-6">
-        <OrgCenterToggle organizationId={org.id} initialEnabled={org.centerEnabled} />
+        <OrgKindSelect organizationId={org.id} initialKind={org.kind} />
       </section>
 
       <section className="mt-6">

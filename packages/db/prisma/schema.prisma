@@ -5732,6 +5732,13 @@ model Organization {
   // apps/web/src/lib/limioLiveBrand.ts (OrgBrandSettings). Logo lấy từ brandingLogoUrl. Mọi giảng viên của trường
   // dùng bộ này cho bài giảng chưa có thương hiệu riêng.
   slideBrand                 Json?
+/// Loại tổ chức. Mỗi tổ chức đúng một loại: trường thường, trung tâm (lịch lớp, điểm danh), nhà xuất bản (học liệu, mã kích hoạt, báo cáo gộp).
+enum OrganizationKind {
+  school
+  center
+  publisher
+}
+
   // Ảnh chữ ký người đại diện trường — hiện trên chứng nhận hoàn thành khoá
   // học, cạnh chữ ký Limio (xem SiteSetting key branding.limio_signature_url).
   signatureImageUrl          String?
@@ -5753,7 +5760,8 @@ model Organization {
   // chung, mã cá nhân, phòng chờ, bắt đầu lượt làm); mọi tính năng khác không bị chặn.
   examAllowedIps             String[] @default([])
   // CENTER: bật các tính năng trung tâm (lịch dạy, giáo trình dựng sẵn, điểm danh, chuyên cần) cho thành viên của
-  // trường. Chỉ ẩn/hiện ở giao diện; dữ liệu và API không đổi. Mặc định TẮT. Platform Admin hoặc OrgAdmin đổi được.
+  // trường. Chỉ ẩn/hiện ở giao diện; dữ liệu và API không đổi. BẢN SAO của `kind = center`: chỉ setOrganizationKind được ghi,
+  // để các nơi đọc cũ vẫn chạy; đọc mới nên dùng `kind`.
   centerEnabled              Boolean  @default(false)
   // SPACE: trang giới thiệu riêng của trường/dự án tại /s/<spaceSlug> kèm nhận diện thương hiệu (màu, logo, chữ, danh
   // sách khoá). Khi bật, mọi trang của các khoá trong danh sách (catalog, học, thi) đổi theo thương hiệu đó. `space`
@@ -5764,6 +5772,9 @@ model Organization {
   createdAt                  DateTime @default(now())
   updatedAt                  DateTime @updatedAt
 
+  // Loại tổ chức, mỗi tổ chức đúng MỘT loại (chốt 2026-11-27): quyết định menu quản trị và phạm vi dữ liệu admin của tổ chức
+  // được thấy (trung tâm thấy tên học viên; nhà xuất bản chỉ thấy số liệu gộp). CHỈ Platform Admin đổi (setOrganizationKind).
+  kind                       OrganizationKind @default(school)
   users               User[]
   courses             Course[]
   admins              OrganizationAdmin[]

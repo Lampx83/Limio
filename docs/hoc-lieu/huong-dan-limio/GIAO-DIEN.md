@@ -408,8 +408,8 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   lớp học" → "Vào học". Từ tab này còn mở được trang "Nhóm làm bài tập" (mục 6).
 - **Bật tính năng trung tâm** (mới, CENTER mục G): các mục **"Lịch dạy"** và **"Giáo trình"** trong menu LMS (và khối
   "Lịch dạy", bảng "Chuyên cần", thông báo giáo trình có bản mới ở trang lớp) **chỉ hiện khi tính năng trung tâm được bật** cho
-  tài khoản: trường của giảng viên bật công tắc **"Tính năng trung tâm"** (cài đặt trường của quản trị trường, hoặc trang quản trị
-  trường của Platform Admin), hoặc Platform Admin cấp cờ `center.access` riêng cho một tài khoản chưa thuộc trường, hoặc giảng viên
+  tài khoản: trường của giảng viên có **loại "Trung tâm"** (do Platform Admin đặt ở trang quản trị trường; quản trị của trường không
+  tự đổi được), hoặc Platform Admin cấp cờ `center.access` riêng cho một tài khoản chưa thuộc trường, hoặc giảng viên
   đang dạy khoá có lớp đã đặt lịch (không bị mất lối vào). Học viên thấy mục **"Lịch học"** khi đang học ở lớp có buổi. Tắt chỉ ẩn,
   không xoá dữ liệu.
 - **Giảng viên trung tâm** (mới, CENTER mục H): vai trò **chỉ dạy, không soạn**, do Platform Admin hoặc quản trị trường cấp cho
@@ -461,7 +461,7 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   kiến, kèm "thay cho ..."), **"Không check-in"** (buổi qua giờ mà không ai bấm). Bấm **"Kết thúc buổi"** thì ghi luôn giờ ra. Ngưỡng
   mặc định 15 phút, quản trị trường đổi trong khoảng 5–120. Giáo viên xem của mình ở trang **"Đối chiếu lịch dạy của tôi"**
   (`/instructor/doi-chieu`, liên kết ở đầu trang "Lịch dạy", đổi tuần bằng "Tuần trước", "Tuần sau", "Tuần này"). Quản trị trường (và Platform
-  Admin) có mục **"Đối chiếu lịch dạy"** (`/org-admin/doi-chieu`) trong menu quản trị trường, chỉ hiện khi trường bật tính năng trung tâm:
+  Admin) có mục **"Đối chiếu lịch dạy"** (`/org-admin/doi-chieu`) trong menu quản trị trường, chỉ hiện khi trường có loại "Trung tâm":
   ô **"Ngưỡng lệch giờ"**, bảng **"Theo giáo viên"** (số buổi, đúng giờ, trễ, kết thúc sớm, dạy thay, không check-in, chưa điểm danh) và
   danh sách **"Từng buổi"**; bấm một buổi để xem chi tiết và, khi giáo viên quên bấm, bổ sung người dạy, giờ bắt đầu, giờ kết thúc kèm
   **"Lý do bổ sung (bắt buộc)"** rồi bấm **"Lưu giờ dạy"** (buổi đó có nhãn "Quản trị bổ sung"). Buổi đã kết thúc mà chưa điểm danh học
@@ -882,6 +882,7 @@ hạng (giao diện dùng "nhiệm vụ", không dùng "mission"). Đây là nơ
 - **Trang "Báo cáo nhà xuất bản"** (`/bao-cao`): chỉ đọc, gồm bốn phần: **Phát hành** (mã đã kích hoạt theo lô và theo tuần), **Doanh thu** (đơn mua trực tiếp theo tháng, theo gói, có nút "Xuất CSV đối soát"), **Người học** (số người, nguồn ghi danh, không kèm tên) và **Học liệu** (mức nắm vững theo bài, câu hỏi bị sai nhiều, tỉ lệ mở bài nên xem lại). Nhóm dưới 10 người không hiện tỉ lệ. Chọn khoảng thời gian "30 ngày", "90 ngày" hoặc "Từ đầu".
 - **Ai mở được:** giảng viên chủ khoá hoặc đồng giảng viên (chỉ các khoá có bán), quản trị trường và người được cấp quyền xem báo cáo của trường (mọi khoá gắn với trường). Chỉ quản trị viên nền tảng gắn được khoá vào trường, ở trang "Quản lý khoá học" của khu quản trị; giảng viên không tự gắn được. Lối vào: menu tài khoản "Báo cáo nhà xuất bản", và mục cùng tên ở thanh trái của trang quản trị trường.
 - **Cấp quyền xem:** quản trị trường vào "Thành viên trường", phần "Người xem báo cáo", nhập email rồi bấm "Cấp quyền xem báo cáo"; nút "Thu quyền" để thu lại. Người được cấp không sửa được khoá, không xem được danh sách học viên.
+- **Quản trị nhà xuất bản (tổ chức loại nhà xuất bản):** thanh trái trang quản trị có nhóm "Nhà xuất bản" với ba mục: **"Báo cáo nhà xuất bản"** (cùng báo cáo trên, chỉ các khoá của nhà xuất bản), **"Mã kích hoạt"** (chọn khoá rồi dùng đúng khối mã theo lô như giảng viên: "Tạo lô", xuất CSV, thu hồi) và **"Đơn hàng và hoàn tiền"**. Quản trị nhà xuất bản làm được các việc này cho mọi khoá của nhà mình mà không cần nhờ giảng viên chủ khoá, nhưng **không sửa được nội dung khoá** và **không thấy tên hay email người mua**. Trang đơn hàng chỉ hiện mã đơn, số tiền, cổng thanh toán, ngày trả; ô "Tìm theo mã đơn" tìm theo mã người mua đọc ra. Hệ thống **không chuyển tiền**: thầy/cô hoàn tiền cho người mua ở cổng thanh toán hoặc ngân hàng trước, rồi bấm "Hoàn tiền" ở dòng đơn và "Xác nhận đã hoàn" để đơn đổi sang "Đã hoàn" và quyền học của người mua đóng lại (nếu họ còn đơn hoặc mã kích hoạt khác cho khoá đó thì quyền vẫn giữ). Đơn Stripe hoàn trên Stripe thì tự cập nhật. Mỗi lần xác nhận đều được ghi nhật ký. Trường thường và trung tâm không có nhóm này.
 
 ## Không được viết (chưa có hoặc chưa tới tay giảng viên)
 
@@ -951,12 +952,12 @@ mục 1–17 ở trên (cập nhật 2026-10-19) thì theo mục ở trên.
 
 ## Lớp và giáo viên (quản trị trường)
 
-- Menu quản trị đơn vị (khi bật tính năng trung tâm): mục **"Lớp và giáo viên"** (`/org-admin/lop-hoc`). Dành cho người điều hành trung tâm không dạy: dựng lớp và xếp giáo viên mà không cần là chủ khoá.
+- Menu quản trị đơn vị, nhóm **"Người, lớp và thi cử"**: mục **"Lớp và giáo viên"** (`/org-admin/lop-hoc`), mọi trường đều có. Dành cho người điều hành không dạy: dựng lớp và xếp giáo viên mà không cần là chủ khoá.
 - Chọn **"Khoá"** ở dãy nút phía trên. Cột **"Lớp của khoá"**: ô **"Tên lớp mới"**, ô chọn **"Giáo viên phụ trách"**, nút **"Thêm lớp"**; mỗi lớp có số học viên, lịch học (hoặc "Chưa đặt lịch"), ô chọn giáo viên phụ trách, nút **"Lịch và học viên"** (mở trang lớp để đặt lịch, điểm danh, chuyển học viên) và biểu tượng xoá (chỉ xoá được lớp không còn học viên). Cột **"Giáo viên của khoá"**: thêm giáo viên bằng email và vai trò, hoặc gỡ (có hộp bàn giao việc đang giao).
 - Quản trị trường làm được: tạo, đổi, xoá lớp; đặt lịch, huỷ, đổi giờ, dạy bù; chuyển học viên giữa các lớp; thêm, gỡ giáo viên của khoá. Quản trị trường không sửa được nội dung bài giảng của khoá.
 
 ## Tổng quan trung tâm (quản trị trường)
 
-- Menu quản trị đơn vị (khi bật tính năng trung tâm): mục **"Tổng quan trung tâm"** (`/org-admin/tong-quan`), chỉ quản trị trường thấy.
+- Menu quản trị đơn vị, nhóm **"Trung tâm"** (chỉ hiện khi quản trị một tổ chức có loại "Trung tâm", cùng với **"Điều phối lịch"** và **"Đối chiếu lịch dạy"**): mục **"Tổng quan trung tâm"** (`/org-admin/tong-quan`), chỉ quản trị trường thấy.
 - Khối **"Hôm nay"**: số buổi **"Đang diễn ra"**, **"Sắp tới"**, **"Đã dạy"**, **"Quá giờ, chưa kết thúc"**, **"Đã huỷ"** (ngày không có buổi thì hiện "Hôm nay không có buổi học"), nút **"Mở bảng điều phối"**; bốn thẻ cảnh báo **"Buổi tới chưa có giáo viên"**, **"Giáo viên chưa bắt đầu buổi"**, **"Buổi đã dạy chưa điểm danh"**, **"Trùng phòng hoặc giáo viên"**; bấm thẻ mở Điều phối lịch đã lọc đúng các buổi đó (có chip bộ lọc để bỏ).
 - Khối **"Lớp"**: sĩ số, tiến độ đã dạy/tổng, chuyên cần 30 ngày (dưới 70% là thấp), số buổi chưa điểm danh, ngày kết thúc kèm nhãn **"Sắp kết thúc"** (còn không quá 3 buổi). Khối **"Giáo viên"**: số buổi và giờ đã dạy, giờ đã xếp 7 ngày tới, đúng giờ, trễ, dạy thay, không bắt đầu; nhãn **"Chưa có buổi nào"** và **"Nhiều việc"** (trên 20 giờ một tuần); nút **"Đối chiếu lịch dạy"**. Khối **"Học viên cần liên hệ"**: vắng liền từ 2 buổi hoặc chuyên cần dưới 70%; Limio không tự gửi tin. Mục **"Các số được tính thế nào"** giải thích cách tính.

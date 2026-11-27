@@ -26,7 +26,7 @@ export default async function InstructorBoardPage({ searchParams }: { searchPara
       <p className="mt-1 text-sm text-muted">Các buổi thuộc khoá thầy/cô quản lý: mỗi khối là một buổi học, vạch hồng là bây giờ.</p>
       <div className="mt-4">
         {org && !org.centerEnabled ? (
-          <EmptyState title="Chưa bật tính năng trung tâm" description="Nhờ quản trị trường bật “Tính năng trung tâm” để dùng bảng điều phối." />
+          <EmptyState title="Tổ chức này không phải trung tâm" description="Bảng điều phối dành cho tổ chức loại trung tâm. Nhờ quản trị nền tảng đổi loại nếu cần." />
         ) : org ? (
           <CenterBoardView userId={userId} organizationId={org.id} orgName={org.name} basePath="/instructor/dieu-phoi" searchParams={searchParams} />
         ) : (

@@ -21,6 +21,7 @@ import {
   LessonDeckError,
   MisconceptionError,
   NoteError,
+  OrderRefundError,
   PortfolioError,
   QuizError,
   SectionDeadlineError,
@@ -168,6 +169,10 @@ export function mapKnownError(err: unknown): NextResponse | null {
       err.details ? { error: err.code, details: err.details } : { error: err.code },
       { status },
     );
+  }
+  if (err instanceof OrderRefundError) {
+    const status = err.code === "order_not_found" ? 404 : err.code === "forbidden" ? 403 : 409;
+    return NextResponse.json({ error: err.code }, { status });
   }
   if (err instanceof LearningError) {
     const status =

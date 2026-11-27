@@ -79,7 +79,12 @@ export interface ReportCourseRow {
  * Platform Admin: mọi khoá thuộc tổ chức hoặc có bán. OrgAdmin/người xem: khoá của tổ chức.
  * Giảng viên sửa được khoá: khoá có bán của mình.
  */
-export async function listReportCourses(userId: string, db: DbClient = prisma): Promise<ReportCourseRow[]> {
+export async function listReportCourses(
+  userId: string,
+  db: DbClient = prisma,
+  /** Chỉ khoá của tổ chức này (khu nhà xuất bản của /org-admin); bỏ trống = mọi khoá user được xem. */
+  organizationId?: string,
+): Promise<ReportCourseRow[]> {
   const select = {
     id: true,
     title: true,
@@ -105,7 +110,7 @@ export async function listReportCourses(userId: string, db: DbClient = prisma): 
       ],
     };
   }
-  const rows = await db.course.findMany({ where, select, orderBy: { updatedAt: "desc" }, take: 300 });
+  const rows = await db.course.findMany({ where: organizationId ? { AND: [where, { organizationId }] } : where, select, orderBy: { updatedAt: "desc" }, take: 300 });
   return rows.map((r) => ({
     id: r.id,
     title: r.title,

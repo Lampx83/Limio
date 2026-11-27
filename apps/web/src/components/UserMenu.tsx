@@ -132,7 +132,7 @@ export default function UserMenu({
             <Item href="/me/settings" onClick={close}>{t("userMenu.settings")}</Item>
             <FeedbackMenuItem onClick={close} />
             {isOrgAdmin && (
-              <Item href="/org-admin/settings" onClick={close}>
+              <Item href="/org-admin" onClick={close}>
                 {t("userMenu.orgAdmin")}
               </Item>
             )}

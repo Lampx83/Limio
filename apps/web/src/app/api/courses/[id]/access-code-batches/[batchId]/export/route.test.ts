@@ -3,16 +3,16 @@ import { AccessCodeError, CourseAuthzError } from "@feedbackme/core-lms";
 
 /** Xuất CSV mã kích hoạt (AC2): chỉ người sửa được khoá; tệp đúng định dạng, không cho lưu đệm. */
 
-const { requireUserId, assertCanEditCourse, exportBatchCodesCsv } = vi.hoisted(() => ({
+const { requireUserId, assertCanManageCourseSales, exportBatchCodesCsv } = vi.hoisted(() => ({
   requireUserId: vi.fn(),
-  assertCanEditCourse: vi.fn(),
+  assertCanManageCourseSales: vi.fn(),
   exportBatchCodesCsv: vi.fn(),
 }));
 
 vi.mock("@/lib/session", () => ({ requireUserId }));
 vi.mock("@feedbackme/core-lms", async (importActual) => {
   const actual = await importActual<typeof import("@feedbackme/core-lms")>();
-  return { ...actual, assertCanEditCourse, exportBatchCodesCsv };
+  return { ...actual, assertCanManageCourseSales, exportBatchCodesCsv };
 });
 
 const ctx = { params: { id: "c-1", batchId: "b-1" } };
@@ -22,7 +22,7 @@ const get = (qs = "") =>
 describe("GET …/access-code-batches/[batchId]/export", () => {
   beforeEach(() => {
     requireUserId.mockReset().mockResolvedValue("u-1");
-    assertCanEditCourse.mockReset().mockResolvedValue(undefined);
+    assertCanManageCourseSales.mockReset().mockResolvedValue(undefined);
     exportBatchCodesCsv.mockReset().mockResolvedValue({ csv: "﻿STT,Mã\r\n1,AAAA-BBBB-CCCC\r\n", filename: "ma-kich-hoat-lo.csv", count: 1 });
   });
 
@@ -33,7 +33,7 @@ describe("GET …/access-code-batches/[batchId]/export", () => {
   });
 
   it("không có quyền sửa khoá → 403, không xuất (không ghi sự kiện xuất)", async () => {
-    assertCanEditCourse.mockRejectedValue(new CourseAuthzError("forbidden"));
+    assertCanManageCourseSales.mockRejectedValue(new CourseAuthzError("forbidden"));
     expect((await get()).status).toBe(403);
     expect(exportBatchCodesCsv).not.toHaveBeenCalled();
   });

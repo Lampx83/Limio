@@ -28,6 +28,7 @@ export * from "./learnerGoals";
 export * from "./sessionPlan";
 export * from "./coursePacks";
 export * from "./teachingScope";
+export * from "./salesAccess";
 export * from "./bundles";
 export * from "./scheduleSummary";
 export * from "./meetingPlan";

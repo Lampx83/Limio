@@ -22,7 +22,7 @@ export default async function OrgBoardPage({ searchParams }: { searchParams: { c
   const { orgs, platform, anyAdminship } = await listManagedCenterOrgs(userId);
   if (orgs.length === 0) {
     return anyAdminship || platform ? (
-      <EmptyState title="Chưa bật tính năng trung tâm" description="Bật ở mục Thương hiệu & kỳ học để dùng bảng điều phối." />
+      <EmptyState title="Tổ chức này không phải trung tâm" description="Bảng điều phối dành cho tổ chức loại trung tâm. Liên hệ quản trị nền tảng nếu cần đổi loại." />
     ) : (
       <EmptyState title="Chưa được gán trường nào" description="Bạn chưa được gán làm quản trị viên cho trường nào." />
     );

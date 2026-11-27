@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { assertCanEditCourse, revokeAccessCode } from "@feedbackme/core-lms";
+import { assertCanManageCourseSales, revokeAccessCode } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
 
@@ -13,7 +13,7 @@ export async function DELETE(
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
-    await assertCanEditCourse(userId, params.id);
+    await assertCanManageCourseSales(userId, params.id);
     await revokeAccessCode(params.id, params.codeId);
     return NextResponse.json({ ok: true });
   } catch (e) {

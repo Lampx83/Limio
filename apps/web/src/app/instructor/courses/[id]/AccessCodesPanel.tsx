@@ -70,7 +70,7 @@ function activationClosed(activateBefore: string | null): boolean {
  * bản sách): tạo một lần, xuất CSV cho nhà in, theo dõi bao nhiêu mã đã kích hoạt, thu hồi cả lô nếu in sai.
  * Mã vẫn là thứ giảng viên gửi / in cho người đã trả tiền ngoài hệ thống; học viên gõ mã là ghi danh ngay.
  */
-export default function AccessCodesPanel({ courseId }: { courseId: string }) {
+export default function AccessCodesPanel({ courseId, reportHref }: { courseId: string; /** Đích của liên kết báo cáo; mặc định trang /bao-cao (khu quản trị nhà xuất bản truyền bản nằm trong khu đó). */ reportHref?: string }) {
   const [batches, setBatches] = useState<BatchRow[] | null>(null);
   const [ungrouped, setUngrouped] = useState(0);
   const [label, setLabel] = useState("");
@@ -149,7 +149,7 @@ export default function AccessCodesPanel({ courseId }: { courseId: string }) {
       <header className="mb-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-base font-semibold">Mã kích hoạt</h2>
-          <Link href={`/bao-cao?course=${courseId}`} className="text-xs text-brand-700 underline">
+          <Link href={reportHref ?? `/bao-cao?course=${courseId}`} className="text-xs text-brand-700 underline">
             Xem báo cáo phát hành và doanh thu
           </Link>
         </div>

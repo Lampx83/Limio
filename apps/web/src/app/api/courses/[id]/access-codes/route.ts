@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   ACCESS_CODE_BATCH_MAX,
-  assertCanEditCourse,
+  assertCanManageCourseSales,
   generateAccessCodes,
   listAccessCodes,
 } from "@feedbackme/core-lms";
@@ -18,7 +18,7 @@ export async function GET(
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
-    await assertCanEditCourse(userId, params.id);
+    await assertCanManageCourseSales(userId, params.id);
   } catch (e) {
     return mapKnownError(e) ?? (() => { throw e; })();
   }
@@ -36,7 +36,7 @@ export async function POST(
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
-    await assertCanEditCourse(userId, params.id);
+    await assertCanManageCourseSales(userId, params.id);
   } catch (e) {
     return mapKnownError(e) ?? (() => { throw e; })();
   }

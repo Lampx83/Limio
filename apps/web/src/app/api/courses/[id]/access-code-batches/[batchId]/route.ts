@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { assertCanEditCourse, revokeBatch } from "@feedbackme/core-lms";
+import { assertCanManageCourseSales, revokeBatch } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
 
@@ -11,7 +11,7 @@ export async function DELETE(_req: Request, { params }: { params: { id: string; 
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
-    await assertCanEditCourse(userId, params.id);
+    await assertCanManageCourseSales(userId, params.id);
     return NextResponse.json(await revokeBatch(params.id, params.batchId, userId));
   } catch (e) {
     return mapKnownError(e) ?? (() => { throw e; })();

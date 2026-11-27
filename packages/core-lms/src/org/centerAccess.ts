@@ -1,5 +1,6 @@
 /**
- * Bật tính năng trung tâm theo tổ chức (CENTER, docs/CENTER-schedule-attendance-AC.md mục G).
+ * Tính năng trung tâm theo tổ chức (CENTER, docs/CENTER-schedule-attendance-AC.md mục G). Từ 2026-11-27 do LOẠI tổ chức quyết định
+ * (`kind = center`, xem orgKind.ts); công tắc riêng của OrgAdmin đã bỏ.
  *
  * "Tính năng trung tâm" = lịch dạy, giáo trình dựng sẵn, điểm danh, chuyên cần. Chỉ ẩn/hiện ở GIAO DIỆN
  * (menu, trang, khối trên trang lớp); dữ liệu và API không đổi, nên bật/tắt không làm mất dữ liệu nào.
@@ -19,35 +20,6 @@ import { isFeatureEnabled } from "../auth/permissions";
 import { OrgMemberError } from "./members";
 
 export const CENTER_FEATURE_KEY = "center.access";
-
-/** Platform Admin hoặc OrgAdmin của chính trường đó bật/tắt tính năng trung tâm cho trường. */
-export async function setOrgCenterEnabled(
-  actorUserId: string,
-  organizationId: string,
-  enabled: boolean,
-  db: PrismaClient = prisma,
-): Promise<{ centerEnabled: boolean }> {
-  const org = await db.organization.findUnique({ where: { id: organizationId }, select: { centerEnabled: true } });
-  // Phân quyền trước, để người ngoài không dò được trường nào tồn tại.
-  if (!(await isAdmin(actorUserId, db)) && !(await isOrgAdminOf(actorUserId, organizationId, db))) {
-    throw new OrgMemberError("forbidden");
-  }
-  if (!org) throw new OrgMemberError("org_not_found");
-  if (org.centerEnabled === enabled) return { centerEnabled: enabled };
-
-  await db.$transaction(async (tx) => {
-    await tx.organization.update({ where: { id: organizationId }, data: { centerEnabled: enabled } });
-    await logAudit(
-      {
-        action: "org.center_setting_changed",
-        actorUserId,
-        payload: { organizationId, from: org.centerEnabled, to: enabled },
-      },
-      tx,
-    );
-  });
-  return { centerEnabled: enabled };
-}
 
 /** Giảng viên có được thấy tính năng trung tâm không (xem đầu file). */
 export async function isCenterEnabledForUser(userId: string, db: DbClient = prisma): Promise<boolean> {

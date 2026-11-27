@@ -3,8 +3,8 @@ import { prisma } from "@feedbackme/db";
 import {
   hasClassSchedule,
   isCenterEnabledForUser,
-  setOrgCenterEnabled,
 } from "../centerAccess";
+import { setOrganizationKind } from "../orgKind";
 import { OrgMemberError } from "../members";
 import { registerUser } from "../../auth/register";
 import { grantRole } from "../../auth/roles";
@@ -53,49 +53,46 @@ async function seedFlag(defaultValue = false) {
   });
 }
 
-describe("setOrgCenterEnabled (G1)", () => {
-  it("mặc định tắt; OrgAdmin của chính trường bật được và có ghi nhật ký", async () => {
-    const orgAdmin = await makeUser("ca-set-oa@e.com");
-    const org = await makeOrg("SET");
-    await prisma.organizationAdmin.create({ data: { organizationId: org.id, userId: orgAdmin } });
+describe("setOrganizationKind (loại tổ chức)", () => {
+  it("mặc định là trường thường, centerEnabled tắt", async () => {
+    const org = await makeOrg("DEF");
+    expect(org.kind).toBe("school");
     expect(org.centerEnabled).toBe(false);
-
-    const res = await setOrgCenterEnabled(orgAdmin, org.id, true);
-    expect(res).toEqual({ centerEnabled: true });
-    expect((await prisma.organization.findUniqueOrThrow({ where: { id: org.id } })).centerEnabled).toBe(true);
-
-    const audit = await prisma.auditLog.findFirst({ where: { action: "org.center_setting_changed" } });
-    expect(audit!.payload).toMatchObject({ organizationId: org.id, from: false, to: true });
   });
 
-  it("Platform Admin bật được trường bất kỳ", async () => {
-    const admin = await makeUser("ca-set-pa@e.com");
+  it("Platform Admin đổi loại; centerEnabled đi theo kind = center; có nhật ký cũ → mới", async () => {
+    const admin = await makeUser("ca-kind-pa@e.com");
     await grantRole(admin, { targetUserId: admin, roleName: "admin" });
-    const org = await makeOrg("PA");
-    await expect(setOrgCenterEnabled(admin, org.id, true)).resolves.toEqual({ centerEnabled: true });
+    const org = await makeOrg("K1");
+    await expect(setOrganizationKind(admin, org.id, "center")).resolves.toEqual({ kind: "center" });
+    expect(await prisma.organization.findUniqueOrThrow({ where: { id: org.id } })).toMatchObject({ kind: "center", centerEnabled: true });
+    const audit = await prisma.auditLog.findFirst({ where: { action: "org.kind_changed" }, orderBy: { occurredAt: "desc" } });
+    expect(audit!.payload).toMatchObject({ organizationId: org.id, from: "school", to: "center" });
+
+    await setOrganizationKind(admin, org.id, "publisher");
+    expect(await prisma.organization.findUniqueOrThrow({ where: { id: org.id } })).toMatchObject({ kind: "publisher", centerEnabled: false });
   });
 
-  it("người không phải quản trị, và OrgAdmin của trường khác, bị từ chối; không đổi gì", async () => {
-    const stranger = await makeUser("ca-set-x@e.com");
-    const otherAdmin = await makeUser("ca-set-oa2@e.com");
-    const org = await makeOrg("DENY");
-    const other = await makeOrg("OTHER");
-    await prisma.organizationAdmin.create({ data: { organizationId: other.id, userId: otherAdmin } });
-
-    for (const who of [stranger, otherAdmin]) {
-      await expect(setOrgCenterEnabled(who, org.id, true)).rejects.toBeInstanceOf(OrgMemberError);
+  it("OrgAdmin của chính tổ chức KHÔNG tự đổi loại được; người lạ cũng không; không đổi gì", async () => {
+    const orgAdmin = await makeUser("ca-kind-oa@e.com");
+    const stranger = await makeUser("ca-kind-x@e.com");
+    const org = await makeOrg("K2");
+    await prisma.organizationAdmin.create({ data: { organizationId: org.id, userId: orgAdmin } });
+    for (const who of [orgAdmin, stranger]) {
+      await expect(setOrganizationKind(who, org.id, "center")).rejects.toMatchObject({ code: "forbidden" });
     }
-    expect((await prisma.organization.findUniqueOrThrow({ where: { id: org.id } })).centerEnabled).toBe(false);
+    expect((await prisma.organization.findUniqueOrThrow({ where: { id: org.id } })).kind).toBe("school");
   });
 
-  it("trường không tồn tại → org_not_found; đặt lại đúng giá trị cũ thì không ghi nhật ký", async () => {
-    const admin = await makeUser("ca-set-nf@e.com");
+  it("tổ chức không tồn tại → org_not_found; loại lạ → validation_failed; đặt lại đúng loại cũ thì không ghi nhật ký", async () => {
+    const admin = await makeUser("ca-kind-nf@e.com");
     await grantRole(admin, { targetUserId: admin, roleName: "admin" });
-    await expect(setOrgCenterEnabled(admin, "no-such-org", true)).rejects.toMatchObject({ code: "org_not_found" });
-
-    const org = await makeOrg("NOOP");
-    await setOrgCenterEnabled(admin, org.id, false);
-    expect(await prisma.auditLog.count({ where: { action: "org.center_setting_changed" } })).toBe(0);
+    await expect(setOrganizationKind(admin, "no-such-org", "center")).rejects.toMatchObject({ code: "org_not_found" });
+    const org = await makeOrg("K3");
+    await expect(setOrganizationKind(admin, org.id, "bakery" as never)).rejects.toMatchObject({ code: "validation_failed" });
+    const before = await prisma.auditLog.count({ where: { action: "org.kind_changed" } });
+    await setOrganizationKind(admin, org.id, "school");
+    expect(await prisma.auditLog.count({ where: { action: "org.kind_changed" } })).toBe(before);
   });
 });
 

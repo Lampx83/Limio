@@ -8,6 +8,8 @@ import { auth } from "@/lib/auth";
 import InstructorLeftMenu from "@/components/InstructorLeftMenu";
 import { ActiveNavSectionProvider } from "@/lib/activeNavSection";
 import InstructorContentFrame from "./InstructorContentFrame";
+import OrgAdminSidebar from "@/app/org-admin/_components/OrgAdminSidebar";
+import { getManagedKindsCached } from "@/lib/orgAdminOrgs";
 import { AssistantProvider } from "@/components/assistant/AssistantProvider";
 import AssistantLauncher from "@/components/assistant/AssistantLauncher";
 import { getInstructorCenterAccess } from "@/lib/centerAccess";
@@ -94,6 +96,18 @@ export default async function InstructorLayout({
           admin để được cấp quyền giảng viên.
         </div>
       </main>
+    );
+  }
+
+  // Quản trị trường không có vai giảng viên: vào đây chỉ để mở trang lớp mình xếp, nên dùng menu quản trị đơn vị, không phải menu giảng viên.
+  if (!hasInstructorRole && !isProctor && !hasCenterTeacherRole) {
+    return (
+      <div className="flex w-full">
+        <OrgAdminSidebar kinds={await getManagedKindsCached(session.user.id)} />
+        <div className="min-w-0 flex-1">
+          <InstructorContentFrame>{children}</InstructorContentFrame>
+        </div>
+      </div>
     );
   }
 

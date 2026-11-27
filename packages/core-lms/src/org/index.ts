@@ -7,6 +7,7 @@ export * from "./member-import";
 export * from "./email-settings";
 export * from "./exam-network";
 export * from "./centerAccess";
+export * from "./orgKind";
 export * from "./centerTeacher";
 export * from "./space";
 export * from "./courseOrganization";

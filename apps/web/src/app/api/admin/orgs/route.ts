@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
+import { isOrgKind } from "@feedbackme/core-lms";
 import { requireAdmin } from "@/lib/session";
 
 export async function GET(req: Request) {
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
   const adminId = await requireAdmin();
   if (!adminId) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
-  let body: { code?: unknown; name?: unknown };
+  let body: { code?: unknown; name?: unknown; kind?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -64,13 +65,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "missing_name" }, { status: 400 });
   }
 
+  // Loại tổ chức (mặc định trường thường); trung tâm thì bật luôn bản sao centerEnabled như setOrganizationKind.
+  const kind = body.kind === undefined ? "school" : body.kind;
+  if (!isOrgKind(kind)) return NextResponse.json({ error: "invalid_kind" }, { status: 400 });
+
   const existing = await prisma.organization.findUnique({ where: { code } });
   if (existing) {
     return NextResponse.json({ error: "code_taken" }, { status: 409 });
   }
 
   const org = await prisma.organization.create({
-    data: { code, name },
+    data: { code, name, kind, centerEnabled: kind === "center" },
     select: { id: true, code: true, name: true },
   });
 

@@ -15,6 +15,7 @@ interface OrgRow {
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_code: "Mã trường chỉ gồm chữ/số/gạch ngang, tối đa 32 ký tự",
   missing_name: "Tên trường không được bỏ trống",
+  invalid_kind: "Loại tổ chức không hợp lệ",
   code_taken: "Mã trường đã tồn tại",
 };
 
@@ -31,6 +32,7 @@ export default function OrgsBrowser() {
 
   const [newCode, setNewCode] = useState("");
   const [newName, setNewName] = useState("");
+  const [newKind, setNewKind] = useState("school");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [createOk, setCreateOk] = useState<string | null>(null);
@@ -62,7 +64,7 @@ export default function OrgsBrowser() {
       const res = await fetch(apiUrl("/api/admin/orgs"), {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ code: newCode, name: newName }),
+        body: JSON.stringify({ code: newCode, name: newName, kind: newKind }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -119,6 +121,16 @@ export default function OrgsBrowser() {
               placeholder="vd: Đại học Bách khoa Hà Nội"
               required
             />
+          </div>
+          <div>
+            <label htmlFor="new-org-kind" className="label">
+              Loại
+            </label>
+            <select id="new-org-kind" value={newKind} onChange={(e) => setNewKind(e.target.value)} className="input mt-1">
+              <option value="school">Trường thường</option>
+              <option value="center">Trung tâm</option>
+              <option value="publisher">Nhà xuất bản</option>
+            </select>
           </div>
           <button type="submit" disabled={creating} className="btn-primary">
             {creating ? "Đang tạo…" : "Thêm tổ chức"}

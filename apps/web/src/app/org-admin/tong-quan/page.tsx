@@ -20,7 +20,7 @@ export default async function CenterOverviewPage({ searchParams }: { searchParam
   const { orgs, platform, anyAdminship } = await listManagedCenterOrgs(userId);
   if (orgs.length === 0) {
     return anyAdminship || platform ? (
-      <EmptyState title="Chưa bật tính năng trung tâm" description="Bật ở mục Thương hiệu & kỳ học để dùng trang này." />
+      <EmptyState title="Tổ chức này không phải trung tâm" description="Trang này dành cho tổ chức loại trung tâm. Liên hệ quản trị nền tảng nếu cần đổi loại." />
     ) : (
       <EmptyState title="Chưa được gán trường nào" description="Bạn chưa được gán làm quản trị viên cho trường nào." />
     );

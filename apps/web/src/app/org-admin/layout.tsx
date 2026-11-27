@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { redirect } from "next/navigation";
 import { isAnyOrgAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { getManagedKindsCached } from "@/lib/orgAdminOrgs";
 import OrgAdminSidebar from "./_components/OrgAdminSidebar";
 
 // OrgAdmin role hiếm khi đổi → cache 60s per userId, giống admin/layout.tsx.
@@ -31,7 +32,7 @@ export default async function OrgAdminLayout({
 
   return (
     <div className="flex w-full">
-      <OrgAdminSidebar />
+      <OrgAdminSidebar kinds={await getManagedKindsCached(session.user.id)} />
       <div className="min-w-0 flex-1">
         <div className="mx-auto w-full max-w-7xl px-4 py-6 lg:px-6">
           {children}
