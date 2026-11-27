@@ -1719,10 +1719,14 @@ function LiveResponseStats({ refId, slide }: { refId: string; slide: Slide }) {
     const es = new EventSource(apiUrl(`/api/classroom/quick-poll/${refId}/stream`));
     es.onmessage = (e) => {
       try {
-        const ev = JSON.parse(e.data) as { choice?: string };
+        const ev = JSON.parse(e.data) as { choice?: string; prev?: string };
         if (!ev.choice) return;
-        setTotalVotes((t) => t + 1);
-        setByOption((v) => ({ ...v, [ev.choice!]: (v[ev.choice!] || 0) + 1 }));
+        setTotalVotes((t) => t + (ev.prev !== undefined ? 0 : 1));
+        setByOption((v) => ({
+          ...v,
+          [ev.choice!]: (v[ev.choice!] || 0) + 1,
+          ...(ev.prev !== undefined ? { [ev.prev]: Math.max(0, (v[ev.prev] || 0) - 1) } : {}),
+        }));
       } catch {
         /* ignore */
       }
@@ -1928,10 +1932,14 @@ function QuestionSlideView({
     const es = new EventSource(apiUrl(`/api/classroom/quick-poll/${refId}/stream`));
     es.onmessage = (e) => {
       try {
-        const ev = JSON.parse(e.data) as { choice?: string };
+        const ev = JSON.parse(e.data) as { choice?: string; prev?: string };
         if (!ev.choice) return;
-        setTotalVotes((t) => t + 1);
-        setVotesByOption((v) => ({ ...v, [ev.choice!]: (v[ev.choice!] || 0) + 1 }));
+        setTotalVotes((t) => t + (ev.prev !== undefined ? 0 : 1));
+        setVotesByOption((v) => ({
+          ...v,
+          [ev.choice!]: (v[ev.choice!] || 0) + 1,
+          ...(ev.prev !== undefined ? { [ev.prev]: Math.max(0, (v[ev.prev] || 0) - 1) } : {}),
+        }));
       } catch {
         /* ignore */
       }

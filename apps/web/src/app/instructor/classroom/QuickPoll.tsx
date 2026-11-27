@@ -156,7 +156,7 @@ export default function QuickPoll({
     esRef.current = es;
     es.onmessage = (e) => {
       try {
-        const ev = JSON.parse(e.data) as { choice?: string; reset?: boolean };
+        const ev = JSON.parse(e.data) as { choice?: string; prev?: string; reset?: boolean };
         if (ev.reset) {
           setResults((prev) =>
             prev
@@ -174,10 +174,13 @@ export default function QuickPoll({
           if (!prev) return prev;
           return {
             ...prev,
-            totalVotes: prev.totalVotes + 1,
+            totalVotes: prev.totalVotes + (ev.prev !== undefined ? 0 : 1),
             votesByOption: {
               ...prev.votesByOption,
               [ev.choice!]: (prev.votesByOption[ev.choice!] || 0) + 1,
+              ...(ev.prev !== undefined
+                ? { [ev.prev]: Math.max(0, (prev.votesByOption[ev.prev] || 0) - 1) }
+                : {}),
             },
           };
         });

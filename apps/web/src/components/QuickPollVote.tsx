@@ -1,5 +1,6 @@
 "use client";
 
+import { getClientId } from "@/lib/clientId";
 import { useState, useEffect } from "react";
 import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
@@ -61,7 +62,7 @@ export default function QuickPollVote({ pollId }: { pollId: string }) {
       const res = await fetch(apiUrl(`/api/classroom/quick-poll/${pollId}/vote`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ choice: selectedChoice.toString() }),
+        body: JSON.stringify({ choice: selectedChoice.toString(), clientId: getClientId() }),
       });
 
       if (!res.ok) {

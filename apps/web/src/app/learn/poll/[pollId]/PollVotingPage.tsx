@@ -1,7 +1,7 @@
 "use client";
 
 import { getClientId } from "@/lib/clientId";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
 
@@ -45,6 +45,27 @@ export default function PollVotingPage({ poll }: { poll: Poll }) {
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<PollResults | null>(null);
 
+  // Nhớ lựa chọn theo từng poll trên thiết bị: tải lại trang / quét lại QR vẫn thấy "đã trả lời"
+  // thay vì hiện lại các nút. Máy chủ vẫn là nơi chặn trùng (theo clientId).
+  const storageKey = `poll_voted:${poll.id}`;
+  const fetchResults = async () => {
+    const r = await fetch(apiUrl(`/api/classroom/quick-poll/${poll.id}/results`));
+    if (r.ok) setResults(await r.json());
+  };
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved !== null && Number.isInteger(Number(saved))) {
+        setSelectedChoice(Number(saved));
+        setHasVoted(true);
+        fetchResults().catch(() => {});
+      }
+    } catch {
+      /* localStorage bị chặn — bỏ qua */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
+
   const handleVote = async (choice?: number) => {
     const idx = choice ?? selectedChoice;
     if (idx === null) {
@@ -68,11 +89,12 @@ export default function PollVotingPage({ poll }: { poll: Poll }) {
       }
 
       setHasVoted(true);
-
-      const resultsRes = await fetch(apiUrl(`/api/classroom/quick-poll/${poll.id}/results`));
-      if (resultsRes.ok) {
-        setResults(await resultsRes.json());
+      try {
+        localStorage.setItem(storageKey, String(idx));
+      } catch {
+        /* bỏ qua */
       }
+      await fetchResults();
     } catch (err) {
       console.error("[PollVotingPage vote]", err);
       toast.error("Lỗi mạng");

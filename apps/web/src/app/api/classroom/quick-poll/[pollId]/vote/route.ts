@@ -88,29 +88,68 @@ export async function POST(
       return Response.json({ error: "Invalid choice" }, { status: 400 });
     }
 
-    const submissionCount = await prisma.classroomPollVote.count({
-      where: { pollId: params.pollId },
-    });
+    // Mỗi người một phiếu: có tài khoản thì theo tài khoản, không thì theo thiết bị (clientId).
+    // Bỏ lại thì ĐỔI lựa chọn chứ không cộng thêm phiếu — nếu không, tải lại trang hay quét lại QR
+    // là bỏ được vô hạn (cứ 5 giây một phiếu) và tổng phiếu vượt xa sĩ số lớp.
+    const existing = userId
+      ? await prisma.classroomPollVote.findFirst({
+          where: { pollId: params.pollId, userId },
+          select: { id: true, choice: true },
+        })
+      : clientId
+        ? await prisma.classroomPollVote.findUnique({
+            where: { pollId_clientId: { pollId: params.pollId, clientId } },
+            select: { id: true, choice: true },
+          })
+        : null;
 
-    if (submissionCount >= 500) {
-      return Response.json(
-        { error: "Poll has reached maximum submissions (500)" },
-        { status: 400 }
-      );
+    let vote;
+    // Lựa chọn trước đó khi người bỏ phiếu đổi ý — client cộng dồn theo sự kiện nên phải trừ phiếu cũ.
+    let prevChoice: string | undefined;
+    if (existing) {
+      if (existing.choice === choice) {
+        // Bấm lại đúng lựa chọn cũ: không đổi gì, không phát sự kiện.
+        return Response.json({ pollId: params.pollId, choice });
+      }
+      prevChoice = existing.choice;
+      vote = await prisma.classroomPollVote.update({
+        where: { id: existing.id },
+        data: { choice },
+      });
+    } else {
+      const submissionCount = await prisma.classroomPollVote.count({
+        where: { pollId: params.pollId },
+      });
+      if (submissionCount >= 500) {
+        return Response.json(
+          { error: "Poll has reached maximum submissions (500)" },
+          { status: 400 }
+        );
+      }
+      try {
+        vote = await prisma.classroomPollVote.create({
+          data: { pollId: params.pollId, userId, clientId: clientId ?? null, choice },
+        });
+      } catch (err) {
+        // Hai yêu cầu cùng thiết bị đến sát nhau: ràng buộc duy nhất giữ lại đúng một phiếu.
+        const code = (err as { code?: string }).code;
+        if (code === "P2002" && clientId) {
+          prevChoice = undefined;
+          vote = await prisma.classroomPollVote.update({
+            where: { pollId_clientId: { pollId: params.pollId, clientId } },
+            data: { choice },
+          });
+        } else {
+          throw err;
+        }
+      }
     }
-
-    const vote = await prisma.classroomPollVote.create({
-      data: {
-        pollId: params.pollId,
-        userId,
-        choice,
-      },
-    });
 
     // Broadcast realtime — fire-and-forget. /results vẫn là fallback nếu Redis down.
     publish(`poll:${params.pollId}`, {
       choice: vote.choice,
-      ts: vote.createdAt.getTime(),
+      ...(prevChoice !== undefined ? { prev: prevChoice } : {}),
+      ts: Date.now(),
     }).catch((err) => {
       console.error("[quick-poll/vote] publish failed (non-fatal):", err);
     });

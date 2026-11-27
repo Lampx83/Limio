@@ -3313,8 +3313,13 @@ model ClassroomPollVote {
 
   choice String // index of selected option (0, 1, 2, ...)
 
+  // Định danh thiết bị (localStorage) — mỗi thiết bị một phiếu mỗi poll; bỏ lại thì đổi lựa chọn.
+  // Null ở phiếu cũ và ở client cũ chưa gửi clientId (NULL không vi phạm ràng buộc duy nhất).
+  clientId String?
+
   createdAt DateTime @default(now())
 
+  @@unique([pollId, clientId])
   @@index([pollId])
   @@index([userId])
 }
