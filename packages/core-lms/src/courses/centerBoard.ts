@@ -113,9 +113,9 @@ async function resolveScope(actorUserId: string, organizationId: string, db: DbC
   };
 }
 
-/** Các khoá người xem mở được trang buổi/lớp: null = mọi khoá (Platform Admin), còn lại là tập khoá mình là chủ hoặc đồng giảng viên. */
+/** Các khoá người xem mở được trang buổi/lớp: null = mọi khoá (Platform Admin, quản trị của trường), còn lại là tập khoá mình là chủ hoặc đồng giảng viên. */
 async function manageableCourses(actorUserId: string, organizationId: string, db: DbClient): Promise<Set<string> | null> {
-  if (await isAdmin(actorUserId, db)) return null;
+  if (await isOrgAdminOf(actorUserId, organizationId, db)) return null;
   const rows = await db.courseInstructor.findMany({ where: { userId: actorUserId, role: { in: [...EDIT_ROLES] }, course: { organizationId } }, select: { courseId: true } });
   return new Set(rows.map((r) => r.courseId));
 }

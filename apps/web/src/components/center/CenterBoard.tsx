@@ -49,6 +49,8 @@ interface Props {
   basePath: string;
   /** Phần `&truong=…` giữ trường đang chọn khi đổi ngày bằng ô chọn ngày. */
   extraQuery: string;
+  /** Lọc sẵn theo một loại cảnh báo (từ thẻ ở Tổng quan trung tâm): no_teacher, no_checkin, no_attendance, clash. */
+  initialFlag?: string;
   nowIso: string;
   orgName: string;
   board: OrgBoard | null;
@@ -100,6 +102,7 @@ export default function CenterBoard(props: Props) {
   const [teacherFilter, setTeacherFilter] = useState("");
   const [hideCancelled, setHideCancelled] = useState(false);
   const [onlyFlagged, setOnlyFlagged] = useState(false);
+  const [flagFilter, setFlagFilter] = useState(props.initialFlag ?? "");
   const [query, setQuery] = useState("");
   // Chế độ gọn: buổi tối có thể có hàng chục lớp chạy song song nên mỗi buổi chỉ một dòng. null = tự bật khi có hàng chồng quá 5 làn.
   const [denseChoice, setDenseChoice] = useState<boolean | null>(null);
@@ -175,9 +178,10 @@ export default function CenterBoard(props: Props) {
           (!query.trim() || m.sectionName.toLowerCase().includes(query.trim().toLowerCase())) &&
           (!teacherFilter || m.teacher?.id === teacherFilter) &&
           !(hideCancelled && m.state === "cancelled") &&
-          !(onlyFlagged && m.flags.length === 0),
+          !(onlyFlagged && m.flags.length === 0) &&
+          (!flagFilter || (flagFilter === "clash" ? m.flags.some((f) => f === "room_clash" || f === "teacher_clash") : m.flags.some((f) => f === flagFilter))),
       ),
-    [meetings, classFilter, teacherFilter, hideCancelled, onlyFlagged, query],
+    [meetings, classFilter, teacherFilter, hideCancelled, onlyFlagged, query, flagFilter],
   );
 
   const axis: Axis = useMemo(() => {
@@ -312,12 +316,13 @@ export default function CenterBoard(props: Props) {
 
   const todayKey = vnDayKey(now);
   const isCurrent = mode === "ngay" ? props.anchor === todayKey : weekStart(props.anchor) === weekStart(todayKey);
-  const activeFilters = (teacherFilter ? 1 : 0) + (mode !== "ky" ? (classFilter ? 1 : 0) + (hideCancelled ? 1 : 0) + (onlyFlagged ? 1 : 0) : 0);
+  const activeFilters = (teacherFilter ? 1 : 0) + (mode !== "ky" ? (classFilter ? 1 : 0) + (hideCancelled ? 1 : 0) + (onlyFlagged ? 1 : 0) + (flagFilter ? 1 : 0) : 0);
   const clearFilters = () => {
     setTeacherFilter("");
     setClassFilter("");
     setHideCancelled(false);
     setOnlyFlagged(false);
+    setFlagFilter("");
   };
 
   const header = (
@@ -593,6 +598,7 @@ export default function CenterBoard(props: Props) {
             {classFilter && <FilterChip label={`Lớp: ${classOptions.find(([id]) => id === classFilter)?.[1] ?? "…"}`} onRemove={() => setClassFilter("")} />}
             {hideCancelled && <FilterChip label="Ẩn buổi đã huỷ" onRemove={() => setHideCancelled(false)} />}
             {onlyFlagged && <FilterChip label="Chỉ buổi cần chú ý" onRemove={() => setOnlyFlagged(false)} />}
+            {flagFilter && <FilterChip label={`Chỉ buổi: ${flagFilter === "clash" ? "trùng phòng hoặc giáo viên" : (FLAG_LABEL[flagFilter as keyof typeof FLAG_LABEL] ?? flagFilter).toLowerCase()}`} onRemove={() => setFlagFilter("")} />}
             <button type="button" className="px-1 text-muted underline hover:text-[rgb(var(--text))]" onClick={clearFilters}>
               Xoá hết
             </button>

@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { addCoInstructorByEmail, listCourseInstructors } from "@feedbackme/core-lms";
+import { addCoInstructorByEmail, assertCanRunSections, listCourseInstructors } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 
@@ -14,8 +14,16 @@ export async function GET(
   const userId = await requireUserId();
   if (!userId)
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  const rows = await listCourseInstructors(params.id);
-  return NextResponse.json(rows);
+  // Danh sách có email giảng viên: chỉ người trong đội giảng dạy của khoá hoặc quản trị trường của khoá được xem.
+  try {
+    await assertCanRunSections(userId, params.id);
+    const rows = await listCourseInstructors(params.id);
+    return NextResponse.json(rows);
+  } catch (e) {
+    const mapped = mapKnownError(e);
+    if (mapped) return mapped;
+    throw e;
+  }
 }
 
 // POST /api/courses/[id]/instructors — Body: { email, role }

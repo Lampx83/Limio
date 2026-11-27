@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { NOINDEX } from "@/lib/seo";
 import { unstable_cache } from "next/cache";
 import { redirect } from "next/navigation";
-import { isCenterTeacher, isFeatureEnabled, isInstructor, isResearcher, userIsAnyProctor } from "@feedbackme/core-lms";
+import { isAnyOrgAdmin, isCenterTeacher, isFeatureEnabled, isInstructor, isResearcher, userIsAnyProctor } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import InstructorLeftMenu from "@/components/InstructorLeftMenu";
@@ -30,13 +30,14 @@ export const metadata: Metadata = NOINDEX;
 // tạo khoá đầu tiên, tự khoá luôn lối vào hợp lệ duy nhất.
 const getInstructorRoles = unstable_cache(
   async (userId: string) => {
-    const [instructor, proctor, researcher, centerTeacher] = await Promise.all([
+    const [instructor, proctor, researcher, centerTeacher, orgAdmin] = await Promise.all([
       isInstructor(userId),
       userIsAnyProctor(userId),
       isResearcher(userId),
       isCenterTeacher(userId),
+      isAnyOrgAdmin(userId),
     ]);
-    return { isInstructor: instructor, isProctor: proctor, isResearcher: researcher, isCenterTeacher: centerTeacher };
+    return { isInstructor: instructor, isProctor: proctor, isResearcher: researcher, isCenterTeacher: centerTeacher, isOrgAdmin: orgAdmin };
   },
   ["instructor-layout-roles"],
   { revalidate: 60, tags: ["user-roles"] },
@@ -78,12 +79,14 @@ export default async function InstructorLayout({
     isProctor,
     isResearcher: hasResearcherRole,
     isCenterTeacher: hasCenterTeacherRole,
+    isOrgAdmin: hasOrgAdminRole,
   } = await getInstructorRoles(session.user.id);
 
   // Instructor status is admin-granted (xem packages/core-lms/src/courses/courses.ts
   // createCourse — không còn tự cấp khi tạo khoá) — không có lối "tự đăng ký"
   // nào ở đây để phải chừa cửa, nên chặn cứng toàn bộ khu vực /instructor/*.
-  if (!hasInstructorRole && !isProctor && !hasCenterTeacherRole) {
+  // Quản trị trường vào được để mở trang lớp mình xếp (lịch, điểm danh); quyền từng trang vẫn do máy chủ kiểm theo khoá.
+  if (!hasInstructorRole && !isProctor && !hasCenterTeacherRole && !hasOrgAdminRole) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">

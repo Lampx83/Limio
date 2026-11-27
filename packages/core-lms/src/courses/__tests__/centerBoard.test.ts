@@ -54,8 +54,8 @@ describe("getOrgBoard", () => {
     expect(byId.get(clash.id)!.flags).toContain("room_clash");
     expect(byId.get(noTeacher.id)!.flags).toEqual(["no_teacher"]);
     expect(byId.get(cancelled.id)).toMatchObject({ state: "cancelled", flags: [] });
-    // OrgAdmin không có tên trong khoá: xem được bảng nhưng KHÔNG mở được trang buổi/lớp (các trang đó kiểm quyền theo khoá)
-    expect(board.meetings.every((m) => m.canManage === false)).toBe(true);
+    // OrgAdmin của trường xếp lớp được (teaching scope `manage`), nên mở được trang buổi/lớp dù không có tên trong khoá
+    expect(board.meetings.every((m) => m.canManage === true)).toBe(true);
     // chủ khoá mở được buổi của khoá mình; Platform Admin mở được mọi buổi
     const asOwner = await getOrgBoard(t.owner, t.org.id, RANGE, now);
     expect(asOwner.meetings.every((m) => m.canManage)).toBe(true);

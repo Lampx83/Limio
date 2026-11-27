@@ -57,6 +57,9 @@ export async function isCenterEnabledForUser(userId: string, db: DbClient = pris
     select: { organization: { select: { centerEnabled: true } } },
   });
   if (user?.organization?.centerEnabled) return true;
+  // Quản trị của một trường đã bật tính năng trung tâm: để trang lớp hiện lịch và chuyên cần khi họ mở lớp mình xếp.
+  const adminOfCenter = await db.organizationAdmin.findFirst({ where: { userId, organization: { centerEnabled: true } }, select: { userId: true } });
+  if (adminOfCenter) return true;
 
   // Cờ riêng. Thiếu dòng cờ (chưa seed) hay lỗi khác đều coi là tắt: menu không được hỏng vì một cờ.
   try {

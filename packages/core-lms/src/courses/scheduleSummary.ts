@@ -7,7 +7,7 @@
  */
 import { prisma } from "@feedbackme/db";
 import type { DbClient } from "../auth/tokens";
-import { assertCanGradeCourse } from "./authz";
+import { assertCanRunSections } from "./teachingScope";
 import { vnDayKey } from "./classScheduleCalc";
 
 const WEEKDAY_NAME: Record<number, string> = {
@@ -74,7 +74,7 @@ export async function getSectionScheduleSummaries(
   now: Date = new Date(),
   db: DbClient = prisma,
 ): Promise<Record<string, SectionScheduleSummary>> {
-  await assertCanGradeCourse(actorUserId, courseId, db);
+  await assertCanRunSections(actorUserId, courseId, db);
   const sections = await db.courseSection.findMany({
     where: { courseId, isDefault: false },
     select: { id: true, classSchedule: { select: { slots: { select: { weekday: true, startTime: true } } } } },

@@ -11,7 +11,8 @@
 
 import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
-import { assertCanEditCourse, assertCanEditExam } from "../courses/authz";
+import { assertCanEditExam } from "../courses/authz";
+import { assertCanEditCourseOrOrgAdmin } from "../courses/teachingScope";
 import { ensureTeachRoleForAssignment } from "../courses/instructors";
 import { isUserEnrolled } from "../learning/enroll";
 import { ensureDefaultRoomForSession } from "./exam-rooms";
@@ -41,7 +42,7 @@ export async function createCohort(
   rawInput: unknown,
   db: PrismaClient = prisma,
 ): Promise<{ id: string }> {
-  await assertCanEditCourse(actorUserId, courseId, db);
+  await assertCanEditCourseOrOrgAdmin(actorUserId, courseId, db);
   const parsed = CreateCohortInput.safeParse(rawInput);
   if (!parsed.success)
     throw new ExamError("validation_failed", parsed.error.flatten());
@@ -105,7 +106,7 @@ export async function listCohorts(
   options: { roundId?: string } = {},
   db: PrismaClient = prisma,
 ): Promise<CohortListItem[]> {
-  await assertCanEditCourse(actorUserId, courseId, db);
+  await assertCanEditCourseOrOrgAdmin(actorUserId, courseId, db);
   const rows = await db.courseSection.findMany({
     where: { courseId },
     orderBy: { name: "asc" },
@@ -256,7 +257,7 @@ async function assertCanEditCohort(
     select: { id: true, courseId: true },
   });
   if (!c) throw new ExamError("cohort_not_found");
-  await assertCanEditCourse(actorUserId, c.courseId, db);
+  await assertCanEditCourseOrOrgAdmin(actorUserId, c.courseId, db);
   return c;
 }
 

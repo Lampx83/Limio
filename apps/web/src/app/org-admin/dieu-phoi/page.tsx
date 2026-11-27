@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { prisma } from "@feedbackme/db";
-import { isAdmin, isAnyOrgAdmin } from "@feedbackme/core-lms";
+import { isAnyOrgAdmin } from "@feedbackme/core-lms";
+import { listManagedCenterOrgs } from "@/lib/orgAdminOrgs";
 import { auth } from "@/lib/auth";
 import EmptyState from "@/components/ui/EmptyState";
 import CenterBoardView from "@/components/center/CenterBoardView";
@@ -12,26 +12,15 @@ export const dynamic = "force-dynamic";
  * Bảng điều phối lịch của một trường (CENTER M): vạch "bây giờ", khối ngang là buổi học hoặc vòng đời lớp.
  * Quản trị nhiều trường, hoặc Platform Admin, chọn trường bằng `?truong=` (Platform Admin thấy mọi trường đã bật tính năng trung tâm).
  */
-export default async function OrgBoardPage({ searchParams }: { searchParams: { che_do?: string; ngay?: string; truong?: string } }) {
+export default async function OrgBoardPage({ searchParams }: { searchParams: { che_do?: string; ngay?: string; truong?: string; chu_y?: string } }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/org-admin/dieu-phoi");
   const userId = session.user.id;
   if (!(await isAnyOrgAdmin(userId))) {
     return <EmptyState title="Không có quyền" description="Bạn cần là quản trị viên trường để xem trang này." />;
   }
-  const platform = await isAdmin(userId);
-  const orgs = platform
-    ? await prisma.organization.findMany({ where: { centerEnabled: true }, select: { id: true, name: true }, orderBy: { name: "asc" } })
-    : (
-        await prisma.organizationAdmin.findMany({
-          where: { userId, organization: { centerEnabled: true } },
-          select: { organization: { select: { id: true, name: true } } },
-        })
-      )
-        .map((a) => a.organization)
-        .sort((a, b) => a.name.localeCompare(b.name, "vi"));
+  const { orgs, platform, anyAdminship } = await listManagedCenterOrgs(userId);
   if (orgs.length === 0) {
-    const anyAdminship = !platform && (await prisma.organizationAdmin.count({ where: { userId } })) > 0;
     return anyAdminship || platform ? (
       <EmptyState title="Chưa bật tính năng trung tâm" description="Bật ở mục Thương hiệu & kỳ học để dùng bảng điều phối." />
     ) : (

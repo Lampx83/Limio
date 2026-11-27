@@ -8,7 +8,7 @@
  */
 import * as XLSX from "xlsx";
 import { prisma, type PrismaClient } from "@feedbackme/db";
-import { assertCanGradeCourse } from "./authz";
+import { assertCanRunSections } from "./teachingScope";
 import { CourseError } from "./courses";
 import { createCourseSection } from "./sections";
 
@@ -131,7 +131,7 @@ async function classify(
   rows: SectionImportInputRow[],
   db: PrismaClient,
 ): Promise<SectionImportPreview> {
-  await assertCanGradeCourse(actorUserId, courseId, db);
+  await assertCanRunSections(actorUserId, courseId, db);
   if (rows.length === 0) throw new SectionImportError("no_rows");
   if (rows.length > SECTION_IMPORT_MAX_ROWS) throw new SectionImportError("too_many_rows");
 

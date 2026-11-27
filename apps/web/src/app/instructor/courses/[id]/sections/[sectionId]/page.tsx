@@ -5,6 +5,7 @@ import {
   getClassSchedule,
   getCoursePlan,
   getTeachingScope,
+  canGradeCourse,
   assertCanViewSection,
   getSectionAttendanceSummary,
   getSectionGoal,
@@ -58,6 +59,8 @@ export default async function SectionRosterPage({
   // Người chỉ dạy (giảng viên trung tâm) chỉ vào lớp được xếp cho mình, và ở đây chỉ để xem.
   const scope = await getTeachingScope(userId, params.id);
   const canManage = scope === "manage";
+  // Quản trị trường xếp lớp mà không có tên trong khoá: không vào được trang khoá nên quay về trang "Lớp và giáo viên" của họ.
+  const backHref = !canManage ? "/instructor/lich-day" : (await canGradeCourse(userId, params.id)) ? `/instructor/courses/${params.id}?tab=sections` : `/org-admin/lop-hoc?khoa=${params.id}`;
   if (!canManage) {
     const sectionRow = await prisma.courseSection.findUnique({ where: { id: params.sectionId }, select: { instructorId: true } });
     try {
@@ -106,7 +109,7 @@ export default async function SectionRosterPage({
   return (
     <main>
       <Link
-        href={canManage ? `/instructor/courses/${params.id}?tab=sections` : "/instructor/lich-day"}
+        href={backHref}
         className="text-sm font-medium text-lime-700 hover:text-lime-800 hover:underline dark:text-lime-400 dark:hover:text-lime-300"
       >
         ← {canManage ? roster.section.courseTitle : "Lịch dạy"}

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse, ensureTeachRoleForAssignment, findOrInviteUserByEmail } from "@feedbackme/core-lms";
+import { canEditCourseOrOrgAdmin, ensureTeachRoleForAssignment, findOrInviteUserByEmail } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
 
@@ -33,7 +33,7 @@ export async function POST(
   const userId = await requireUserId();
   if (!userId)
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!(await canEditCourse(userId, params.id)))
+  if (!(await canEditCourseOrOrgAdmin(userId, params.id)))
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const body = (await readJson(req)) as { rows?: BulkRow[] } | null;

@@ -22,7 +22,7 @@ export default async function CenterBoardView({
   basePath: string;
   /** Mã trường cần giữ trên mọi liên kết khi người xem chọn được nhiều trường (`?truong=`). */
   orgParam?: string;
-  searchParams: { che_do?: string; ngay?: string };
+  searchParams: { che_do?: string; ngay?: string; chu_y?: string };
 }) {
   const mode: BoardMode = searchParams.che_do === "tuan" ? "tuan" : searchParams.che_do === "ky" ? "ky" : "ngay";
   const now = new Date();
@@ -64,6 +64,7 @@ export default async function CenterBoardView({
         todayHref={href(mode, today)}
         basePath={basePath}
         extraQuery={extraQuery}
+        initialFlag={["no_teacher", "no_checkin", "no_attendance", "clash"].includes(searchParams.chu_y ?? "") ? searchParams.chu_y : undefined}
         modeHrefs={{ ngay: href("ngay", anchor), tuan: href("tuan", anchor), ky: href("ky", anchor) }}
         nowIso={now.toISOString()}
         orgName={orgName}

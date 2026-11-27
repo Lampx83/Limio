@@ -11,7 +11,8 @@
 import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { generateSectionInviteCode } from "../exam/code-access";
-import { assertCanEditCourse, assertCanGradeCourse } from "./authz";
+import { assertCanEditCourse } from "./authz";
+import { assertCanRunSections, isOrgAdminOfCourse } from "./teachingScope";
 import { CourseError } from "./courses";
 import { logAudit } from "../auth/audit";
 import { isResearcher } from "../auth/roles";
@@ -68,7 +69,7 @@ export async function createCourseSection(
   rawInput: unknown,
   db: PrismaClient = prisma,
 ): Promise<CourseSectionItem> {
-  await assertCanGradeCourse(actorUserId, courseId, db);
+  await assertCanRunSections(actorUserId, courseId, db);
   const parsed = CreateCourseSectionInput.safeParse(rawInput);
   if (!parsed.success) throw new CourseError("validation_failed", parsed.error.flatten());
 
@@ -116,7 +117,7 @@ export async function countUnassignedLearners(
   courseId: string,
   db: PrismaClient = prisma,
 ): Promise<number> {
-  await assertCanGradeCourse(actorUserId, courseId, db);
+  await assertCanRunSections(actorUserId, courseId, db);
   const def = await db.courseSection.findFirst({
     where: { courseId, isDefault: true },
     select: { id: true },
@@ -133,7 +134,7 @@ export async function listCourseSections(
   courseId: string,
   db: PrismaClient = prisma,
 ): Promise<CourseSectionItem[]> {
-  await assertCanGradeCourse(actorUserId, courseId, db);
+  await assertCanRunSections(actorUserId, courseId, db);
   const rows = await db.courseSection.findMany({
     where: { courseId, isDefault: false },
     orderBy: { createdAt: "asc" },
@@ -167,7 +168,7 @@ async function assertCanManageSection(
     select: { id: true, courseId: true, isDefault: true, feedbackVariant: true },
   });
   if (!section) throw new CourseError("section_not_found");
-  await assertCanGradeCourse(actorUserId, section.courseId, db);
+  await assertCanRunSections(actorUserId, section.courseId, db);
   return section;
 }
 
@@ -380,7 +381,8 @@ export async function transferEnrollmentSection(
     select: { id: true, courseId: true, sectionId: true },
   });
   if (!enrollment) throw new CourseError("not_found");
-  await assertCanEditCourse(actorUserId, enrollment.courseId, db);
+  // Chuyển học viên giữa các lớp: người sửa khoá như trước, thêm quản trị trường (xếp lớp là việc của họ).
+  if (!(await isOrgAdminOfCourse(actorUserId, enrollment.courseId, db))) await assertCanEditCourse(actorUserId, enrollment.courseId, db);
 
   if (targetSectionId === enrollment.sectionId) return;
 

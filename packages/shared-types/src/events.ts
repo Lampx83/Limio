@@ -99,6 +99,8 @@ export const LearningEventType = {
   ReportViewerRevoked: "report.viewer.revoked",
   ReportPublisherViewed: "report.publisher.viewed",
   ReportPublisherExported: "report.publisher.exported",
+  /** Quản trị trường mở danh sách học viên cần liên hệ ở Tổng quan trung tâm (CENTER L4). Tối đa một lần mỗi người, mỗi trường, mỗi ngày; payload chỉ id trường và số dòng, không có tên. */
+  CenterRiskListViewed: "center.risk_list.viewed",
   /** Platform Admin gắn/gỡ khoá khỏi tổ chức (core-lms/src/org/courseOrganization.ts). Payload chỉ id. */
   CourseOrganizationChanged: "course.organization.changed",
 
