@@ -37,3 +37,8 @@ export function resolveWeek(raw: string | string[] | undefined, now: Date = new 
   const ms = parse(from);
   return { from, to: fmt(ms + 6 * DAY_MS), prev: fmt(ms - 7 * DAY_MS), next: fmt(ms + 7 * DAY_MS) };
 }
+
+/** Ngày (YYYY-MM-DD) cách `day` `n` ngày (âm = lùi). */
+export function shiftDay(day: string, n: number): string {
+  return fmt(parse(day) + n * DAY_MS);
+}

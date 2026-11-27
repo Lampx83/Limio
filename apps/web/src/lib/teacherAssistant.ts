@@ -59,6 +59,7 @@ export const ASSISTANT_DESTINATIONS: readonly AssistantDestination[] = [
   { id: "my_courses", label: "Khoá học của tôi", description: "Xem và chỉnh sửa các khoá học đang dạy.", href: "/instructor/courses", icon: "course" },
   { id: "teaching_reconcile", label: "Đối chiếu lịch dạy của tôi", description: "Xem các buổi mình được xếp trong tuần, giờ bắt đầu và kết thúc thực tế, buổi nào dạy thay hoặc chưa ai bắt đầu.", href: "/instructor/doi-chieu", icon: "organize" },
   { id: "teaching_schedule", label: "Lịch dạy", description: "Xem các buổi dạy trong tuần của mọi lớp; đặt lịch từng lớp ở trang lớp trong khoá học.", href: "/instructor/lich-day", icon: "organize" },
+  { id: "schedule_board", label: "Điều phối lịch", description: "Nhìn các buổi và lớp như bảng phát sóng: vạch đỏ là bây giờ, mỗi khối là một buổi hoặc cả vòng đời một lớp; thấy buổi chưa có giáo viên, trùng phòng, giáo viên chưa bắt đầu.", href: "/instructor/dieu-phoi", icon: "organize" },
   { id: "pack_library", label: "Giáo trình", description: "Xếp bài của khoá vào từng buổi học (phân phối chương trình) để lịch dạy và lịch học hiện đúng bài; cuối trang có giáo trình dựng sẵn.", href: "/instructor/giao-trinh", icon: "course" },
   { id: "grade_essays", label: "Chấm bài tự luận", description: "Chấm các câu trả lời tự luận đang chờ.", href: "/instructor/grade-essays", icon: "grading" },
   { id: "assignments", label: "Chấm bài tập", description: "Xem các bài tập học viên đã nộp và đang chờ chấm.", href: "/instructor/assignments?view=pending", icon: "assignment" },

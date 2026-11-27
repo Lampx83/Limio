@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Calendar, ClipboardCheck, Palette, Menu, X, Building2, Users, Mail, BarChart3, type LucideIcon } from "lucide-react";
+import { Calendar, ClipboardCheck, GanttChart, Palette, Menu, X, Building2, Users, Mail, BarChart3, type LucideIcon } from "lucide-react";
 
 type Item = {
   label: string;
@@ -16,6 +16,7 @@ const ITEMS: Item[] = [
   { label: "Thành viên trường", href: "/org-admin/members", icon: Users },
   { label: "Danh mục ca thi", href: "/org-admin/session-templates", icon: Calendar },
   { label: "Mẫu email", href: "/org-admin/emails", icon: Mail },
+  { label: "Điều phối lịch", href: "/org-admin/dieu-phoi", icon: GanttChart },
   { label: "Đối chiếu lịch dạy", href: "/org-admin/doi-chieu", icon: ClipboardCheck },
   { label: "Thương hiệu & kỳ học", href: "/org-admin/settings", icon: Palette },
   { label: "Báo cáo nhà xuất bản", href: "/bao-cao", icon: BarChart3 },

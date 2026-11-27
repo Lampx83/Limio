@@ -1,5 +1,5 @@
 /** Các mục menu giảng viên thuộc tính năng trung tâm: ẩn khi tài khoản chưa được bật (xem core-lms/org/centerAccess.ts). */
-export const CENTER_INSTRUCTOR_HREFS: ReadonlySet<string> = new Set(["/instructor/lich-day", "/instructor/giao-trinh"]);
+export const CENTER_INSTRUCTOR_HREFS: ReadonlySet<string> = new Set(["/instructor/lich-day", "/instructor/dieu-phoi", "/instructor/giao-trinh"]);
 /** Mục menu học viên "Lịch học": ẩn khi học viên chưa học ở lớp nào có lịch. */
 export const CENTER_LEARNER_HREF = "/me/lich-hoc";
 /**

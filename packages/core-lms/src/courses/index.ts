@@ -34,6 +34,8 @@ export * from "./meetingPlan";
 export * from "./courseSessionPlan";
 export * from "./teacherCheckInCalc";
 export * from "./teacherCheckIn";
+export * from "./centerBoardCalc";
+export * from "./centerBoard";
 export * from "./protectedMedia";
 export * from "./personalizationReadiness";
 export * from "./aiGradeBatch";

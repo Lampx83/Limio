@@ -64,6 +64,17 @@ export const GUIDES: readonly GuideEntry[] = [
     ],
   },
   {
+    id: "dieu-phoi-lich",
+    title: "Điều phối lịch: bảng phát sóng các buổi và lớp của trung tâm",
+    keywords: ["điều phối lịch", "bảng điều phối", "lịch phát sóng", "lịch cả trung tâm", "lớp nào đang diễn ra", "trùng phòng", "trùng giáo viên", "chưa có giáo viên", "phòng nào trống", "giáo viên nào rảnh", "vòng đời lớp", "lớp sắp kết thúc"],
+    destinationIds: ["schedule_board", "teaching_schedule"],
+    body: `Mục "Điều phối lịch" trong menu LMS (chỉ hiện khi tính năng trung tâm được bật; quản trị trường mở ở trang "Điều phối lịch" của quản trị đơn vị) vẽ lịch như bảng phát sóng: trục ngang là thời gian, vạch hồng là bây giờ và tự chạy, mỗi khối ngang là một buổi học. Bấm "Ngày", "Tuần" hoặc "Kỳ" để đổi mức xem: "Ngày" cho thấy các buổi hôm nay, "Tuần" cho cả tuần, "Kỳ" cho cả vòng đời mỗi lớp từ buổi đầu đến buổi cuối kèm "Đã dạy 7/24"; bấm "Hôm nay" để quay về hiện tại. Ba số "đang học", "sắp tới", "cần chú ý" nằm ngay trên đầu. Ở "Nhóm theo", mặc định là "Trình độ" (mỗi dòng một trình độ như HSK 1, HSK 2); chọn "Phòng", "Giáo viên" hoặc "Lớp" để xem ai chiếm phòng nào hoặc ai đang rảnh. Ô "Tìm lớp…" và nút "Bộ lọc" giúp thu hẹp theo lớp hoặc giáo viên. Khối có biểu tượng cảnh báo là buổi cần chú ý như chưa có giáo viên, trùng phòng, giáo viên chưa bắt đầu hoặc đã dạy mà chưa điểm danh; bấm "cần chú ý" để chỉ xem các buổi đó. Bấm một khối để xem chi tiết, rồi bấm "Mở buổi" để điểm danh, huỷ hoặc đổi giờ. Bảng chỉ để xem, chưa kéo thả đổi giờ được.`,
+    useCases: [
+      `Thầy/cô quản lý trung tâm mở "Điều phối lịch" vào đầu buổi tối để xem lớp nào đang diễn ra và buổi nào chưa có giáo viên.`,
+      `Thầy/cô muốn xếp thêm một lớp học thứ bảy nên chuyển "Nhóm theo" sang "Phòng" để tìm phòng còn trống và tránh trùng phòng.`,
+    ],
+  },
+  {
     id: "phan-phoi-chuong-trinh",
     title: "Phân phối chương trình: bài theo buổi cho mọi lớp của khoá",
     keywords: ["phân phối chương trình", "bài theo buổi", "chia bài", "chia bài theo số buổi", "giáo án cả khoá", "nhiều lớp cùng khoá", "lịch dạy có bài", "buổi nào học bài nào", "kế hoạch cả khoá"],
