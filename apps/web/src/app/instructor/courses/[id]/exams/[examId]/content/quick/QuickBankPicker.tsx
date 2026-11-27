@@ -37,6 +37,8 @@ export default function QuickBankPicker({ examId, doneHref }: { examId: string; 
   }, []);
 
   const [topics, setTopics] = useState<string[]>([]);
+  // Số câu đã publish theo chủ đề — chỉ để hiển thị và giải thích khi thiếu câu.
+  const [publishedCounts, setPublishedCounts] = useState<Record<string, number>>({});
   const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set());
   const [count, setCount] = useState(10);
   const [difficulties, setDifficulties] = useState<Set<number>>(new Set());
@@ -54,14 +56,16 @@ export default function QuickBankPicker({ examId, doneHref }: { examId: string; 
   useEffect(() => {
     if (!bankId) {
       setTopics([]);
+      setPublishedCounts({});
       setSelectedTopics(new Set());
       return;
     }
     fetch(`/api/question-banks/${bankId}/topics`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((j: { topics: string[] } | null) => {
+      .then((j: { topics: string[]; publishedCounts?: Record<string, number> } | null) => {
         const t = j?.topics ?? [];
         setTopics(t);
+        setPublishedCounts(j?.publishedCounts ?? {});
         // Mặc định chọn hết — người dùng bỏ bớt thay vì phải tự thêm từng chủ
         // đề, đỡ 1 bước thao tác cho trường hợp phổ biến "lấy khắp mọi chủ đề".
         setSelectedTopics(new Set(t));
@@ -130,7 +134,9 @@ export default function QuickBankPicker({ examId, doneHref }: { examId: string; 
         count: base + (i < remainder ? 1 : 0),
       }))
       .filter((b) => b.count > 0);
-    return { bankIds: [bankId], count, buckets };
+    // spillShortfall: chủ đề nhỏ không đủ phần được chia thì lấy bù từ chủ đề còn
+    // câu, để đề vẫn đủ số câu đã đặt khi các chủ đề đã chọn cộng lại đủ.
+    return { bankIds: [bankId], count, buckets, spillShortfall: true };
   };
 
   const onXemTruoc = async () => {
@@ -195,6 +201,15 @@ export default function QuickBankPicker({ examId, doneHref }: { examId: string; 
       setBusy(false);
     }
   };
+
+  // Giải thích đúng nguyên nhân thiếu câu: các chủ đề đã chọn cộng lại không đủ
+  // (≠ "ngân hàng chưa đủ" — chủ đề khác trong ngân hàng có thể còn nhiều câu).
+  const scopeTopics = selectedTopics.size > 0 ? [...selectedTopics] : topics;
+  const publishedInScope = scopeTopics.reduce((s, t) => s + (publishedCounts[t] ?? 0), 0);
+  const shortfallReason =
+    difficulties.size > 0
+      ? "các chủ đề và mức độ khó đã chọn chưa đủ câu đã publish"
+      : `các chủ đề đã chọn chỉ có ${publishedInScope} câu đã publish — chọn thêm chủ đề để đủ`;
 
   const toggleDifficulty = (n: number) => {
     setDifficulties((prev) => {
@@ -293,7 +308,10 @@ export default function QuickBankPicker({ examId, doneHref }: { examId: string; 
                         onChange={() => toggleTopic(t)}
                         className="h-[18px] w-[18px] shrink-0 accent-brand-600"
                       />
-                      {t}
+                      <span className="min-w-0 flex-1">{t}</span>
+                      <span className="shrink-0 text-xs tabular-nums text-faint">
+                        {publishedCounts[t] ?? 0} câu
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -352,8 +370,7 @@ export default function QuickBankPicker({ examId, doneHref }: { examId: string; 
               {preview.totalRequested} câu
               {preview.totalSampled < preview.totalRequested && (
                 <span className="ml-2 text-amber-700">
-                  ⚠ thiếu {preview.totalRequested - preview.totalSampled} — ngân hàng chưa đủ câu đã
-                  publish
+                  ⚠ thiếu {preview.totalRequested - preview.totalSampled} — {shortfallReason}
                 </span>
               )}
             </span>

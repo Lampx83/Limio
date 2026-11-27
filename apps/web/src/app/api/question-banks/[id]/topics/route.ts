@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { listTopicsInBank } from "@feedbackme/core-lms";
+import { countPublishedByTopic, listTopicsInBank } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -17,6 +17,11 @@ export async function GET(
   const userId = await requireUserId();
   if (!userId)
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  const topics = await listTopicsInBank(userId, params.id);
-  return NextResponse.json({ topics });
+  const [topics, publishedCounts] = await Promise.all([
+    listTopicsInBank(userId, params.id),
+    countPublishedByTopic(userId, params.id),
+  ]);
+  // `publishedCounts`: số câu đã publish theo chủ đề (chỉ câu published được rút
+  // ngẫu nhiên vào đề). Thêm trường, không đổi `topics` nên các chỗ dùng cũ không ảnh hưởng.
+  return NextResponse.json({ topics, publishedCounts });
 }

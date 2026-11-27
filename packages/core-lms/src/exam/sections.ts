@@ -73,6 +73,14 @@ export const PoolFilter = z.object({
    * and `cognitiveLevel` are ignored. Total must equal `count`.
    */
   buckets: z.array(PoolBucket).optional(),
+  /**
+   * Bù phần thiếu giữa các bucket: bucket nào không đủ câu thì phần thiếu được
+   * lấy thêm từ các bucket còn câu dư (chia đều, lần lượt từng câu), để đề vẫn
+   * đủ `count` khi ngân hàng còn đủ. Chỉ nên bật khi các bucket là phép chia đều
+   * tự động (màn "Chọn nhanh"); ma trận đề / wizard có hạn mức từng ô là yêu cầu
+   * cố định nên để tắt (thiếu ô nào báo ô đó).
+   */
+  spillShortfall: z.boolean().optional(),
   /** Question type filter. */
   type: z.array(z.string()).optional(),
   /** Per-item point override (else inherit from question). */
@@ -148,6 +156,9 @@ export async function pickPoolQuestions(
   // gets section_pool_underfilled at the end if total fell below count.
   if (filter.buckets && filter.buckets.length > 0) {
     const picked: string[] = [];
+    // Câu còn dư của từng bucket sau khi đã lấy đủ hạn mức (đã xáo theo seed),
+    // dùng cho bước bù khi `spillShortfall`.
+    const spare: string[][] = [];
     for (const [i, bucket] of filter.buckets.entries()) {
       const where: Prisma.BankQuestionWhereInput = {
         ...baseWhere,
@@ -165,6 +176,26 @@ export async function pickPoolQuestions(
       );
       const shuffled = shuffle(ids.map((q) => q.id), rng);
       picked.push(...shuffled.slice(0, bucket.count));
+      spare.push(shuffled.slice(bucket.count));
+    }
+    if (filter.spillShortfall && picked.length < filter.count) {
+      // Bù lần lượt từng câu theo vòng tròn qua các bucket còn dư, nên phần thiếu
+      // chia đều chứ không dồn hết vào bucket đứng đầu. Bỏ qua câu đã được chọn
+      // (bucket có thể chồng nhau nếu không khoanh theo chủ đề).
+      const taken = new Set(picked);
+      let progressed = true;
+      while (picked.length < filter.count && progressed) {
+        progressed = false;
+        for (const pool of spare) {
+          if (picked.length >= filter.count) break;
+          let next = pool.shift();
+          while (next !== undefined && taken.has(next)) next = pool.shift();
+          if (next === undefined) continue;
+          taken.add(next);
+          picked.push(next);
+          progressed = true;
+        }
+      }
     }
     if (tolerant) return picked;
     if (picked.length === 0) throw new ExamError("section_pool_empty");

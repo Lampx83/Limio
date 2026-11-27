@@ -608,6 +608,30 @@ export async function listTopicsInBank(
 }
 
 /**
+ * Số câu ĐÃ PUBLISH theo từng chủ đề của 1 ngân hàng (chỉ câu published mới được
+ * rút ngẫu nhiên vào đề). Chủ đề chưa có câu published thì không có khoá.
+ * Cùng quyền xem với listTopicsInBank.
+ */
+export async function countPublishedByTopic(
+  actorUserId: string,
+  bankId: string,
+  db: PrismaClient = prisma,
+): Promise<Record<string, number>> {
+  const visibleIds = await visibleBankIds(actorUserId, db);
+  if (!visibleIds.includes(bankId)) return {};
+  const rows = await db.$queryRaw<Array<{ topic: string; n: bigint }>>`
+    SELECT config->>'topic' AS topic, COUNT(*) AS n
+    FROM "BankQuestion"
+    WHERE "bankId" = ${bankId}
+      AND status = 'published'
+      AND config ? 'topic'
+      AND config->>'topic' <> ''
+    GROUP BY 1
+  `;
+  return Object.fromEntries(rows.map((r) => [r.topic, Number(r.n)]));
+}
+
+/**
  * Hard-delete a single BankQuestion. Cascade aware (giống deleteBank):
  *   - BankQuestionVersion / BankQuestionSkillTag / BankQuestionStats cascade
  *     khi xoá row chính.
