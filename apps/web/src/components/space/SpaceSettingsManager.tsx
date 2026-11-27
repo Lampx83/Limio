@@ -7,9 +7,10 @@ import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
 import { derivePalette, isHexColor } from "@/lib/space/theme";
 import { spaceBasePath } from "@/lib/space/aliases";
-import { SPACE_EDITABLE_COPY, SPACE_TEMPLATES } from "@/lib/space/templates";
+import type { OrgKind } from "@feedbackme/core-lms";
+import { KIND_TEMPLATE_LABEL, SPACE_EDITABLE_COPY, templatesForKind } from "@/lib/space/templates";
 import type { SpaceStored } from "@/lib/space/settings";
-import type { SpaceLang } from "@/lib/space/types";
+import { SPACE_LANGS, type SpaceLang } from "@/lib/space/types";
 
 type CopyKey = (typeof SPACE_EDITABLE_COPY)[number];
 
@@ -55,6 +56,7 @@ export default function SpaceSettingsManager({
   orgName,
   orgCourses,
   orgBundles,
+  orgKind,
   initial,
   initialEnabled,
   initialSlug,
@@ -64,6 +66,8 @@ export default function SpaceSettingsManager({
   orgName: string;
   orgCourses: Array<{ slug: string; title: string; status: string }>;
   orgBundles: Array<{ slug: string; title: string; status: string }>;
+  /** Loại tổ chức: quyết định mẫu theo loại ở ô "Nạp mẫu". */
+  orgKind: OrgKind;
   initial: SpaceStored;
   initialEnabled: boolean;
   initialSlug: string | null;
@@ -111,12 +115,34 @@ export default function SpaceSettingsManager({
   const addable = orgCourses.filter((c) => !inSpace.has(c.slug));
   const statusOf = (s: string) => orgCourses.find((c) => c.slug === s)?.status ?? null;
 
+  const templates = templatesForKind(orgKind, orgName);
+
   function applyTemplate(id: string) {
-    const t = SPACE_TEMPLATES.find((x) => x.id === id);
+    const t = templates.find((x) => x.id === id);
     if (!t) return;
-    const hasInput = Boolean(name || logoUrl || partnerLogoUrl || courses.length > 0);
-    if (hasInput && !window.confirm("Nạp mẫu sẽ thay các giá trị đang nhập trong form (chưa lưu). Tiếp tục?")) return;
+    // Mẫu theo loại chỉ thay chữ (và màu/tên khi form còn trống); khoá, logo, ảnh đang có được giữ. Mẫu dự án nạp trọn bộ như trước.
+    const merge = t.group === "kind";
+    const hasCopy = SPACE_LANGS.some((l) => Object.values(copy[l] ?? {}).some((v) => v && v.trim()));
+    const hasInput = merge ? hasCopy : Boolean(name || logoUrl || partnerLogoUrl || courses.length > 0 || hasCopy);
+    if (hasInput && !window.confirm(merge ? "Nạp mẫu sẽ thay các dòng chữ đang nhập trong form (chưa lưu). Khoá, logo và ảnh được giữ. Tiếp tục?" : "Nạp mẫu sẽ thay các giá trị đang nhập trong form (chưa lưu). Tiếp tục?")) return;
     const s = t.build();
+    if (merge) {
+      if (!name) {
+        setName(s.name ?? "");
+        setTitleSuffix(s.titleSuffix ?? "");
+        setPrimary(s.primary ?? primary);
+        setAccent(s.accent ?? accent);
+        setTones({ dark: s.dark, soft: s.soft, accent2: s.accent2 });
+      }
+      setLangs(s.langs ?? ["en", "vi"]);
+      setDefaultLang(s.defaultLang ?? "en");
+      setCopy({
+        en: { ...(s.copy?.en as Partial<Record<CopyKey, string>>) },
+        vi: { ...(s.copy?.vi as Partial<Record<CopyKey, string>>) },
+      });
+      toast.success("Đã nạp mẫu vào form", { description: "Bấm Lưu để áp dụng." });
+      return;
+    }
     setName(s.name ?? "");
     setTitleSuffix(s.titleSuffix ?? "");
     setPrimary(s.primary ?? primary);
@@ -284,9 +310,16 @@ export default function SpaceSettingsManager({
           <span className="label">Mẫu</span>
           <select className="select mt-1.5" value="" onChange={(e) => applyTemplate(e.target.value)} aria-label="Nạp mẫu">
             <option value="">Nạp mẫu có sẵn…</option>
-            {SPACE_TEMPLATES.map((t) => (
-              <option key={t.id} value={t.id}>{t.label}</option>
-            ))}
+            <optgroup label="Mẫu theo loại">
+              {templates.filter((t) => t.group === "kind").map((t) => (
+                <option key={t.id} value={t.id}>{KIND_TEMPLATE_LABEL[orgKind]} (chữ khởi đầu)</option>
+              ))}
+            </optgroup>
+            <optgroup label="Mẫu dự án">
+              {templates.filter((t) => t.group === "project").map((t) => (
+                <option key={t.id} value={t.id}>{t.label}</option>
+              ))}
+            </optgroup>
           </select>
         </div>
       </div>

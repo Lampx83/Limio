@@ -19,6 +19,19 @@ async function setup(tag: string) {
 
 const space = (courses: Array<{ slug: string }> = []) => ({ name: "X", courses });
 
+describe("getOrganizationSpaceAdminData: loại tổ chức", () => {
+  it("trả loại của tổ chức (quyết định mẫu space ở form); đổi loại thì không đụng vào space đã lưu; người ngoài vẫn bị chặn", async () => {
+    const t = await setup("spk");
+    expect((await getOrganizationSpaceAdminData(t.orgAdmin, t.org.id)).kind).toBe("school");
+    await updateOrganizationSpace(t.orgAdmin, t.org.id, { spaceEnabled: false, spaceSlug: null, space: { name: "Giữ nguyên" } });
+    await prisma.organization.update({ where: { id: t.org.id }, data: { kind: "center", centerEnabled: true } });
+    const data = await getOrganizationSpaceAdminData(t.orgAdmin, t.org.id);
+    expect(data.kind).toBe("center");
+    expect(data.space).toEqual({ name: "Giữ nguyên" });
+    await expect(getOrganizationSpaceAdminData(t.outsider, t.org.id)).rejects.toBeInstanceOf(OrgSpaceError);
+  });
+});
+
 describe("updateOrganizationSpace", () => {
   it("OrgAdmin lưu được; người ngoài bị chặn; đọc cũng cần quyền", async () => {
     const t = await setup("sp1");

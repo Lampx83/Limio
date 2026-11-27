@@ -2,6 +2,7 @@ import { prisma } from "@feedbackme/db";
 import { getOrganizationSpaceAdminData, isAdmin, OrgSpaceError } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { bundleAllowedForOrg, normalizeStored } from "@/lib/space/settings";
+import { isBlankSpace, templateForKind } from "@/lib/space/templates";
 import SpaceSettingsManager from "./SpaceSettingsManager";
 
 /** Mục "Space" trong trang quản trị trường — dùng ở /org-admin/settings và /admin/orgs/[id]. */
@@ -20,13 +21,17 @@ export default async function SpaceSettingsSection({ organizationId }: { organiz
     const orgBundles = bundleRows
       .filter((b) => bundleAllowedForOrg(b.items.map((i) => i.course.organizationId), organizationId))
       .map((b) => ({ slug: b.slug, title: b.title, status: b.status }));
+    // Space chưa từng cấu hình: form mở sẵn mẫu theo loại tổ chức (chưa lưu gì cho tới khi bấm Lưu). Đã có cấu hình thì giữ nguyên.
+    const stored = normalizeStored(data.space);
+    const initial = isBlankSpace(stored) ? templateForKind(data.kind, data.name) : stored;
     return (
       <SpaceSettingsManager
         organizationId={organizationId}
         orgName={data.name}
         orgCourses={data.courses}
         orgBundles={orgBundles}
-        initial={normalizeStored(data.space)}
+        orgKind={data.kind}
+        initial={initial}
         initialEnabled={data.spaceEnabled}
         initialSlug={data.spaceSlug}
         isPlatformAdmin={platformAdmin}

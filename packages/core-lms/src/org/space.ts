@@ -7,6 +7,7 @@ import { isBuiltinSpaceSlug, isValidSpaceSlug } from "@feedbackme/shared-types";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { isAdmin, isOrgAdminOf } from "../auth/roles";
 import { logAudit } from "../auth/audit";
+import type { OrgKind } from "./orgKind";
 
 export class OrgSpaceError extends Error {
   constructor(
@@ -22,6 +23,8 @@ export interface OrgSpaceAdminData {
   id: string;
   name: string;
   code: string;
+  /** Loại tổ chức: quyết định danh sách mẫu space ở form (docs/tieu-chi/space-theo-loai-to-chuc-buoc-1.md). */
+  kind: OrgKind;
   brandingLogoUrl: string | null;
   spaceEnabled: boolean;
   spaceSlug: string | null;
@@ -47,6 +50,7 @@ export async function getOrganizationSpaceAdminData(
       id: true,
       name: true,
       code: true,
+      kind: true,
       brandingLogoUrl: true,
       spaceEnabled: true,
       spaceSlug: true,
