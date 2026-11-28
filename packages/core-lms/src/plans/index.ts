@@ -27,3 +27,18 @@ export {
   type AssignSubscriptionInput,
 } from "./admin";
 export { grantTrialSubscriptions, type TrialGrantResult } from "./trial";
+// `vnDayKey` của quota.ts là bản của courses/classScheduleCalc, đã xuất ở gốc package.
+export {
+  vnMonthRange,
+  getPlanLimit,
+  checkUsageQuota,
+  assertUsageQuota,
+  PlanLimitError,
+  type UsageMetric,
+  type SnapshotMetric,
+  type QuotaSource,
+  type QuotaResult,
+  type QuotaSubject,
+  type QuotaOptions,
+  type PlanLimitDetails,
+} from "./quota";

@@ -60,24 +60,33 @@ export async function getPlanSubjectKind(
   return kindOf(userId, subject.userRoles.map((r) => r.role.name), db);
 }
 
-function asEntitlements(json: Prisma.JsonValue): Record<string, FeatureValue> {
+/** Nội bộ module gói (quota.ts dùng lại); không xuất qua index. */
+export function asEntitlements(json: Prisma.JsonValue): Record<string, FeatureValue> {
   return json && typeof json === "object" && !Array.isArray(json)
     ? (json as Record<string, FeatureValue>)
     : {};
 }
 
-async function activeFor(
-  userId: string,
+/**
+ * Thuê bao hiệu lực của một người và của tổ chức truyền vào (`userId = null`:
+ * chỉ của tổ chức). Nội bộ module gói (quota.ts dùng lại); không xuất qua index.
+ */
+export async function activeFor(
+  userId: string | null,
   organizationId: string | null,
   now: Date,
   db: PrismaClient,
 ): Promise<ActiveSubscription[]> {
+  const or: Prisma.SubscriptionWhereInput[] = [];
+  if (userId) or.push({ userId });
+  if (organizationId) or.push({ organizationId });
+  if (or.length === 0) return [];
   const rows = await db.subscription.findMany({
     where: {
       cancelledAt: null,
       startsAt: { lte: now },
       endsAt: { gt: now },
-      OR: organizationId ? [{ userId }, { organizationId }] : [{ userId }],
+      OR: or,
     },
     include: { plan: true },
   });
