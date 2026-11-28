@@ -16,6 +16,11 @@ export async function GET(req: Request) {
   const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit") ?? 25)));
   const q = (url.searchParams.get("q") ?? "").trim();
 
+  // Bộ lọc tuỳ chọn: status (draft|published|archived), org ("none" = chưa thuộc tổ chức, hoặc id), sample ("teacher"|"learner").
+  const status = url.searchParams.get("status");
+  const org = url.searchParams.get("org");
+  const sample = url.searchParams.get("sample");
+
   const where: Record<string, unknown> = q
     ? {
         OR: [
@@ -24,9 +29,19 @@ export async function GET(req: Request) {
         ],
       }
     : {};
+  if (status === "draft" || status === "published" || status === "archived") where.status = status;
+  if (org === "none") where.organizationId = null;
+  else if (org) where.organizationId = org;
+  if (sample === "teacher") where.isSample = true;
+  else if (sample === "learner") where.learnerSampleAt = { not: null };
 
-  const [total, rows] = await Promise.all([
+  const [total, statusGroups, noOrgCount, teacherSampleCount, learnerSampleCount, rows] = await Promise.all([
     prisma.course.count({ where }),
+    // Số liệu tổng không phụ thuộc bộ lọc đang chọn: để các nút lọc luôn cho biết "bấm vào sẽ thấy bao nhiêu".
+    prisma.course.groupBy({ by: ["status"], _count: { _all: true } }),
+    prisma.course.count({ where: { organizationId: null } }),
+    prisma.course.count({ where: { isSample: true } }),
+    prisma.course.count({ where: { learnerSampleAt: { not: null } } }),
     prisma.course.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -69,7 +84,17 @@ export async function GET(req: Request) {
     organizationName: c.organization?.name ?? null,
   }));
 
+  const byStatus = { draft: 0, published: 0, archived: 0 } as Record<string, number>;
+  for (const g of statusGroups) byStatus[g.status] = g._count._all;
+
   return NextResponse.json({
+    stats: {
+      all: Object.values(byStatus).reduce((a, b) => a + b, 0),
+      byStatus,
+      noOrg: noOrgCount,
+      teacherSample: teacherSampleCount,
+      learnerSample: learnerSampleCount,
+    },
     courses,
     total,
     page,
