@@ -78,6 +78,8 @@ import { withoutHiddenAudioTranscripts } from "@/lib/lessonAudio";
 import SafeHtml from "@/components/SafeHtml";
 import { htmlToPlainText, plainToRichHtml } from "@/lib/richText";
 import LessonTabs from "@/components/lesson/LessonTabs";
+import LessonPager from "@/components/lesson/LessonPager";
+import { lessonNeighbours } from "@/lib/lessonNeighbours";
 import { lessonBottomTabs } from "@/lib/lessonBottomTabs";
 import LessonTasksTab, {
   type TaskItem,
@@ -539,6 +541,8 @@ export default async function LessonPage({
     }),
   }));
   const threads = await listThreadsForLesson(lesson.id);
+  // Chân bài: bài trước / bài sau theo đúng danh sách học viên thấy (bài và chương ẩn đã bị loại ở getCourseProgress).
+  const neighbours = lessonNeighbours(progress.modules, lesson.id);
 
   const skipSuggestion = completedEvent
     ? null
@@ -1448,6 +1452,21 @@ export default async function LessonPage({
               hskAuthored={isAuthoredLesson(shownItems)}
             />
           </div>
+        )}
+        {!stageMode && (
+          <LessonPager
+            slug={params.slug}
+            prev={neighbours.prev}
+            next={neighbours.next}
+            preview={previewMode}
+            labels={{
+              prev: t("learn.lesson.pagerPrev"),
+              next: t("learn.lesson.pagerNext"),
+              locked: t("learn.lesson.pagerLocked"),
+              backToCourse: t("learn.lesson.pagerBackToCourse"),
+              endOfCourse: t("learn.lesson.pagerEnd"),
+            }}
+          />
         )}
         </div>
         <div
