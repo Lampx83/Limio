@@ -35,6 +35,7 @@ export * from "./result-lookup";
 export * from "./access-config";
 export * from "./candidates";
 export * from "./bank";
+export * from "./bankQuestionsInExam";
 export * from "./cohorts";
 export * from "./sections";
 export * from "./section-timeline";

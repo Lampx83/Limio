@@ -20,6 +20,7 @@ import { assertCanEditExam } from "../courses/authz";
 import { ExamError } from "./types";
 import { resolveSkillScope, resolveBankScope } from "./wizard";
 import { pickPoolQuestions, PoolFilter } from "./sections";
+import { bankQuestionIdsInExam } from "./bankQuestionsInExam";
 import { configSchemaForType } from "./schemas";
 
 // ============================================================================
@@ -649,6 +650,8 @@ export interface SectionPoolPreviewResult {
   totalSampled: number;
   questions: SectionPoolPreviewQuestion[];
   seed: string;
+  /** Số câu của đề này đã chép từ ngân hàng — các câu đó không được bốc lại. */
+  alreadyInExam: number;
 }
 
 function extractCorrectPreview(
@@ -715,7 +718,13 @@ export async function previewSectionPool(
   const seed = createHash("sha256").update(seedInput).digest("hex");
   // Tolerant: instructor xem preview, pool thiếu thì show partial + cảnh báo —
   // không phải fail giống attempt runtime (học viên không được nhận đề thiếu).
-  const ids = await pickPoolQuestions(filterParsed.data, seed, db, { tolerant: true });
+  // Bỏ câu đã có trong đề: bốc nhiều lần không ra trùng, và bộ xem trước khớp
+  // đúng bộ sẽ được chốt.
+  const inExam = await bankQuestionIdsInExam(examId, db);
+  const ids = await pickPoolQuestions(filterParsed.data, seed, db, {
+    tolerant: true,
+    excludeIds: inExam,
+  });
 
   // Load chi tiết theo thứ tự pickPoolQuestions trả về.
   const rows = await db.bankQuestion.findMany({
@@ -781,6 +790,7 @@ export async function previewSectionPool(
     totalSampled: questions.length,
     questions,
     seed: seedInput,
+    alreadyInExam: inExam.length,
   };
 }
 
@@ -841,8 +851,10 @@ export async function importPreviewToExam(
   // câu họ vừa thấy trên UI.
   const seedInput = opts.reshuffleSeed ?? `preview:${sectionId}`;
   const seed = createHash("sha256").update(seedInput).digest("hex");
+  const inExam = await bankQuestionIdsInExam(examId, db);
   const ids = await pickPoolQuestions(filterParsed.data, seed, db, {
     tolerant: true,
+    excludeIds: inExam,
   });
   if (ids.length === 0) throw new ExamError("section_pool_empty");
 

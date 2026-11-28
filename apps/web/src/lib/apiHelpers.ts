@@ -290,7 +290,8 @@ export function mapKnownError(err: unknown): NextResponse | null {
               err.code === "student_code_in_use" ||
               err.code === "cohort_has_attempts" ||
               err.code === "cohort_name_taken" ||
-              err.code === "cohort_required"
+              err.code === "cohort_required" ||
+              err.code === "bank_question_already_in_exam"
             ? 409
             : err.code === "exam_not_publishable" ||
                 err.code === "practice_scope_empty" ||

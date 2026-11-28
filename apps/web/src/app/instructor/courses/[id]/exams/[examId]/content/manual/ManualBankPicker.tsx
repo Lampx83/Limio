@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, ChevronDown } from "lucide-react";
 
@@ -82,14 +82,18 @@ function TopicMultiSelectDropdown({
 export default function ManualBankPicker({
   examId,
   sectionId,
+  usedBankQuestionIds,
   doneHref,
 }: {
   examId: string;
   courseId: string;
   sectionId: string | null;
+  /** Câu ngân hàng đã có trong đề — hiện mờ, không chọn lại được. */
+  usedBankQuestionIds: string[];
   doneHref: string;
 }) {
   const router = useRouter();
+  const used = useMemo(() => new Set(usedBankQuestionIds), [usedBankQuestionIds]);
 
   const [banks, setBanks] = useState<Bank[]>([]);
   const [bankId, setBankId] = useState("");
@@ -185,7 +189,11 @@ export default function ManualBankPicker({
         });
         if (!r.ok) {
           const j = (await r.json().catch(() => null)) as { error?: string } | null;
-          setErr(j?.error ?? `HTTP ${r.status}`);
+          setErr(
+            j?.error === "bank_question_already_in_exam"
+              ? "Có câu đã nằm trong đề này — tải lại trang rồi chọn câu khác."
+              : (j?.error ?? `HTTP ${r.status}`),
+          );
           return;
         }
       }
@@ -271,17 +279,23 @@ export default function ManualBankPicker({
           )}
           <ul className="space-y-2">
             {items.map((it) => {
-              const checked = selected.has(it.id);
+              const inExam = used.has(it.id);
+              const checked = !inExam && selected.has(it.id);
               return (
                 <li key={it.id}>
                   <label
-                    className={`flex cursor-pointer items-start gap-3 rounded border p-3 hover:bg-slate-50 ${
-                      checked ? "border-brand-400 bg-brand-50/40" : "border-default"
+                    className={`flex items-start gap-3 rounded border p-3 ${
+                      inExam
+                        ? "cursor-not-allowed border-default bg-slate-50 opacity-60"
+                        : `cursor-pointer hover:bg-slate-50 ${
+                            checked ? "border-brand-400 bg-brand-50/40" : "border-default"
+                          }`
                     }`}
                   >
                     <input
                       type="checkbox"
                       checked={checked}
+                      disabled={inExam}
                       onChange={() => toggleSelected(it.id)}
                       className="mt-1 h-4 w-4 shrink-0"
                     />
@@ -293,6 +307,11 @@ export default function ManualBankPicker({
                         <span className="text-faint">
                           {it.points} điểm · ✦{it.difficulty}/5 · {it.skillIds.length} skill
                         </span>
+                        {inExam && (
+                          <span className="rounded bg-slate-200 px-2 py-0.5 text-slate-700">
+                            Đã có trong đề
+                          </span>
+                        )}
                         <span className="ml-auto inline-flex items-center gap-1 text-faint">
                           <BookOpen className="h-3 w-3 shrink-0" />
                           {it.bankName}

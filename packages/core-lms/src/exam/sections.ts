@@ -137,12 +137,23 @@ export async function pickPoolQuestions(
    * throw `section_pool_empty` / `section_pool_underfilled` để học viên không
    * nhận đề thiếu câu.
    */
-  opts: { tolerant?: boolean } = {},
+  opts: {
+    tolerant?: boolean;
+    /**
+     * Câu ngân hàng đã có trong đề — loại khỏi vòng bốc để thêm nhiều lần không
+     * ra trùng. Chỉ đường soạn đề (xem trước / chốt) truyền; lúc học viên làm
+     * bài không truyền, nên không loại gì.
+     */
+    excludeIds?: readonly string[];
+  } = {},
 ): Promise<string[]> {
   const tolerant = opts.tolerant ?? false;
   const baseWhere: Prisma.BankQuestionWhereInput = {
     bankId: { in: filter.bankIds },
     status: "published",
+    ...(opts.excludeIds && opts.excludeIds.length > 0
+      ? { id: { notIn: [...opts.excludeIds] } }
+      : {}),
     ...(filter.type && filter.type.length > 0
       ? { type: { in: filter.type as never } }
       : {}),

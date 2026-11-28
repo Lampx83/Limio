@@ -22,6 +22,7 @@ import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditCourse, assertCanEditExam, canEditCourse } from "../courses/authz";
 import { ExamError } from "./types";
 import { configSchemaForType } from "./schemas";
+import { bankQuestionIdsInExam } from "./bankQuestionsInExam";
 
 const BankVisibility = z.enum(["private", "course", "org"]);
 const QuestionType = z.enum([
@@ -1188,6 +1189,10 @@ export async function copyBankQuestionToExam(
     const attempts = await db.examAttempt.count({ where: { examId } });
     if (attempts > 0) throw new ExamError("exam_has_attempts");
   }
+
+  // Một câu ngân hàng chỉ vào một đề một lần: thêm lần hai là trùng câu.
+  if ((await bankQuestionIdsInExam(examId, db)).includes(bankQuestionId))
+    throw new ExamError("bank_question_already_in_exam");
 
   // Resolve orderInExam: append to end if not specified.
   const next =

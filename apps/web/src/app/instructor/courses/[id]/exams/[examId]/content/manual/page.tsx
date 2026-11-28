@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { canEditExam } from "@feedbackme/core-lms";
+import { bankQuestionIdsInExam, canEditExam } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import ManualBankPicker from "./ManualBankPicker";
 
@@ -30,6 +30,9 @@ export default async function ManualBankPickerPage({
   if (!(await canEditExam(session.user.id, exam))) {
     redirect("/instructor/courses");
   }
+
+  // Câu đã chép vào đề này: hiện mờ, không cho chọn lại (tránh trùng câu).
+  const usedBankQuestionIds = await bankQuestionIdsInExam(exam.id);
 
   const sectionId = searchParams?.sectionId ?? null;
   // Chỉ khi thêm vào 1 "Phần" có sẵn thì mới bỏ qua bước chọn phương thức —
@@ -61,6 +64,7 @@ export default async function ManualBankPickerPage({
         examId={exam.id}
         courseId={params.id}
         sectionId={sectionId}
+        usedBankQuestionIds={usedBankQuestionIds}
         doneHref={doneHref}
       />
     </main>

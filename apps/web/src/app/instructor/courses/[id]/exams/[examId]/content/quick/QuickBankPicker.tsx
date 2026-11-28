@@ -50,6 +50,7 @@ export default function QuickBankPicker({ examId, doneHref }: { examId: string; 
     totalRequested: number;
     totalSampled: number;
     questions: PreviewQuestion[];
+    alreadyInExam?: number;
   } | null>(null);
   const [reshuffleSeed, setReshuffleSeed] = useState<string | null>(null);
 
@@ -371,6 +372,11 @@ export default function QuickBankPicker({ examId, doneHref }: { examId: string; 
               {preview.totalSampled < preview.totalRequested && (
                 <span className="ml-2 text-amber-700">
                   ⚠ thiếu {preview.totalRequested - preview.totalSampled} — {shortfallReason}
+                </span>
+              )}
+              {(preview.alreadyInExam ?? 0) > 0 && (
+                <span className="ml-2 text-slate-500">
+                  · bỏ qua {preview.alreadyInExam} câu đã có trong đề
                 </span>
               )}
             </span>
