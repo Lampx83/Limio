@@ -4,14 +4,21 @@
  *
  *   pnpm create:mini-test -- --owner gv@example.com --spec mini-test.json [--apply] [--replace]
  *
- * Tệp JSON: { lessonId, title, description?, timeLimitSec, questions: [{ type, prompt, explanation?, options?, extra?, audioFrom? }] }
+ * Tệp JSON: { lessonId, title, description?, timeLimitSec, questions: [{ type, prompt, explanation?, options?, extra?, audioFrom?, listen? }] }
  *   - `audioFrom`: tiền tố tên khối hội thoại của bài ("课文1A"); script gắn `extra.audioUrl` = audio cả đoạn của khối đó.
+ *   - `listen`: { script: [{ who, line }], question?: "问：…" } — kịch bản câu nghe kiểu đề HSK (hội thoại ngắn, rồi người dẫn đọc câu hỏi).
+ *     Thêm `--audio` (cần OPENAI_API_KEY) thì đọc bằng OpenAI TTS (giọng nhân vật theo --voices, người dẫn "旁白"), ghép các lượt cách 0,6 giây
+ *     và câu hỏi cách 1,2 giây, ghi vào kho audio bài học, gắn `extra.audioUrl`. Audio đã sinh nhớ trong --audio-cache (theo nội dung) nên chạy lại không tốn thêm.
  * Không có --apply thì chỉ kiểm tra và in tóm tắt. Bài đã có quiz cùng tên thì dừng, trừ khi có --replace (xoá quiz cũ rồi tạo lại).
  * Mini-test không xáo thứ tự câu (giữ phần nghe, đọc, viết như đề HSK), không bắt chấm độ tự tin, điểm lấy lượt mới nhất, làm lại không giới hạn.
  */
-import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { prisma } from "@feedbackme/db";
+import { encodeMp3, type Pcm } from "../src/narration/audio";
 import { createQuestion, createQuiz, deleteQuiz } from "../src/quizzes";
+import { openAiSpeechPcm, sentenceInstructionsFor, trimSilence } from "./openai-tts";
+import { lessonAudioStore } from "./vocab-audio";
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);
@@ -25,6 +32,7 @@ interface SpecQuestion {
   options?: unknown[];
   extra?: Record<string, unknown>;
   audioFrom?: string;
+  listen?: { script: Array<{ who: string; line: string }>; question?: string };
 }
 interface Spec {
   lessonId: string;
@@ -32,6 +40,22 @@ interface Spec {
   description?: string;
   timeLimitSec: number;
   questions: SpecQuestion[];
+}
+
+const NARRATOR = "旁白";
+const TURN_GAP_SEC = 0.6;
+const QUESTION_GAP_SEC = 1.2;
+
+function joinClips(clips: Array<{ pcm: Pcm; gapAfterSec: number }>): Pcm {
+  const rate = clips[0]!.pcm.sampleRate;
+  const total = clips.reduce((n, c, i) => n + c.pcm.samples.length + (i < clips.length - 1 ? Math.round(rate * c.gapAfterSec) : 0), 0);
+  const out = new Int16Array(total);
+  let pos = 0;
+  clips.forEach((c, i) => {
+    out.set(c.pcm.samples, pos);
+    pos += c.pcm.samples.length + (i < clips.length - 1 ? Math.round(rate * c.gapAfterSec) : 0);
+  });
+  return { sampleRate: rate, samples: out };
 }
 
 async function main() {
@@ -58,10 +82,47 @@ async function main() {
     if (!hit?.audioUrl) throw new Error(`Bài không có hội thoại "${prefix}" có audio`);
     return hit.audioUrl;
   };
-  const questions = spec.questions.map((q) => {
-    const { audioFrom, ...rest } = q;
-    return audioFrom ? { ...rest, extra: { ...(rest.extra ?? {}), audioUrl: audioOf(audioFrom) } } : rest;
-  });
+  const wantAudio = process.argv.includes("--audio");
+  const voicesPath = arg("voices");
+  const cachePath = arg("audio-cache");
+  const voices: Record<string, string> = voicesPath ? JSON.parse(readFileSync(voicesPath, "utf8")) : {};
+  const cache: Record<string, string> = cachePath && existsSync(cachePath) ? JSON.parse(readFileSync(cachePath, "utf8")) : {};
+  const store = lessonAudioStore(owner.id);
+
+  async function listenAudio(listen: NonNullable<SpecQuestion["listen"]>): Promise<string | null> {
+    const key = createHash("sha1").update(JSON.stringify([listen, voices])).digest("hex").slice(0, 20);
+    if (cache[key]) return cache[key]!;
+    if (!wantAudio) return null;
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) throw new Error("Thiếu OPENAI_API_KEY để sinh audio câu nghe");
+    const clips: Array<{ pcm: Pcm; gapAfterSec: number }> = [];
+    const say = async (who: string, text: string, gapAfterSec: number) => {
+      const voice = voices[who] ?? "sage";
+      clips.push({ pcm: trimSilence(await openAiSpeechPcm({ apiKey, voice, input: text, instructions: sentenceInstructionsFor(voice) })), gapAfterSec });
+    };
+    for (const t of listen.script) await say(t.who, t.line, TURN_GAP_SEC);
+    if (listen.question) await say(voices[NARRATOR] ? NARRATOR : "sage", listen.question, 0);
+    else clips[clips.length - 1]!.gapAfterSec = 0;
+    // Khoảng nghỉ trước câu hỏi dài hơn giữa các lượt thoại.
+    if (listen.question && clips.length >= 2) clips[clips.length - 2]!.gapAfterSec = QUESTION_GAP_SEC;
+    const url = await store(encodeMp3(joinClips(clips)));
+    cache[key] = url;
+    if (cachePath) writeFileSync(cachePath, JSON.stringify(cache, null, 1));
+    return url;
+  }
+
+  const questions: Array<Omit<SpecQuestion, "audioFrom" | "listen">> = [];
+  for (const q of spec.questions) {
+    const { audioFrom, listen, ...rest } = q;
+    let extra = rest.extra;
+    if (audioFrom) extra = { ...(extra ?? {}), audioUrl: audioOf(audioFrom) };
+    if (listen) {
+      const url = await listenAudio(listen);
+      if (url) extra = { ...(extra ?? {}), audioUrl: url };
+      else console.warn(`Câu "${rest.prompt.slice(0, 30)}" có kịch bản nghe nhưng chưa có audio (thêm --audio)`);
+    }
+    questions.push({ ...rest, ...(extra ? { extra } : {}) });
+  }
 
   const existing = await prisma.quiz.findMany({ where: { lessonId: spec.lessonId, title: spec.title }, select: { id: true } });
   console.log(`Bài: ${lesson.title}\nMini-test: ${spec.title} — ${questions.length} câu, ${Math.round(spec.timeLimitSec / 60)} phút, ${questions.filter((q) => q.extra?.audioUrl).length} câu có audio`);

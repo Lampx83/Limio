@@ -92,8 +92,12 @@ Giữ 15 phút, 16 câu; bám cấu trúc và cách làm của đề HSK:
 - **Kết quả theo phần thi** (听力 6/6, 阅读 5/6, 书写 0/4) ngoài tổng điểm và nhãn.
 - Dữ liệu: `QuizQuestion.extra.section = { key, label, part, intro }`, `extra.audioPlays`. Quiz tên "Tự kiểm tra · …" tự bật các hành vi này.
 
+**Audio câu nghe (đã làm 28/11/2026, mini-test mẫu):** mỗi câu nghe có audio RIÊNG như đề HSK: hội thoại hai lượt (hoặc đoạn văn ngắn) rồi người dẫn đọc "问：…", đọc bằng OpenAI TTS theo bảng giọng của khoá (林雨 nova, 方强 echo, 赵叔叔 ash, 中介 onyx, người dẫn sage), lượt cách nhau 0,6 giây, câu hỏi cách 1,2 giây. Màn hình chỉ có "请听录音，选出正确答案。" và bốn phương án; lời ghi âm hiện ở phần giải thích sau khi nộp. Sinh bằng `pnpm create:mini-test -- … --audio --voices <tệp> --audio-cache <tệp>` (cần `OPENAI_API_KEY`; có bộ nhớ đệm nên chạy lại không tốn thêm).
+
+**Bản đồ câu hỏi trên điện thoại:** thu gọn thành một hàng "đồng hồ · Câu i/n ▲ · Nộp bài"; bấm "Câu i/n" mới mở bảng số, chọn câu xong tự đóng (16 câu xuống hai hàng thì che phương án). Từ màn hình rộng vẫn là khung bên phải.
+
 **Chưa mô phỏng được (cần việc khác):**
-- Câu hỏi nghe do **giọng đọc** (đề thật đọc cả câu hỏi và có quãng nghỉ giữa các câu): hiện câu hỏi in trên màn hình, audio là cả hội thoại có sẵn nên ba câu cùng một hội thoại phải nghe ba lần (mỗi câu một lần). Cần sinh audio hội thoại ngắn kèm câu hỏi đọc bằng giọng NEU/OpenAI (chưa có khoá trên máy dev).
+- Chất lượng giọng đọc 6 audio mới **chưa có người nghe duyệt** (máy chỉ kiểm được độ dài và phát được).
 - Phần viết thật của HSK 3.0 (viết câu theo tranh và từ cho trước, đoạn văn từ 80 chữ) cần chấm tay hoặc AI; mini-test giữ dạng sắp xếp câu và điền chữ Hán để chấm tự động.
 - Dạng câu đọc của HSK 3.0 chưa kiểm với đề mẫu chính thức.
 

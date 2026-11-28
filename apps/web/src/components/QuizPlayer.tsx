@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import SafeHtml from "@/components/SafeHtml";
-import { Check, Flag } from "lucide-react";
+import { Check, Flag, ChevronUp, ChevronDown } from "lucide-react";
 import ConfidenceStars from "@/components/quiz/ConfidenceStars";
 import { CoveredOptions, WorkOnPaperIntro } from "@/components/quiz/WorkOnPaper";
 import { setQuizLeaveGuard } from "@/lib/quizLeaveGuard";
@@ -73,6 +73,8 @@ export default function QuizPlayer({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  // Điện thoại: bản đồ câu hỏi thu gọn thành một hàng "Câu i/n", bấm để mở (chọn câu xong tự đóng) — 16 câu xuống hai hàng thì che mất phương án.
+  const [mapOpen, setMapOpen] = useState(false);
   // Nháp ra giấy (docs/tieu-chi/quiz-nhap-ra-giay.md): đã qua màn chuẩn bị chưa, và những câu học sinh đã bấm mở đáp án trong lần mở trang này.
   const [prepared, setPrepared] = useState(false);
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
@@ -770,9 +772,21 @@ export default function QuizPlayer({
         </div>
       </aside>
 
-      {/* MOBILE — sticky bottom strip with timer + palette + submit */}
+      {/* MOBILE — sticky bottom strip: một hàng (đồng hồ · Câu i/n · Nộp bài); bản đồ câu hỏi chỉ mở khi bấm "Câu i/n". */}
       <div className="sticky bottom-0 left-0 right-0 z-30 -mx-4 mt-4 border-t border-token bg-[rgb(var(--surface))/0.95] px-4 py-3 backdrop-blur lg:hidden">
-        <div className="mb-2 flex items-center justify-between gap-3">
+        {mapOpen && (
+          <div className="mb-3" id="quiz-mobile-map" data-testid="quiz-mobile-map">
+            <QuestionMap
+              cells={mapCells}
+              onJump={(i) => {
+                setMapOpen(false);
+                jumpTo(i);
+              }}
+              size="sm"
+            />
+          </div>
+        )}
+        <div className="flex items-center justify-between gap-3">
           {remainingSec !== null && (
             <span
               className={`rounded px-2 py-1 font-mono text-sm tabular-nums ${
@@ -787,14 +801,25 @@ export default function QuizPlayer({
           )}
           <button
             type="button"
+            onClick={() => setMapOpen((v) => !v)}
+            aria-expanded={mapOpen}
+            aria-controls="quiz-mobile-map"
+            title={t("practice.quiz.map.title")}
+            data-testid="quiz-mobile-map-toggle"
+            className="inline-flex items-center gap-1 rounded-full border border-token px-3 py-1.5 text-sm font-semibold"
+          >
+            {t("practice.quiz.nav.counter", { i: currentStepIndex + 1, n: quiz.questions.length })}
+            {mapOpen ? <ChevronDown size={16} aria-hidden /> : <ChevronUp size={16} aria-hidden />}
+          </button>
+          <button
+            type="button"
             onClick={() => onSubmit()}
             disabled={submitting}
-            className={`${submitClass} btn-sm ml-auto`}
+            className={`${submitClass} btn-sm`}
           >
             {submitting ? t("practice.quiz.submitting") : t("practice.quiz.submit")}
           </button>
         </div>
-        <QuestionMap cells={mapCells} onJump={jumpTo} size="sm" />
       </div>
     </div>
   );
