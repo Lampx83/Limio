@@ -376,3 +376,49 @@ describe("getLanguageProfile — bài đã luyện tính cả Bài luyện nhún
   });
 });
 
+
+describe("getLanguageProfile — khối Bài luyện có nhãn kỹ năng riêng (giáo trình HSK)", () => {
+  /** Khối luyện của một bài: đề ẩn có chủ, một phần "Bài luyện" mang `skill`; `answers` > 0 thì học viên đã trả lời ngần ấy câu. */
+  async function skilledBlock(f: Fx, lessonIndex: number, skill: LanguageSkill | null, answers: number) {
+    const lessonId = f.lessonIds[lessonIndex]!;
+    const item = await prisma.contentItem.create({ data: { lessonId, type: "exam_practice", payload: {}, orderIndex: 200 + seq++ } });
+    const exam = await prisma.exam.create({
+      data: { courseId: f.courseId, title: "Bài luyện", durationMin: 10, openAt: new Date(), closeAt: new Date(Date.now() + 86_400_000), ownerContentItemId: item.id },
+    });
+    await prisma.examSection.create({ data: { examId: exam.id, title: "Bài luyện", orderIndex: 0, languageSkill: skill } });
+    if (answers > 0) {
+      const session = await prisma.examPracticeSession.create({ data: { examId: exam.id, userId: f.userId, scope: {} } });
+      for (let i = 0; i < answers; i++) {
+        const q = await prisma.examQuestion.create({ data: { examId: exam.id, type: "essay", prompt: `Câu ${i + 1}`, orderInExam: i, config: {} } });
+        await prisma.examPracticeAnswer.create({ data: { sessionId: session.id, questionId: q.id, answerJson: { text: "你好" } } });
+      }
+    }
+  }
+
+  it("bài không có nhãn của bài: mỗi khối có nhãn là một đơn vị; khối đã làm tính vào lessonsPracticed của đúng kỹ năng", async () => {
+    const f = await fx([{ skill: null }]);
+    await skilledBlock(f, 0, "writing", 2);
+    await skilledBlock(f, 0, "writing", 0);
+    await skilledBlock(f, 0, "speaking", 0);
+    const p = await getLanguageProfile(f.userId, f.courseId, "learner");
+    expect(row(p, "writing")).toMatchObject({ lessonsTotal: 2, lessonsPracticed: 1 });
+    expect(row(p, "speaking")).toMatchObject({ lessonsTotal: 1, lessonsPracticed: 0 });
+    expect(row(p, "reading")).toMatchObject({ lessonsTotal: 0, lessonsPracticed: 0 });
+    expect(row(p, "writing").label).toBe("no_data"); // khối luyện chưa nuôi BKT: chỉ có phần trăm, chưa có nhãn mức
+  });
+
+  it("khối không có nhãn (từ vựng, ngữ pháp…) không được đếm", async () => {
+    const f = await fx([{ skill: null }]);
+    await skilledBlock(f, 0, null, 3);
+    const p = await getLanguageProfile(f.userId, f.courseId, "learner");
+    for (const r of p.skills) expect(r).toMatchObject({ lessonsTotal: 0, lessonsPracticed: 0 });
+  });
+
+  it("bài ĐÃ có nhãn của bài thì khối của nó không được đếm thêm (không đếm hai lần)", async () => {
+    const f = await fx([{ skill: "listening" }]);
+    await skilledBlock(f, 0, "writing", 2);
+    const p = await getLanguageProfile(f.userId, f.courseId, "learner");
+    expect(row(p, "listening")).toMatchObject({ lessonsTotal: 1, lessonsPracticed: 1 }); // đếm theo bài (Bài luyện nhúng)
+    expect(row(p, "writing")).toMatchObject({ lessonsTotal: 0, lessonsPracticed: 0 });
+  });
+});

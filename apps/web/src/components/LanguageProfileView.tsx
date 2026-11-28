@@ -208,7 +208,7 @@ export default function LanguageProfileView({
                 {r.lessonsTotal === 0 ? "Khoá chưa có bài thuộc kỹ năng này." : LEVEL_NOTE[r.label]}
               </p>
               {r.lessonsTotal > 0 && (
-                <p className="text-caption mt-1">{`${r.lessonsPracticed}/${r.lessonsTotal} bài đã làm`}</p>
+                <p className="text-caption mt-1">{`${r.lessonsPracticed}/${r.lessonsTotal} bài và bài luyện đã làm`}</p>
               )}
             </li>
           );

@@ -39,11 +39,15 @@ export type LanguageProfileReason =
 export interface LanguageSkillRow {
   skill: LanguageSkill;
   label: MasteryLabel;
-  /** Số bài (học viên thấy được) thuộc kỹ năng này. */
+  /**
+   * Số bài (học viên thấy được) thuộc kỹ năng này, CỘNG số khối Bài luyện thuộc kỹ năng này nằm trong những bài chưa có nhãn kỹ năng của bài
+   * (nhãn của khối = `ExamSection.languageSkill` của đề ẩn). Khoá gắn nhãn theo bài thì không có khối nào được đếm thêm.
+   */
   lessonsTotal: number;
   /**
    * Số bài đã luyện: có trạng thái kỹ năng (BKT, từ quiz chấm tự động) HOẶC học viên đã trả lời ít nhất một câu của Bài luyện nhúng trong bài
    * (hội thoại bạn ảo, phiếu bài tập). Bài luyện chưa nuôi BKT nên trước đây luyện nói/viết không làm thanh kỹ năng nhúc nhích.
+   * CỘNG số khối có nhãn kỹ năng riêng mà học viên đã trả lời ít nhất một câu (cùng đơn vị với `lessonsTotal`).
    */
   lessonsPracticed: number;
   /** CHỈ audience "instructor": trung bình mastery; null = chưa có lượt trả lời nào. */
@@ -158,6 +162,31 @@ export async function getLanguageProfile(
     practiceSessions.flatMap((s) => (s.exam.ownerContentItem ? [s.exam.ownerContentItem.lessonId] : [])),
   );
 
+  // Khoá không gắn kỹ năng theo bài (vd giáo trình HSK: một bài có đủ nghe/nói/đọc/viết) thì gắn theo KHỐI Bài luyện: nhãn nằm ở phần của đề ẩn.
+  // Chỉ xét bài chưa có nhãn của bài; khối không có nhãn (từ vựng, ngữ pháp, văn hoá) không được đếm.
+  const unlabelledLessonIds = lessons.filter((l) => !l.skill).map((l) => l.id);
+  const blockExams = unlabelledLessonIds.length
+    ? await db.exam.findMany({
+        where: { ownerContentItem: { type: "exam_practice", lessonId: { in: unlabelledLessonIds } } },
+        select: { id: true, sections: { select: { languageSkill: true } } },
+      })
+    : [];
+  const blockSkill = new Map<string, LanguageSkill>();
+  for (const e of blockExams) {
+    const sk = e.sections.find((s) => s.languageSkill)?.languageSkill;
+    if (sk) blockSkill.set(e.id, sk as LanguageSkill);
+  }
+  const practicedBlocks = blockSkill.size
+    ? new Set(
+        (
+          await db.examPracticeSession.findMany({
+            where: { userId, answers: { some: {} }, examId: { in: [...blockSkill.keys()] } },
+            select: { examId: true },
+          })
+        ).map((s) => s.examId),
+      )
+    : new Set<string>();
+
   const states = await db.learnerSkillState.findMany({
     where: { userId, skillId: { in: [...skillLang.keys()] } },
     select: { skillId: true, masteryProbability: true, attempts: true },
@@ -177,11 +206,14 @@ export async function getLanguageProfile(
     const mastery = used.length ? used.reduce((n, s) => n + s.masteryProbability, 0) / used.length : null;
     const label: MasteryLabel =
       mastery !== null && evidence >= LANGUAGE_PROFILE_MIN_EVIDENCE ? masteryLabel(mastery) : "no_data";
+    const blocks = [...blockSkill].filter(([, sk]) => sk === skill).map(([examId]) => examId);
     const base: LanguageSkillRow = {
       skill,
       label,
-      lessonsTotal: inSkill.length,
-      lessonsPracticed: inSkill.filter((l) => practicedViaPractice.has(l.id) || l.skillIds.some((id) => stateBySkill.has(id))).length,
+      lessonsTotal: inSkill.length + blocks.length,
+      lessonsPracticed:
+        inSkill.filter((l) => practicedViaPractice.has(l.id) || l.skillIds.some((id) => stateBySkill.has(id))).length +
+        blocks.filter((examId) => practicedBlocks.has(examId)).length,
     };
     return { row: base, mastery, evidence };
   });
