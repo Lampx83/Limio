@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { getAiTokensPageLocked } from "@/lib/site-settings";
 import AiTokensPageLockCard from "./AiTokensPageLockCard";
 import AdminTokensClient from "./AdminTokensClient";
+import AdminSectionTabs from "../_components/AdminSectionTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export default async function AdminAiTokensPage({
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 lg:px-6">
+      <AdminSectionTabs section="commerce" />
       <h1 className="text-h1">Token AI — đối soát</h1>
       <p className="mt-1 text-meta">
         Người học đặt đơn rồi chuyển khoản kèm mã. Đối chiếu sao kê, thấy đúng

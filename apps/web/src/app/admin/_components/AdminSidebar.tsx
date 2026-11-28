@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSidebarNav } from "@/components/useSidebarNav";
+import { ADMIN_SECTIONS, pathInSection, pathInTab, type AdminSectionId } from "./adminNav";
 import {
   Users,
-  Network,
   Wrench,
   Mail,
   Settings,
@@ -14,20 +14,18 @@ import {
   Menu,
   X,
   ShieldCheck,
-  Coins,
-  LayoutGrid,
   GraduationCap,
   UserCheck,
   Building2,
   type LucideIcon,
-  HardDrive,
   Package,
-  ListChecks,
 } from "lucide-react";
 
 type Item = {
   label: string;
   href?: string;
+  /** Mục đại diện cho cả một khu nhiều trang (xem adminNav.ts): bấm vào mở tab đầu, sáng khi đang ở bất kỳ tab nào. */
+  section?: AdminSectionId;
   icon: LucideIcon;
   note?: string;
 };
@@ -48,39 +46,26 @@ const PINK_FG = "text-pink-600 dark:text-pink-300";
 const GROUPS: Group[] = [
   {
     id: "users",
-    label: "Người dùng & Skill",
+    label: "Người dùng",
     iconBg: PINK_BG,
     iconFg: PINK_FG,
     items: [
       { label: "Người dùng", href: "/admin/users", icon: Users },
-      { label: "Tổ chức (OrgAdmin)", href: "/admin/orgs", icon: Building2 },
-      { label: "Đơn giáo viên", href: "/admin/instructor-applications", icon: UserCheck },
-      { label: "Hoạt động giảng viên", href: "/admin/instructor-activity", icon: History },
-      { label: "Skill taxonomy", href: "/admin/skills", icon: Network },
+      { label: "Tổ chức", href: "/admin/orgs", icon: Building2 },
+      // Đơn đăng ký + hoạt động của giảng viên
+      { label: "Giảng viên", section: "instructors", icon: UserCheck },
     ],
   },
   {
     id: "catalog",
-    label: "Catalog",
+    label: "Khoá học & bán hàng",
     iconBg: PINK_BG,
     iconFg: PINK_FG,
     items: [
-      { label: "Section catalog", href: "/admin/catalog-sections", icon: LayoutGrid },
-      { label: "Khoá học", href: "/admin/courses", icon: GraduationCap },
-      { label: "Tiến độ học liệu", href: "/admin/tien-do-hoc-lieu", icon: ListChecks },
-    ],
-  },
-  {
-    id: "integrations",
-    label: "Tích hợp",
-    iconBg: PINK_BG,
-    iconFg: PINK_FG,
-    items: [
-      { label: "LTI tools", href: "/admin/lti-tools", icon: Wrench },
-      { label: "Email templates", href: "/admin/emails", icon: Mail },
-      { label: "Token AI", href: "/admin/ai-tokens", icon: Coins },
-      { label: "Dung lượng", href: "/admin/storage", icon: HardDrive },
-      { label: "Gói tài khoản", href: "/admin/plans", icon: Package },
+      // Khoá học, nhóm danh mục, skill, tiến độ học liệu
+      { label: "Khoá học", section: "content", icon: GraduationCap },
+      // Gói tài khoản, token AI, dung lượng
+      { label: "Gói & hạn mức", section: "commerce", icon: Package },
     ],
   },
   {
@@ -90,6 +75,8 @@ const GROUPS: Group[] = [
     iconFg: PINK_FG,
     items: [
       { label: "Cài đặt & tích hợp", href: "/admin/settings", icon: Settings },
+      { label: "Email templates", href: "/admin/emails", icon: Mail },
+      { label: "LTI tools", href: "/admin/lti-tools", icon: Wrench },
       { label: "Changelog", href: "/admin/changelog", icon: History },
     ],
   },
@@ -97,7 +84,7 @@ const GROUPS: Group[] = [
 
 const LS_KEY = "fbm-admin-menu-collapsed";
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ badges = {} }: { badges?: Partial<Record<AdminSectionId, number>> }) {
   const { pathname, collapsed, toggle, pendingHref, linkProps } = useSidebarNav(LS_KEY);
   const [mobileOpen, setMobileOpen] = useState(false);
   // Mục vừa bấm coi như đang active ngay, không đợi URL đổi.
@@ -111,7 +98,7 @@ export default function AdminSidebar() {
   const isActive = (href?: string) => {
     if (!href) return false;
     if (href === "/admin/dashboard") return current === href;
-    return current === href || current.startsWith(href + "/");
+    return pathInTab(current, href);
   };
 
   const nav = (
@@ -162,8 +149,10 @@ export default function AdminSidebar() {
             </button>
             {!isCollapsed && (
               <ul className="mt-1 space-y-0.5">
-                {g.items.map((it) => {
-                  const active = isActive(it.href);
+                {g.items.map((raw) => {
+                  const it = raw.section ? { ...raw, href: ADMIN_SECTIONS[raw.section].tabs[0]!.href } : raw;
+                  const active = raw.section ? pathInSection(current, raw.section) : isActive(it.href);
+                  const badge = raw.section ? badges[raw.section] : undefined;
                   const Icon = it.icon;
                   const baseRow =
                     "group/item relative flex items-center gap-2.5 rounded-full pl-1.5 pr-3 py-1 text-sm transition-colors";
@@ -214,6 +203,14 @@ export default function AdminSidebar() {
                           />
                         </span>
                         <span className="flex-1 truncate">{it.label}</span>
+                        {badge ? (
+                          <span
+                            className="shrink-0 rounded-full bg-warning-100 px-1.5 text-xs font-semibold tabular-nums text-warning-700"
+                            title={`${badge} đơn chờ duyệt`}
+                          >
+                            {badge}
+                          </span>
+                        ) : null}
                       </Link>
                     </li>
                   );

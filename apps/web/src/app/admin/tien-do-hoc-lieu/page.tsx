@@ -3,6 +3,7 @@ import { isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { getRedis } from "@/lib/redis";
 import { formatDateTime } from "@/lib/datetime";
+import AdminSectionTabs from "../_components/AdminSectionTabs";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Tiến độ học liệu" };
@@ -218,6 +219,7 @@ export default async function AdminContentProgressPage() {
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 px-4 py-5 lg:px-6">
+      <AdminSectionTabs section="content" />
       <div>
         <h1 className="text-h1">Tiến độ học liệu</h1>
         <p className="text-caption">

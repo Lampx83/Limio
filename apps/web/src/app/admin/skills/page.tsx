@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listSkillsWithStats } from "@feedbackme/core-lms";
 import SkillsManager from "./SkillsManager";
+import AdminSectionTabs from "../_components/AdminSectionTabs";
 
 export const revalidate = 30;
 
@@ -16,6 +17,7 @@ export default async function AdminSkillsPage({
 
   return (
     <main>
+      <AdminSectionTabs section="content" />
       <header className="mb-6">
         <h1 className="h-display text-3xl font-bold">Skill taxonomy</h1>
         <p className="mt-1 text-sm text-muted">

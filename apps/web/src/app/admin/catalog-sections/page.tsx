@@ -7,6 +7,7 @@ import CatalogSpacesManager from "./CatalogSpacesManager";
 import { getSiteSetting } from "@/lib/site-settings";
 import { listCatalogSpaceChoices } from "@/lib/space/catalogSpaces";
 import { CATALOG_SPACES_KEY, parseCatalogSpacesSetting } from "@/lib/space/catalogSpaceConfig";
+import AdminSectionTabs from "../_components/AdminSectionTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,7 @@ export default async function CatalogSectionsAdminPage() {
 
   return (
     <main>
+      <AdminSectionTabs section="content" />
       <Link href="/catalog" className="link inline-flex items-center gap-1 text-sm">
         ← Xem trang catalog
       </Link>

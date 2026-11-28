@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getStorageUsageReport, isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { formatBytes } from "@/lib/formatBytes";
+import AdminSectionTabs from "../_components/AdminSectionTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,7 @@ export default async function AdminStoragePage() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 lg:px-6">
+      <AdminSectionTabs section="commerce" />
       <h1 className="text-h1">Dung lượng lưu trữ</h1>
       <p className="mt-1 text-meta">
         Đang ở giai đoạn đo: chỉ thống kê, chưa giới hạn ai. Dung lượng của bài

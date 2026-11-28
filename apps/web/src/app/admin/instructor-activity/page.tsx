@@ -18,6 +18,7 @@ import {
   isCategoryId,
   type CategoryId,
 } from "./activity";
+import AdminSectionTabs from "../_components/AdminSectionTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -175,6 +176,7 @@ export default async function InstructorActivityPage({
 
   return (
     <main>
+      <AdminSectionTabs section="instructors" />
       <header>
         <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-medium text-rose-700">
           Quản trị

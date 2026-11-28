@@ -1,5 +1,6 @@
 import { listInstructorApplications } from "@feedbackme/core-lms";
 import ApplicationsClient from "./ApplicationsClient";
+import AdminSectionTabs from "../_components/AdminSectionTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,7 @@ export default async function InstructorApplicationsPage() {
 
   return (
     <main>
+      <AdminSectionTabs section="instructors" />
       <header className="mb-6">
         <h1 className="h-display text-2xl font-bold sm:text-3xl">Đơn đăng ký giáo viên</h1>
         <p className="mt-1 text-sm text-muted">

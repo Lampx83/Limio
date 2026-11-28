@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { NOINDEX } from "@/lib/seo";
 import { unstable_cache } from "next/cache";
 import { redirect } from "next/navigation";
-import { isAdmin } from "@feedbackme/core-lms";
+import { countPendingInstructorApplications, isAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import AdminSidebar from "./_components/AdminSidebar";
 import ExitImpersonationButton from "@/components/ExitImpersonationButton";
@@ -66,9 +66,12 @@ export default async function AdminLayout({
     );
   }
 
+  // Huy hiệu "đơn chờ duyệt" trên mục Giảng viên: đếm một lần mỗi lần vào trang admin, lỗi đếm thì thôi không hiện.
+  const pendingApplications = await countPendingInstructorApplications().catch(() => 0);
+
   return (
     <div className="flex w-full">
-      <AdminSidebar />
+      <AdminSidebar badges={{ instructors: pendingApplications }} />
       <div className="min-w-0 flex-1">
         <div className="mx-auto w-full max-w-7xl px-4 py-6 lg:px-6">
           {children}
