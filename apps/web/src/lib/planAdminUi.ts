@@ -37,7 +37,6 @@ export const LIMIT_HINTS: Record<string, { text: string; orgOnly?: boolean }> = 
 export const BOOLEAN_LABELS: Record<string, string> = {
   "limio_live.access": "Limio-Live",
   "ai_oral.access": "Vấn đáp AI",
-  "center.access": "Tính năng trung tâm",
 };
 
 export type SubStatus = "active" | "expired" | "cancelled" | "upcoming";

@@ -13,9 +13,9 @@ describe("danh mục gói", () => {
       }
     }
   });
-  it("gói dùng thử không chứa center.access nhưng bật limio_live.access và ai_oral.access", () => {
+  it("không gói nào chứa center.access (trung tâm theo loại tổ chức); gói dùng thử bật limio_live.access và ai_oral.access", () => {
+    for (const p of PLAN_CATALOG) expect(Object.prototype.hasOwnProperty.call(p.entitlements, "center.access")).toBe(false);
     for (const t of PLAN_CATALOG.filter((p) => p.referencePlanKey)) {
-      expect(Object.prototype.hasOwnProperty.call(t.entitlements, "center.access")).toBe(false);
       expect(t.entitlements["limio_live.access"]).toBe(true);
       expect(t.entitlements["ai_oral.access"]).toBe(true);
     }

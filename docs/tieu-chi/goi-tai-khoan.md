@@ -14,8 +14,8 @@ Limio chuẩn bị thu tiền ba nhóm khách: cơ sở giáo dục và trung t�
 | Người đang dùng | Mọi giảng viên và tổ chức hiện có được dùng thử đến hết 28/02/2027; tài khoản đăng ký mới bắt đầu ở Free |
 | Cách dựng | Cách A: gói là một tầng trong hệ thống cờ tính năng (`resolveFeatures`), số đã dùng đếm từ dữ liệu thật |
 | Ai trả | Tổ chức trả theo hợp đồng (admin gán gói); giảng viên lẻ tự mua qua SePay; học viên không bao giờ trả tiền tài khoản |
-| Mức dùng thử | **Không giới hạn về hạn mức**: mọi hạn mức bằng trần kỹ thuật, `limio_live.access` và `ai_oral.access` bật, còn `center.access` không nằm trong gói dùng thử nên tính năng trung tâm chạy như hôm nay; không ai bị chặn trước 01/03/2027. Hệ thống ghi lại ai vượt mức Pro hoặc mức Khoa để làm danh sách khách cần chào gói lớn |
-| Tính năng trung tâm | **Chỉ gói Trung tâm** (và gói dùng thử) mới có lịch lớp, điểm danh, nhận xét sau buổi; công tắc `centerEnabled` của OrgAdmin chỉ có tác dụng khi gói tổ chức có `center.access` |
+| Mức dùng thử | **Không giới hạn về hạn mức**: mọi hạn mức bằng trần kỹ thuật, `limio_live.access` và `ai_oral.access` bật; không ai bị chặn trước 01/03/2027. Hệ thống ghi lại ai vượt mức Pro hoặc mức Khoa để làm danh sách khách cần chào gói lớn |
+| Tính năng trung tâm | **Chỉ theo loại tổ chức** (chốt lại 28/11/2026, thay quyết định 26/11 "chỉ gói Trung tâm"): lịch lớp, điểm danh, nhận xét sau buổi bật cho giáo viên của tổ chức loại trung tâm (`docs/tieu-chi/giao-vien-theo-loai-to-chuc.md`), gói không bật hay tắt chúng. Gói Trung tâm chỉ khác gói khác ở hạn mức; gói không còn khoá `center.access` |
 
 ## 3. Mục tiêu, ngoài phạm vi, điều cấm
 
@@ -84,7 +84,7 @@ Một hàm dùng chung `checkQuota(userId, metric)` trả `{ allowed, limit, use
 | `org.max_instructors` | Số giảng viên của tổ chức | Lúc OrgAdmin hoặc admin thêm người có vai trò giảng dạy vào tổ chức (thêm tay, nhập hàng loạt) | Người có `User.organizationId` là tổ chức đó và có vai trò Instructor hoặc CenterTeacher; đồng giảng viên từ ngoài tổ chức không tính | Chỉ gói tổ chức |
 | `org.active_learners` | Học viên hoạt động trong tháng (gói trung tâm) | **Không chặn.** Vượt thì báo OrgAdmin và hiện trong báo cáo admin để bán nâng cấp | `LearningEvent` với `learnerActivityWhere()`, `course.organizationId`, theo tháng | Chỉ gói tổ chức |
 
-**Tính năng trung tâm theo gói.** `isCenterEnabledForUser` (`core-lms/src/org/centerAccess.ts`) hiện bật khi có một trong bốn điều kiện, trong đó có `Organization.centerEnabled` do OrgAdmin tự bật. Khi `PLANS_ENABLED` bật: mọi điều kiện bật tính năng trung tâm phía giảng viên đều phải đi kèm `center.access` của gói hiệu lực (gói tổ chức hoặc cá nhân); công tắc `centerEnabled` vẫn giữ để tổ chức có gói tự tắt/bật, và trang cài đặt nói rõ "Cần gói Trung tâm" khi gói không có. Dữ liệu đã tạo (lịch, điểm danh, nhận xét) không bị xoá khi gói hết; giảng viên chỉ mất lối tạo mới, học viên vẫn xem được lịch và nhận xét đã gửi.
+**Tính năng trung tâm không theo gói** (chốt 28/11/2026). `isCenterEnabledForUser` và `isCenterCourse` (`core-lms/src/org/centerAccess.ts`) quyết định theo loại tổ chức như hiện nay; tầng gói không chạm vào. Khoá `center.access` bị bỏ khỏi danh mục gói và khỏi `Plan.entitlements` (migration dữ liệu), vì không còn chỗ nào đọc nó.
 
 Kèm theo để số đếm đúng:
 - **Dung lượng:** chạy `pnpm backfill:stored-files` trên prod và đối chiếu (sổ ghi 1,15 GB trong khi thư mục uploads khoảng 9 GB) **trước khi** bật chặn dung lượng; thêm cron chạy `attributeStoredFiles` hằng đêm để bài nộp và tệp đồng giảng viên tính về chủ khoá.
@@ -95,7 +95,7 @@ Kèm theo để số đếm đúng:
 - **Công tắc theo máy chủ:** biến môi trường `PLANS_ENABLED` (mặc định tắt, khai trong `x-web-env` của `docker-compose.prod.yml`). Tắt thì hàm tra bỏ qua tầng gói, không hiện trang gói hay nút nâng cấp, không chạy migration dùng thử. Chỉ bật trên limio.vn (server 224); máy chủ riêng của trường (limio.hust.edu.vn) giữ tắt vì đã có hợp đồng riêng.
 
 - Migration dữ liệu (idempotent, có bản chạy thử): mỗi người dùng có vai trò giảng dạy ở thời điểm chạy nhận một `Subscription` gói `trial_individual`; mỗi tổ chức hiện có nhận `org_trial`. `source = trial`, `endsAt = 01/03/2027 00:00` giờ Việt Nam.
-- Hai gói dùng thử **không giới hạn hạn mức**: bật `limio_live.access` và `ai_oral.access`; **không có** `center.access` (có mặt thì giảng viên đang dùng thử bỗng thấy menu trung tâm; khoá vắng thì rơi về override theo vai trò / mặc định như hôm nay, cổng AND theo gói là việc của mốc 2; các khoá sellable khác như `lms.enrollment.direct_payment` không nằm trong gói nào nên giữ như cũ), mọi khoá int bằng trần kỹ thuật (mục 5.3). Mỗi gói dùng thử có thêm trường `referencePlanKey` (`pro` với cá nhân, `org_khoa` với tổ chức): khi số đã dùng vượt mức của gói tham chiếu, `checkQuota` vẫn cho phép nhưng ghi `plan.limit.reached` với `enforced = false`. Admin xem danh sách đó ở `/admin/plans` (ai vượt, vượt khoá nào, bao nhiêu) để chào gói lớn trước 01/03/2027.
+- Hai gói dùng thử **không giới hạn hạn mức**: bật `limio_live.access` và `ai_oral.access`; (các khoá sellable khác như `lms.enrollment.direct_payment` không nằm trong gói nào nên giữ như cũ), mọi khoá int bằng trần kỹ thuật (mục 5.3). Mỗi gói dùng thử có thêm trường `referencePlanKey` (`pro` với cá nhân, `org_khoa` với tổ chức): khi số đã dùng vượt mức của gói tham chiếu, `checkQuota` vẫn cho phép nhưng ghi `plan.limit.reached` với `enforced = false`. Admin xem danh sách đó ở `/admin/plans` (ai vượt, vượt khoá nào, bao nhiêu) để chào gói lớn trước 01/03/2027.
 - Hết hạn không cần job: hàm tra so ngày, quá `endsAt` thì tự rơi về gói còn lại hoặc `free`.
 - Cron hằng ngày (sidecar `docker/cron`) gửi email nhắc trước 14 ngày và 3 ngày khi gói sắp hết, mỗi mốc tối đa một lần mỗi gói.
 - Thanh báo ở đầu trang giảng viên khi gói còn ≤ 30 ngày: "Gói … của thầy/cô còn n ngày" kèm nút "Xem gói".
@@ -141,7 +141,6 @@ Hai gói `trial_individual` và `org_trial` không nằm trong bảng: chúng b�
 | `org.max_instructors` | — | — | — | 30 | 200 | 5 | 20 |
 | `org.active_learners` | — | — | — | — | — | 100 | 500 |
 | `limio_live.access`, `ai_oral.access` | bật | bật | bật | bật | bật | bật | bật |
-| `center.access` | tắt | tắt | tắt | tắt | tắt | bật | bật |
 
 Giá (`PlanPrice`): Pro 99.000đ/tháng hoặc 990.000đ/năm; Pro+ 2.900.000đ/năm.
 
@@ -162,10 +161,10 @@ Giá (`PlanPrice`): Pro 99.000đ/tháng hoặc 990.000đ/năm; Pro+ 2.900.000đ/
 - Given giảng viên đang dùng thử đã chạy 1.100 lượt vấn đáp trong tháng, When học viên bắt đầu lượt mới, Then vẫn được; có sự kiện `plan.limit.reached` với `enforced = false` và người đó hiện trong danh sách "vượt mức Pro" ở `/admin/plans`.
 - Given `PLANS_ENABLED` tắt (máy chủ riêng của trường), Then không có tầng gói, không có trang gói, không chạy migration dùng thử; mọi quyền như trước.
 
-**AC2b — Tính năng trung tâm theo gói**
-- Given tổ chức có gói `org_khoa` (không có `center.access`) và OrgAdmin bật `centerEnabled`, Then giảng viên không thấy lịch lớp, điểm danh; trang cài đặt hiện "Cần gói Trung tâm".
-- Given tổ chức đang dùng thử, Then tính năng trung tâm chạy như hôm nay.
-- Given gói Trung tâm hết hạn, Then lịch và nhận xét đã gửi vẫn hiện với học viên; giảng viên không tạo buổi hay điểm danh mới được.
+**AC2b — Tính năng trung tâm không theo gói**
+- Given tổ chức loại trung tâm có gói bất kỳ (kể cả không có gói), Then giáo viên của tổ chức thấy lịch lớp, điểm danh như hôm nay.
+- Given tổ chức loại trường có gói `center_start`, Then giáo viên không thấy tính năng trung tâm (gói không bật được).
+- Given migration chạy, Then không `Plan.entitlements` nào còn khoá `center.access`.
 
 **AC3 — Chặn lúc tạo, không cắt giữa chừng**
 - Given giảng viên Free đã dùng 2 lượt vấn đáp trong tháng, When học viên bấm bắt đầu lượt mới, Then bị từ chối với câu dành cho học viên; giảng viên thấy `<PlanLimitNotice>` ở trang đề.
@@ -201,7 +200,7 @@ Giá (`PlanPrice`): Pro 99.000đ/tháng hoặc 990.000đ/năm; Pro+ 2.900.000đ/
 ## 8. Thứ tự làm (đề xuất)
 
 1. **Mốc 1 — xong 26/11/2026, xem `docs/superpowers/plans/2026-11-26-goi-tai-khoan-moc-1.md`.** Dữ liệu, hàm tra quyền theo gói, seed gói, migration dùng thử, `/admin/plans` và gán gói. Lên prod được ngay vì mọi người đang dùng thử nên chưa ai bị chặn, trừ tài khoản mới.
-2. Các điểm kiểm hạn mức (5.3) và `<PlanLimitNotice>`; đối chiếu dung lượng trên prod trước khi bật `storage.mb`.
+2. Các điểm kiểm hạn mức (5.3) và `<PlanLimitNotice>`; đối chiếu dung lượng trên prod trước khi bật `storage.mb`. **Lên prod cùng mốc 3** (chốt 28/11/2026): `PLANS_ENABLED` đã bật trên limio.vn, nên mốc 2 lên một mình sẽ chặn giáo viên Free mà chưa có trang mua.
 3. `/me/goi`, mua qua SePay, email nhắc, thanh báo hết hạn.
 4. Trang OrgAdmin, báo cáo học viên hoạt động, cập nhật Lily.
 

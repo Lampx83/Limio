@@ -41,10 +41,10 @@ export const FLAGS: FlagSeed[] = [
     group: "lms",
     name: "Tính năng trung tâm",
     description:
-      "Hiện lịch dạy, giáo trình dựng sẵn, điểm danh và chuyên cần trong menu giảng viên. Mặc định tắt; thường bật theo trường (Organization.centerEnabled). Cờ này dùng để cấp riêng cho một tài khoản chưa thuộc trường nào.",
+      "Không còn dùng: từ 27/11/2026 tính năng trung tâm bật theo loại tổ chức (isCenterEnabledForUser), không theo cờ hay gói. Giữ dòng để override cũ không mồ côi.",
     valueType: "boolean",
     defaultValue: false,
-    sellable: true,
+    sellable: false,
   },
   // --- Công cụ giảng dạy ---
   {

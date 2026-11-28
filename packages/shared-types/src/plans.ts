@@ -15,8 +15,11 @@ export const PLAN_LIMIT_KEYS = [
   "org.active_learners",
 ] as const;
 
-/** Khoá bật/tắt mà gói bán có. */
-export const PLAN_BOOLEAN_KEYS = ["limio_live.access", "ai_oral.access", "center.access"] as const;
+/**
+ * Khoá bật/tắt mà gói bán có. Không có `center.access`: tính năng trung tâm theo loại
+ * tổ chức, không theo gói (docs/tieu-chi/goi-tai-khoan.md §2, chốt 28/11/2026).
+ */
+export const PLAN_BOOLEAN_KEYS = ["limio_live.access", "ai_oral.access"] as const;
 
 /** Trần kỹ thuật cho mọi hạn mức (gói dùng thử lấy đúng các số này). */
 export const TECH_CEILINGS: Record<string, number> = {
@@ -46,7 +49,7 @@ export interface PlanSeed {
 
 type Num = {
   act: number; game: number; exam: number; oral: number; tok: number; mb: number;
-  inst?: number; learners?: number; center: boolean;
+  inst?: number; learners?: number;
 };
 
 function ent(n: Num): Record<string, boolean | number> {
@@ -59,22 +62,16 @@ function ent(n: Num): Record<string, boolean | number> {
     "storage.mb": n.mb,
     "limio_live.access": true,
     "ai_oral.access": true,
-    "center.access": n.center,
   };
   if (n.inst !== undefined) e["org.max_instructors"] = n.inst;
   if (n.learners !== undefined) e["org.active_learners"] = n.learners;
   return e;
 }
 
-/**
- * Gói dùng thử: boolean của gói bán bật, trừ `center.access`; mọi hạn mức lấy trần kỹ thuật.
- * `center.access` cố ý vắng: có mặt thì giảng viên đang dùng thử bỗng thấy menu trung tâm
- * (xem isCenterEnabledForUser), trái với "chạy như hôm nay". Khoá vắng thì rơi về
- * override theo vai trò / mặc định như cũ; cổng AND theo gói là việc của mốc 2.
- */
+/** Gói dùng thử: mọi boolean của gói bán bật; mọi hạn mức lấy trần kỹ thuật. */
 function trialEntitlements(withOrg: boolean): Record<string, boolean | number> {
   const e: Record<string, boolean | number> = {};
-  for (const k of PLAN_BOOLEAN_KEYS) if (k !== "center.access") e[k] = true;
+  for (const k of PLAN_BOOLEAN_KEYS) e[k] = true;
   for (const k of PLAN_LIMIT_KEYS) {
     if (k.startsWith("org.") && !withOrg) continue;
     e[k] = TECH_CEILINGS[k]!;
@@ -85,33 +82,33 @@ function trialEntitlements(withOrg: boolean): Record<string, boolean | number> {
 export const PLAN_CATALOG: PlanSeed[] = [
   {
     key: "free", name: "Miễn phí", scope: "individual", isPublic: true, sortOrder: 10,
-    entitlements: ent({ act: 100, game: 40, exam: 50, oral: 2, tok: 300000, mb: 2048, center: false }),
+    entitlements: ent({ act: 100, game: 40, exam: 50, oral: 2, tok: 300000, mb: 2048 }),
   },
   {
     key: "pro", name: "Pro", scope: "individual", isPublic: true, sortOrder: 20,
-    entitlements: ent({ act: 300, game: 150, exam: 300, oral: 30, tok: 1000000, mb: 20480, center: false }),
+    entitlements: ent({ act: 300, game: 150, exam: 300, oral: 30, tok: 1000000, mb: 20480 }),
     prices: [{ period: "month", amountVnd: 99000 }, { period: "year", amountVnd: 990000 }],
   },
   {
     key: "pro_plus", name: "Pro+", scope: "individual", isPublic: true, sortOrder: 30,
-    entitlements: ent({ act: 500, game: 300, exam: 1000, oral: 100, tok: 3000000, mb: 51200, center: false }),
+    entitlements: ent({ act: 500, game: 300, exam: 1000, oral: 100, tok: 3000000, mb: 51200 }),
     prices: [{ period: "year", amountVnd: 2900000 }],
   },
   {
     key: "org_khoa", name: "Tổ chức - Khoa", scope: "organization", isPublic: false, sortOrder: 40,
-    entitlements: ent({ act: 500, game: 300, exam: 1000, oral: 125, tok: 1000000, mb: 204800, inst: 30, center: false }),
+    entitlements: ent({ act: 500, game: 300, exam: 1000, oral: 125, tok: 1000000, mb: 204800, inst: 30 }),
   },
   {
     key: "org_truong", name: "Tổ chức - Trường", scope: "organization", isPublic: false, sortOrder: 50,
-    entitlements: ent({ act: 500, game: 300, exam: 1000, oral: 833, tok: 1000000, mb: 1048576, inst: 200, center: false }),
+    entitlements: ent({ act: 500, game: 300, exam: 1000, oral: 833, tok: 1000000, mb: 1048576, inst: 200 }),
   },
   {
     key: "center_start", name: "Trung tâm - Khởi đầu", scope: "organization", isPublic: false, sortOrder: 60,
-    entitlements: ent({ act: 300, game: 150, exam: 300, oral: 100, tok: 1000000, mb: 51200, inst: 5, learners: 100, center: true }),
+    entitlements: ent({ act: 300, game: 150, exam: 300, oral: 100, tok: 1000000, mb: 51200, inst: 5, learners: 100 }),
   },
   {
     key: "center_growth", name: "Trung tâm - Phát triển", scope: "organization", isPublic: false, sortOrder: 70,
-    entitlements: ent({ act: 500, game: 300, exam: 1000, oral: 400, tok: 1000000, mb: 204800, inst: 20, learners: 500, center: true }),
+    entitlements: ent({ act: 500, game: 300, exam: 1000, oral: 400, tok: 1000000, mb: 204800, inst: 20, learners: 500 }),
   },
   {
     key: "trial_individual", name: "Dùng thử (cá nhân)", scope: "individual", isPublic: false, sortOrder: 80,
