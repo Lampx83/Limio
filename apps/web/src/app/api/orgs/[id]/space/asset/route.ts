@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
-import { isOrgAdminOf } from "@feedbackme/core-lms";
+import { isAdmin } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { storageFor } from "@/lib/storage";
 import { orgLogoKey } from "@/lib/storage-keys";
@@ -22,7 +22,7 @@ const MIME_TO_EXT: Record<string, string> = {
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!(await isOrgAdminOf(userId, params.id))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (!(await isAdmin(userId))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   let form: FormData;
   try {

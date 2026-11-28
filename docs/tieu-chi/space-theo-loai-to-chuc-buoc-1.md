@@ -4,7 +4,7 @@ Chốt 2026-11-28 (theo đề xuất: mẫu dự án vẫn hiện cho mọi tổ
 
 ## Hiện trạng
 
-- Space là trang `/s/<mã>` của một tổ chức: tên, màu, logo, chữ giới thiệu, danh sách khoá. Cấu hình ở `Organization.space` (JSON), quản trị tổ chức sửa ở "Thương hiệu & kỳ học" (`SpaceSettingsManager`).
+- Space là trang `/s/<mã>` của một tổ chức: tên, màu, logo, chữ giới thiệu, danh sách khoá. Cấu hình ở `Organization.space` (JSON), đến 2026-11-28 quản trị tổ chức sửa ở "Thương hiệu & kỳ học"; từ đó **chỉ Platform Admin** sửa, ở trang tổ chức `/admin/orgs/<id>` (`SpaceSettingsManager`).
 - Ô **"Nạp mẫu"** liệt kê `SPACE_TEMPLATES` cho MỌI tổ chức: chỉ có hai mẫu của dự án (MICRO4ASIA, HSK 3.0). Tổ chức mới bật space phải tự viết mọi dòng chữ từ trang trắng.
 - Mẫu chỉ được nạp vào form rồi Lưu; không lưu "đang dùng mẫu nào". Bước 1 giữ nguyên cách này, **không đổi schema**.
 - Mọi space dùng chung một bố cục (`SpaceHome`).
@@ -22,7 +22,7 @@ Bước 1 **không** đổi bố cục và **không** thêm tính năng nào và
 3. **Mặc định khi chưa cấu hình**: space trống (chưa có tên, chưa có chữ nào, chưa có khoá) mở form với mẫu của loại. Space đã có bất kỳ cấu hình nào thì giữ nguyên, **không bao giờ tự ghi đè**. Mẫu chỉ vào DB khi quản trị bấm Lưu.
 4. **Đổi loại tổ chức** (Platform Admin) không đụng vào `space` đã lưu. Danh sách mẫu đổi theo loại mới ở lần mở form kế tiếp.
 5. **Nạp mẫu khi đã có chữ**: hỏi xác nhận trước khi thay (hiện nạp là thay luôn); quản trị huỷ được và form giữ nguyên.
-6. **Quyền**: không đổi. Quản trị tổ chức hoặc Platform Admin sửa; mã (slug) dựng sẵn chỉ Platform Admin dùng; chỉ khoá của chính tổ chức đưa vào được.
+6. **Quyền** (đổi 2026-11-28): chỉ Platform Admin đọc và sửa space; OrgAdmin nhận `forbidden` ở lõi, 403 ở API và không thấy mục Space trong "Thương hiệu & kỳ học". Các kiểm tra slug dành riêng và khoá của tổ chức khác giữ lại làm lớp phòng thủ.
 7. `getOrganizationSpaceAdminData` trả thêm `kind` của tổ chức (đã kiểm quyền trước, như cũ).
 
 ## Tiêu chí chấp nhận

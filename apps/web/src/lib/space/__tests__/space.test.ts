@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { builtinMicro4Asia } from "../builtin";
 import { hskTemplate } from "../templates";
-import { spaceBasePath } from "../aliases";
+import { BUILTIN_SPACE_SLUGS } from "@feedbackme/shared-types";
+import { SPACE_HOME_ALIAS, spaceBasePath } from "../aliases";
 import { buildSpaceConfig, isValidSpaceSlug, normalizeStored, safeUrl } from "../settings";
 import { derivePalette, isHexColor, mixHex, spaceThemeCss } from "../theme";
 import { resolveSpaceLang } from "../lang";
@@ -20,6 +21,14 @@ describe("space: slug và URL", () => {
     expect(safeUrl("https://a.vn/x.png")).toBe("https://a.vn/x.png");
     for (const bad of ["javascript:alert(1)", "data:image/svg+xml;base64,AAA", "//evil.com/x.png", "http://a.vn/x.png", ""]) {
       expect(safeUrl(bad), bad).toBeUndefined();
+    }
+  });
+});
+
+describe("space: slug dành riêng cho URL ngắn", () => {
+  it("mọi space có URL ngắn ở gốc site (/hsk, /micro4asia...) đều là slug dành riêng cho Platform Admin", () => {
+    for (const slug of Object.keys(SPACE_HOME_ALIAS)) {
+      expect(BUILTIN_SPACE_SLUGS, `thiếu "${slug}" trong BUILTIN_SPACE_SLUGS (packages/shared-types/src/space.ts)`).toContain(slug);
     }
   });
 });

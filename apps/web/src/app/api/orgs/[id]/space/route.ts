@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 
 /**
  * PUT /api/orgs/[id]/space — body: { enabled: boolean, slug: string | null, space: object }.
- * Platform Admin hoặc OrgAdmin của trường. `space` được chuẩn hoá ở đây (màu hex, URL https/nội bộ, độ dài chữ)
+ * Chỉ Platform Admin (OrgAdmin của trường bị 403). `space` được chuẩn hoá ở đây (màu hex, URL https/nội bộ, độ dài chữ)
  * trước khi lưu — giá trị này sau đó đi vào CSS và HTML của trang công khai.
  */
 export async function PUT(req: Request, { params }: { params: { id: string } }) {

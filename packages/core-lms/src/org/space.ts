@@ -1,11 +1,11 @@
 /**
  * SPACE của trường: trang riêng /s/<slug> + nhận diện thương hiệu (màu, logo, chữ, danh sách khoá).
  * Cấu hình lưu ở Organization.space (JSON đã được tầng web chuẩn hoá); module này lo quyền, slug và ranh giới khoá.
- * Platform Admin hoặc OrgAdmin của chính trường được sửa; slug của space dựng sẵn chỉ Platform Admin dùng.
+ * Chỉ Platform Admin đọc và sửa (chốt 2026-11-28); OrgAdmin của chính trường không còn quyền. Các kiểm tra slug dành riêng và khoá của trường khác giữ lại làm lớp phòng thủ.
  */
 import { isBuiltinSpaceSlug, isValidSpaceSlug } from "@feedbackme/shared-types";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
-import { isAdmin, isOrgAdminOf } from "../auth/roles";
+import { isAdmin } from "../auth/roles";
 import { logAudit } from "../auth/audit";
 import type { OrgKind } from "./orgKind";
 
@@ -33,8 +33,9 @@ export interface OrgSpaceAdminData {
   courses: Array<{ slug: string; title: string; status: string }>;
 }
 
-async function assertCanManage(actorUserId: string, organizationId: string, db: PrismaClient): Promise<void> {
-  if (!(await isOrgAdminOf(actorUserId, organizationId, db))) throw new OrgSpaceError("forbidden");
+/** Chốt 2026-11-28: space (địa chỉ, nhận diện, trang công khai) chỉ Platform Admin đặt; quản trị tổ chức không đọc hay sửa được. */
+async function assertCanManage(actorUserId: string, _organizationId: string, db: PrismaClient): Promise<void> {
+  if (!(await isAdmin(actorUserId, db))) throw new OrgSpaceError("forbidden");
 }
 
 export async function getOrganizationSpaceAdminData(

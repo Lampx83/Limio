@@ -19,62 +19,52 @@ async function setup(tag: string) {
 
 const space = (courses: Array<{ slug: string }> = []) => ({ name: "X", courses });
 
+describe("space chỉ dành cho Platform Admin (chốt 2026-11-28)", () => {
+  it("OrgAdmin của chính tổ chức, người ngoài đều bị chặn cả đọc lẫn ghi; Platform Admin làm được", async () => {
+    const t = await setup("sp0");
+    const input = { spaceEnabled: false, spaceSlug: null, space: space() };
+    for (const who of [t.orgAdmin, t.outsider]) {
+      await expect(getOrganizationSpaceAdminData(who, t.org.id)).rejects.toBeInstanceOf(OrgSpaceError);
+      await expect(updateOrganizationSpace(who, t.org.id, input)).rejects.toMatchObject({ code: "forbidden" });
+    }
+    await expect(updateOrganizationSpace(t.platformAdmin, t.org.id, input)).resolves.toEqual({ spaceEnabled: false, spaceSlug: null });
+    await expect(getOrganizationSpaceAdminData(t.platformAdmin, t.org.id)).resolves.toMatchObject({ id: t.org.id });
+  });
+});
+
 describe("getOrganizationSpaceAdminData: loại tổ chức", () => {
-  it("trả loại của tổ chức (quyết định mẫu space ở form); đổi loại thì không đụng vào space đã lưu; người ngoài vẫn bị chặn", async () => {
+  it("trả loại của tổ chức (quyết định mẫu space ở form); đổi loại thì không đụng vào space đã lưu", async () => {
     const t = await setup("spk");
-    expect((await getOrganizationSpaceAdminData(t.orgAdmin, t.org.id)).kind).toBe("school");
-    await updateOrganizationSpace(t.orgAdmin, t.org.id, { spaceEnabled: false, spaceSlug: null, space: { name: "Giữ nguyên" } });
+    expect((await getOrganizationSpaceAdminData(t.platformAdmin, t.org.id)).kind).toBe("school");
+    await updateOrganizationSpace(t.platformAdmin, t.org.id, { spaceEnabled: false, spaceSlug: null, space: { name: "Giữ nguyên" } });
     await prisma.organization.update({ where: { id: t.org.id }, data: { kind: "center", centerEnabled: true } });
-    const data = await getOrganizationSpaceAdminData(t.orgAdmin, t.org.id);
+    const data = await getOrganizationSpaceAdminData(t.platformAdmin, t.org.id);
     expect(data.kind).toBe("center");
     expect(data.space).toEqual({ name: "Giữ nguyên" });
-    await expect(getOrganizationSpaceAdminData(t.outsider, t.org.id)).rejects.toBeInstanceOf(OrgSpaceError);
   });
 });
 
 describe("updateOrganizationSpace", () => {
-  it("OrgAdmin lưu được; người ngoài bị chặn; đọc cũng cần quyền", async () => {
+  it("Platform Admin lưu được và đọc lại đúng", async () => {
     const t = await setup("sp1");
     const slug = `sp1-${Date.now()}`;
-    const r = await updateOrganizationSpace(t.orgAdmin, t.org.id, { spaceEnabled: true, spaceSlug: slug, space: space() });
+    const r = await updateOrganizationSpace(t.platformAdmin, t.org.id, { spaceEnabled: true, spaceSlug: slug, space: space() });
     expect(r).toEqual({ spaceEnabled: true, spaceSlug: slug });
-    const data = await getOrganizationSpaceAdminData(t.orgAdmin, t.org.id);
-    expect(data.spaceSlug).toBe(slug);
-    await expect(updateOrganizationSpace(t.outsider, t.org.id, { spaceEnabled: false, spaceSlug: null, space: space() })).rejects.toMatchObject({ code: "forbidden" });
-    await expect(getOrganizationSpaceAdminData(t.outsider, t.org.id)).rejects.toBeInstanceOf(OrgSpaceError);
+    expect((await getOrganizationSpaceAdminData(t.platformAdmin, t.org.id)).spaceSlug).toBe(slug);
   });
 
-  it("kiểm tra slug: bắt buộc khi bật, hợp lệ, không trùng, slug dựng sẵn chỉ Platform Admin", async () => {
+  it("kiểm tra slug: bắt buộc khi bật, hợp lệ, không trùng; Platform Admin dùng được slug dựng sẵn", async () => {
     const t = await setup("sp2");
-    const call = (slug: string | null, enabled = true, actor = t.orgAdmin, orgId = t.org.id) =>
-      updateOrganizationSpace(actor, orgId, { spaceEnabled: enabled, spaceSlug: slug, space: space() });
+    const call = (slug: string | null, enabled = true, orgId = t.org.id) =>
+      updateOrganizationSpace(t.platformAdmin, orgId, { spaceEnabled: enabled, spaceSlug: slug, space: space() });
     await expect(call(null)).rejects.toMatchObject({ code: "slug_required" });
     await expect(call("Bad Slug")).rejects.toMatchObject({ code: "invalid_slug" });
     await expect(call("admin")).rejects.toMatchObject({ code: "invalid_slug" });
-    await expect(call("micro4asia")).rejects.toMatchObject({ code: "slug_reserved" });
     const slug = `sp2-${Date.now()}`;
     await call(slug);
-    await expect(call(slug, true, t.platformAdmin, t.other.id)).rejects.toMatchObject({ code: "slug_taken" });
-    // Platform Admin dùng được slug dựng sẵn.
-    const builtin = await updateOrganizationSpace(t.platformAdmin, t.other.id, { spaceEnabled: true, spaceSlug: "micro4asia", space: space() });
+    await expect(call(slug, true, t.other.id)).rejects.toMatchObject({ code: "slug_taken" });
+    const builtin = await call("micro4asia", true, t.other.id);
     expect(builtin.spaceSlug).toBe("micro4asia");
     await prisma.organization.update({ where: { id: t.other.id }, data: { spaceSlug: null, spaceEnabled: false } });
-  });
-
-  it("OrgAdmin không gắn thương hiệu lên khoá của trường khác; khoá chưa tồn tại thì được giữ chỗ", async () => {
-    const t = await setup("sp3");
-    const slugOwn = `own-${Date.now()}`;
-    const slugForeign = `foreign-${Date.now()}`;
-    const mkCourse = (slug: string, organizationId: string | null) =>
-      prisma.course.create({ data: { slug, title: slug, description: "x", status: "published", organizationId } });
-    await mkCourse(slugOwn, t.org.id);
-    await mkCourse(slugForeign, t.other.id);
-    const slug = `sp3-${Date.now()}`;
-    await expect(
-      updateOrganizationSpace(t.orgAdmin, t.org.id, { spaceEnabled: true, spaceSlug: slug, space: space([{ slug: slugOwn }, { slug: slugForeign }]) }),
-    ).rejects.toMatchObject({ code: "course_not_in_org" });
-    await updateOrganizationSpace(t.orgAdmin, t.org.id, { spaceEnabled: true, spaceSlug: slug, space: space([{ slug: slugOwn }, { slug: "chua-co-khoa" }]) });
-    // Platform Admin không bị giới hạn.
-    await updateOrganizationSpace(t.platformAdmin, t.org.id, { spaceEnabled: true, spaceSlug: slug, space: space([{ slug: slugForeign }]) });
   });
 });

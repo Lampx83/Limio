@@ -589,7 +589,7 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   không được gán làm quản trị đều được ghi lại. OrgAdmin chỉ thấy tổ chức mình được gán và tự vào tổ chức đầu tiên theo tên. Menu bên trái hiện
   tên tổ chức đang chọn và chỉ các mục hợp với loại của tổ chức đó (trường thường, trung tâm hay nhà xuất bản); nút **"Đổi tổ chức"** dưới tên
   tổ chức dẫn về màn chọn (có khi quản trị được nhiều tổ chức hoặc là Platform Admin).
-- **Space của tổ chức** (mục "Space" ở `/org-admin/settings`): trang riêng `/s/<địa chỉ>` có tên, màu, logo, chữ giới thiệu và danh sách khoá. Ô **"Nạp mẫu có sẵn…"**
+- **Space của tổ chức** (chỉ **Platform Admin** đặt, ở mục "Space" của trang tổ chức `/admin/orgs/<id>`; quản trị tổ chức không thấy mục này): trang riêng `/s/<địa chỉ>` có tên, màu, logo, chữ giới thiệu và danh sách khoá. Ô **"Nạp mẫu có sẵn…"**
   chia hai nhóm: **"Mẫu theo loại"** (chữ khởi đầu hợp với loại tổ chức: trường thường, trung tâm hoặc nhà xuất bản; chỉ thay chữ, khoá và logo đang có được giữ)
   và **"Mẫu dự án"** (MICRO4ASIA, HSK 3.0; nạp trọn bộ). Tổ chức chưa từng cấu hình space thì form mở sẵn mẫu theo loại; bấm **"Lưu"** mới áp dụng.
   Nạp mẫu khi form đã có chữ thì hỏi xác nhận trước.
