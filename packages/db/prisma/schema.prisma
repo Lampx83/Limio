@@ -5725,6 +5725,13 @@ model SystemRelease {
 // OrganizationAdmin bridge: 1 user có thể là OrgAdmin của nhiều org (rare
 // in practice, nhưng giữ flexibility).
 // =====================================================================
+/// Loại tổ chức. Mỗi tổ chức đúng một loại: trường thường, trung tâm (lịch lớp, điểm danh), nhà xuất bản (học liệu, mã kích hoạt, báo cáo gộp).
+enum OrganizationKind {
+  school
+  center
+  publisher
+}
+
 model Organization {
   id                         String   @id @default(uuid())
   // Mã trường ngắn (vd "BKHN"), unique, dùng làm slug.
@@ -5737,13 +5744,6 @@ model Organization {
   // apps/web/src/lib/limioLiveBrand.ts (OrgBrandSettings). Logo lấy từ brandingLogoUrl. Mọi giảng viên của trường
   // dùng bộ này cho bài giảng chưa có thương hiệu riêng.
   slideBrand                 Json?
-/// Loại tổ chức. Mỗi tổ chức đúng một loại: trường thường, trung tâm (lịch lớp, điểm danh), nhà xuất bản (học liệu, mã kích hoạt, báo cáo gộp).
-enum OrganizationKind {
-  school
-  center
-  publisher
-}
-
   // Ảnh chữ ký người đại diện trường — hiện trên chứng nhận hoàn thành khoá
   // học, cạnh chữ ký Limio (xem SiteSetting key branding.limio_signature_url).
   signatureImageUrl          String?
