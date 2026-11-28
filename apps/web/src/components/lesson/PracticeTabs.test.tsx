@@ -247,3 +247,49 @@ describe("PracticeTabs — báo hoàn tất cho nút 'Tiếp' của thanh đáy"
     window.removeEventListener(PRACTICE_COMPLETE_EVENT, on);
   });
 });
+
+describe("PracticeTabs — số bước và nhãn mục đích của khối đang chọn", () => {
+  const named = [
+    { id: "a", label: "Từ vựng · Nối từ và hình", content: <p>A</p>, meta: { ids: ["q1"] } },
+    { id: "b", label: "Viết · Viết ngắn", content: <p>B</p>, meta: { ids: ["q2"] } },
+    { id: "c", label: "课文2 · Nối từ", content: <p>C</p>, meta: { ids: ["q3"] } },
+  ];
+  const cur = () => host.querySelector('[data-testid="practice-step-current"]');
+  const stepBtns = () => [...host.querySelectorAll<HTMLButtonElement>('[data-testid="practice-steps"] button')];
+
+  it("khối đầu tên theo quy ước: dưới các số bước chỉ có nhãn gọn 'Luyện tập: Từ vựng', không còn 'Bài tập n/m' và tên khối", async () => {
+    await render(named);
+    expect(cur()!.textContent).toBe("Luyện tập: Từ vựng");
+    expect(host.querySelector('[data-testid="practice-step-nav"]')!.textContent).not.toContain("1/3");
+    expect(host.querySelector('[data-testid="practice-step-nav"]')!.textContent).not.toContain("Nối từ và hình");
+  });
+
+  it("bấm số 2: nhãn đổi sang 'Luyện tập: Kỹ năng Viết'; số 3 (tên cũ) giữ cách ghi cũ (có 'Bài tập 3/3')", async () => {
+    await render(named);
+    await click(stepBtns()[1]!);
+    expect(cur()!.textContent).toBe("Luyện tập: Kỹ năng Viết");
+    await click(stepBtns()[2]!);
+    expect(cur()).toBeNull();
+    const nav = host.querySelector('[data-testid="practice-step-nav"]')!.textContent!;
+    expect(nav).toContain("课文2: Nối từ");
+    expect(nav).toContain("3/3");
+  });
+});
+
+describe("PracticeTabs — số bước mang màu và biểu tượng của mục đích", () => {
+  const named = [
+    { id: "a", label: "Từ vựng · Nối từ", content: <p>A</p>, meta: { ids: ["q1"], purpose: "vocab" as const } },
+    { id: "b", label: "Nói · Đóng vai", content: <p>B</p>, meta: { ids: ["q2"], purpose: "speaking" as const } },
+    { id: "c", label: "课文2 · Nối từ", content: <p>C</p>, meta: { ids: ["q3"] } },
+  ];
+  it("hàng số bước không có biểu tượng bên dưới", async () => {
+    await act(async () => root.render(<PracticeTabs tabs={named} />));
+    expect(host.querySelectorAll('[data-testid="practice-step-icon"]').length).toBe(0);
+  });
+  it("số bước có mục đích mang data-purpose (cùng một màu, nút đang chọn tô đặc); số bước tên cũ giữ kiểu cũ", async () => {
+    await act(async () => root.render(<PracticeTabs tabs={named} />));
+    const btns = [...host.querySelectorAll<HTMLButtonElement>('[data-testid="practice-steps"] button')];
+    expect(btns.map((b) => b.getAttribute("data-purpose"))).toEqual(["vocab", "speaking", null]);
+    expect(btns[0]!.getAttribute("aria-current")).toBe("step");
+  });
+});

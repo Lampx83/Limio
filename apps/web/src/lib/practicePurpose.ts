@@ -10,23 +10,25 @@ export type PracticePurposeKey = "vocab" | "grammar" | "culture" | "dialogue" | 
 export interface PracticePurpose {
   key: PracticePurposeKey;
   label: string;
+  /** Nhãn của thanh số bước: "Luyện tập: Kỹ năng Đọc", "Luyện tập: Từ vựng"… (từ vựng, ngữ pháp, văn hoá không phải kỹ năng nên không ghi "Kỹ năng"). */
+  step: string;
   /** Màu chữ/biểu tượng (sáng, tối). */
   fg: [string, string];
   /** Màu nền chip, pha 16% trên nền thẻ. */
   tint: string;
 }
 
-const P = (key: PracticePurposeKey, label: string, light: string, dark: string, tint: string): PracticePurpose => ({ key, label, fg: [light, dark], tint });
+const P = (key: PracticePurposeKey, label: string, step: string, light: string, dark: string, tint: string): PracticePurpose => ({ key, label, step: `Luyện tập: ${step}`, fg: [light, dark], tint });
 
 export const PRACTICE_PURPOSES: Record<PracticePurposeKey, PracticePurpose> = {
-  vocab: P("vocab", "Từ vựng", "#3B6D11", "#97C459", "#639922"),
-  grammar: P("grammar", "Ngữ pháp", "#534AB7", "#AFA9EC", "#7F77DD"),
-  culture: P("culture", "Văn hoá", "#993556", "#ED93B1", "#D4537E"),
-  dialogue: P("dialogue", "Hiểu hội thoại", "#185FA5", "#85B7EB", "#378ADD"),
-  reading: P("reading", "Đọc", "#0F6E56", "#5DCAA5", "#1D9E75"),
-  speaking: P("speaking", "Nói", "#993C1D", "#F0997B", "#D85A30"),
-  writing: P("writing", "Viết", "#854F0B", "#EF9F27", "#BA7517"),
-  speakwrite: P("speakwrite", "Nói và viết", "#993C1D", "#F0997B", "#D85A30"),
+  vocab: P("vocab", "Từ vựng", "Từ vựng", "#3B6D11", "#97C459", "#639922"),
+  grammar: P("grammar", "Ngữ pháp", "Ngữ pháp", "#534AB7", "#AFA9EC", "#7F77DD"),
+  culture: P("culture", "Văn hoá", "Văn hoá", "#993556", "#ED93B1", "#D4537E"),
+  dialogue: P("dialogue", "Hiểu hội thoại", "Kỹ năng Nghe", "#185FA5", "#85B7EB", "#378ADD"),
+  reading: P("reading", "Đọc", "Kỹ năng Đọc", "#0F6E56", "#5DCAA5", "#1D9E75"),
+  speaking: P("speaking", "Nói", "Kỹ năng Nói", "#993C1D", "#F0997B", "#D85A30"),
+  writing: P("writing", "Viết", "Kỹ năng Viết", "#854F0B", "#EF9F27", "#BA7517"),
+  speakwrite: P("speakwrite", "Nói và viết", "Kỹ năng Nói và Viết", "#993C1D", "#F0997B", "#D85A30"),
 };
 
 /** Phần chữ trước dấu " · " → mục đích. Tên thường gặp ở Bài tập tổng hợp cũng được nhận ("Luyện nói", "Đọc hiểu"…). */

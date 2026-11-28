@@ -24,6 +24,14 @@ describe("practicePurposeOf — mục đích của khối luyện theo tên", ()
     expect(practicePurposeOf(undefined)).toBeNull();
   });
 
+  it("nhãn thanh số bước: bốn kỹ năng ghi 'Kỹ năng', từ vựng/ngữ pháp/văn hoá thì không; Hiểu hội thoại tính là Nghe", () => {
+    expect(PRACTICE_PURPOSES.reading.step).toBe("Luyện tập: Kỹ năng Đọc");
+    expect(PRACTICE_PURPOSES.dialogue.step).toBe("Luyện tập: Kỹ năng Nghe");
+    expect(PRACTICE_PURPOSES.vocab.step).toBe("Luyện tập: Từ vựng");
+    expect(PRACTICE_PURPOSES.grammar.step).toBe("Luyện tập: Ngữ pháp");
+    expect(PRACTICE_PURPOSES.speakwrite.step).toBe("Luyện tập: Kỹ năng Nói và Viết");
+  });
+
   it("mỗi mục đích có màu chữ sáng/tối và chip dùng light-dark()", () => {
     for (const p of Object.values(PRACTICE_PURPOSES)) {
       expect(p.fg).toHaveLength(2);

@@ -4,8 +4,8 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, Headphones, ListChecks, Mic, Shuffle, TextCursorInput, type LucideIcon } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 import Collapse from "@/components/ui/Collapse";
-import { PRACTICE_PURPOSES, practicePurposeChipStyle } from "@/lib/practicePurpose";
-import { PRACTICE_PURPOSE_ICON } from "@/components/language/PracticePurposeChip";
+import { PRACTICE_PURPOSES, practicePurposeChipStyle, practicePurposeOf } from "@/lib/practicePurpose";
+import PracticePurposeChip, { PRACTICE_PURPOSE_ICON } from "@/components/language/PracticePurposeChip";
 import { PRACTICE_COMPLETE_EVENT, PRACTICE_KIND_LABEL, PRACTICE_PROGRESS_EVENT, type PracticeKind, type PracticeProgressDetail, type PracticeTabMeta } from "@/lib/practiceTabMeta";
 
 export interface PracticeTab {
@@ -149,6 +149,7 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
     return tb.meta?.title && tb.meta.title !== head ? `${head} · ${tb.meta.title}` : tb.label;
   };
   const curDone = progressOf(tabs[cur]?.meta, live).done;
+  const curParsed = practicePurposeOf(tabs[cur]?.label);
   // Nhảy thẳng tới một bài tập (bấm số bước): cùng cách về đầu khu bài luyện như `step`.
   const jump = (i: number) => {
     setActive(i);
@@ -169,24 +170,33 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
         </button>
         {/* Điện thoại: hàng số bước ở trên (không xuống dòng), "Bài tập n/m" và tên bài ở hàng dưới; từ sm: một hàng "Bài tập n/m · số bước · tên bài". */}
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1.5 px-3 py-2">
-          <span className="order-2 shrink-0 text-sm font-bold tabular-nums text-brand-700 sm:order-1" aria-label={tr("practice.tabs.counter", { n: cur + 1, total: tabs.length })}>
-            {tr("practice.tabs.label")} {cur + 1}/{tabs.length}
-          </span>
+          {!curParsed && (
+            <span className="order-2 shrink-0 text-sm font-bold tabular-nums text-brand-700 sm:order-1" aria-label={tr("practice.tabs.counter", { n: cur + 1, total: tabs.length })}>
+              {tr("practice.tabs.label")} {cur + 1}/{tabs.length}
+            </span>
+          )}
           {showSteps && (
             <ol data-testid="practice-steps" className="order-1 flex w-full items-center justify-between gap-1 sm:order-2 sm:w-auto sm:justify-start sm:gap-1.5">
                 {tabs.map((tb, i) => {
                   const pr = progressOf(tb.meta, live);
                   const on = i === cur;
-                  const state = on ? "bg-brand-600 text-white ring-2 ring-brand-200" : pr.done ? "border border-lime-400 bg-lime-100 text-lime-800" : pr.answered > 0 ? "border border-brand-400 bg-brand-50 text-brand-700" : "border border-token bg-[rgb(var(--surface))] text-muted hover:bg-brand-50";
+                  // Khối có mục đích: số bước là nút bấm cùng MỘT màu (màu chủ đạo); nút đang chọn tô đặc và có quầng sáng, các nút còn lại viền và nền nhạt.
+                  const purp = tb.meta?.purpose ? PRACTICE_PURPOSES[tb.meta.purpose] : null;
+                  const state = purp
+                    ? on
+                      ? "bg-brand-600 text-white ring-4 ring-brand-200"
+                      : "border border-brand-300 bg-brand-50 text-brand-700 hover:bg-brand-100"
+                    : on ? "bg-brand-600 text-white ring-2 ring-brand-200" : pr.done ? "border border-lime-400 bg-lime-100 text-lime-800" : pr.answered > 0 ? "border border-brand-400 bg-brand-50 text-brand-700" : "border border-token bg-[rgb(var(--surface))] text-muted hover:bg-brand-50";
                   return (
-                    <li key={tb.id}>
+                    <li key={tb.id} className="flex min-w-0 flex-1 justify-center sm:flex-none">
                       <button
                         type="button"
                         onClick={() => jump(i)}
                         aria-current={on ? "step" : undefined}
                         aria-label={`${tr("practice.tabs.label")} ${i + 1}: ${barTitle(tb)}${pr.done ? " ✓" : ""}`}
                         title={barTitle(tb)}
-                        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold tabular-nums transition-colors sm:h-7 sm:w-7 ${state}`}
+                        className={`flex items-center justify-center text-xs font-bold tabular-nums transition ${purp ? "h-8 w-full max-w-8 rounded-lg shadow-sm hover:-translate-y-px hover:shadow active:translate-y-px active:shadow-none sm:h-9 sm:max-w-none sm:w-9 sm:text-sm" : "h-6 w-6 rounded-full sm:h-7 sm:w-7"} ${state}`}
+                        data-purpose={purp ? purp.key : undefined}
                       >
                         {pr.done && !on ? <Check size={14} aria-hidden /> : i + 1}
                       </button>
@@ -196,9 +206,22 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
             </ol>
           )}
           <button type="button" onClick={() => setListOpen((v) => !v)} aria-expanded={listOpen} aria-label={tr("practice.tabs.list")} className="order-3 flex min-w-[5rem] flex-1 basis-0 items-center gap-2 text-left">
-            <span className="min-w-0 flex-1 truncate text-sm font-medium">{barTitle(tabs[cur]!)}</span>
+            {/* Khối đặt tên theo quy ước "Mục đích · tên": nhãn gọn "Luyện tập: Kỹ năng Đọc" tô màu mục đích; tên riêng của khối đã nằm trong nội dung khối. */}
+            {curParsed ? (
+              <span className="flex min-w-0 flex-1 items-center" data-testid="practice-step-current">
+                <span className="inline-flex max-w-full items-center gap-1.5 truncate rounded-full px-3 py-1 text-sm font-medium" style={practicePurposeChipStyle(curParsed.purpose)}>
+                  {(() => {
+                    const CurIcon = PRACTICE_PURPOSE_ICON[curParsed.purpose.key];
+                    return <CurIcon size={16} aria-hidden className="shrink-0" />;
+                  })()}
+                  <span className="truncate">{curParsed.purpose.step}</span>
+                </span>
+              </span>
+            ) : (
+              <span className="min-w-0 flex-1 truncate text-sm font-medium">{barTitle(tabs[cur]!)}</span>
+            )}
             {curDone && <Check size={16} aria-hidden className="shrink-0 text-lime-700" />}
-            <ChevronDown size={16} aria-hidden className={`shrink-0 text-muted transition-transform ${listOpen ? "rotate-180" : ""}`} />
+            {!curParsed && <ChevronDown size={16} aria-hidden className={`shrink-0 text-muted transition-transform ${listOpen ? "rotate-180" : ""}`} />}
           </button>
         </div>
         <button type="button" onClick={() => step(1)} disabled={cur === tabs.length - 1} aria-label={tr("practice.tabs.next")} className={stepBtn}>
