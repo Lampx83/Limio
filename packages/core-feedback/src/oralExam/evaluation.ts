@@ -46,7 +46,47 @@ Chấm điểm theo thang 0-100. Trả lời DUY NHẤT 1 khối JSON hợp lệ
 {"score": <0-100>, "summary": "<nhận xét tổng quan 2-4 câu>", "breakdown": [{"topic": "<chủ đề/câu hỏi>", "note": "<nhận xét ngắn>"}]}`;
 }
 
-function parseGradingResponse(raw: string): {
+/** Câu thay cho khối JSON hỏng: nhận xét này có thể được điền sẵn vào ghi chú sinh viên và xuất Word, nên không bao giờ để JSON thô lọt vào. */
+export const UNREADABLE_AI_SUMMARY =
+  "AI trả lời sai khuôn nên chưa đọc được điểm đề xuất. Bấm \"Chấm bằng AI\" để chạy lại, hoặc thầy/cô tự chấm.";
+
+function readJsonString(raw: string, key: string): string | null {
+  const m = raw.match(new RegExp(`"${key}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`));
+  if (!m) return null;
+  try {
+    return JSON.parse(`"${m[1]}"`) as string;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Khi JSON bị cắt giữa chừng (hết trần đầu ra) thì JSON.parse hỏng dù điểm và nhận xét đã viết xong ở đầu khối.
+ * Lấy lại phần nào còn nguyên: điểm, nhận xét tổng quan và những mục phân tích đã đóng ngoặc.
+ */
+function salvageTruncatedJson(raw: string): {
+  score: number | null;
+  summary: string;
+  breakdown: RubricBreakdownItem[] | null;
+} | null {
+  const scoreMatch = raw.match(/"score"\s*:\s*(\d+(?:\.\d+)?)\s*[,}]/);
+  const score = scoreMatch ? Number(scoreMatch[1]) : null;
+  if (score == null || score < 0 || score > 100) return null;
+  const summary = readJsonString(raw, "summary");
+  if (!summary) return null;
+  const items: RubricBreakdownItem[] = [];
+  const itemRe = /\{\s*"topic"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,\s*"note"\s*:\s*"((?:[^"\\]|\\.)*)"\s*\}/g;
+  for (let m = itemRe.exec(raw); m; m = itemRe.exec(raw)) {
+    try {
+      items.push({ topic: JSON.parse(`"${m[1]}"`) as string, note: JSON.parse(`"${m[2]}"`) as string });
+    } catch {
+      /* bỏ qua mục hỏng */
+    }
+  }
+  return { score, summary, breakdown: items.length > 0 ? items : null };
+}
+
+export function parseGradingResponse(raw: string): {
   score: number | null;
   summary: string;
   breakdown: RubricBreakdownItem[] | null;
@@ -62,16 +102,18 @@ function parseGradingResponse(raw: string): {
       typeof parsed.score === "number" && parsed.score >= 0 && parsed.score <= 100
         ? parsed.score
         : null;
-    const summary = typeof parsed.summary === "string" ? parsed.summary : raw;
+    const summary = typeof parsed.summary === "string" ? parsed.summary : UNREADABLE_AI_SUMMARY;
     const breakdown = Array.isArray(parsed.breakdown)
       ? (parsed.breakdown as RubricBreakdownItem[])
       : null;
     return { score, summary, breakdown };
   } catch {
-    // JSON không đọc được — vẫn giữ nguyên văn AI viết cho GV tự đọc, không
-    // suy đoán điểm số, không chặn (đúng triết lý "để trống chứ không đoán"
-    // đã dùng ở A6.1 cho extractedText).
-    return { score: null, summary: raw, breakdown: null };
+    const salvaged = salvageTruncatedJson(raw);
+    if (salvaged) return salvaged;
+    // Không đọc được điểm thì không đoán. Văn xuôi thường vẫn có ích cho giảng viên đọc, còn khối JSON hỏng thì
+    // không (đã từng hiện nguyên khối `{ "score": ...` trong ô ghi chú sinh viên).
+    const trimmed = raw.trim();
+    return { score: null, summary: trimmed.startsWith("{") ? UNREADABLE_AI_SUMMARY : trimmed, breakdown: null };
   }
 }
 

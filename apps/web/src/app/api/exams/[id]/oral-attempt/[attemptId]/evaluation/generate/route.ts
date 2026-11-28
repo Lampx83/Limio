@@ -2,6 +2,7 @@ import { createOpenaiClient, getChatOnlyApiKey } from "@/lib/openaiClient";
 import { NextResponse } from "next/server";
 import {
   AiTutorError,
+  GRADING_MAX_OUTPUT_TOKENS,
   generateOralExamEvaluation,
   openAiChatCompute,
 } from "@feedbackme/core-feedback";
@@ -47,7 +48,7 @@ export async function POST(
 
   try {
     const openai = createOpenaiClient(openaiKey);
-    const r = await generateOralExamEvaluation(userId, params.attemptId, openAiChatCompute(openai));
+    const r = await generateOralExamEvaluation(userId, params.attemptId, openAiChatCompute(openai, undefined, { maxTokens: GRADING_MAX_OUTPUT_TOKENS }));
     return NextResponse.json(r);
   } catch (e) {
     if (e instanceof AiTutorError) {

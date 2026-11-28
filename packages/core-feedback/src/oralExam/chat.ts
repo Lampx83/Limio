@@ -21,6 +21,15 @@ export type ChatComputeFn = (
   onDelta?: (delta: string) => void,
 ) => Promise<ChatComputeResult>;
 
+/** Lượt hỏi của giám khảo ngắn, nên giữ trần thấp. */
+const EXAMINER_MAX_OUTPUT_TOKENS = 500;
+
+/**
+ * Trần đầu ra khi chấm điểm. Khối JSON gồm điểm, nhận xét và phân tích từng chủ đề/thuốc thường dài hơn 500 token;
+ * bị cắt giữa chừng thì JSON hỏng, điểm thành null (sự cố chấm vấn đáp hàng loạt 28/11/2026: 13/21 lượt hỏng).
+ */
+export const GRADING_MAX_OUTPUT_TOKENS = 3000;
+
 /**
  * Adapter thật gọi OpenAI. Tách khỏi runOralExamTurn() (examinerChat.ts) —
  * cùng lý do với openAiEmbedCompute ở embeddings.ts: phần điều phối lượt hỏi
@@ -30,6 +39,7 @@ export type ChatComputeFn = (
 export function openAiChatCompute(
   openai: OpenAI,
   model: string = DEFAULT_EXAMINER_MODEL,
+  opts: { maxTokens?: number } = {},
 ): ChatComputeFn {
   return async (messages, onDelta) => {
     let content = "";
@@ -41,7 +51,7 @@ export function openAiChatCompute(
       stream: true,
       stream_options: { include_usage: true },
       temperature: 0.3,
-      max_tokens: 500,
+      max_tokens: opts.maxTokens ?? EXAMINER_MAX_OUTPUT_TOKENS,
     });
     for await (const chunk of stream) {
       const delta = chunk.choices[0]?.delta?.content ?? "";

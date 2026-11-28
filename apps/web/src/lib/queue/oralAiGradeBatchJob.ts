@@ -6,7 +6,7 @@ import {
   loadOralAiGradeBatchForRunner,
   recordOralAiGradeBatchProgress,
 } from "@feedbackme/core-lms";
-import { AiTutorError, generateOralExamEvaluation, openAiChatCompute } from "@feedbackme/core-feedback";
+import { AiTutorError, GRADING_MAX_OUTPUT_TOKENS, generateOralExamEvaluation, openAiChatCompute } from "@feedbackme/core-feedback";
 import { createOpenaiClient, getChatOnlyApiKey } from "../openaiClient";
 import { getOralAiGradeBatchQueue, QUEUE_NAMES } from "./index";
 
@@ -84,7 +84,7 @@ export async function runOralAiGradeBatch(
 }
 
 async function defaultChat(): Promise<ChatFn> {
-  return openAiChatCompute(createOpenaiClient(await getChatOnlyApiKey()));
+  return openAiChatCompute(createOpenaiClient(await getChatOnlyApiKey()), undefined, { maxTokens: GRADING_MAX_OUTPUT_TOKENS });
 }
 
 function isKeyMissing(e: unknown): boolean {
