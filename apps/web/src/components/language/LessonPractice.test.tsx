@@ -898,3 +898,25 @@ describe("LessonPractice — đề bài phiếu bạn ảo rút gọn khi tab đ
   });
 });
 
+
+describe("LessonPractice — chip mục đích ở đầu thẻ (quy ước 'Mục đích · tên')", () => {
+  it("tên khối theo quy ước: chip mục đích + phần tên; không còn chữ 'Ngữ pháp · ' lặp trong tiêu đề", async () => {
+    await act(async () => {
+      root.render(<LessonPractice slug="hsk" embed={embed()} blockTitle="Ngữ pháp · 按时、赶紧、本来、忽然" />);
+    });
+    await flush();
+    const chip = host.querySelector('[data-testid="practice-purpose-chip"]')!;
+    expect(chip.getAttribute("data-purpose")).toBe("grammar");
+    expect(chip.textContent).toBe("Ngữ pháp");
+    expect(host.querySelector("#lp-title")!.textContent).toBe("Ngữ pháp按时、赶紧、本来、忽然");
+  });
+
+  it("tên khối không theo quy ước: giữ nguyên tiêu đề, không có chip", async () => {
+    await act(async () => {
+      root.render(<LessonPractice slug="hsk" embed={embed()} blockTitle="课文2 · Nối từ" />);
+    });
+    await flush();
+    expect(host.querySelector('[data-testid="practice-purpose-chip"]')).toBeNull();
+    expect(host.querySelector("#lp-title")!.textContent).toBe("课文2 · Nối từ");
+  });
+});

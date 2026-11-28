@@ -87,3 +87,16 @@ describe("headingTitleOf — tiêu đề thẻ đề bài", () => {
     expect(headingTitleOf("5", doc())).toBe("5");
   });
 });
+
+describe("practiceTabMeta — mục đích của khối (quy ước 'Mục đích · tên')", () => {
+  it("tên khối theo quy ước → meta.purpose; tên khác → không có", () => {
+    const embed = { passages: [], questions: [], answers: [] } as unknown as Parameters<typeof practiceTabMeta>[0];
+    expect(practiceTabMeta(embed, false, "Ngữ pháp · 按时、赶紧").purpose).toBe("grammar");
+    expect(practiceTabMeta(embed, false, "课文2 · Nối từ").purpose).toBeUndefined();
+    expect(practiceTabMeta(embed, false, undefined).purpose).toBeUndefined();
+  });
+
+  it("gộp các tab cùng nhãn giữ mục đích đầu tiên có", () => {
+    expect(mergePracticeMeta([{ title: "a" }, { purpose: "reading" }, { purpose: "writing" }])?.purpose).toBe("reading");
+  });
+});

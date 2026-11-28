@@ -4,6 +4,8 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, Headphones, ListChecks, Mic, Shuffle, TextCursorInput, type LucideIcon } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 import Collapse from "@/components/ui/Collapse";
+import { PRACTICE_PURPOSES, practicePurposeChipStyle } from "@/lib/practicePurpose";
+import { PRACTICE_PURPOSE_ICON } from "@/components/language/PracticePurposeChip";
 import { PRACTICE_COMPLETE_EVENT, PRACTICE_KIND_LABEL, PRACTICE_PROGRESS_EVENT, type PracticeKind, type PracticeProgressDetail, type PracticeTabMeta } from "@/lib/practiceTabMeta";
 
 export interface PracticeTab {
@@ -218,6 +220,9 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
             const kind = t.meta?.kind;
             const Icon = kind ? KIND_ICON[kind] : null;
             const pr = progressOf(t.meta, live);
+            // Khối đặt tên theo quy ước "Mục đích · tên" (HSK 4): thẻ lấy biểu tượng và màu của mục đích thay cho biểu tượng theo dạng câu.
+            const purp = t.meta?.purpose ? PRACTICE_PURPOSES[t.meta.purpose] : null;
+            const PurpIcon = purp ? PRACTICE_PURPOSE_ICON[purp.key] : null;
             const glued = t.meta ? /^(\d+[A-E]?(?:[–-]\d*[A-E])?)\s+([^·].*)$/.exec(t.label) : null;
             const [head, ...restParts] = glued ? [glued[1]!, glued[2]!] : t.meta ? t.label.split(" · ") : [t.label];
             const isCode = !t.meta || EXERCISE_CODE.test(head ?? "");
@@ -247,8 +252,8 @@ export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[
                 }}
                 className="hsk-tab"
               >
-                <span className="hsk-tab-ic" aria-hidden>
-                  {pr.done ? <Check size={20} /> : Icon ? <Icon size={20} /> : <BookOpen size={20} />}
+                <span className="hsk-tab-ic" aria-hidden data-purpose={purp?.key} style={purp && !pr.done ? practicePurposeChipStyle(purp) : undefined}>
+                  {pr.done ? <Check size={20} /> : PurpIcon ? <PurpIcon size={20} /> : Icon ? <Icon size={20} /> : <BookOpen size={20} />}
                 </span>
                 <span className="min-w-0">
                   <b className="hsk-tab-t">{title}</b>

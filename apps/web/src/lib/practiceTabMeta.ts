@@ -1,5 +1,6 @@
 import type { PracticeEmbed } from "@feedbackme/core-lms";
 import { splitPassageInstruction, type PassageDoc } from "./passageInstruction";
+import { practicePurposeOf, type PracticePurposeKey } from "./practicePurpose";
 
 /**
  * Thông tin hiện trên thẻ của mỗi tab bài tập (loại bài, tên bài, tiến độ), để học viên biết một tab là một bài tập và đang ở trạng thái nào.
@@ -29,6 +30,8 @@ export interface PracticeProgressDetail {
 export interface PracticeTabMeta {
   title?: string;
   kind?: PracticeKind;
+  /** Mục đích của khối (từ vựng, ngữ pháp, nghe, nói, đọc, viết…) khi tên khối theo quy ước "Mục đích · tên"; thẻ tab dùng để đổi biểu tượng và màu. */
+  purpose?: PracticePurposeKey;
   /** Mọi câu của tab; rỗng với tab chỉ có nội dung để nghe hoặc đọc. */
   ids?: string[];
   /** Câu đã có đáp án và câu đã kiểm tra khi mở trang (cập nhật tiếp theo sự kiện của khối luyện). */
@@ -134,6 +137,7 @@ export function practiceTabMeta(embed: PracticeEmbed, virtualPartner: boolean, b
   return {
     title: practiceTabTitle(embed.passages.map((p) => p.title), blockTitle) || titleFromInstruction(instruction ?? firstParagraphText(first?.contentJson)) || undefined,
     kind: practiceKindOf(embed, virtualPartner),
+    ...(practicePurposeOf(blockTitle) ? { purpose: practicePurposeOf(blockTitle)!.purpose.key } : {}),
     ids,
     answered: embed.answers.filter((a) => own.has(a.questionId) && isAnsweredJson(a.answerJson)).map((a) => a.questionId),
     checked: embed.answers.filter((a) => own.has(a.questionId) && a.checked).map((a) => a.questionId),
@@ -149,6 +153,7 @@ export function mergePracticeMeta(metas: readonly (PracticeTabMeta | undefined)[
   return {
     title: list.find((m) => m.title)?.title,
     kind: list.find((m) => m.kind && m.kind !== "read")?.kind ?? list[0]!.kind,
+    ...(list.find((m) => m.purpose) ? { purpose: list.find((m) => m.purpose)!.purpose } : {}),
     ids: uniq((m) => m.ids),
     answered: uniq((m) => m.answered),
     checked: uniq((m) => m.checked),

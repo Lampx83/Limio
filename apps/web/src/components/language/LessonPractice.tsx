@@ -40,6 +40,8 @@ import { accentVar } from "@/lib/courseAccent";
 import { essayFeedbackEnabled, essayVoiceEnabled, parseFeedback, type FeedbackView } from "@/lib/practiceEssayView";
 import { splitPassageInstruction, type PassageDoc } from "@/lib/passageInstruction";
 import { passageDisplayTitle } from "@/lib/lessonSections";
+import { practicePurposeOf } from "@/lib/practicePurpose";
+import PracticePurposeChip from "./PracticePurposeChip";
 
 interface CheckResult {
   isCorrect: boolean | null;
@@ -788,10 +790,19 @@ export default function LessonPractice({
     </div>
   ) : null;
 
+  // Tên khối theo quy ước "Mục đích · tên" (khoá HSK 4): mục đích hiện thành chip có màu, phần còn lại là tên khối.
+  const parsedTitle = practicePurposeOf(blockTitle);
   const titleBlock = (
     <div className="min-w-0">
       <h2 id="lp-title" className="text-base font-semibold leading-snug">
-        {blockTitle || embed.title}
+        {parsedTitle ? (
+          <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+            <PracticePurposeChip purpose={parsedTitle.purpose} />
+            <span>{parsedTitle.text}</span>
+          </span>
+        ) : (
+          blockTitle || embed.title
+        )}
       </h2>
       <p className="text-xs text-muted" aria-live="polite">
         {progressLabel(counts)}
