@@ -26,6 +26,7 @@ export async function GET(req: Request) {
       id: true,
       code: true,
       name: true,
+      kind: true,
       _count: { select: { admins: true, users: true } },
     },
   });
@@ -35,6 +36,7 @@ export async function GET(req: Request) {
       id: o.id,
       code: o.code,
       name: o.name,
+      kind: o.kind,
       adminCount: o._count.admins,
       userCount: o._count.users,
     })),

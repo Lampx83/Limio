@@ -7,10 +7,10 @@ export default function AdminOrgsPage() {
     <main>
       <header className="mb-6">
         <h1 className="h-display text-2xl font-bold sm:text-3xl">
-          Tổ chức (Organization)
+          Tổ chức
         </h1>
         <p className="mt-1 text-sm text-muted">
-          Chọn một tổ chức để cấu hình tên, logo, chữ ký, kỳ học và cấp quyền OrgAdmin.
+          Mở một tổ chức để cấu hình thương hiệu, loại, gói tài khoản và cấp quyền OrgAdmin.
         </p>
       </header>
       <OrgsBrowser />
