@@ -60,6 +60,9 @@ import HskSectionHead from "@/components/lesson/HskSectionHead";
 import { HSK_DECOR_SLUGS_KEY, HSK_SECTIONS, hskDecorLang, isHskDecorCourse, planHskSections } from "@/lib/hskLesson";
 import { isAuthoredLesson } from "@/lib/hskAuthored";
 import PracticeTabs from "@/components/lesson/PracticeTabs";
+import DialogueAudioBar from "@/components/lesson/DialogueAudioBar";
+import { dialogueTracksOf } from "@/lib/dialogueTracks";
+import { practicePurposeOf } from "@/lib/practicePurpose";
 import StatementTab from "@/components/lesson/StatementTab";
 import LessonRichText from "@/components/lesson/LessonRichText";
 import TheoryCard from "@/components/lesson/TheoryCard";
@@ -998,6 +1001,9 @@ export default async function LessonPage({
       [lessonFrame.unitTitle, lesson.module.title].some((x) => x.trim().toLowerCase() === htmlToPlainText(lesson.description!).trim().toLowerCase())
     );
   const titleInTheory = theoryAsOneCard && !!lessonFrame && !descriptionShown;
+  // Khối luyện kỹ năng Nghe ("Hiểu hội thoại · …"): đặt sẵn thanh nghe các hội thoại của bài ở đầu khối, học viên khỏi cuộn lên phần Hội thoại.
+  const lessonDialogueTracks = dialogueTracksOf(visibleItems);
+  const dialogueBarFor = (title?: string) => (lessonDialogueTracks.length > 0 && practicePurposeOf(title)?.purpose.key === "dialogue" ? <DialogueAudioBar tracks={lessonDialogueTracks} /> : null);
   const practiceTabItems = sections
     ? arrangeTabs(
         mergeTabsByLabel(
@@ -1032,6 +1038,7 @@ export default async function LessonPage({
                   <>
                     {k === 0 ? introNode : null}
                     {k === 0 ? leadNode : null}
+                    {k === 0 ? dialogueBarFor(info.title) : null}
                     {renderStacked(g.embed, info, true)}
                   </>
                 ),
@@ -1057,6 +1064,7 @@ export default async function LessonPage({
                 build: () => (
                   <>
                     {introNode}
+                    {dialogueBarFor(info?.title)}
                     {/* Tab bạn ảo có câu yêu cầu của sách: câu đó nằm CHUNG thẻ đề với lời mời bạn ảo (LessonPractice `lead`), không dựng thẻ riêng. */}
                     {info && embed && tab.virtualPartner && leadNode ? null : leadNode}
                     {info && embed && ((hoist && hoist.hoisted.length > 0) || (tab.virtualPartner && leadNode)) ? renderBlock(embed, info, false, tab.virtualPartner && !!leadNode, tab.virtualPartner && leadNode && leadHtml ? { code: tab.label, title: leadTitle, html: leadHtml } : undefined) : info && embed && !tab.virtualPartner && splitEmbedByPassage(embed).length >= 2 ? renderStacked(embed, info, false) : practiceBlocks[tab.id]}

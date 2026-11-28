@@ -32,6 +32,8 @@
     "generate:bundle-codes": "node --env-file=../db/.env --import tsx scripts/generate-bundle-codes.ts",
     "generate:bundle-codes:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/generate-bundle-codes.ts",
     "split:course:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/split-course.ts",
+    "create:mini-test": "node --env-file=../db/.env --import tsx scripts/create-mini-test.ts",
+    "create:mini-test:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/create-mini-test.ts",
     "publish:courses": "node --env-file=../db/.env --import tsx scripts/publish-courses.ts",
     "publish:courses:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/publish-courses.ts",
     "order:blocks": "node --env-file=../db/.env --import tsx scripts/order-lesson-blocks.ts",

@@ -10,6 +10,8 @@ import {
 import { auth } from "@/lib/auth";
 import { getActiveRole } from "@/lib/active-role";
 import QuizPlayer from "@/components/QuizPlayer";
+import { isSelfTestTitle } from "@/lib/selfTest";
+import { paperOutline } from "@/lib/selfTestPaper";
 import QuizBackLink from "@/components/QuizBackLink";
 import ExamRoomChrome from "@/components/exam/ExamRoomChrome";
 import { getT } from "@/lib/i18n/server";
@@ -26,8 +28,10 @@ const ERROR_LABEL_KEY: Record<string, MessageKey> = {
 
 export default async function QuizPage({
   params,
+  searchParams,
 }: {
   params: { slug: string; quizId: string };
+  searchParams?: { batdau?: string };
 }) {
   const t = await getT();
   const session = await auth();
@@ -38,7 +42,13 @@ export default async function QuizPage({
 
   const quiz = await prisma.quiz.findUnique({
     where: { id: params.quizId },
-    select: { id: true, courseId: true },
+    select: {
+      id: true,
+      courseId: true,
+      title: true,
+      timeLimitSec: true,
+      questions: { orderBy: { orderIndex: "asc" }, select: { extra: true } },
+    },
   });
   if (!quiz || !quiz.courseId) notFound();
   const course = await prisma.course.findUnique({
@@ -55,6 +65,42 @@ export default async function QuizPage({
       : false;
   if (!enrolled && !instructorPreview) {
     redirect(`/catalog/${params.slug}`);
+  }
+
+  // Mini-test cuối bài kiểu phòng thi: màn hướng dẫn (考试说明) trước khi vào làm; đồng hồ chỉ chạy từ lúc bấm Bắt đầu.
+  // Lượt đang làm dở thì vào thẳng, không hiện lại hướng dẫn.
+  if (isSelfTestTitle(quiz.title) && searchParams?.batdau !== "1") {
+    const inProgress = await prisma.quizAttempt.findFirst({
+      where: { quizId: quiz.id, userId, status: "in_progress" },
+      select: { id: true },
+    });
+    if (!inProgress) {
+      const outline = paperOutline(quiz.questions);
+      return (
+        <main className="mx-auto max-w-2xl px-4 py-6 lg:px-6">
+          <ExamRoomChrome />
+          <QuizBackLink href={`/learn/${params.slug}`} />
+          <section className="card mt-6" data-testid="self-test-intro">
+            <p className="text-meta">{t("practice.selfTest.intro.kicker")}</p>
+            <h1 className="mt-1 text-h2">{quiz.title}</h1>
+            <ul className="mt-4 space-y-2 text-sm">
+              <li>{t("practice.selfTest.intro.total", { n: quiz.questions.length, m: quiz.timeLimitSec ? Math.round(quiz.timeLimitSec / 60) : 0 })}</li>
+              {outline.map((o) => (
+                <li key={o.key}>
+                  <span className="font-semibold">{o.label}</span>: {t("practice.selfTest.intro.part", { n: o.count })}
+                  {o.listenOnce ? ` ${t("practice.selfTest.intro.once")}` : ""}
+                </li>
+              ))}
+              {quiz.timeLimitSec ? <li>{t("practice.selfTest.intro.timer")}</li> : null}
+              <li>{t("practice.selfTest.intro.retake")}</li>
+            </ul>
+            <Link href={`/learn/${params.slug}/quizzes/${params.quizId}?batdau=1`} className="btn-primary mt-6 inline-flex" data-testid="self-test-start">
+              {t("practice.selfTest.intro.start")}
+            </Link>
+          </section>
+        </main>
+      );
+    }
   }
 
   let attemptId: string;

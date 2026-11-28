@@ -23,6 +23,11 @@ import {
 } from "@/lib/quizPlayerState";
 import { formatTime } from "@/lib/datetime";
 import { plainToRichHtml } from "@/lib/richText";
+import { quizAudioUrlOf } from "@/lib/quizAudio";
+import AudioLessonPlayer from "@/components/AudioLessonPlayer";
+import OnceAudioPlayer from "@/components/quiz/OnceAudioPlayer";
+import { audioPlaysOf, optionLetter, paperSectionOf, startsPart } from "@/lib/selfTestPaper";
+import { isSelfTestTitle } from "@/lib/selfTest";
 import { useT, useUiLang } from "@/lib/i18n/client";
 import type { MessageKey } from "@/lib/i18n/dict";
 
@@ -534,12 +539,30 @@ export default function QuizPlayer({
             nhỏ hơn mức này. */}
         {currentQ && (
           <section className="card min-h-[26rem]">
+            {/* Mini-test mô phỏng đề HSK: khung hướng dẫn ở câu đầu mỗi phần (听力 / 阅读 / 书写), chữ Hán kèm tiếng Việt. */}
+            {startsPart(quiz.questions[currentStepIndex - 1]?.extra, currentQ.extra) && (() => {
+              const sec = paperSectionOf(currentQ.extra)!;
+              return (
+                <div className="mb-4 rounded-xl border border-brand-200 bg-brand-soft px-4 py-3" data-testid="paper-part-intro">
+                  <p className="text-sm font-bold text-brand-700">
+                    {sec.label}
+                    {sec.part ? ` · ${sec.part}` : ""}
+                  </p>
+                  {sec.intro && <p className="mt-1 text-sm">{sec.intro}</p>}
+                </div>
+              );
+            })()}
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-700">
                   {currentStepIndex + 1}
                 </span>
-                <span className="chip">
+                {paperSectionOf(currentQ.extra) && (
+                  <span className="chip whitespace-nowrap" data-testid="paper-section-chip">
+                    {paperSectionOf(currentQ.extra)!.label.split(" · ")[0]}
+                  </span>
+                )}
+                <span className="chip whitespace-nowrap">
                   {currentQ.type === "mcq" && currentQ.isSingleAnswer
                     ? t("practice.quiz.type.single")
                     : TYPE_LABEL_KEY[currentQ.type]
@@ -567,6 +590,16 @@ export default function QuizPlayer({
                 </span>
               </div>
             </div>
+            {/* Câu nghe (mini-test cuối bài): trình phát audio phía trên đề, không kèm lời thoại (lời thoại là đáp án). Nghe lại tự do. */}
+            {quizAudioUrlOf(currentQ.extra) && (
+              <div className="mt-4" data-testid="quiz-question-audio">
+                {audioPlaysOf(currentQ.extra) === 1 ? (
+                  <OnceAudioPlayer key={currentQ.id} url={quizAudioUrlOf(currentQ.extra)!} storageKey={`${attemptId}:${currentQ.id}`} />
+                ) : (
+                  <AudioLessonPlayer key={currentQ.id} url={quizAudioUrlOf(currentQ.extra)!} compact showTranscript={false} />
+                )}
+              </div>
+            )}
             {/* drag_drop_fill renders the prompt itself with drop zones in
                 place of [[N]] placeholders, so skip the standard SafeHtml. */}
             {currentQ.type !== "drag_drop_fill" && (
@@ -585,6 +618,7 @@ export default function QuizPlayer({
                 />
               ) : (
                 <QuestionInput
+                  letters={isSelfTestTitle(quiz.title)}
                   question={currentQ}
                   answer={answers[currentQ.id]}
                   onChange={(r) => setResponse(currentQ.id, r)}
@@ -869,7 +903,10 @@ function QuestionInput({
   answer,
   onChange,
   onBlur,
+  letters = false,
 }: {
+  /** Phương án đánh A B C D (mini-test mô phỏng đề HSK). */
+  letters?: boolean;
   question: Question;
   answer: AnswerState | undefined;
   onChange: (r: Response) => void;
@@ -958,7 +995,7 @@ function QuestionInput({
         : "grid grid-cols-1 gap-2 sm:grid-cols-2";
       return (
         <ul className={listClass}>
-          {question.options.map((opt) => {
+          {question.options.map((opt, optIdx) => {
             const isSelected = selected.includes(opt.id);
             return (
               <li key={opt.id}>
@@ -989,6 +1026,7 @@ function QuestionInput({
                     onChange={() => toggle(opt.id)}
                     className="sr-only"
                   />
+                  {letters && <span className="shrink-0 text-sm font-bold text-brand-700" aria-hidden>{optionLetter(optIdx)}.</span>}
                   <SafeHtml
                     html={plainToRichHtml(opt.label)}
                     className="prose prose-sm max-w-none text-sm dark:prose-invert"

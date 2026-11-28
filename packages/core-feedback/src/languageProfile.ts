@@ -165,6 +165,7 @@ export async function getLanguageProfile(
   // Khoá không gắn kỹ năng theo bài (vd giáo trình HSK: một bài có đủ nghe/nói/đọc/viết) thì gắn theo KHỐI Bài luyện: nhãn nằm ở phần của đề ẩn.
   // Chỉ xét bài chưa có nhãn của bài; khối không có nhãn (từ vựng, ngữ pháp, văn hoá) không được đếm.
   const unlabelledLessonIds = lessons.filter((l) => !l.skill).map((l) => l.id);
+  // owned-practice-ok: cố ý đọc đề ẩn của Bài luyện (lọc theo ownerContentItem) để lấy nhãn kỹ năng của khối; không phải danh sách đề thi.
   const blockExams = unlabelledLessonIds.length
     ? await db.exam.findMany({
         where: { ownerContentItem: { type: "exam_practice", lessonId: { in: unlabelledLessonIds } } },

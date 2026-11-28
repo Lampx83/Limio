@@ -17,6 +17,8 @@ import SafeHtml from "@/components/SafeHtml";
 import AnswerBreakdown from "@/components/quiz/AnswerBreakdown";
 import ConfidenceStars from "@/components/quiz/ConfidenceStars";
 import { plainToRichHtml } from "@/lib/richText";
+import { isSelfTestTitle, selfTestLabel } from "@/lib/selfTest";
+import { sectionBreakdown } from "@/lib/selfTestPaper";
 import { formatPoints, summarizeScore, xpMultiplierNote } from "@/lib/quizResultView";
 import { Zap } from "lucide-react";
 import { getT, getUiLang } from "@/lib/i18n/server";
@@ -84,7 +86,15 @@ export default async function ResultPage({
     pathLesson && quizContext?.courseId
       ? await getLearningPath(userId, quizContext.courseId)
       : null;
-  const pathLabel = path?.enabled && pathLesson ? path.labels[pathLesson.id] : undefined;
+  // Mini-test cuối bài: nhãn theo điểm lượt vừa làm (lib/selfTest.ts); quiz khác giữ nhãn mức nắm vững của bài.
+  const selfTest = isSelfTestTitle(quizContext?.title);
+  // Điểm theo phần thi (听力 / 阅读 / 书写) cho mini-test mô phỏng đề HSK.
+  const sectionExtras = selfTest
+    ? await prisma.quizQuestion.findMany({ where: { id: { in: result.items.map((i) => i.questionId) } }, select: { id: true, extra: true } })
+    : [];
+  const extraById = new Map(sectionExtras.map((q) => [q.id, q.extra]));
+  const sections = selfTest ? sectionBreakdown(result.items.map((i) => ({ extra: extraById.get(i.questionId), isCorrect: i.isCorrect }))) : [];
+  const pathLabel = path?.enabled && pathLesson ? (selfTest ? selfTestLabel(result.attempt.scorePct) : path.labels[pathLesson.id]) : undefined;
   const nextSteps = path?.enabled ? path.steps.slice(0, 1) : [];
   if (quizContext?.courseId && nextSteps.length > 0) {
     await recordPathShown(userId, quizContext.courseId, nextSteps, "quiz_result").catch(() => {});
@@ -290,6 +300,22 @@ export default async function ResultPage({
         </div>
       )}
 
+      {sections.length > 0 && (
+        <section className="mt-6 rounded-2xl border border-token bg-[rgb(var(--surface))] p-5 shadow-card" data-testid="section-breakdown">
+          <p className="text-meta">{t("practice.result.bySection")}</p>
+          <ul className="mt-2 space-y-2">
+            {sections.map((sec) => (
+              <li key={sec.key} className="flex items-center justify-between text-sm">
+                <span className="font-medium">{sec.label}</span>
+                <span className="tabular-nums font-semibold">
+                  {sec.correct} / {sec.total}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {/* B4 — lộ trình: nhãn bài vừa làm + bước tiếp theo */}
       {pathLesson && pathLabel && (
         <section className="mt-6 rounded-2xl border border-token bg-[rgb(var(--surface))] p-5 shadow-card">
@@ -298,6 +324,14 @@ export default async function ResultPage({
             <span className="break-words font-semibold">{pathLesson.title}</span>
             <MasteryBadge label={pathLabel} />
           </div>
+          {selfTest && pathLabel !== "solid" && (
+            <p className="mt-3 text-sm">
+              {t("practice.result.selfTestReview")}{" "}
+              <Link href={`/learn/${params.slug}/lessons/${pathLesson.id}`} className="link">
+                {t("practice.result.selfTestReviewLink")}
+              </Link>
+            </p>
+          )}
           {nextSteps.length > 0 ? (
             <>
               <p className="text-meta mt-4">{t("practice.result.nextStep")}</p>
