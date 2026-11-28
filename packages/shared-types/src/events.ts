@@ -232,6 +232,10 @@ export const LearningEventType = {
   // "grading." trong NON_LEARNER_ACTIVITY_PREFIXES) — `assignment.*` là của học viên nên không dùng được.
   GradingAiBatchStarted: "grading.ai_batch.started",
   GradingAiBatchCompleted: "grading.ai_batch.completed",
+  // Chấm vấn đáp bằng AI hàng loạt (docs/tieu-chi/cham-van-dap-bang-ai-hang-loat.md): cùng quy tắc với grading.ai_batch.* —
+  // payload chỉ id và số đếm, KHÔNG mang lời hội thoại, điểm hay nhận xét; không tính là hoạt động học.
+  GradingOralBatchStarted: "grading.oral_batch.started",
+  GradingOralBatchCompleted: "grading.oral_batch.completed",
   /** B9.2 — learner opened a lesson the feedback routed them to (uptake). */
   FeedbackRemediationClicked: "feedback.remediation.clicked",
   AdaptivePathUpdated: "adaptive.path.updated",
@@ -720,6 +724,24 @@ export interface GradingAiBatchCompletedPayload {
   tokensUsed: number;
   status: "completed" | "stopped" | "halted";
   /** Mã lý do khi lô dừng vì ví/trần hệ thống. */
+  haltReason?: string;
+}
+
+/** Sự kiện `grading.oral_batch.*`: chỉ id và số đếm. */
+export interface GradingOralBatchStartedPayload {
+  examId: string;
+  batchId: string;
+  total: number;
+}
+export interface GradingOralBatchCompletedPayload {
+  examId: string;
+  batchId: string;
+  total: number;
+  done: number;
+  failed: number;
+  skipped: number;
+  tokensUsed: number;
+  status: "completed" | "stopped" | "halted";
   haltReason?: string;
 }
 

@@ -104,6 +104,8 @@ export async function deleteUser(
     // người này bấm chạy (giảng viên). Bài nộp được giữ ẩn danh nên gợi ý đi kèm phải xoá hẳn.
     await tx.assignmentAiGradeSuggestion.deleteMany({ where: { submission: { userId: targetUserId } } });
     await tx.assignmentAiGradeBatch.deleteMany({ where: { startedById: targetUserId } });
+    // Chấm vấn đáp bằng AI hàng loạt — các lô do người này bấm chạy (đề xuất nằm ở OralExamEvaluation, đã theo lượt thi).
+    await tx.oralAiGradeBatch.deleteMany({ where: { startedById: targetUserId } });
     // LANG G7 — bài nói: file ghi âm là lời nói riêng của học viên. Bản chữ + góp ý xoá hẳn; liên kết file
     // trên bài nộp được gỡ và TÊN FILE trả về cho tầng gọi (kho file thuộc apps/web) để xoá khỏi kho.
     await tx.speakingFeedback.deleteMany({ where: { userId: targetUserId } });

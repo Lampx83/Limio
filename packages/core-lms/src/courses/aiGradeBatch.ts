@@ -111,12 +111,12 @@ export function selectAiGradeTargets(
 }
 
 /** Lấy phần đầu vừa số dư. `overflow` = số bài không vừa. Chỉ chạy phần vừa, không chạy rồi dừng giữa chừng. */
-export function fitTargetsToBudget(
-  targets: AiGradeTarget[],
+export function fitTargetsToBudget<T extends { estimatedTokens: number }>(
+  targets: T[],
   availableTokens: number,
-): { fit: AiGradeTarget[]; overflow: number } {
+): { fit: T[]; overflow: number } {
   let used = 0;
-  const fit: AiGradeTarget[] = [];
+  const fit: T[] = [];
   for (const t of targets) {
     if (used + t.estimatedTokens > availableTokens) break;
     used += t.estimatedTokens;

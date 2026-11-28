@@ -69,4 +69,5 @@ export * from "./oral-material-extract";
 export * from "./oral-attempts";
 export * from "./legacy-oral-switch";
 export * from "./oral-evaluation";
+export * from "./oralAiGradeBatch";
 export * from "./survey";

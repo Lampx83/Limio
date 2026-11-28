@@ -27,6 +27,11 @@ import {
   type AiGradeBatchJobResult,
 } from "../lib/queue/aiGradeBatchJob";
 import {
+  processOralAiGradeBatchJob,
+  type OralAiGradeBatchJobData,
+  type OralAiGradeBatchJobResult,
+} from "../lib/queue/oralAiGradeBatchJob";
+import {
   processAutoGradeJob,
   type AutoGradeJobData,
   type AutoGradeJobResult,
@@ -139,6 +144,23 @@ aiGradeBatchWorker.on("failed", (job, err) => {
   reportJobFailure(QUEUE_NAMES.aiGradeBatch, job, err);
 });
 workers.push(aiGradeBatchWorker);
+
+// Chấm vấn đáp bằng AI hàng loạt: mỗi job là một lô chạy tuần tự; lượt có thể có hội thoại dài nên khoá job đủ lâu.
+const oralAiGradeBatchWorker = new Worker<OralAiGradeBatchJobData, OralAiGradeBatchJobResult>(
+  QUEUE_NAMES.oralAiGradeBatch,
+  processOralAiGradeBatchJob,
+  {
+    connection: getBullmqConnection(),
+    concurrency: Number(process.env.AI_GRADE_BATCH_CONCURRENCY ?? "2"),
+    lockDuration: 5 * 60 * 1000,
+  },
+);
+oralAiGradeBatchWorker.on("ready", () => console.log(`[worker:${QUEUE_NAMES.oralAiGradeBatch}] ready`));
+oralAiGradeBatchWorker.on("failed", (job, err) => {
+  console.error(`[worker:${QUEUE_NAMES.oralAiGradeBatch}] job ${job?.id} failed:`, err.message);
+  reportJobFailure(QUEUE_NAMES.oralAiGradeBatch, job, err);
+});
+workers.push(oralAiGradeBatchWorker);
 
 async function shutdown(signal: string) {
   console.log(`[worker] received ${signal}, shutting down...`);

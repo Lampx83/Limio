@@ -16,6 +16,7 @@ const globalForQueue = globalThis as unknown as {
   autoGradeQueue: Queue | undefined;
   classMailQueue: Queue | undefined;
   aiGradeBatchQueue: Queue | undefined;
+  oralAiGradeBatchQueue: Queue | undefined;
 };
 
 export function getBullmqConnection(): Redis {
@@ -34,6 +35,7 @@ export const QUEUE_NAMES = {
   autoGrade: "auto-grade",
   classMail: "class-mail",
   aiGradeBatch: "ai-grade-batch",
+  oralAiGradeBatch: "oral-ai-grade-batch",
 } as const;
 
 export function getRealtimePublishQueue(): Queue {
@@ -105,5 +107,21 @@ export function getAiGradeBatchQueue(): Queue {
     },
   });
   globalForQueue.aiGradeBatchQueue = q;
+  return q;
+}
+
+/** Chấm vấn đáp bằng AI hàng loạt — cùng cấu hình retry với lô chấm bài tập (tiến độ nằm ở DB). */
+export function getOralAiGradeBatchQueue(): Queue {
+  if (globalForQueue.oralAiGradeBatchQueue) return globalForQueue.oralAiGradeBatchQueue;
+  const q = new Queue(QUEUE_NAMES.oralAiGradeBatch, {
+    connection: getBullmqConnection(),
+    defaultJobOptions: {
+      removeOnComplete: { count: 500, age: 24 * 3600 },
+      removeOnFail: { count: 1000, age: 7 * 24 * 3600 },
+      attempts: 2,
+      backoff: { type: "exponential", delay: 10_000 },
+    },
+  });
+  globalForQueue.oralAiGradeBatchQueue = q;
   return q;
 }

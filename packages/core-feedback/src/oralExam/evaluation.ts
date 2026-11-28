@@ -78,6 +78,8 @@ function parseGradingResponse(raw: string): {
 export interface GenerateEvaluationResult {
   aiSuggestedScore: number | null;
   aiSummary: string;
+  /** Token thật của lượt gọi (vào + ra) — chấm hàng loạt cộng lại để báo chi phí của cả lô. */
+  tokensUsed: number;
 }
 
 export async function generateOralExamEvaluation(
@@ -167,5 +169,9 @@ export async function generateOralExamEvaluation(
     },
   });
 
-  return { aiSuggestedScore: parsed.score, aiSummary: parsed.summary };
+  return {
+    aiSuggestedScore: parsed.score,
+    aiSummary: parsed.summary,
+    tokensUsed: chatResult.inputTokens + chatResult.outputTokens,
+  };
 }

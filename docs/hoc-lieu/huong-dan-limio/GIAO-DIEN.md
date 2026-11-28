@@ -713,7 +713,12 @@ Cần quyền `ai_oral.access`. Menu → "Phòng vấn đáp" (`/instructor/oral
    viên đã ghi danh tự vào từ trang khoá (mục Đề thi); học viên khác nhập mã.
 6. Nút đầu trang đề: "Thử vấn đáp" (thử, không tạo lượt), "Live", "Chấm bài" (khi đã có lượt). Chấm: "Chấm bằng
    AI" / "Chấm lại bằng AI" từng lượt, "Điểm của bạn" (/100), "Ghi chú cho sinh viên (tuỳ chọn)", "Chốt điểm" /
-   "Lưu điểm mới"; điểm luôn do giảng viên duyệt; có "Xuất điểm (Excel)". Xuất nội dung phiên: tick ô từng lượt hoặc
+   "Lưu điểm mới"; điểm luôn do giảng viên duyệt; có "Xuất điểm (Excel)" (có cột "Mã sinh viên" do sinh viên tự khai ở
+   Cài đặt, trống nếu chưa khai). Cả đề: dưới khung rubric có khung **"✨ Gợi ý điểm vấn đáp bằng AI cho cả đề"**, nút
+   **"Gợi ý điểm bằng AI cho n lượt chưa chấm"** mở hộp xác nhận (số lượt, ước lượng token, số dư ví, ô tích "Chạy lại cả
+   lượt đã có đề xuất (tốn thêm token)", "Bắt đầu (n lượt)", "Huỷ"); chạy nền, có thanh tiến độ và "Dừng". AI chỉ lưu
+   đề xuất, không chốt điểm. Danh sách lượt có ô tích "Chỉ lượt có đề xuất AI" và nút **"Chốt theo đề xuất AI cho n lượt"**
+   (có hỏi xác nhận; ghi điểm thật và nhận xét tóm tắt của AI làm ghi chú sinh viên sẽ đọc). Xuất nội dung phiên: tick ô từng lượt hoặc
    "Chọn tất cả" rồi bấm "Xuất Word" (một người), "Xuất n file Word (.zip)" (nhiều người), không tick ai thì nút là
    "Xuất tất cả file Word (.zip)". File nén có một thư mục chứa file từng người, tên file "Tên học viên - ngày thi -
    Tên đề.docx". Trang chấm từng lượt cũng có "Xuất Word".

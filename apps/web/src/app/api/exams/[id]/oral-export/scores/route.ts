@@ -44,7 +44,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       startedAt: true,
       submittedAt: true,
       status: true,
-      user: { select: { displayName: true, email: true } },
+      user: { select: { displayName: true, email: true, studentCode: true } },
       oralEvaluation: {
         select: {
           aiSuggestedScore: true,
@@ -78,6 +78,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
   const rows = attempts.map((a) => ({
     "Họ tên": a.user?.displayName ?? "",
+    // Do chính sinh viên tự khai ở Cài đặt (không xác thực) — để trống khi chưa khai.
+    "Mã sinh viên": a.user?.studentCode ?? "",
     "Email": a.user?.email ?? "",
     ...(hasMulti
       ? { "Lượt": attemptNo.get(a) ?? 1, "Tính điểm": counted.has(a) ? "✓ (cao nhất)" : "" }
@@ -95,6 +97,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   const ws = XLSX.utils.json_to_sheet(rows);
   ws["!cols"] = [
     { wch: 24 },
+    { wch: 16 },
     { wch: 28 },
     ...(hasMulti ? [{ wch: 8 }, { wch: 14 }] : []),
     { wch: 12 },

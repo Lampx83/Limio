@@ -241,6 +241,17 @@ export const GUIDES: readonly GuideEntry[] = [
     ],
   },
   {
+    id: "van-dap-ai-ca-lop",
+    title: "AI gợi ý điểm vấn đáp cho cả đề",
+    keywords: ["chấm vấn đáp hàng loạt", "ai chấm vấn đáp cả lớp", "chấm cả đề vấn đáp", "chốt theo đề xuất ai", "gợi ý điểm vấn đáp", "chấm nhanh vấn đáp", "mã sinh viên", "xuất điểm vấn đáp"],
+    destinationIds: ["oral_exams"],
+    body: `Mở đề vấn đáp, bấm "Chấm bài", rồi ở đầu danh sách lượt bấm "Gợi ý điểm bằng AI cho n lượt chưa chấm". Hộp xác nhận cho biết số lượt, ước lượng token cần và số dư ví của thầy/cô; bấm "Bắt đầu" để chạy. Lô chạy nền nên đóng trang vẫn chạy, có thanh tiến độ và nút "Dừng". AI chỉ lưu đề xuất, chưa có điểm nào được chốt và sinh viên không thấy đề xuất. Danh sách hiện "AI gợi ý" cạnh từng lượt; mở lượt thì điểm đã điền sẵn để thầy/cô xem lại rồi mới bấm "Chốt điểm". Muốn chốt nhanh, tích các lượt có đề xuất rồi bấm "Chốt theo đề xuất AI cho n lượt"; lúc này điểm và nhận xét tóm tắt của AI đến tay sinh viên nên có hỏi xác nhận. Ví không đủ cho cả đề thì chỉ chạy phần đầu vừa ví; muốn chạy lại cả lượt đã có đề xuất thì tích "Chạy lại cả lượt đã có đề xuất (tốn thêm token)". File "Xuất điểm (Excel)" có cột "Mã sinh viên" do sinh viên tự khai ở Cài đặt, để trống nếu chưa khai.`,
+    useCases: [
+      `Lớp ba mươi sinh viên vừa thi vấn đáp xong, thầy/cô cho AI gợi ý điểm cả đề một lần rồi xem lại từng lượt và chốt những lượt đồng ý với đề xuất.`,
+      `Cần nộp bảng điểm vấn đáp cho khoa, thầy/cô bấm "Xuất điểm (Excel)" và đối chiếu theo cột "Mã sinh viên".`,
+    ],
+  },
+  {
     id: "bai-tap-nhom",
     title: "Bài tập nộp theo nhóm",
     keywords: ["nhóm", "nộp nhóm", "nộp theo nhóm", "bài tập nhóm", "điểm nhóm", "trưởng nhóm", "chia nhóm làm bài", "đổi tên nhóm"],

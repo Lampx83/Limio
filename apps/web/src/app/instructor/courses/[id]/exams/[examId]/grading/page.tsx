@@ -7,6 +7,7 @@ import GradeForm from "./GradeForm";
 import EssayRubric, { essayRubricOf } from "./EssayRubric";
 import OralAttemptsList from "./OralAttemptsList";
 import OralRubricEditor from "./OralRubricEditor";
+import OralAiBatchPanel from "./OralAiBatchPanel";
 import RegradeAllButton from "./RegradeAllButton";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
@@ -96,6 +97,8 @@ export default async function GradingInboxPage({
         <div className="mt-4">
           <OralRubricEditor examId={exam.id} initialRubric={exam.oralRubricText ?? ""} />
         </div>
+
+        {attempts.length > 0 && <OralAiBatchPanel examId={exam.id} />}
 
         {attempts.length === 0 ? (
           <p className="mt-6 rounded border border-dashed border-default px-4 py-6 text-center text-sm text-faint">

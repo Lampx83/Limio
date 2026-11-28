@@ -83,6 +83,7 @@ model User {
   assignmentSubmissions          AssignmentSubmission[]    @relation("Submitter")
   gradedSubmissions              AssignmentSubmission[]    @relation("Grader")
   aiGradeBatches                 AssignmentAiGradeBatch[]
+  oralAiGradeBatches             OralAiGradeBatch[]
   forumThreads                   ForumThread[]
   forumPosts                     ForumPost[]
   questProgress                  UserQuestProgress[]
@@ -2011,6 +2012,35 @@ model AssignmentAiGradeBatch {
   startedBy  User       @relation(fields: [startedById], references: [id], onDelete: Cascade)
 
   @@index([assignmentId, status])
+}
+
+/// Một lượt "Gợi ý điểm bằng AI cho các lượt vấn đáp chưa chấm" (docs/tieu-chi/cham-van-dap-bang-ai-hang-loat.md).
+/// Đề xuất của AI nằm ở `OralExamEvaluation` (aiSuggested*), không có bảng gợi ý riêng. Tối đa một lô `running`
+/// mỗi đề (chỉ mục duy nhất từng phần trong migration — Prisma không diễn đạt được).
+model OralAiGradeBatch {
+  id            String             @id @default(uuid())
+  examId        String
+  startedById   String
+  status        AiGradeBatchStatus @default(running)
+  /// Danh sách lượt thi (ExamAttempt.id) sẽ chạy, theo thứ tự nộp.
+  queue         Json
+  total         Int
+  done          Int                @default(0)
+  failed        Int                @default(0)
+  skipped       Int                @default(0)
+  tokensUsed    Int                @default(0)
+  stopRequested Boolean            @default(false)
+  /// "no_token_budget" | "global_token_cap" | … khi lô dừng vì ví/trần hệ thống.
+  haltReason    String?
+  /// [{ attemptId, code }] — lượt lỗi hoặc chưa gợi ý được, kèm mã lý do.
+  problems      Json?
+  startedAt     DateTime           @default(now())
+  finishedAt    DateTime?
+
+  exam      Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+  startedBy User @relation(fields: [startedById], references: [id], onDelete: Cascade)
+
+  @@index([examId, status])
 }
 
 enum SubmissionMode {
@@ -4066,6 +4096,7 @@ model Exam {
   oralMaterials    OralExamMaterial[]
   oralTopics       OralExamTopic[]
   practiceSessions ExamPracticeSession[]
+  oralAiGradeBatches OralAiGradeBatch[]
 
   @@index([courseId, status])
   @@index([status, openAt, closeAt])
