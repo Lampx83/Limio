@@ -229,7 +229,7 @@ export default function NarrationsManager({ courseId }: { courseId: string }) {
         <div className="banner-danger">
           <p>
             Chưa cấu hình NEU TTS nên chưa tạo được giọng. Vào{" "}
-            <Link href="/admin/integrations" className="link font-medium">
+            <Link href="/admin/settings#ai" className="link font-medium">
               Quản trị › Tích hợp
             </Link>{" "}
             để nhập địa chỉ cổng và khoá.

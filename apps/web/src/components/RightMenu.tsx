@@ -28,8 +28,7 @@ const NAV: Record<string, NavItem[]> = {
   admin: [
     { href: "/admin/dashboard", label: "Dashboard" },
     { href: "/admin/users", label: "Người dùng" },
-    { href: "/admin/settings", label: "Cài đặt" },
-    { href: "/admin/integrations", label: "Tích hợp" },
+    { href: "/admin/settings", label: "Cài đặt & tích hợp" },
   ],
 };
 

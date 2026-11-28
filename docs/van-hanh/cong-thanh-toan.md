@@ -33,7 +33,7 @@ Mọi bước làm trong **chế độ Test** của Stripe trước, rồi lặp
 Stripe Dashboard → Developers → API keys → **Secret key** (`sk_test_...`, sau này `sk_live_...`).
 
 ### 3.2. Đưa khoá vào Limio (chọn một trong hai)
-- **Qua giao diện:** Admin → Tích hợp (`/admin/integrations`) → "Stripe secret key". Khoá được mã hoá trong DB, cần `SECRETS_MASTER_KEY` đã đặt.
+- **Qua giao diện:** Admin → Cài đặt & tích hợp (`/admin/settings`, tab Thanh toán) → "Stripe secret key". Khoá được mã hoá trong DB, cần `SECRETS_MASTER_KEY` đã đặt.
 - **Qua biến môi trường:** `STRIPE_SECRET_KEY=sk_...` trong `/etc/feedbackme/.env.prod` (prod) hoặc `apps/web/.env.local` (dev).
 
 Giao diện thắng biến môi trường nếu có cả hai.

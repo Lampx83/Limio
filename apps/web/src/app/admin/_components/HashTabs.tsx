@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useState, type KeyboardEvent, type ReactNode } from "react";
 
-export interface OrgTab {
+export interface HashTab {
   id: string;
   label: string;
   /** Số nhỏ cạnh nhãn (vd số OrgAdmin). */
@@ -13,10 +13,19 @@ export interface OrgTab {
 }
 
 /**
- * Chia trang tổ chức thành các tab. Mọi panel đều được dựng sẵn từ server và chỉ ẩn bằng `hidden`,
+ * Chia một trang quản trị thành các tab. Mọi panel đều được dựng sẵn từ server và chỉ ẩn bằng `hidden`,
  * nên form đang gõ dở không mất khi đổi tab. Tab đang mở nằm ở `#hash` để gửi link đúng tab và nút "Quay lại" hoạt động.
  */
-export default function OrgTabs({ tabs, defaultId }: { tabs: OrgTab[]; defaultId?: string }) {
+export default function HashTabs({
+  tabs,
+  defaultId,
+  label = "Các mục",
+}: {
+  tabs: HashTab[];
+  defaultId?: string;
+  /** Nhãn của thanh tab cho trình đọc màn hình. */
+  label?: string;
+}) {
   const uid = useId();
   const first = defaultId ?? tabs[0]?.id;
   const [active, setActive] = useState(first);
@@ -56,7 +65,7 @@ export default function OrgTabs({ tabs, defaultId }: { tabs: OrgTab[]; defaultId
     <div className="mt-5">
       <div
         role="tablist"
-        aria-label="Các mục của tổ chức"
+        aria-label={label}
         className="-mx-4 flex gap-1 overflow-x-auto border-b border-token px-4 sm:mx-0 sm:px-0"
       >
         {tabs.map((t, i) => {

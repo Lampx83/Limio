@@ -109,8 +109,8 @@ export default async function AdminDashboard() {
 
       {/* Quick actions */}
       <div className="mt-6 flex flex-wrap gap-2">
-        <Link href="/admin/integrations" className="btn-secondary btn-sm">
-          Integrations
+        <Link href="/admin/settings" className="btn-secondary btn-sm">
+          Cài đặt &amp; tích hợp
         </Link>
         <Link href="/admin/lti-tools" className="btn-secondary btn-sm">
           LTI tools

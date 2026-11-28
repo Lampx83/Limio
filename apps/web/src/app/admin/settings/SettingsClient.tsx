@@ -14,7 +14,11 @@ interface BankSettings {
   accountName: string;
 }
 
+/** `general`: đăng ký, chữ ký, footer. `payment`: bật/tắt thanh toán và tài khoản nhận tiền mua token. Trang cài đặt dựng hai bản, mỗi tab một bản. */
+export type SettingsPart = "general" | "payment";
+
 export default function SettingsClient({
+  part,
   initialPaymentEnabled,
   initialRegisterEnabled,
   initialFooterText,
@@ -24,6 +28,7 @@ export default function SettingsClient({
   initialSignatureName,
   initialSignatureTitle,
 }: {
+  part: SettingsPart;
   initialPaymentEnabled: boolean;
   initialRegisterEnabled: boolean;
   initialFooterText: string;
@@ -217,6 +222,7 @@ export default function SettingsClient({
   return (
     <div className="space-y-6">
       {/* Đăng ký tài khoản trên trang chủ */}
+      {part === "general" && (
       <section className="card">
         <header className="border-b border-token pb-4">
           <h2 className="text-base font-semibold">Đăng ký tài khoản</h2>
@@ -240,8 +246,10 @@ export default function SettingsClient({
           />
         </div>
       </section>
+      )}
 
       {/* Payment section */}
+      {part === "payment" && (
       <section className="card">
         <header className="border-b border-token pb-4">
           <h2 className="text-base font-semibold">Thanh toán & Định giá</h2>
@@ -267,14 +275,16 @@ export default function SettingsClient({
 
         {paymentEnabled && (
           <div className="mt-4 rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-xs text-warning-800">
-            <strong>Cổng thanh toán:</strong> hiện chỉ có Stripe (thẻ quốc tế); VNPay và Momo chưa tích hợp.
-            Khoá có phí cần Stripe đã cấu hình (khoá bí mật và webhook) hoặc dùng mã kích hoạt cho người trả
-            tiền ngoài hệ thống. Xem docs/van-hanh/cong-thanh-toan.md.
+            <strong>Cổng thanh toán:</strong> khoá có phí cần ít nhất một cổng đã cấu hình đủ khoá (Stripe,
+            VNPay hoặc SePay, ở mục &ldquo;Cổng thanh toán&rdquo; bên dưới) hoặc dùng mã kích hoạt cho người
+            trả tiền ngoài hệ thống. Xem docs/van-hanh/cong-thanh-toan.md.
           </div>
         )}
       </section>
+      )}
 
       {/* Chữ ký đại diện Limio — A6, hiện trên chứng nhận hoàn thành khoá học */}
+      {part === "general" && (
       <section className="card">
         <header className="border-b border-token pb-4">
           <h2 className="text-base font-semibold">Chữ ký Limio</h2>
@@ -372,8 +382,10 @@ export default function SettingsClient({
           </button>
         </div>
       </section>
+      )}
 
       {/* Tài khoản nhận tiền mua token AI */}
+      {part === "payment" && (
       <section className="card">
         <header className="border-b border-token pb-4">
           <h2 className="text-base font-semibold">
@@ -463,8 +475,10 @@ export default function SettingsClient({
           </div>
         </div>
       </section>
+      )}
 
       {/* Footer section */}
+      {part === "general" && (
       <section className="card">
         <header className="border-b border-token pb-4">
           <h2 className="text-base font-semibold">Footer trang công khai</h2>
@@ -523,6 +537,7 @@ export default function SettingsClient({
           </div>
         </div>
       </section>
+      )}
     </div>
   );
 }

@@ -6,7 +6,6 @@ import { useSidebarNav } from "@/components/useSidebarNav";
 import {
   Users,
   Network,
-  Plug,
   Wrench,
   Mail,
   Settings,
@@ -77,7 +76,6 @@ const GROUPS: Group[] = [
     iconBg: PINK_BG,
     iconFg: PINK_FG,
     items: [
-      { label: "Integrations", href: "/admin/integrations", icon: Plug },
       { label: "LTI tools", href: "/admin/lti-tools", icon: Wrench },
       { label: "Email templates", href: "/admin/emails", icon: Mail },
       { label: "Token AI", href: "/admin/ai-tokens", icon: Coins },
@@ -91,7 +89,7 @@ const GROUPS: Group[] = [
     iconBg: PINK_BG,
     iconFg: PINK_FG,
     items: [
-      { label: "Cài đặt", href: "/admin/settings", icon: Settings },
+      { label: "Cài đặt & tích hợp", href: "/admin/settings", icon: Settings },
       { label: "Changelog", href: "/admin/changelog", icon: History },
     ],
   },

@@ -30,7 +30,7 @@ export async function Ga4Section() {
         <h2 className="text-base font-semibold">
           Google Analytics — 7 ngày qua
         </h2>
-        <Link href="/admin/integrations" className="text-xs text-faint hover:underline">
+        <Link href="/admin/settings#phan-tich" className="text-xs text-faint hover:underline">
           Cấu hình
         </Link>
       </header>

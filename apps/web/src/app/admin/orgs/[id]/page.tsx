@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { listAcademicTerms, listOrgAdmins } from "@feedbackme/core-lms";
 import OrgAdminManager from "./OrgAdminManager";
-import OrgTabs from "./OrgTabs";
+import HashTabs from "../../_components/HashTabs";
 import { orgKindMeta } from "../orgKindMeta";
 import SubscriptionManager from "../../_components/SubscriptionManager";
 import OrgMembersClient from "@/app/org-admin/members/OrgMembersClient";
@@ -85,7 +85,8 @@ export default async function AdminOrgDetailPage({
         )}
       </header>
 
-      <OrgTabs
+      <HashTabs
+        label="Các mục của tổ chức"
         tabs={[
           {
             id: "thong-tin",

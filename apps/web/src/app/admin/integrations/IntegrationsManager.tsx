@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import NeuApiTester from "./NeuApiTester";
 import { formatDateTime } from "@/lib/datetime";
@@ -197,10 +198,39 @@ const GROUPS: Record<
   },
 };
 
+/**
+ * Chủ đề của từng tích hợp, để trang Cài đặt hiện mỗi tab một nhóm thay vì một trang dài 14 thẻ.
+ * Khoá/nhóm chưa được xếp ở đây (thêm khoá mới mà quên khai) rơi vào "ai", không bao giờ bị ẩn mất.
+ */
+export type IntegrationTopic = "payment" | "ai" | "analytics";
+
+const TOPIC_MEMBERS: Record<Exclude<IntegrationTopic, "ai">, { groups: string[]; keys: string[] }> = {
+  payment: { groups: ["vnpay", "sepaypg", "sepay"], keys: ["stripe.secret", "momo.secret"] },
+  analytics: { groups: ["ga4"], keys: [] },
+};
+
+const DISPLAY_ORDER: Record<IntegrationTopic, string[]> = {
+  payment: ["stripe.secret", "sepaypg", "vnpay", "sepay", "momo.secret"],
+  ai: ["openai", "neutts", "speech_analysis", "vbee", "websearch.tavily"],
+  analytics: ["ga4"],
+};
+
+function topicOfGroup(groupId: string): IntegrationTopic {
+  for (const [t, m] of Object.entries(TOPIC_MEMBERS)) if (m.groups.includes(groupId)) return t as IntegrationTopic;
+  return "ai";
+}
+
+function topicOfKey(key: string): IntegrationTopic {
+  for (const [t, m] of Object.entries(TOPIC_MEMBERS)) if (m.keys.includes(key)) return t as IntegrationTopic;
+  return "ai";
+}
+
 export default function IntegrationsManager({
   initialStatuses,
+  topic,
 }: {
   initialStatuses: Status[];
+  topic: IntegrationTopic;
 }) {
   const [statuses, setStatuses] = useState<Status[]>(initialStatuses);
 
@@ -212,35 +242,96 @@ export default function IntegrationsManager({
 
   const byKey = new Map(statuses.map((s) => [s.key, s]));
   const groupedKeys = new Set(Object.values(GROUPS).flatMap((g) => g.keys));
-  const standalone = statuses.filter((s) => !groupedKeys.has(s.key));
+  const groupEntries = Object.entries(GROUPS)
+    .filter(([id]) => topicOfGroup(id) === topic)
+    .map(([id, group]) => ({
+      id,
+      group,
+      members: group.keys.map((k) => byKey.get(k)).filter((s): s is Status => s !== undefined),
+    }))
+    .filter((e) => e.members.length > 0);
+  const standalone = statuses.filter((s) => !groupedKeys.has(s.key) && topicOfKey(s.key) === topic);
+
+  const total = groupEntries.length + standalone.length;
+  const configured =
+    groupEntries.filter((e) => e.members.some((m) => m.hasValue)).length + standalone.filter((s) => s.hasValue).length;
+
+  // Cái hay dùng nhất lên đầu; cái chưa xếp (khoá mới) xuống cuối, giữ nguyên thứ tự gốc.
+  const order = DISPLAY_ORDER[topic];
+  const rank = (id: string) => {
+    const i = order.indexOf(id);
+    return i === -1 ? order.length : i;
+  };
+  const cards = [
+    ...groupEntries.map((e) => ({ id: e.id, node: e })),
+    ...standalone.map((s) => ({ id: s.key, node: s })),
+  ].sort((a, b) => rank(a.id) - rank(b.id));
 
   return (
-    <div className="space-y-4">
-      {Object.entries(GROUPS).map(([groupId, group]) => {
-        const members = group.keys
-          .map((k) => byKey.get(k))
-          .filter((s): s is Status => s !== undefined);
-        if (members.length === 0) return null;
-        return (
+    <div className="space-y-3">
+      <p className="text-sm text-muted" aria-live="polite">
+        <span className="font-medium text-[rgb(var(--text))]">{configured}</span> / {total} tích hợp đã có cấu hình. Khoá được
+        mã hoá AES-256-GCM, không bao giờ trả lại trình duyệt.
+      </p>
+      {cards.map(({ id, node }) =>
+        "group" in node ? (
           <IntegrationGroupCard
-            key={groupId}
-            group={group}
-            members={members}
+            key={id}
+            group={node.group}
+            members={node.members}
             onChange={refresh}
             extra={
-              group.embedsTester &&
-              byKey.get("neutts.base_url")?.hasValue &&
-              byKey.get("neutts.api_key")?.hasValue ? (
+              node.group.embedsTester && byKey.get("neutts.base_url")?.hasValue && byKey.get("neutts.api_key")?.hasValue ? (
                 <NeuApiTester />
               ) : null
             }
           />
-        );
-      })}
-      {standalone.map((s) => (
-        <IntegrationRow key={s.key} status={s} onChange={refresh} />
-      ))}
+        ) : (
+          <IntegrationRow key={id} status={node} onChange={refresh} />
+        ),
+      )}
     </div>
+  );
+}
+
+/** Thẻ thu gọn: tên + trạng thái luôn thấy, phần hướng dẫn và ô nhập chỉ mở khi cần. */
+function Disclosure({
+  title,
+  subtitle,
+  badge,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  badge: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const id = useId();
+  return (
+    <section className="card p-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls={id}
+        className="flex w-full flex-wrap items-center gap-x-3 gap-y-2 rounded-xl px-5 py-4 text-left hover:bg-[rgb(var(--surface-muted))]"
+      >
+        <span className="min-w-[14rem] flex-1">
+          <span className="block text-base font-semibold">{title}</span>
+          {subtitle && <span className="mt-0.5 block font-mono text-xs text-faint">{subtitle}</span>}
+        </span>
+        <span className="ml-auto flex items-center gap-3 sm:ml-0">
+          {badge}
+          <ChevronDown aria-hidden className={`h-4 w-4 shrink-0 text-faint transition-transform ${open ? "rotate-180" : ""}`} />
+        </span>
+      </button>
+      {open && (
+        <div id={id} className="border-t border-token px-5 pb-5 pt-4">
+          {children}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -257,7 +348,8 @@ function IntegrationGroupCard({
 }) {
   const [busy, setBusy] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
-  const allConfigured = members.every((m) => m.hasValue);
+  const filled = members.filter((m) => m.hasValue).length;
+  const allConfigured = filled === members.length;
 
   async function testSaved() {
     if (!group.testEndpoint) return;
@@ -269,16 +361,17 @@ function IntegrationGroupCard({
     setTestResult(j.ok ? "✓ Key đã lưu hợp lệ" : `✗ ${j.error}`);
   }
 
+  // Nhóm có ô tuỳ chọn nên không có "đủ/thiếu" tuyệt đối: chỉ nói đã điền bao nhiêu ô.
+  const badge = (
+    <span className={filled === 0 ? "chip" : allConfigured ? "chip-success" : "chip-brand"}>
+      {filled === 0 ? "Chưa cấu hình" : `${filled}/${members.length} ô đã điền`}
+    </span>
+  );
+
   return (
-    <section className="card">
-      <header className="flex items-start gap-3 border-b border-token pb-3">
-        <span className="text-2xl">{group.emoji ?? ""}</span>
-        <div className="min-w-0 flex-1">
-          <h2 className="text-base font-semibold">{group.name}</h2>
-          {group.help && <p className="mt-1.5 text-xs text-muted">{group.help}</p>}
-        </div>
-      </header>
-      <div className="mt-4 space-y-5">
+    <Disclosure title={group.name} badge={badge}>
+      {group.help && <p className="mb-4 text-xs text-muted">{group.help}</p>}
+      <div className="space-y-5">
         {members.map((status, i) => (
           <div key={status.key} className={i > 0 ? "border-t border-token pt-4" : ""}>
             <IntegrationField status={status} onChange={onChange} />
@@ -290,11 +383,7 @@ function IntegrationGroupCard({
 
       {group.testEndpoint && allConfigured && (
         <div className="mt-4 border-t border-token pt-4">
-          <button
-            onClick={testSaved}
-            disabled={busy}
-            className="btn-secondary btn-sm"
-          >
+          <button onClick={testSaved} disabled={busy} className="btn-secondary btn-sm">
             Test key đã lưu
           </button>
           {testResult && (
@@ -312,7 +401,7 @@ function IntegrationGroupCard({
           )}
         </div>
       )}
-    </section>
+    </Disclosure>
   );
 }
 
@@ -325,24 +414,10 @@ function IntegrationRow({
 }) {
   const meta = LABELS[status.key] ?? { name: status.key, placeholder: "", emoji: "" };
   return (
-    <section className="card">
-      <header className="flex items-start justify-between gap-3 border-b border-token pb-3">
-        <div className="flex items-start gap-3 min-w-0 flex-1">
-          <span className="text-2xl">{meta.emoji ?? ""}</span>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-base font-semibold">{meta.name}</h2>
-            <p className="mt-0.5 text-xs text-faint">
-              <code className="font-mono">{status.key}</code>
-            </p>
-            {meta.help && <p className="mt-1.5 text-xs text-muted">{meta.help}</p>}
-          </div>
-        </div>
-        <StatusChip status={status} />
-      </header>
-      <div className="mt-4">
-        <IntegrationField status={status} onChange={onChange} hideLabel />
-      </div>
-    </section>
+    <Disclosure title={meta.name} subtitle={status.key} badge={<StatusChip status={status} />}>
+      {meta.help && <p className="mb-4 text-xs text-muted">{meta.help}</p>}
+      <IntegrationField status={status} onChange={onChange} hideLabel />
+    </Disclosure>
   );
 }
 
@@ -354,8 +429,8 @@ function StatusChip({ status }: { status: Status }) {
     : "chip";
   const statusLabel = status.hasValue
     ? status.source === "env"
-      ? "✓ env"
-      : "✓ saved"
+      ? "Từ biến môi trường"
+      : "Đã lưu"
     : "Chưa cấu hình";
   return <span className={statusChip}>{statusLabel}</span>;
 }
