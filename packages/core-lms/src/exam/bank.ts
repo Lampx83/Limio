@@ -723,6 +723,8 @@ export interface SearchFilters {
    * Postgres JSON path filter để match.
    */
   topics?: string[];
+  /** Loại các câu này khỏi kết quả (vd câu đã có trong đề đang soạn). */
+  excludeIds?: string[];
   limit?: number;
   cursor?: string;
 }
@@ -850,6 +852,9 @@ export async function searchQuestions(
     // q và topics đều là điều kiện OR bên trong; ghép bằng AND, KHÔNG để chung
     // một khoá `OR` (spread sau sẽ ghi đè spread trước, mất bộ lọc từ khoá).
     AND: textAndTopicClauses(filters),
+    ...(filters.excludeIds && filters.excludeIds.length > 0
+      ? { id: { notIn: filters.excludeIds } }
+      : {}),
   };
 
   // Đếm song song findMany để UI hiển thị "X câu khớp" + chọn "Tất cả X".

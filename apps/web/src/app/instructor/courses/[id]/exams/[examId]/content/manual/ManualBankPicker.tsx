@@ -113,6 +113,12 @@ export default function ManualBankPicker({
   const [topics, setTopics] = useState<string[]>([]);
   const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set());
   const [items, setItems] = useState<Item[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [totalMatching, setTotalMatching] = useState<number | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  // Mặc định hiện cả câu đã có (mờ, có nhãn) để thấy toàn bộ ngân hàng; bật
+  // công tắc này để chỉ còn câu chưa dùng.
+  const [hideUsed, setHideUsed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [adding, setAdding] = useState(false);
@@ -140,32 +146,68 @@ export default function ManualBankPicker({
     });
   };
 
+  // Tham số lọc dùng chung cho lần tải đầu và "Tải thêm" (chỉ khác cursor).
+  const buildParams = (cursor?: string) => {
+    const p = new URLSearchParams();
+    p.append("status", "published");
+    if (q.trim()) p.append("q", q.trim());
+    if (type) p.append("type", type);
+    if (difficulty) p.append("difficulty", difficulty);
+    if (bankId) p.append("bank", bankId);
+    selectedTopics.forEach((t2) => p.append("topic", t2));
+    if (hideUsed) p.append("excludeInExam", examId);
+    p.append("limit", "30");
+    if (cursor) p.append("cursor", cursor);
+    return p;
+  };
+
   useEffect(() => {
     const t = setTimeout(async () => {
       setLoading(true);
       setErr(null);
-      const p = new URLSearchParams();
-      p.append("status", "published");
-      if (q.trim()) p.append("q", q.trim());
-      if (type) p.append("type", type);
-      if (difficulty) p.append("difficulty", difficulty);
-      if (bankId) p.append("bank", bankId);
-      selectedTopics.forEach((t2) => p.append("topic", t2));
-      p.append("limit", "30");
       try {
-        const r = await fetch(`/api/bank-questions?${p.toString()}`);
+        const r = await fetch(`/api/bank-questions?${buildParams().toString()}`);
         if (!r.ok) {
           setErr(`HTTP ${r.status}`);
           return;
         }
-        const j = (await r.json()) as { items: Item[] };
+        const j = (await r.json()) as {
+          items: Item[];
+          nextCursor: string | null;
+          totalMatching: number;
+        };
         setItems(j.items);
+        setNextCursor(j.nextCursor);
+        setTotalMatching(j.totalMatching);
       } finally {
         setLoading(false);
       }
     }, 200);
     return () => clearTimeout(t);
-  }, [q, type, difficulty, bankId, selectedTopics]);
+    // buildParams đọc đúng các state liệt kê dưới đây.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, type, difficulty, bankId, selectedTopics, hideUsed]);
+
+  const loadMore = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    setErr(null);
+    try {
+      const r = await fetch(`/api/bank-questions?${buildParams(nextCursor).toString()}`);
+      if (!r.ok) {
+        setErr(`HTTP ${r.status}`);
+        return;
+      }
+      const j = (await r.json()) as { items: Item[]; nextCursor: string | null };
+      setItems((prev) => {
+        const seen = new Set(prev.map((x) => x.id));
+        return [...prev, ...j.items.filter((x) => !seen.has(x.id))];
+      });
+      setNextCursor(j.nextCursor);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const toggleSelected = (id: string) => {
     setSelected((prev) => {
@@ -277,6 +319,26 @@ export default function ManualBankPicker({
                 : "Chưa có câu hỏi published nào. Tạo + publish trong tab Question Bank trước."}
             </div>
           )}
+          {!loading && items.length > 0 && (
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-faint">
+              <span>
+                Hiển thị {items.length}
+                {totalMatching !== null ? ` / ${totalMatching}` : ""} câu
+                {usedBankQuestionIds.length > 0 && ` · ${usedBankQuestionIds.length} câu đã có trong đề`}
+              </span>
+              {usedBankQuestionIds.length > 0 && (
+                <label className="inline-flex cursor-pointer items-center gap-1.5 text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={hideUsed}
+                    onChange={(e) => setHideUsed(e.target.checked)}
+                    className="h-3.5 w-3.5"
+                  />
+                  Ẩn câu đã có trong đề
+                </label>
+              )}
+            </div>
+          )}
           <ul className="space-y-2">
             {items.map((it) => {
               const inExam = used.has(it.id);
@@ -324,6 +386,18 @@ export default function ManualBankPicker({
               );
             })}
           </ul>
+          {nextCursor && !loading && (
+            <div className="mt-3 text-center">
+              <button
+                type="button"
+                onClick={() => void loadMore()}
+                disabled={loadingMore}
+                className="rounded border border-default px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                {loadingMore ? "Đang tải…" : "Tải thêm câu hỏi"}
+              </button>
+            </div>
+          )}
         </div>
 
         {err && (
