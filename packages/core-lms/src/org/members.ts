@@ -304,3 +304,83 @@ export async function assignUserOrganization(
 
   return { from, to: organizationId };
 }
+
+export type OrgMemberCandidateStatus = "available" | "member" | "other_org";
+
+export interface OrgMemberCandidate {
+  id: string;
+  email: string;
+  displayName: string;
+  /** available: thêm được · member: đã thuộc trường này · other_org: đang ở trường khác (không tự chuyển được). */
+  status: OrgMemberCandidateStatus;
+  /** Chỉ Platform Admin được thấy tên trường khác. */
+  otherOrgName?: string;
+}
+
+/** Ngắn hơn thế thì gần như khớp mọi người, không phải gợi ý mà là liệt kê danh bạ. */
+export const MEMBER_SUGGEST_MIN_CHARS = 2;
+export const MEMBER_SUGGEST_MIN_CHARS_ORG_ADMIN = 3;
+export const MEMBER_SUGGEST_LIMIT = 8;
+
+/**
+ * Gợi ý user để thêm vào trường khi OrgAdmin gõ email/tên. Danh bạ toàn nền tảng là dữ liệu cá nhân, nên:
+ *  - Platform Admin: thấy mọi người, kèm trạng thái (đã thuộc trường này / đang ở trường khác).
+ *  - OrgAdmin của trường: chỉ thấy người CHƯA thuộc trường nào (thêm được) hoặc đã thuộc chính trường mình; không bao giờ
+ *    thấy ai đang ở trường khác, kể cả tên trường. Gõ tối thiểu 3 ký tự.
+ * Kết quả khớp đầu email xếp trước. Tối đa MEMBER_SUGGEST_LIMIT dòng.
+ */
+export async function suggestOrgMemberCandidates(
+  actorUserId: string,
+  organizationId: string,
+  rawQuery: string,
+  db: PrismaClient = prisma,
+): Promise<OrgMemberCandidate[]> {
+  await assertOrgAdmin(actorUserId, organizationId, db);
+  const platformAdmin = await isAdmin(actorUserId, db);
+  const q = rawQuery.trim();
+  const min = platformAdmin ? MEMBER_SUGGEST_MIN_CHARS : MEMBER_SUGGEST_MIN_CHARS_ORG_ADMIN;
+  if (q.length < min) return [];
+
+  const rows = await db.user.findMany({
+    where: {
+      AND: [
+        {
+          OR: [
+            { email: { contains: q, mode: "insensitive" } },
+            { displayName: { contains: q, mode: "insensitive" } },
+          ],
+        },
+        // Prisma không nhận `in: [null, id]`, nên viết OR tường minh.
+        ...(platformAdmin ? [] : [{ OR: [{ organizationId: null }, { organizationId }] }]),
+      ],
+    },
+    orderBy: { email: "asc" },
+    take: 30,
+    select: {
+      id: true,
+      email: true,
+      displayName: true,
+      organizationId: true,
+      organization: { select: { name: true } },
+    },
+  });
+
+  const lower = q.toLowerCase();
+  const rank = (r: { email: string; displayName: string }) =>
+    r.email.toLowerCase().startsWith(lower) ? 0 : r.displayName.toLowerCase().startsWith(lower) ? 1 : 2;
+
+  return rows
+    .sort((a, b) => rank(a) - rank(b))
+    .slice(0, MEMBER_SUGGEST_LIMIT)
+    .map((r): OrgMemberCandidate => {
+      const status: OrgMemberCandidateStatus =
+        r.organizationId === organizationId ? "member" : r.organizationId === null ? "available" : "other_org";
+      return {
+        id: r.id,
+        email: r.email,
+        displayName: r.displayName,
+        status,
+        ...(status === "other_org" && platformAdmin && r.organization ? { otherOrgName: r.organization.name } : {}),
+      };
+    });
+}

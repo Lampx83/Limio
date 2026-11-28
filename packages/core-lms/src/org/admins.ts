@@ -160,3 +160,55 @@ export async function revokeOrgAdmin(
     db,
   );
 }
+
+export interface OrgAdminCandidate {
+  id: string;
+  email: string;
+  displayName: string;
+  /** available: cấp được · already_admin: đã là OrgAdmin của tổ chức này. */
+  status: "available" | "already_admin";
+}
+
+export const ADMIN_SUGGEST_MIN_CHARS = 2;
+export const ADMIN_SUGGEST_LIMIT = 8;
+
+/**
+ * Gợi ý user để cấp OrgAdmin khi gõ email/tên. Chỉ Platform Admin (cùng quyền với cấp OrgAdmin), nên thấy mọi tài khoản.
+ * Người đã là OrgAdmin của tổ chức vẫn hiện, đánh dấu để khỏi cấp trùng. Khớp đầu email xếp trước.
+ */
+export async function suggestOrgAdminCandidates(
+  actorUserId: string,
+  organizationId: string,
+  rawQuery: string,
+  db: PrismaClient = prisma,
+): Promise<OrgAdminCandidate[]> {
+  await assertPlatformAdmin(actorUserId, db);
+  const q = rawQuery.trim();
+  if (q.length < ADMIN_SUGGEST_MIN_CHARS) return [];
+
+  const rows = await db.user.findMany({
+    where: {
+      OR: [
+        { email: { contains: q, mode: "insensitive" } },
+        { displayName: { contains: q, mode: "insensitive" } },
+      ],
+    },
+    orderBy: { email: "asc" },
+    take: 30,
+    select: { id: true, email: true, displayName: true },
+  });
+  const admins = await db.organizationAdmin.findMany({
+    where: { organizationId, userId: { in: rows.map((r) => r.id) } },
+    select: { userId: true },
+  });
+  const adminIds = new Set(admins.map((a) => a.userId));
+
+  const lower = q.toLowerCase();
+  const rank = (r: { email: string; displayName: string }) =>
+    r.email.toLowerCase().startsWith(lower) ? 0 : r.displayName.toLowerCase().startsWith(lower) ? 1 : 2;
+
+  return rows
+    .sort((a, b) => rank(a) - rank(b))
+    .slice(0, ADMIN_SUGGEST_LIMIT)
+    .map((r) => ({ ...r, status: adminIds.has(r.id) ? ("already_admin" as const) : ("available" as const) }));
+}

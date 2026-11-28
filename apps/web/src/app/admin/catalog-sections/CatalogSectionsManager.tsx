@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "@/lib/toast";
+import SuggestBox, { Highlight } from "@/components/ui/SuggestBox";
 import SortableModulesWrapper from "../../instructor/courses/[id]/SortableModulesWrapper";
 
 type SectionType = "MANUAL" | "AUTO_RECENT";
@@ -296,29 +298,12 @@ function SectionCoursesPanel({
 }) {
   const [courses, setCourses] = useState<CourseInSection[] | null>(null);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<CourseSearchResult[]>([]);
-  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     fetch(`/api/admin/catalog-sections/${sectionId}/courses`)
       .then((r) => r.json())
       .then((d) => setCourses(d.courses ?? []));
   }, [sectionId]);
-
-  useEffect(() => {
-    if (!query.trim()) {
-      setResults([]);
-      return;
-    }
-    setSearching(true);
-    const t = setTimeout(() => {
-      fetch(`/api/admin/courses/search?q=${encodeURIComponent(query)}`)
-        .then((r) => r.json())
-        .then((d) => setResults(d.courses ?? []))
-        .finally(() => setSearching(false));
-    }, 300);
-    return () => clearTimeout(t);
-  }, [query]);
 
   async function addCourse(c: CourseSearchResult) {
     const res = await fetch(`/api/admin/catalog-sections/${sectionId}/courses`, {
@@ -327,7 +312,7 @@ function SectionCoursesPanel({
       body: JSON.stringify({ courseId: c.id }),
     });
     if (!res.ok) {
-      alert("Thêm course thất bại");
+      toast.error("Chưa thêm được khoá học", { description: "Thử lại sau." });
       return;
     }
     setCourses((prev) => {
@@ -336,7 +321,7 @@ function SectionCoursesPanel({
       return next;
     });
     setQuery("");
-    setResults([]);
+    toast.success(`Đã thêm "${c.title}" vào nhóm`);
   }
 
   async function removeCourse(courseId: string) {
@@ -344,7 +329,7 @@ function SectionCoursesPanel({
       method: "DELETE",
     });
     if (!res.ok) {
-      alert("Xoá course thất bại");
+      toast.error("Chưa xoá được khoá học khỏi nhóm", { description: "Thử lại sau." });
       return;
     }
     setCourses((prev) => {
@@ -358,44 +343,40 @@ function SectionCoursesPanel({
 
   return (
     <div className="space-y-3">
-      <div className="relative">
-        <input
-          className="input"
-          placeholder="Tìm course đã publish để thêm vào section..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        {query.trim() && (
-          <div className="absolute z-10 mt-1 w-full rounded-lg border border-token bg-[rgb(var(--surface))] shadow-card">
-            {searching ? (
-              <p className="p-3 text-sm text-faint">Đang tìm...</p>
-            ) : results.length === 0 ? (
-              <p className="p-3 text-sm text-faint">Không tìm thấy course publish nào khớp.</p>
-            ) : (
-              <ul className="max-h-64 overflow-y-auto">
-                {results.map((c) => {
-                  const already = courses.some((x) => x.id === c.id);
-                  return (
-                    <li key={c.id}>
-                      <button
-                        type="button"
-                        disabled={already}
-                        onClick={() => addCourse(c)}
-                        className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-[rgb(var(--surface-muted))] disabled:opacity-50"
-                      >
-                        <span className="truncate">{c.title}</span>
-                        <span className="shrink-0 text-xs text-faint">
-                          {already ? "Đã có" : "+ Thêm"}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        )}
-      </div>
+      <SuggestBox<CourseSearchResult>
+        value={query}
+        onValueChange={setQuery}
+        minChars={0}
+        type="search"
+        ariaLabel="Tìm khoá học đã publish để thêm vào nhóm"
+        placeholder="Gõ tên hoặc slug khoá học đã publish để thêm vào nhóm…"
+        fetchSuggestions={async (q, signal) => {
+          const res = await fetch(`/api/admin/courses/search?q=${encodeURIComponent(q)}`, { signal });
+          if (!res.ok) throw new Error(String(res.status));
+          return ((await res.json()) as { courses: CourseSearchResult[] }).courses ?? [];
+        }}
+        getKey={(c) => c.id}
+        isDisabled={(c) => courses.some((x) => x.id === c.id)}
+        onSelect={(c) => void addCourse(c)}
+        emptyText="Không có khoá học đã publish nào khớp."
+        renderItem={(c, { query: q }) => {
+          const already = courses.some((x) => x.id === c.id);
+          return (
+            <span className="flex items-center justify-between gap-3">
+              <span className="min-w-0">
+                <span className="block truncate font-medium">
+                  <Highlight text={c.title} query={q} />
+                </span>
+                <span className="block truncate text-xs text-muted">
+                  <Highlight text={c.slug} query={q} />
+                  {c.category ? ` · ${c.category}` : ""}
+                </span>
+              </span>
+              <span className={`shrink-0 text-xs ${already ? "text-faint" : "text-brand-600"}`}>{already ? "Đã có" : "+ Thêm"}</span>
+            </span>
+          );
+        }}
+      />
 
       {courses.length === 0 ? (
         <p className="text-sm text-faint">Section này chưa có course nào.</p>

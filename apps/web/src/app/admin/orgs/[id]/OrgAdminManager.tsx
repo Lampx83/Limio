@@ -3,6 +3,14 @@
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDateTime } from "@/lib/datetime";
+import SuggestBox, { Highlight } from "@/components/ui/SuggestBox";
+
+interface Candidate {
+  id: string;
+  email: string;
+  displayName: string;
+  status: "available" | "already_admin";
+}
 
 interface AdminEntry {
   userId: string;
@@ -133,14 +141,44 @@ export default function OrgAdminManager({
           <label htmlFor="grant-org-admin-email" className="label">
             Cấp quyền OrgAdmin cho user (theo email)
           </label>
-          <input
+          <SuggestBox<Candidate>
             id="grant-org-admin-email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="input mt-1"
-            placeholder="vd: giaovien@truong.edu.vn"
+            onValueChange={setEmail}
+            minChars={2}
             required
+            inputClassName="input mt-1"
+            placeholder="Gõ email hoặc tên để tìm, vd: giaovien@truong.edu.vn"
+            hintText="Gõ ít nhất 2 ký tự để xem gợi ý."
+            fetchSuggestions={async (q, signal) => {
+              const res = await fetch(apiUrl(`/api/admin/orgs/${organizationId}/admins/suggest?q=${encodeURIComponent(q)}`), {
+                signal,
+                cache: "no-store",
+              });
+              if (!res.ok) throw new Error(String(res.status));
+              return ((await res.json()) as { candidates: Candidate[] }).candidates;
+            }}
+            getKey={(c) => c.id}
+            isDisabled={(c) => c.status === "already_admin"}
+            onSelect={(c) => {
+              setEmail(c.email);
+              setError(null);
+            }}
+            emptyText="Không có tài khoản nào khớp. OrgAdmin phải là người đã có tài khoản."
+            renderItem={(c, { query }) => (
+              <span className="flex items-center justify-between gap-3">
+                <span className="min-w-0">
+                  <span className="block truncate font-medium">
+                    <Highlight text={c.displayName} query={query} />
+                  </span>
+                  <span className="block truncate text-xs text-muted">
+                    <Highlight text={c.email} query={query} />
+                  </span>
+                </span>
+                {c.status === "already_admin" && <span className="chip shrink-0">Đã là OrgAdmin</span>}
+              </span>
+            )}
           />
         </div>
         <button type="submit" disabled={busy} className="btn-primary btn-sm">

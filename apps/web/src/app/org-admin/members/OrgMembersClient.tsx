@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDate } from "@/lib/datetime";
+import SuggestBox, { Highlight } from "@/components/ui/SuggestBox";
 import MemberImport from "./MemberImport";
 
 interface MemberRow {
@@ -11,6 +12,14 @@ interface MemberRow {
   displayName: string;
   roles: string[];
   createdAt: string;
+}
+
+interface Candidate {
+  id: string;
+  email: string;
+  displayName: string;
+  status: "available" | "member" | "other_org";
+  otherOrgName?: string;
 }
 
 interface MembersResponse {
@@ -155,14 +164,52 @@ export default function OrgMembersClient({
             <label htmlFor="member-email" className="label">
               Email
             </label>
-            <input
+            <SuggestBox<Candidate>
               id="member-email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input mt-1"
-              placeholder="vd: hocvien@truong.edu.vn"
+              onValueChange={setEmail}
+              minChars={3}
+              placeholder="Gõ email hoặc tên để tìm, vd: hocvien@truong.edu.vn"
               required
+              inputClassName="input mt-1"
+              hintText="Gõ ít nhất 3 ký tự để xem gợi ý."
+              fetchSuggestions={async (q, signal) => {
+                const res = await fetch(apiUrl(`/api/orgs/${organizationId}/members/suggest?q=${encodeURIComponent(q)}`), {
+                  signal,
+                  cache: "no-store",
+                });
+                if (!res.ok) throw new Error(String(res.status));
+                return ((await res.json()) as { candidates: Candidate[] }).candidates;
+              }}
+              getKey={(c) => c.id}
+              isDisabled={(c) => c.status !== "available"}
+              onSelect={(c) => {
+                setEmail(c.email);
+                setError(null);
+                setOk(null);
+              }}
+              emptyText={
+                email.includes("@")
+                  ? "Chưa có tài khoản này. Bấm Thêm để tạo tài khoản mới và gửi email mời."
+                  : "Không có tài khoản nào khớp. Nhập đủ email để tạo tài khoản mới."
+              }
+              renderItem={(c, { query }) => (
+                <span className="flex items-center justify-between gap-3">
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">
+                      <Highlight text={c.displayName} query={query} />
+                    </span>
+                    <span className="block truncate text-xs text-muted">
+                      <Highlight text={c.email} query={query} />
+                    </span>
+                  </span>
+                  {c.status === "member" && <span className="chip shrink-0">Đã là thành viên</span>}
+                  {c.status === "other_org" && (
+                    <span className="chip-warning shrink-0">{c.otherOrgName ? `Thuộc ${c.otherOrgName}` : "Thuộc trường khác"}</span>
+                  )}
+                </span>
+              )}
             />
           </div>
           <div className="min-w-[200px] flex-1">
